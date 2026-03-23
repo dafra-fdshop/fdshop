@@ -1,0 +1,20 @@
+{
+  "$schema": "https://developer.joomla.org/schemas/json-schema/web_assets.json",
+  "name": "com_fdshop",
+  "version": "0.0.1",
+  "assets": [
+    {
+      "name": "com_fdshop.site",
+      "type": "style",
+      "uri": "com_fdshop/site.css"
+    },
+    {
+      "name": "com_fdshop.site",
+      "type": "script",
+      "uri": "com_fdshop/site.js",
+      "attributes": {
+        "defer": true
+      }
+    }
+  ]
+}

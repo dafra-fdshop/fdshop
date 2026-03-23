@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="utf-8"?>
+<form>
+    <fields>
+        <fieldset name="basic" label="Produkt">
+            <field
+                name="id"
+                type="hidden"
+                default="0"
+            />
+
+            <field
+                name="product_name"
+                type="text"
+                label="Produktname"
+                required="true"
+                size="40"
+            />
+
+            <field
+                name="sku"
+                type="text"
+                label="Artikelnummer (SKU)"
+                size="40"
+            />
+
+            <field
+                name="gtin"
+                type="text"
+                label="GTIN"
+                size="40"
+            />
+
+            <field
+                name="alias"
+                type="text"
+                label="Alias"
+                size="40"
+            />
+
+            <field
+                name="manufacturer_id"
+                type="sql"
+                label="Hersteller"
+                query="SELECT 0 AS value, '- Kein Hersteller -' AS text UNION SELECT id AS value, manufacturer_name AS text FROM #__fdshop_manufacturers ORDER BY text ASC"
+                key_field="value"
+                value_field="text"
+                default="0"
+            />
+
+            <field
+                name="category_ids"
+                type="sql"
+                label="Kategorien"
+                query="SELECT id AS value, category_name AS text FROM #__fdshop_categories ORDER BY category_name ASC"
+                key_field="value"
+                value_field="text"
+                multiple="true"
+                size="8"
+            />
+
+            <field
+                name="active_price_net"
+                type="number"
+                label="Preis netto"
+                step="0.01"
+                min="0"
+            />
+
+            <field
+                name="active_price_gross"
+                type="number"
+                label="Preis brutto"
+                step="0.01"
+                min="0"
+            />
+
+            <field
+                name="active_tax_rate"
+                type="number"
+                label="Steuersatz"
+                step="0.01"
+                min="0"
+            />
+
+            <field
+                name="currency"
+                type="text"
+                label="Währung"
+                size="10"
+            />
+
+            <field
+                name="short_description"
+                type="textarea"
+                label="Kurzbeschreibung"
+                rows="4"
+                cols="60"
+                filter="raw"
+            />
+
+            <field
+                name="description"
+                type="textarea"
+                label="Produktbeschreibung"
+                rows="8"
+                cols="60"
+                filter="raw"
+            />
+
+            <field
+                name="stock_quantity"
+                type="number"
+                label="Lagerbestand"
+                step="1"
+                min="0"
+            />
+
+            <field
+                name="reserved_quantity"
+                type="number"
+                label="Reserviert"
+                step="1"
+                min="0"
+            />
+
+            <field
+                name="min_order_qty"
+                type="number"
+                label="Mindestbestellmenge"
+                step="1"
+                min="0"
+            />
+
+            <field
+                name="max_order_qty"
+                type="number"
+                label="Maximalbestellmenge"
+                step="1"
+                min="0"
+            />
+
+            <field
+                name="step_order_qty"
+                type="number"
+                label="Bestellschritt"
+                step="1"
+                min="0"
+            />
+
+            <field
+                name="ordering"
+                type="number"
+                label="Reihenfolge"
+                step="1"
+            />
+
+            <field
+                name="publish_up"
+                type="calendar"
+                label="Veröffentlichen ab"
+                format="%Y-%m-%d %H:%M:%S"
+                filter="user_utc"
+            />
+
+            <field
+                name="publish_down"
+                type="calendar"
+                label="Veröffentlichen bis"
+                format="%Y-%m-%d %H:%M:%S"
+                filter="user_utc"
+            />
+
+            <field
+                name="access"
+                type="accesslevel"
+                label="Zugriff"
+            />
+
+            <field
+                name="is_featured"
+                type="radio"
+                label="Hervorgehoben"
+                default="0"
+                class="btn-group btn-group-yesno"
+            >
+                <option value="1">Ja</option>
+                <option value="0">Nein</option>
+            </field>
+
+            <field
+                name="is_active"
+                type="radio"
+                label="Veröffentlicht"
+                default="1"
+                class="btn-group btn-group-yesno"
+            >
+                <option value="1">Ja</option>
+                <option value="0">Nein</option>
+            </field>
+        </fieldset>
+    </fields>
+</form>

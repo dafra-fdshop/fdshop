@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extension type="component" method="upgrade">
+	<name>com_fdshop</name>
+	<author>FDShop</author>
+	<creationDate>2026-03-19</creationDate>
+	<version>0.0.6</version>
+	<description>COM_FDSHOP_XML_DESCRIPTION</description>
+
+	<namespace path="src">FDShop\Component\FDShop</namespace>
+	
+	<files folder="site">
+		<folder>src</folder>
+		<folder>tmpl</folder>
+	</files>
+	
+	<media destination="com_fdshop" folder="media">
+		<folder>css</folder>
+		<folder>js</folder>
+		<folder>images</folder>
+		<filename>joomla.asset.json</filename>
+	</media>
+
+	<administration>
+		<menu>FDShop</menu>
+		<submenu>
+			<menu view="dashboard">dashboard</menu>
+			<menu view="categories">Kategorien</menu>
+			<menu view="products">Produkte</menu>
+			<menu view="manufacturers">Hersteller</menu>
+		</submenu>
+
+		<files folder="administrator">
+			<folder>services</folder>
+			<folder>src</folder>
+			<folder>forms</folder>
+			<folder>tmpl</folder>
+			<folder>sql</folder>
+			<filename>config.xml</filename>
+		</files>
+	</administration>
+
+	<install>
+		<sql>
+			<file driver="mysql" charset="utf8">sql/install.mysql.utf8.sql</file>
+		</sql>
+	</install>
+
+	<uninstall>
+		<sql>
+			<file driver="mysql" charset="utf8">sql/uninstall.mysql.utf8.sql</file>
+		</sql>
+	</uninstall>
+
+	<update>
+		<schemas>
+			<schemapath type="mysql">sql/updates</schemapath>
+		</schemas>
+	</update>
+</extension>

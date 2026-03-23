@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<form>
+    <fields>
+        <fieldset name="basic" label="Hersteller">
+            <field
+                name="id"
+                type="hidden"
+                default="0"
+            />
+
+            <field
+                name="manufacturer_name"
+                type="text"
+                label="Herstellername"
+                required="true"
+                size="40"
+            />
+
+            <field
+                name="alias"
+                type="text"
+                label="Alias"
+                size="40"
+            />
+
+            <field
+                name="is_active"
+                type="radio"
+                label="Veröffentlicht"
+                default="1"
+                class="btn-group btn-group-yesno"
+            >
+                <option value="1">Ja</option>
+                <option value="0">Nein</option>
+            </field>
+        </fieldset>
+    </fields>
+</form>

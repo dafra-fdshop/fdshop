@@ -1,0 +1,2 @@
+-- Placeholder for future schema updates.
+-- Intentionally left blank.
