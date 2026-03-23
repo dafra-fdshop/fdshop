@@ -29,6 +29,7 @@ class HtmlView extends BaseHtmlView
         }
 
         $item->category_ids = $this->getAssignedCategoryIds((int) ($item->id ?? 0));
+        $item->buyer_group_ids = $this->getAssignedBuyerGroupIds((int) ($item->id ?? 0));
 
         $form = Form::getInstance(
             'com_fdshop.product',
@@ -62,6 +63,25 @@ class HtmlView extends BaseHtmlView
             ->from($db->quoteName('#__fdshop_product_category_map'))
             ->where($db->quoteName('product_id') . ' = ' . (int) $productId)
             ->order($db->quoteName('is_primary') . ' DESC, ' . $db->quoteName('id') . ' ASC');
+
+        $db->setQuery($query);
+
+        return array_map('intval', (array) $db->loadColumn());
+    }
+
+    private function getAssignedBuyerGroupIds(int $productId): array
+    {
+        if ($productId <= 0) {
+            return [];
+        }
+
+        $db = Factory::getContainer()->get(DatabaseInterface::class);
+
+        $query = $db->getQuery(true)
+            ->select($db->quoteName('buyer_group_id'))
+            ->from($db->quoteName('#__fdshop_product_buyer_group_map'))
+            ->where($db->quoteName('product_id') . ' = ' . (int) $productId)
+            ->order($db->quoteName('id') . ' ASC');
 
         $db->setQuery($query);
 

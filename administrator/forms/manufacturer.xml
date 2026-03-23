@@ -24,6 +24,40 @@
             />
 
             <field
+                name="description"
+                type="textarea"
+                label="Beschreibung"
+                rows="6"
+                cols="60"
+                filter="raw"
+            />
+
+            <field
+                name="meta_title"
+                type="text"
+                label="Meta-Titel"
+                size="60"
+            />
+
+            <field
+                name="meta_keywords"
+                type="textarea"
+                label="Meta-Keywords"
+                rows="4"
+                cols="60"
+                filter="raw"
+            />
+
+            <field
+                name="meta_description"
+                type="textarea"
+                label="Meta-Beschreibung"
+                rows="4"
+                cols="60"
+                filter="raw"
+            />
+
+            <field
                 name="is_active"
                 type="radio"
                 label="Veröffentlicht"

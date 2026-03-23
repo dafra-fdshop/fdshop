@@ -59,6 +59,17 @@
             />
 
             <field
+                name="buyer_group_ids"
+                type="sql"
+                label="Käufergruppe"
+                query="SELECT id AS value, group_name AS text FROM #__fdshop_buyer_groups WHERE is_active = 1 ORDER BY ordering ASC, group_name ASC"
+                key_field="value"
+                value_field="text"
+                multiple="true"
+                size="8"
+            />
+
+            <field
                 name="active_price_net"
                 type="number"
                 label="Preis netto"
@@ -90,6 +101,41 @@
             />
 
             <field
+                name="purchase_price"
+                type="number"
+                label="Einkaufspreis"
+                step="0.01"
+                min="0"
+            />
+
+            <field
+                name="sale_price"
+                type="number"
+                label="Verkaufspreis"
+                step="0.01"
+                min="0"
+            />
+
+            <field
+                name="discount_price"
+                type="number"
+                label="Rabattpreis"
+                step="0.01"
+                min="0"
+            />
+
+            <field
+                name="discount_active"
+                type="radio"
+                label="Rabatt aktiv"
+                default="0"
+                class="btn-group btn-group-yesno"
+            >
+                <option value="1">Ja</option>
+                <option value="0">Nein</option>
+            </field>
+
+            <field
                 name="short_description"
                 type="textarea"
                 label="Kurzbeschreibung"
@@ -103,6 +149,31 @@
                 type="textarea"
                 label="Produktbeschreibung"
                 rows="8"
+                cols="60"
+                filter="raw"
+            />
+
+            <field
+                name="meta_title"
+                type="text"
+                label="Meta-Titel"
+                size="60"
+            />
+
+            <field
+                name="meta_keywords"
+                type="textarea"
+                label="Meta-Keywords"
+                rows="4"
+                cols="60"
+                filter="raw"
+            />
+
+            <field
+                name="meta_description"
+                type="textarea"
+                label="Meta-Beschreibung"
+                rows="4"
                 cols="60"
                 filter="raw"
             />
@@ -143,6 +214,33 @@
                 name="step_order_qty"
                 type="number"
                 label="Bestellschritt"
+                step="1"
+                min="0"
+            />
+
+            <field
+                name="is_in_stock"
+                type="radio"
+                label="Auf Lager"
+                default="1"
+                class="btn-group btn-group-yesno"
+            >
+                <option value="1">Ja</option>
+                <option value="0">Nein</option>
+            </field>
+
+            <field
+                name="available_from"
+                type="calendar"
+                label="Verfügbar ab"
+                format="%Y-%m-%d %H:%M:%S"
+                filter="user_utc"
+            />
+
+            <field
+                name="sold_quantity"
+                type="number"
+                label="Verkaufte Menge"
                 step="1"
                 min="0"
             />
@@ -197,6 +295,90 @@
                 <option value="1">Ja</option>
                 <option value="0">Nein</option>
             </field>
+
+            <field
+                name="unit_type"
+                type="text"
+                label="Einheitstyp"
+                size="40"
+            />
+
+            <field
+                name="unit_quantity"
+                type="number"
+                label="Einheitsmenge"
+                step="1"
+                min="0"
+            />
+
+            <field
+                name="nem"
+                type="number"
+                label="NEM"
+                step="0.01"
+                min="0"
+            />
+
+            <field
+                name="shot_count"
+                type="number"
+                label="Schussanzahl"
+                step="1"
+                min="0"
+            />
+
+            <field
+                name="caliber"
+                type="text"
+                label="Kaliber"
+                size="40"
+            />
+
+            <field
+                name="burn_time"
+                type="text"
+                label="Brenndauer"
+                size="40"
+            />
+
+            <field
+                name="rise_height"
+                type="text"
+                label="Steighöhe"
+                size="40"
+            />
+
+            <field
+                name="weight_kg"
+                type="number"
+                label="Gewicht (kg)"
+                step="0.01"
+                min="0"
+            />
+
+            <field
+                name="length_cm"
+                type="number"
+                label="Länge (cm)"
+                step="0.01"
+                min="0"
+            />
+
+            <field
+                name="width_cm"
+                type="number"
+                label="Breite (cm)"
+                step="0.01"
+                min="0"
+            />
+
+            <field
+                name="height_cm"
+                type="number"
+                label="Höhe (cm)"
+                step="0.01"
+                min="0"
+            />
         </fieldset>
     </fields>
 </form>

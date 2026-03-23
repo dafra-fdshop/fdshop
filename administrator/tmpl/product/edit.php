@@ -25,23 +25,22 @@ use Joomla\CMS\HTML\HTMLHelper;
                         <?php echo $this->form->renderField('manufacturer_id'); ?>
                         <?php echo $this->form->renderField('category_ids'); ?>
                         <?php echo $this->form->renderField('is_active'); ?>
-
-                        <div class="mb-3">
-                            <label class="form-label">Käufergruppe</label>
-                            <div class="form-text">KOMMT IN EINER SPÄTEREN VERSION</div>
-                        </div>
                     </div>
                 </div>
             </div>
 
             <div class="col-12 col-xl-6">
                 <div class="card mb-3">
-                    <div class="card-header">Preisangabe</div>
+                    <div class="card-header">Preis</div>
                     <div class="card-body">
                         <?php echo $this->form->renderField('active_price_net'); ?>
                         <?php echo $this->form->renderField('active_price_gross'); ?>
                         <?php echo $this->form->renderField('active_tax_rate'); ?>
                         <?php echo $this->form->renderField('currency'); ?>
+                        <?php echo $this->form->renderField('purchase_price'); ?>
+                        <?php echo $this->form->renderField('sale_price'); ?>
+                        <?php echo $this->form->renderField('discount_price'); ?>
+                        <?php echo $this->form->renderField('discount_active'); ?>
                     </div>
                 </div>
             </div>
@@ -58,9 +57,20 @@ use Joomla\CMS\HTML\HTMLHelper;
 
             <div class="col-12 col-xl-6">
                 <div class="card mb-3">
-                    <div class="card-header">Meta-Informationen</div>
+                    <div class="card-header">Meta</div>
                     <div class="card-body">
-                        <div class="form-text">Aktuell keine vorhandenen Meta-Felder in dieser Version.</div>
+                        <?php echo $this->form->renderField('meta_title'); ?>
+                        <?php echo $this->form->renderField('meta_keywords'); ?>
+                        <?php echo $this->form->renderField('meta_description'); ?>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <div class="card mb-3">
+                    <div class="card-header">Käufergruppe</div>
+                    <div class="card-body">
+                        <?php echo $this->form->renderField('buyer_group_ids'); ?>
                     </div>
                 </div>
             </div>
@@ -71,13 +81,16 @@ use Joomla\CMS\HTML\HTMLHelper;
         <div class="row">
             <div class="col-12 col-xl-6">
                 <div class="card mb-3">
-                    <div class="card-header">Lagerinformationen</div>
+                    <div class="card-header">Lager / Status</div>
                     <div class="card-body">
                         <?php echo $this->form->renderField('stock_quantity'); ?>
                         <?php echo $this->form->renderField('reserved_quantity'); ?>
                         <?php echo $this->form->renderField('min_order_qty'); ?>
                         <?php echo $this->form->renderField('max_order_qty'); ?>
                         <?php echo $this->form->renderField('step_order_qty'); ?>
+                        <?php echo $this->form->renderField('is_in_stock'); ?>
+                        <?php echo $this->form->renderField('available_from'); ?>
+                        <?php echo $this->form->renderField('sold_quantity'); ?>
                     </div>
                 </div>
             </div>
@@ -104,8 +117,41 @@ use Joomla\CMS\HTML\HTMLHelper;
     <?php echo HTMLHelper::_('uitab.endTab'); ?>
 
     <?php echo HTMLHelper::_('uitab.addTab', 'fdshopProductTabs', 'special', 'Besondere Felder'); ?>
-        <div class="alert alert-info mb-0">
-            KOMMT IN EINER SPÄTEREN VERSION
+        <div class="row">
+            <div class="col-12 col-xl-4">
+                <div class="card mb-3">
+                    <div class="card-header">Verpackung</div>
+                    <div class="card-body">
+                        <?php echo $this->form->renderField('unit_type'); ?>
+                        <?php echo $this->form->renderField('unit_quantity'); ?>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-xl-4">
+                <div class="card mb-3">
+                    <div class="card-header">Technische Daten</div>
+                    <div class="card-body">
+                        <?php echo $this->form->renderField('nem'); ?>
+                        <?php echo $this->form->renderField('shot_count'); ?>
+                        <?php echo $this->form->renderField('caliber'); ?>
+                        <?php echo $this->form->renderField('burn_time'); ?>
+                        <?php echo $this->form->renderField('rise_height'); ?>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-xl-4">
+                <div class="card mb-3">
+                    <div class="card-header">Maße</div>
+                    <div class="card-body">
+                        <?php echo $this->form->renderField('weight_kg'); ?>
+                        <?php echo $this->form->renderField('length_cm'); ?>
+                        <?php echo $this->form->renderField('width_cm'); ?>
+                        <?php echo $this->form->renderField('height_cm'); ?>
+                    </div>
+                </div>
+            </div>
         </div>
     <?php echo HTMLHelper::_('uitab.endTab'); ?>
 
