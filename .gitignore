@@ -1,0 +1,25 @@
+# System files
+.DS_Store
+Thumbs.db
+
+# Editor folders
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Temp files
+*.tmp
+*.bak
+
+# ZIP files (wichtig für dein Projekt!)
+*.zip
+
+# Node / Build (falls später relevant)
+node_modules/
+
+# Joomla typische Cache (optional später)
+cache/
+logs/
+tmp/
