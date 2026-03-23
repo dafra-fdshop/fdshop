@@ -8,10 +8,10 @@ namespace FDShop\Component\FDShop\Administrator\Model;
 
 defined('_JEXEC') or die;
 
-use RuntimeException;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Form\Form;
 use Joomla\CMS\MVC\Model\AdminModel;
+use FDShop\Component\FDShop\Administrator\Service\ProductService;
 
 class ProductModel extends AdminModel
 {
@@ -45,45 +45,82 @@ class ProductModel extends AdminModel
         $app = Factory::getApplication();
         $data = $app->getUserState('com_fdshop.edit.product.data', []);
 
-        if (empty($data)) {
-            $data = $this->getItem();
+        if (!empty($data)) {
+            return $data;
         }
 
-        return $data;
+        $item = $this->getItem();
+
+        if (empty($item) || empty($item->id)) {
+            return $item;
+        }
+
+        $service = $this->getProductService();
+        $loadedItem = $service->getProductById((int) $item->id);
+
+        if (!$loadedItem) {
+            return $item;
+        }
+
+        if (
+            empty($loadedItem->primary_category_id)
+            && !empty($loadedItem->category_ids)
+            && is_array($loadedItem->category_ids)
+        ) {
+            $loadedItem->primary_category_id = (int) $loadedItem->category_ids[0];
+        }
+
+        return $loadedItem;
     }
 
     public function save($data): bool
     {
-        $table = $this->getTable();
+        try {
+            $categoryIds = $this->normalizeIds($data['category_ids'] ?? []);
+            $buyerGroupIds = $this->normalizeIds($data['buyer_group_ids'] ?? []);
+            $primaryCategoryId = !empty($data['primary_category_id'])
+                ? (int) $data['primary_category_id']
+                : null;
 
-        if (!$table) {
-            throw new RuntimeException('ProductTable konnte nicht geladen werden.');
-        }
+            $productId = $this->getProductService()->saveProduct(
+                $data,
+                $categoryIds,
+                $primaryCategoryId,
+                $buyerGroupIds
+            );
 
-        if (!empty($data['id'])) {
-            $table->load((int) $data['id']);
-        }
+            $this->setState($this->getName() . '.id', $productId);
 
-        if (!$table->bind($data)) {
-            $this->setError($table->getError());
-
-            return false;
-        }
-
-        if (!$table->check()) {
-            $this->setError($table->getError());
-
-            return false;
-        }
-
-        if (!$table->store()) {
-            $this->setError($table->getError());
+            return true;
+        } catch (\Throwable $e) {
+            $this->setError($e->getMessage());
 
             return false;
         }
+    }
 
-        $this->setState($this->getName() . '.id', (int) $table->id);
+    private function normalizeIds($ids): array
+    {
+        if (!is_array($ids)) {
+            $ids = [$ids];
+        }
 
-        return true;
+        $ids = array_map('intval', $ids);
+        $ids = array_filter(
+            $ids,
+            static fn (int $id): bool => $id > 0
+        );
+
+        return array_values(array_unique($ids));
+    }
+
+    private function getProductService(): ProductService
+    {
+        $component = Factory::getApplication()->bootComponent('com_fdshop');
+
+        return new ProductService(
+            $component->getMVCFactory(),
+            $this->getDatabase()
+        );
     }
 }
