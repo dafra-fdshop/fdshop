@@ -7,6 +7,7 @@
 	<description>COM_FDSHOP_XML_DESCRIPTION</description>
 
 	<namespace path="src">FDShop\Component\FDShop</namespace>
+	<scriptfile>script.php</scriptfile>
 	
 	<files folder="site">
 		<folder>src</folder>
@@ -36,6 +37,7 @@
 			<folder>tmpl</folder>
 			<folder>sql</folder>
 			<filename>config.xml</filename>
+			<filename>script.php</filename>
 		</files>
 	</administration>
 
