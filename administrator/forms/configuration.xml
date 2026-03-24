@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<form>
+    <fields>
+        <fieldset name="basic" label="Konfiguration">
+            <field
+                name="id"
+                type="hidden"
+                default="1"
+            />
+
+            <field
+                name="general_vat_rate"
+                type="number"
+                label="Allgemeiner MwSt-Satz"
+                step="0.01"
+                min="0"
+                required="true"
+            />
+
+            <field
+                name="image_size_default"
+                type="number"
+                label="Bildgröße Standard"
+                step="1"
+                min="1"
+                required="true"
+            />
+
+            <field
+                name="image_size_small"
+                type="number"
+                label="Bildgröße Klein"
+                step="1"
+                min="1"
+                required="true"
+            />
+
+            <field
+                name="image_size_mobile"
+                type="number"
+                label="Bildgröße Mobile"
+                step="1"
+                min="1"
+                required="true"
+            />
+
+            <field
+                name="image_size_manufacturer"
+                type="number"
+                label="Bildgröße Hersteller"
+                step="1"
+                min="1"
+                required="true"
+            />
+        </fieldset>
+    </fields>
+</form>
