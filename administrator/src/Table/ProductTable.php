@@ -21,7 +21,39 @@ class ProductTable extends Table
 
     public function check()
     {
-        
+        //Felder die auf Null gestellt werden wenn leer
+		$numericFields = [
+			'active_price_net',
+			'active_price_gross',
+			'active_tax_rate',
+			'stock_quantity',
+			'reserved_quantity',
+			'min_order_qty',
+			'max_order_qty',
+			'step_order_qty',
+			'purchase_price',
+			'sale_price',
+			'discount_price',
+			'discount_active',
+			'sold_quantity',
+			'unit_quantity',
+			'nem',
+			'shot_count',
+			'weight_kg',
+			'length_cm',
+			'width_cm',
+			'height_cm'
+		];
+
+		foreach ($numericFields as $field) {
+			$value = $this->$field ?? null;
+
+			if ($value === '' || $value === null) {
+				$this->$field = 0;
+			}
+		}
+		
+		
 		// Normalize datetime fields
 		if (!isset($this->publish_up) || $this->publish_up === '') {
 			$this->publish_up = null;
@@ -35,6 +67,7 @@ class ProductTable extends Table
 			$this->available_from = null;
 		}
 		
+		//Fügt der Erstellter 
 		if (empty($this->created)) {
 			$this->created = Factory::getDate()->toSql();
 		}
@@ -43,6 +76,7 @@ class ProductTable extends Table
 			$user = Factory::getApplication()->getIdentity();
 			$this->created_by = $user->id;
 		}
+		
 		
 		$this->product_name = trim((string) $this->product_name);
 
