@@ -21,7 +21,21 @@ class ProductTable extends Table
 
     public function check()
     {
-        $this->product_name = trim((string) $this->product_name);
+        
+		// Normalize datetime fields
+		if (!isset($this->publish_up) || $this->publish_up === '') {
+			$this->publish_up = null;
+		}
+
+		if (!isset($this->publish_down) || $this->publish_down === '') {
+			$this->publish_down = null;
+		}
+
+		if (!isset($this->available_from) || $this->available_from === '') {
+			$this->available_from = null;
+		}
+		
+		$this->product_name = trim((string) $this->product_name);
 
         if ($this->product_name === '') {
             $this->setError('product_name darf nicht leer sein.');
