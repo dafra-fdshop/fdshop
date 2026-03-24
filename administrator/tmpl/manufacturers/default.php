@@ -8,6 +8,13 @@ defined('_JEXEC') or die;
 ?>
 
 <div class="com-fdshop-manufacturers">
+	
+	<p>
+        <a class="btn btn-primary" href="index.php?option=com_fdshop&view=manufacturer&layout=edit">
+            Neu
+        </a>
+    </p>
+	
     <table class="table table-striped">
         <thead>
             <tr>
