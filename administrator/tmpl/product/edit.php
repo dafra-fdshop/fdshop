@@ -9,7 +9,7 @@ defined('_JEXEC') or die;
 use Joomla\CMS\HTML\HTMLHelper;
 ?>
 
-<form action="index.php?option=com_fdshop&view=product&layout=edit" method="post" name="adminForm" id="adminForm">
+<form action="index.php?option=com_fdshop&view=product&layout=edit" method="post" name="adminForm" id="adminForm" enctype="multipart/form-data">
     <?php echo HTMLHelper::_('uitab.startTabSet', 'fdshopProductTabs', ['active' => 'general']); ?>
 
     <?php echo HTMLHelper::_('uitab.addTab', 'fdshopProductTabs', 'general', 'Allgemein'); ?>
@@ -111,8 +111,15 @@ use Joomla\CMS\HTML\HTMLHelper;
     <?php echo HTMLHelper::_('uitab.endTab'); ?>
 
     <?php echo HTMLHelper::_('uitab.addTab', 'fdshopProductTabs', 'media', 'Medien'); ?>
-        <div class="alert alert-info mb-0">
-            KOMMT IN EINER SPÄTEREN VERSION
+        <div class="row">
+            <div class="col-12 col-xl-8">
+                <div class="card mb-3">
+                    <div class="card-header">Produktbild</div>
+                    <div class="card-body">
+                        <?php echo $this->form->renderField('product_image'); ?>
+                    </div>
+                </div>
+            </div>
         </div>
     <?php echo HTMLHelper::_('uitab.endTab'); ?>
 
