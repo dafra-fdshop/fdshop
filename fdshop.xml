@@ -3,7 +3,7 @@
 	<name>com_fdshop</name>
 	<author>FDShop</author>
 	<creationDate>2026-03-19</creationDate>
-	<version>0.0.7</version>
+	<version>0.0.8</version>
 	<description>COM_FDSHOP_XML_DESCRIPTION</description>
 
 	<namespace path="src">FDShop\Component\FDShop</namespace>
@@ -28,6 +28,7 @@
 			<menu view="categories">Kategorien</menu>
 			<menu view="products">Produkte</menu>
 			<menu view="manufacturers">Hersteller</menu>
+			<menu view="configuration">Konfiguration</menu>
 		</submenu>
 
 		<files folder="administrator">
