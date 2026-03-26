@@ -336,7 +336,7 @@ INSERT INTO `#__fdshop_config` (
   `image_size_default`,
   `image_size_small`,
   `image_size_mobile`,
-  `image_size_manufacturer`
+  `image_size_manufacturer`,
   `show_terms_checkbox`,
   `require_terms_checkbox`
 )

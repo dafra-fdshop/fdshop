@@ -52,12 +52,23 @@ class ConfigurationModel extends AdminModel
 
         if (!$item) {
             $item = (object) [
-                'id'                     => 1,
-                'general_vat_rate'       => '',
-                'image_size_default'     => '',
-                'image_size_small'       => '',
-                'image_size_mobile'      => '',
-                'image_size_manufacturer'=> '',
+                'id'                      => 1,
+                'general_vat_rate'        => '',
+                'image_size_default'      => '',
+                'image_size_small'        => '',
+                'image_size_mobile'       => '',
+                'image_size_manufacturer' => '',
+                'show_terms_checkbox'     => 0,
+                'require_terms_checkbox'  => 0,
+                'shipment_name'           => '',
+                'shipment_description'    => '',
+                'shipment_color'          => '#000000',
+                'shipment_price'          => '',
+                'is_published'            => 1,
+                'payment_name'            => '',
+                'payment_description'     => '',
+                'payment_fee'             => '',
+                'paypal_enabled'          => 0,
             ];
         }
 
