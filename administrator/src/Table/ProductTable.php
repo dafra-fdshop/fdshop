@@ -39,10 +39,10 @@ class ProductTable extends Table
 			'unit_quantity',
 			'nem',
 			'shot_count',
-			'weight_kg',
-			'length_cm',
-			'width_cm',
-			'height_cm'
+			'weight',
+			'length',
+			'width',
+			'height'
 		];
 
 		foreach ($numericFields as $field) {
