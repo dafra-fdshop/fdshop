@@ -43,35 +43,94 @@ use Joomla\CMS\HTML\HTMLHelper;
         </div>
     <?php echo HTMLHelper::_('uitab.endTab'); ?>
 
-    <?php echo HTMLHelper::_('uitab.addTab', 'fdshopConfigurationTabs', 'shipment', 'Versand'); ?>
-        <div class="row">
-            <div class="col-12 col-xl-8">
-                <div class="card mb-3">
-                    <div class="card-header">Versand</div>
-                    <div class="card-body">
-                        <?php echo $this->form->renderField('shipment_name'); ?>
-                        <?php echo $this->form->renderField('shipment_description'); ?>
-                        <?php echo $this->form->renderField('shipment_color'); ?>
-                        <?php echo $this->form->renderField('shipment_price'); ?>
-                        <?php echo $this->form->renderField('is_published'); ?>
-                    </div>
-                </div>
+    <?php echo HTMLHelper::_('uitab.addTab', 'fdshopConfigurationTabs', 'shipments', 'Versand'); ?>
+        <div class="card mb-3">
+            <div class="card-header">Versandarten</div>
+            <div class="card-body">
+                <p>
+                    <a class="btn btn-primary" href="index.php?option=com_fdshop&view=shipment&layout=edit">
+                        Hinzufügen
+                    </a>
+                </p>
+
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Versandname</th>
+                            <th>Farbe</th>
+                            <th>Preis</th>
+                            <th>Veröffentlicht</th>
+                            <th>ID</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (!empty($this->shipments)) : ?>
+                            <?php foreach ($this->shipments as $item) : ?>
+                                <tr>
+                                    <td>
+                                        <a href="index.php?option=com_fdshop&view=shipment&layout=edit&id=<?php echo (int) $item->id; ?>">
+                                            <?php echo htmlspecialchars((string) $item->shipment_name, ENT_QUOTES, 'UTF-8'); ?>
+                                        </a>
+                                    </td>
+                                    <td><?php echo htmlspecialchars((string) $item->shipment_color, ENT_QUOTES, 'UTF-8'); ?></td>
+                                    <td><?php echo htmlspecialchars((string) $item->shipment_price, ENT_QUOTES, 'UTF-8'); ?></td>
+                                    <td><?php echo (int) $item->is_published; ?></td>
+                                    <td><?php echo (int) $item->id; ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php else : ?>
+                            <tr>
+                                <td colspan="5">Noch keine Versandarten vorhanden.</td>
+                            </tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
             </div>
         </div>
     <?php echo HTMLHelper::_('uitab.endTab'); ?>
 
-    <?php echo HTMLHelper::_('uitab.addTab', 'fdshopConfigurationTabs', 'payment', 'Bezahlsystem'); ?>
-        <div class="row">
-            <div class="col-12 col-xl-8">
-                <div class="card mb-3">
-                    <div class="card-header">Bezahlsystem</div>
-                    <div class="card-body">
-                        <?php echo $this->form->renderField('payment_name'); ?>
-                        <?php echo $this->form->renderField('payment_description'); ?>
-                        <?php echo $this->form->renderField('payment_fee'); ?>
-                        <?php echo $this->form->renderField('paypal_enabled'); ?>
-                    </div>
-                </div>
+    <?php echo HTMLHelper::_('uitab.addTab', 'fdshopConfigurationTabs', 'paymentmethods', 'Bezahlsystem'); ?>
+        <div class="card mb-3">
+            <div class="card-header">Zahlungsarten</div>
+            <div class="card-body">
+                <p>
+                    <a class="btn btn-primary" href="index.php?option=com_fdshop&view=paymentmethod&layout=edit">
+                        Hinzufügen
+                    </a>
+                </p>
+
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Zahlungsname</th>
+                            <th>Gebühr</th>
+                            <th>PayPal</th>
+                            <th>Veröffentlicht</th>
+                            <th>ID</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (!empty($this->paymentMethods)) : ?>
+                            <?php foreach ($this->paymentMethods as $item) : ?>
+                                <tr>
+                                    <td>
+                                        <a href="index.php?option=com_fdshop&view=paymentmethod&layout=edit&id=<?php echo (int) $item->id; ?>">
+                                            <?php echo htmlspecialchars((string) $item->payment_name, ENT_QUOTES, 'UTF-8'); ?>
+                                        </a>
+                                    </td>
+                                    <td><?php echo htmlspecialchars((string) $item->payment_fee, ENT_QUOTES, 'UTF-8'); ?></td>
+                                    <td><?php echo (int) $item->paypal_enabled; ?></td>
+                                    <td><?php echo (int) $item->is_published; ?></td>
+                                    <td><?php echo (int) $item->id; ?></td>
+                                <?php endforeach; ?>
+                            </tr>
+                        <?php else : ?>
+                            <tr>
+                                <td colspan="5">Noch keine Zahlungsarten vorhanden.</td>
+                            </tr>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
             </div>
         </div>
     <?php echo HTMLHelper::_('uitab.endTab'); ?>
@@ -87,7 +146,6 @@ use Joomla\CMS\HTML\HTMLHelper;
 document.addEventListener('DOMContentLoaded', function () {
     const showTermsNo = document.querySelector('input[name="jform[show_terms_checkbox]"][value="0"]');
     const showTermsYes = document.querySelector('input[name="jform[show_terms_checkbox]"][value="1"]');
-    const requireTermsYes = document.querySelector('input[name="jform[require_terms_checkbox]"][value="1"]');
     const requireTermsNo = document.querySelector('input[name="jform[require_terms_checkbox]"][value="0"]');
     const requireTermsInputs = document.querySelectorAll('input[name="jform[require_terms_checkbox]"]');
 

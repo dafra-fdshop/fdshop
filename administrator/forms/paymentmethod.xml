@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<form>
+    <fields>
+        <fieldset name="basic" label="Zahlungsart">
+            <field name="id" type="hidden" default="0" />
+
+            <field
+                name="payment_name"
+                type="text"
+                label="Zahlungsname"
+                required="true"
+                size="60"
+            />
+
+            <field
+                name="payment_description"
+                type="textarea"
+                label="Beschreibung"
+                rows="6"
+                cols="60"
+                filter="raw"
+            />
+
+            <field
+                name="payment_fee"
+                type="number"
+                label="Gebühr"
+                step="0.0001"
+                min="0"
+            />
+
+            <field
+                name="paypal_enabled"
+                type="radio"
+                label="PayPal aktiviert"
+                default="0"
+                class="btn-group btn-group-yesno"
+            >
+                <option value="1">Ja</option>
+                <option value="0">Nein</option>
+            </field>
+
+            <field
+                name="is_published"
+                type="radio"
+                label="Veröffentlicht"
+                default="1"
+                class="btn-group btn-group-yesno"
+            >
+                <option value="1">Ja</option>
+                <option value="0">Nein</option>
+            </field>
+        </fieldset>
+    </fields>
+</form>
