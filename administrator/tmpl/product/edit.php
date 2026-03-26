@@ -7,6 +7,7 @@
 defined('_JEXEC') or die;
 
 use Joomla\CMS\HTML\HTMLHelper;
+use Joomla\CMS\Uri\Uri;
 ?>
 
 <form action="index.php?option=com_fdshop&view=product&layout=edit" method="post" name="adminForm" id="adminForm" enctype="multipart/form-data">
@@ -112,6 +113,21 @@ use Joomla\CMS\HTML\HTMLHelper;
 
     <?php echo HTMLHelper::_('uitab.addTab', 'fdshopProductTabs', 'media', 'Medien'); ?>
         <div class="row">
+            <?php if (!empty($this->productImage)) : ?>
+                <div class="col-12 col-xl-4">
+                    <div class="card mb-3">
+                        <div class="card-header">Aktuelles Bild</div>
+                        <div class="card-body">
+                            <img
+                                src="<?php echo htmlspecialchars(Uri::root() . ltrim((string) $this->productImage, '/'), ENT_QUOTES, 'UTF-8'); ?>"
+                                alt=""
+                                class="img-fluid"
+                            >
+                        </div>
+                    </div>
+                </div>
+            <?php endif; ?>
+
             <div class="col-12 col-xl-8">
                 <div class="card mb-3">
                     <div class="card-header">Produktbild</div>
@@ -152,10 +168,10 @@ use Joomla\CMS\HTML\HTMLHelper;
                 <div class="card mb-3">
                     <div class="card-header">Maße</div>
                     <div class="card-body">
-                        <?php echo $this->form->renderField('weight_kg'); ?>
-                        <?php echo $this->form->renderField('length_cm'); ?>
-                        <?php echo $this->form->renderField('width_cm'); ?>
-                        <?php echo $this->form->renderField('height_cm'); ?>
+                        <?php echo $this->form->renderField('weight'); ?>
+                        <?php echo $this->form->renderField('length'); ?>
+                        <?php echo $this->form->renderField('width'); ?>
+                        <?php echo $this->form->renderField('height'); ?>
                     </div>
                 </div>
             </div>

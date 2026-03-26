@@ -349,33 +349,33 @@
             />
 
             <field
-                name="weight_kg"
+                name="weight"
                 type="number"
-                label="Gewicht (kg)"
+                label="Gewicht"
                 step="0.01"
                 min="0"
             />
 
             <field
-                name="length_cm"
+                name="length"
                 type="number"
-                label="Länge (cm)"
+                label="Länge"
                 step="0.01"
                 min="0"
             />
 
             <field
-                name="width_cm"
+                name="width"
                 type="number"
-                label="Breite (cm)"
+                label="Breite"
                 step="0.01"
                 min="0"
             />
 
             <field
-                name="height_cm"
+                name="height"
                 type="number"
-                label="Höhe (cm)"
+                label="Höhe"
                 step="0.01"
                 min="0"
             />
