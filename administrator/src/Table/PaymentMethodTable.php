@@ -11,7 +11,7 @@ defined('_JEXEC') or die;
 use Joomla\CMS\Table\Table;
 use Joomla\Database\DatabaseDriver;
 
-class PaymentMethodTable extends Table
+class PaymentmethodTable extends Table
 {
     public function __construct(DatabaseDriver $db)
     {

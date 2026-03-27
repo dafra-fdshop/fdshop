@@ -12,11 +12,11 @@ use Joomla\CMS\Factory;
 use Joomla\CMS\Form\Form;
 use Joomla\CMS\MVC\Model\AdminModel;
 
-class PaymentMethodModel extends AdminModel
+class PaymentmethodModel extends AdminModel
 {
     protected $text_prefix = 'COM_FDSHOP_PAYMENTMETHOD';
 
-    public function getTable($name = 'PaymentMethod', $prefix = 'Table', $options = [])
+    public function getTable($name = 'Paymentmethod', $prefix = 'Table', $options = [])
     {
         return parent::getTable($name, $prefix, $options);
     }

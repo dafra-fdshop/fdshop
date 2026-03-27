@@ -10,7 +10,7 @@ defined('_JEXEC') or die;
 
 use Joomla\CMS\MVC\Model\ListModel;
 
-class PaymentMethodsModel extends ListModel
+class PaymentmethodsModel extends ListModel
 {
     protected function getListQuery()
     {

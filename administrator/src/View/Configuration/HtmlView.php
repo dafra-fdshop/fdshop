@@ -8,7 +8,7 @@ namespace FDShop\Component\FDShop\Administrator\View\Configuration;
 
 defined('_JEXEC') or die;
 
-use FDShop\Component\FDShop\Administrator\Model\PaymentMethodsModel;
+use FDShop\Component\FDShop\Administrator\Model\PaymentmethodsModel;
 use FDShop\Component\FDShop\Administrator\Model\ShipmentsModel;
 use Joomla\CMS\MVC\View\HtmlView as BaseHtmlView;
 use Joomla\CMS\Toolbar\ToolbarHelper;
@@ -18,7 +18,7 @@ class HtmlView extends BaseHtmlView
     protected $form;
     protected $item;
     protected $shipments = [];
-    protected $paymentMethods = [];
+    protected $paymentmethods = [];
 
     public function display($tpl = null)
     {
@@ -26,10 +26,10 @@ class HtmlView extends BaseHtmlView
         $this->item = $this->get('Item');
 
         $shipmentsModel = new ShipmentsModel();
-        $paymentMethodsModel = new PaymentMethodsModel();
+        $paymentmethodsModel = new PaymentmethodsModel();
 
         $this->shipments = $shipmentsModel->getItems();
-        $this->paymentMethods = $paymentMethodsModel->getItems();
+        $this->paymentmethods = $paymentmethodsModel->getItems();
 
         ToolbarHelper::title('FDShop - Konfiguration');
         ToolbarHelper::apply('configuration.apply');

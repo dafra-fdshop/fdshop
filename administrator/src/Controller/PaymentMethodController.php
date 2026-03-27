@@ -10,7 +10,7 @@ defined('_JEXEC') or die;
 
 use Joomla\CMS\MVC\Controller\FormController;
 
-class PaymentMethodController extends FormController
+class PaymentmethodController extends FormController
 {
     protected $view_list = 'configuration';
 }
