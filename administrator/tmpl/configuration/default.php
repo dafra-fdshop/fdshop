@@ -110,8 +110,8 @@ use Joomla\CMS\HTML\HTMLHelper;
                         </tr>
                     </thead>
                     <tbody>
-                        <?php if (!empty($this->paymentMethods)) : ?>
-                            <?php foreach ($this->paymentMethods as $item) : ?>
+                        <?php if (!empty($this->paymentmethods)) : ?>
+                            <?php foreach ($this->paymentmethods as $item) : ?>
                                 <tr>
                                     <td>
                                         <a href="index.php?option=com_fdshop&view=paymentmethod&layout=edit&id=<?php echo (int) $item->id; ?>">

@@ -67,7 +67,7 @@ class ProductTable extends Table
 			$this->available_from = null;
 		}
 		
-		//Fügt der Erstellter 
+		//Fügt Erstellt hinzu, wenn fehlt 
 		if (empty($this->created)) {
 			$this->created = Factory::getDate()->toSql();
 		}

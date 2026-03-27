@@ -50,4 +50,33 @@ class ShipmentModel extends AdminModel
 
         return $this->getItem();
     }
+
+    public function save($data): bool
+    {
+        $result = parent::save($data);
+
+        if (!$result) {
+            return false;
+        }
+
+        $id = (int) $this->getState($this->getName() . '.id');
+
+        if ($id <= 0) {
+            $table = $this->getTable();
+
+            if (!empty($table->id)) {
+                $id = (int) $table->id;
+            }
+        }
+
+        if ($id <= 0 && !empty($data['id'])) {
+            $id = (int) $data['id'];
+        }
+
+        if ($id > 0) {
+            $this->setState($this->getName() . '.id', $id);
+        }
+
+        return true;
+    }
 }
