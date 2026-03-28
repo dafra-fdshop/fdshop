@@ -17,9 +17,24 @@ class HtmlView extends BaseHtmlView
 {
     protected $items = [];
 
+    protected $state;
+
+    protected $pagination;
+
+    protected $filterForm;
+
+    protected $activeFilters = [];
+
     public function display($tpl = null)
     {
-        $this->items = $this->get('Items');
+        $model = $this->getModel();
+
+        $this->items         = $model->getItems();
+        $this->state         = $model->getState();
+        $this->pagination    = $model->getPagination();
+        $this->filterForm    = $model->getFilterForm();
+        $this->activeFilters = $model->getActiveFilters();
+
         $this->attachProductImages();
 
         ToolbarHelper::title('FDShop - Produkte');
@@ -57,7 +72,12 @@ class HtmlView extends BaseHtmlView
             ->from($db->quoteName('#__fdshop_media'))
             ->where($db->quoteName('product_id') . ' IN (' . implode(',', $productIds) . ')')
             ->where($db->quoteName('path_mobile') . " <> " . $db->quote(''))
-            ->order($db->quoteName('product_id') . ' ASC, ' . $db->quoteName('is_primary') . ' DESC, ' . $db->quoteName('ordering') . ' ASC, ' . $db->quoteName('id') . ' ASC');
+            ->order(
+                $db->quoteName('product_id') . ' ASC, '
+                . $db->quoteName('is_primary') . ' DESC, '
+                . $db->quoteName('ordering') . ' ASC, '
+                . $db->quoteName('id') . ' ASC'
+            );
 
         $db->setQuery($query);
         $rows = (array) $db->loadObjectList();
