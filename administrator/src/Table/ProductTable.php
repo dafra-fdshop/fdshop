@@ -19,66 +19,73 @@ class ProductTable extends Table
         parent::__construct('#__fdshop_products', 'id', $db);
     }
 
+    public function getColumnAlias($column)
+    {
+        if ($column === 'published') {
+            return 'state';
+        }
+
+        return parent::getColumnAlias($column);
+    }
+
     public function check()
     {
-        //Felder die auf Null gestellt werden wenn leer
-		$numericFields = [
-			'active_price_net',
-			'active_price_gross',
-			'active_tax_rate',
-			'stock_quantity',
-			'reserved_quantity',
-			'min_order_qty',
-			'max_order_qty',
-			'step_order_qty',
-			'purchase_price',
-			'sale_price',
-			'discount_price',
-			'discount_active',
-			'sold_quantity',
-			'unit_quantity',
-			'nem',
-			'shot_count',
-			'weight',
-			'length',
-			'width',
-			'height'
-		];
+        // Felder die auf Null gestellt werden wenn leer
+        $numericFields = [
+            'active_price_net',
+            'active_price_gross',
+            'active_tax_rate',
+            'stock_quantity',
+            'reserved_quantity',
+            'min_order_qty',
+            'max_order_qty',
+            'step_order_qty',
+            'purchase_price',
+            'sale_price',
+            'discount_price',
+            'discount_active',
+            'sold_quantity',
+            'unit_quantity',
+            'nem',
+            'shot_count',
+            'weight',
+            'length',
+            'width',
+            'height',
+        ];
 
-		foreach ($numericFields as $field) {
-			$value = $this->$field ?? null;
+        foreach ($numericFields as $field) {
+            $value = $this->$field ?? null;
 
-			if ($value === '' || $value === null) {
-				$this->$field = 0;
-			}
-		}
-		
-		
-		// Normalize datetime fields
-		if (!isset($this->publish_up) || $this->publish_up === '') {
-			$this->publish_up = null;
-		}
+            if ($value === '' || $value === null) {
+                $this->$field = 0;
+            }
+        }
 
-		if (!isset($this->publish_down) || $this->publish_down === '') {
-			$this->publish_down = null;
-		}
+        // Normalize datetime fields
+        if (!isset($this->publish_up) || $this->publish_up === '') {
+            $this->publish_up = null;
+        }
 
-		if (!isset($this->available_from) || $this->available_from === '') {
-			$this->available_from = null;
-		}
-		
-		//Fügt Erstellt hinzu, wenn fehlt 
-		if (empty($this->created)) {
-			$this->created = Factory::getDate()->toSql();
-		}
-		
-		if (empty($this->created_by)) {
-			$user = Factory::getApplication()->getIdentity();
-			$this->created_by = $user->id;
-		}
-		
-		
-		$this->product_name = trim((string) $this->product_name);
+        if (!isset($this->publish_down) || $this->publish_down === '') {
+            $this->publish_down = null;
+        }
+
+        if (!isset($this->available_from) || $this->available_from === '') {
+            $this->available_from = null;
+        }
+
+        // Fügt Erstellt hinzu, wenn fehlt
+        if (empty($this->created)) {
+            $this->created = Factory::getDate()->toSql();
+        }
+
+        if (empty($this->created_by)) {
+            $user = Factory::getApplication()->getIdentity();
+            $this->created_by = $user->id;
+        }
+
+        $this->product_name = trim((string) $this->product_name);
 
         if ($this->product_name === '') {
             $this->setError('product_name darf nicht leer sein.');
@@ -112,6 +119,10 @@ class ProductTable extends Table
 
         if (!isset($this->is_active) || $this->is_active === '') {
             $this->is_active = 1;
+        }
+
+        if (!isset($this->state) || $this->state === '') {
+            $this->state = 1;
         }
 
         if (!isset($this->is_featured) || $this->is_featured === '') {
