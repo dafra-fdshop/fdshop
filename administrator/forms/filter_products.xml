@@ -1,22 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
 <form>
-	<fields>
-		<fieldset name="filter" label="">
-			<field
-				name="filter_search"
-				type="text"
-				label="JSEARCH_FILTER"
-				description="JSEARCH_FILTER"
-				hint="JSEARCH_FILTER"
-			/>
+	<fields name="filter">		
+		<field
+			name="search"
+			type="text"
+			inputmode="search"
+			label="COM_FDSHOP_FILTER_SEARCH_LABEL"
+			description="Suche eingeben"
+			hint="JSEARCH_FILTER"
+		/>
+		<field
+			name="published"
+			type="status"
+			label="JOPTION_SELECT_PUBLISHED"
+			class="js-select-submit-on-change"
+			extension="com_fdshop"
+			>
+			<option value="">JOPTION_SELECT_PUBLISHED</option> <!--ACHTUNG: class="js-select-submit-on-change" ist Wichtig!    -->
+		</field>
+		
+	</fields>
+	
+	<fields name="list">
+		<field
+			name="fullordering"
+			type="list"
+			label="JGLOBAL_SORT_BY"
+			default="a.ordering ASC"
+			class="js-select-submit-on-change"
+		>
+			<option value="a.ordering ASC">Sortierung ASC</option>
+			<option value="a.ordering DESC">Sortierung DESC</option>
+			<option value="a.product_name ASC">Name ASC</option>
+			<option value="a.product_name DESC">Name DESC</option>
+			<option value="a.id ASC">ID ASC</option>
+			<option value="a.id DESC">ID DESC</option>
+		</field>
 
-			<field
-				name="filter_published"
-				type="status"
-				label="JSTATUS"
-				description="JOPTION_SELECT_PUBLISHED"
-				onchange="this.form.submit();"
-			/>
-		</fieldset>
+		<field
+			name="limit"
+			type="limitbox"
+			default="20"
+			class="js-select-submit-on-change"
+		/>
 	</fields>
 </form>

@@ -15,15 +15,15 @@ use Joomla\Database\DatabaseInterface;
 
 class HtmlView extends BaseHtmlView
 {
-    protected $items = [];
+    public $items = [];
 
-    protected $state;
+    public $state;
 
-    protected $pagination;
+    public $pagination;
 
-    protected $filterForm;
+    public $filterForm;
 
-    protected $activeFilters = [];
+    public $activeFilters = [];
 
     public function display($tpl = null)
     {
@@ -34,6 +34,10 @@ class HtmlView extends BaseHtmlView
         $this->pagination    = $model->getPagination();
         $this->filterForm    = $model->getFilterForm();
         $this->activeFilters = $model->getActiveFilters();
+		
+		$this->filterForm
+			->addControlField('task', '')
+			->addControlField('boxchecked', '0');
 
         $this->attachProductImages();
 
