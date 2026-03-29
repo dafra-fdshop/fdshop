@@ -7,57 +7,103 @@
 defined('_JEXEC') or die;
 
 use Joomla\CMS\HTML\HTMLHelper;
+use Joomla\CMS\Layout\LayoutHelper;
+use Joomla\CMS\Router\Route;
 
-HTMLHelper::_('behavior.multiselect');
-HTMLHelper::_('draggablelist.draggable');
+HTMLHelper::_('bootstrap.tooltip');
+
+$user      = $this->getCurrentUser();
+$listOrder = $this->state->get('list.ordering');
+$listDirn  = $this->state->get('list.direction');
 ?>
 
-<form action="index.php?option=com_fdshop&view=categories" method="post" name="adminForm" id="adminForm">
+<form action="<?php echo Route::_('index.php?option=com_fdshop&view=categories'); ?>" method="post" name="adminForm" id="adminForm">
+	<?php echo LayoutHelper::render('joomla.searchtools.default', ['view' => $this]); ?>
 
-<table class="table table-striped" id="categoryList">
-    <thead>
-        <tr>
-            <th width="1%">#</th>
-            <th width="1%"><?php echo HTMLHelper::_('grid.checkall'); ?></th>
-            <th width="5%">Order</th>
-            <th>Name</th>
-            <th>Alias</th>
-            <th>Aktiv</th>
-            <th>ID</th>
-        </tr>
-    </thead>
+	<div class="table-responsive">
+		<table class="table itemList" id="categoryList">
+			<thead>
+				<tr>
+					<td class="w-1 text-center">
+						<?php echo HTMLHelper::_('grid.checkall'); ?>
+					</td>
+					<th scope="col">
+						<?php echo HTMLHelper::_('searchtools.sort', 'Name', 'a.category_name', $listDirn, $listOrder); ?>
+					</th>
+					<th scope="col">
+						<?php echo HTMLHelper::_('searchtools.sort', 'Beschreibung', 'a.description', $listDirn, $listOrder); ?>
+					</th>
+					<th scope="col" class="w-1 text-center">
+						<?php echo HTMLHelper::_('searchtools.sort', 'Veröffentlicht', 'a.is_active', $listDirn, $listOrder); ?>
+					</th>
+					<th scope="col" class="w-1 text-center">
+						<?php echo HTMLHelper::_('searchtools.sort', 'ID', 'a.id', $listDirn, $listOrder); ?>
+					</th>
+				</tr>
+			</thead>
 
-    <tbody>
-        <?php foreach ($this->items as $i => $item) : ?>
-            <tr>
-                <td><?php echo $i + 1; ?></td>
+			<tbody>
+				<?php if (!empty($this->items)) : ?>
+					<?php foreach ($this->items as $i => $item) : ?>
+						<?php
+						$editLink  = Route::_('index.php?option=com_fdshop&view=category&layout=edit&id=' . (int) $item->id);
+						$canEdit   = $user->authorise('core.edit', 'com_fdshop');
+						$canChange = $user->authorise('core.edit.state', 'com_fdshop');
+						?>
+						<tr class="row<?php echo $i % 2; ?>">
+							<td class="text-center">
+								<?php echo HTMLHelper::_('grid.id', $i, (int) $item->id); ?>
+							</td>
 
-                <td>
-                    <?php echo HTMLHelper::_('grid.id', $i, $item->id); ?>
-                </td>
+							<th scope="row">
+								<?php if ($canEdit) : ?>
+									<a href="<?php echo $editLink; ?>">
+										<?php echo $this->escape((string) $item->category_name); ?>
+									</a>
+								<?php else : ?>
+									<?php echo $this->escape((string) $item->category_name); ?>
+								<?php endif; ?>
 
-                <td class="order nowrap">
-                    <?php echo HTMLHelper::_('grid.order', $this->items, 'filesave.png', 'categories.saveorder'); ?>
-                </td>
+								<?php if (!empty($item->alias)) : ?>
+									<div class="small text-muted">
+										<?php echo $this->escape((string) $item->alias); ?>
+									</div>
+								<?php endif; ?>
+							</th>
 
-                <td>
-                    <a href="index.php?option=com_fdshop&view=category&layout=edit&id=<?php echo $item->id; ?>">
-                        <?php echo $this->escape($item->category_name); ?>
-                    </a>
-                </td>
+							<td>
+								<?php echo $item->description ?? ''; ?>
+							</td>
 
-                <td><?php echo $this->escape($item->alias); ?></td>
+							<td class="text-center">
+								<?php echo HTMLHelper::_('jgrid.published', (int) $item->published, $i, 'categories.', $canChange, 'cb'); ?>
+							</td>
 
-                <td>
-                    <?php echo HTMLHelper::_('grid.published', $item->is_active, $i, 'categories.', true); ?>
-                </td>
+							<td class="text-center">
+								<?php echo (int) $item->id; ?>
+							</td>
+						</tr>
+					<?php endforeach; ?>
+				<?php else : ?>
+					<tr>
+						<td colspan="5" class="text-center">
+							Keine Kategorien vorhanden.
+						</td>
+					</tr>
+				<?php endif; ?>
+			</tbody>
 
-                <td><?php echo $item->id; ?></td>
-            </tr>
-        <?php endforeach; ?>
-    </tbody>
-</table>
+			<?php if (!empty($this->items)) : ?>
+				<tfoot>
+					<tr>
+						<td colspan="5">
+							<?php echo $this->pagination->getListFooter(); ?>
+						</td>
+					</tr>
+				</tfoot>
+			<?php endif; ?>
+		</table>
+	</div>
 
-<input type="hidden" name="task" value="">
-<?php echo HTMLHelper::_('form.token'); ?>
+	<?php echo $this->filterForm->renderControlFields(); ?>
 </form>
