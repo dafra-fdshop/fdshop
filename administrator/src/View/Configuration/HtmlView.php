@@ -15,21 +15,59 @@ use Joomla\CMS\Toolbar\ToolbarHelper;
 
 class HtmlView extends BaseHtmlView
 {
-    protected $form;
-    protected $item;
-    protected $shipments = [];
-    protected $paymentmethods = [];
+    public $form;
+
+    public $item;
+
+    public $shipments = [];
+
+    public $shipmentState;
+
+    public $shipmentPagination;
+
+    public $shipmentFilterForm;
+
+    public $shipmentActiveFilters = [];
+
+    public $paymentmethods = [];
+
+    public $paymentState;
+
+    public $paymentPagination;
+
+    public $paymentFilterForm;
+
+    public $paymentActiveFilters = [];
 
     public function display($tpl = null)
     {
-        $this->form = $this->get('Form');
-        $this->item = $this->get('Item');
+        $model = $this->getModel();
+
+        $this->form = $model->getForm();
+        $this->item = $model->getItem();
 
         $shipmentsModel = new ShipmentsModel();
         $paymentmethodsModel = new PaymentmethodsModel();
 
-        $this->shipments = $shipmentsModel->getItems();
-        $this->paymentmethods = $paymentmethodsModel->getItems();
+        $this->shipments              = $shipmentsModel->getItems();
+        $this->shipmentState          = $shipmentsModel->getState();
+        $this->shipmentPagination     = $shipmentsModel->getPagination();
+        $this->shipmentFilterForm     = $shipmentsModel->getFilterForm();
+        $this->shipmentActiveFilters  = $shipmentsModel->getActiveFilters();
+
+        $this->shipmentFilterForm
+            ->addControlField('task', '')
+            ->addControlField('boxchecked', '0');
+
+        $this->paymentmethods         = $paymentmethodsModel->getItems();
+        $this->paymentState           = $paymentmethodsModel->getState();
+        $this->paymentPagination      = $paymentmethodsModel->getPagination();
+        $this->paymentFilterForm      = $paymentmethodsModel->getFilterForm();
+        $this->paymentActiveFilters   = $paymentmethodsModel->getActiveFilters();
+
+        $this->paymentFilterForm
+            ->addControlField('task', '')
+            ->addControlField('boxchecked', '0');
 
         ToolbarHelper::title('FDShop - Konfiguration');
         ToolbarHelper::apply('configuration.apply');

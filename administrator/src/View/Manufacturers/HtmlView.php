@@ -13,11 +13,29 @@ use Joomla\CMS\Toolbar\ToolbarHelper;
 
 class HtmlView extends BaseHtmlView
 {
-    protected $items = [];
+    public $items = [];
+
+    public $state;
+
+    public $pagination;
+
+    public $filterForm;
+
+    public $activeFilters = [];
 
     public function display($tpl = null)
     {
-        $this->items = $this->get('Items');
+        $model = $this->getModel();
+
+        $this->items         = $model->getItems();
+        $this->state         = $model->getState();
+        $this->pagination    = $model->getPagination();
+        $this->filterForm    = $model->getFilterForm();
+        $this->activeFilters = $model->getActiveFilters();
+
+        $this->filterForm
+            ->addControlField('task', '')
+            ->addControlField('boxchecked', '0');
 
         ToolbarHelper::title('FDShop - Hersteller');
         ToolbarHelper::addNew('manufacturer.add');
