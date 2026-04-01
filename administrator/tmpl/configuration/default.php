@@ -280,7 +280,65 @@ $paymentSearchView = (object) [
 			</div>
 		</div>
 	<?php echo HTMLHelper::_('uitab.endTab'); ?>
+	
+	<?php echo HTMLHelper::_('uitab.addTab', 'fdshopConfigurationTabs', 'orderstatuses', 'Bestellstatus'); ?>
+		<div class="card mb-3">
+			<div class="card-header">Bestellstatus</div>
+			<div class="card-body">
 
+				<div class="table-responsive">
+					<table class="table table-striped">
+						<thead>
+							<tr>
+								<th>Bezeichnung</th>
+								<th class="text-center">E-Mail Verkäufer</th>
+								<th class="text-center">E-Mail Käufer</th>
+								<th class="text-center">Rechnung</th>
+								<th>Bestandsaktion</th>
+							</tr>
+						</thead>
+						<tbody>
+							<?php if (!empty($this->orderStatuses)) : ?>
+								<?php foreach ($this->orderStatuses as $item) : ?>
+									<tr>
+										<td>
+											<a href="<?php echo Route::_('index.php?option=com_fdshop&view=orderstatus&layout=edit&id=' . (int) $item->id); ?>">
+												<?php echo $this->escape($item->status_name); ?>
+											</a>
+										</td>
+
+										<td class="text-center">
+											<?php echo $item->notify_seller ? '✓' : '✗'; ?>
+										</td>
+
+										<td class="text-center">
+											<?php echo $item->notify_buyer ? '✓' : '✗'; ?>
+										</td>
+
+										<td class="text-center">
+											<?php echo $item->create_invoice ? '✓' : '✗'; ?>
+										</td>
+
+										<td>
+											<?php echo $this->escape($item->stock_action); ?>
+										</td>
+									</tr>
+								<?php endforeach; ?>
+							<?php else : ?>
+								<tr>
+									<td colspan="5" class="text-center">
+										Keine Bestellstatus vorhanden.
+									</td>
+								</tr>
+							<?php endif; ?>
+						</tbody>
+					</table>
+				</div>
+
+			</div>
+		</div>
+	<?php echo HTMLHelper::_('uitab.endTab'); ?>
+	
 	<?php echo HTMLHelper::_('uitab.endTabSet'); ?>
 
 	<?php echo $this->form->renderField('id'); ?>

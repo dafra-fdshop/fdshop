@@ -10,6 +10,7 @@ defined('_JEXEC') or die;
 
 use FDShop\Component\FDShop\Administrator\Model\PaymentmethodsModel;
 use FDShop\Component\FDShop\Administrator\Model\ShipmentsModel;
+use Joomla\CMS\Factory;
 use Joomla\CMS\MVC\View\HtmlView as BaseHtmlView;
 use Joomla\CMS\Toolbar\ToolbarHelper;
 
@@ -38,6 +39,8 @@ class HtmlView extends BaseHtmlView
     public $paymentFilterForm;
 
     public $paymentActiveFilters = [];
+
+    public $orderStatuses = [];
 
     public function display($tpl = null)
     {
@@ -68,6 +71,16 @@ class HtmlView extends BaseHtmlView
         $this->paymentFilterForm
             ->addControlField('task', '')
             ->addControlField('boxchecked', '0');
+
+        $db = Factory::getDbo();
+
+        $query = $db->getQuery(true)
+            ->select('*')
+            ->from($db->quoteName('#__fdshop_order_statuses'))
+            ->order($db->quoteName('ordering') . ' ASC');
+
+        $db->setQuery($query);
+        $this->orderStatuses = $db->loadObjectList();
 
         ToolbarHelper::title('FDShop - Konfiguration');
         ToolbarHelper::apply('configuration.apply');
