@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<form>
+    <fields>
+        <fieldset name="basic" label="Bestellstatus">
+            <field
+                name="id"
+                type="hidden"
+                default="0"
+            />
+
+            <field
+                name="status_name"
+                type="text"
+                label="Statusname"
+                required="true"
+                size="60"
+            />
+
+            <field
+                name="seller_email_mode"
+                type="list"
+                label="Verkäufer-Mail-Modus"
+                default="config"
+            >
+                <option value="config">Ja (Konfiguration)</option>
+                <option value="custom">Benutzerdefiniert</option>
+                <option value="none">Nein</option>
+            </field>
+
+            <field
+                name="seller_email_address"
+                type="email"
+                label="Verkäufer E-Mail-Adresse"
+                size="60"
+            />
+
+            <field
+                name="create_invoice"
+                type="radio"
+                label="Rechnung erstellen"
+                default="0"
+                class="btn-group btn-group-yesno"
+            >
+                <option value="1">Ja</option>
+                <option value="0">Nein</option>
+            </field>
+
+            <field
+                name="stock_action"
+                type="list"
+                label="Lageraktion"
+                default="none"
+            >
+                <option value="none">Keine Änderung</option>
+                <option value="reserve">Reservieren</option>
+                <option value="deduct">Bestand verringern</option>
+                <option value="available">Verfügbar</option>
+            </field>
+        </fieldset>
+    </fields>
+</form>
