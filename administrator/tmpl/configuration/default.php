@@ -21,13 +21,13 @@ $paymentListOrder = $this->paymentState->get('list.ordering');
 $paymentListDirn  = $this->paymentState->get('list.direction');
 
 $shipmentSearchView = (object) [
-	'filterForm'     => $this->shipmentFilterForm,
-	'activeFilters'  => $this->shipmentActiveFilters,
+	'filterForm'    => $this->shipmentFilterForm,
+	'activeFilters' => $this->shipmentActiveFilters,
 ];
 
 $paymentSearchView = (object) [
-	'filterForm'     => $this->paymentFilterForm,
-	'activeFilters'  => $this->paymentActiveFilters,
+	'filterForm'    => $this->paymentFilterForm,
+	'activeFilters' => $this->paymentActiveFilters,
 ];
 ?>
 
@@ -280,21 +280,20 @@ $paymentSearchView = (object) [
 			</div>
 		</div>
 	<?php echo HTMLHelper::_('uitab.endTab'); ?>
-	
+
 	<?php echo HTMLHelper::_('uitab.addTab', 'fdshopConfigurationTabs', 'orderstatuses', 'Bestellstatus'); ?>
 		<div class="card mb-3">
 			<div class="card-header">Bestellstatus</div>
 			<div class="card-body">
-
 				<div class="table-responsive">
 					<table class="table table-striped">
 						<thead>
 							<tr>
 								<th>Bezeichnung</th>
-								<th class="text-center">E-Mail Verkäufer</th>
-								<th class="text-center">E-Mail Käufer</th>
-								<th class="text-center">Rechnung</th>
-								<th>Bestandsaktion</th>
+								<th>E-Mail Verkäufer</th>
+								<th>E-Mail Käufer</th>
+								<th>Rechnung</th>
+								<th>Bestand</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -303,24 +302,25 @@ $paymentSearchView = (object) [
 									<tr>
 										<td>
 											<a href="<?php echo Route::_('index.php?option=com_fdshop&view=orderstatus&layout=edit&id=' . (int) $item->id); ?>">
-												<?php echo $this->escape($item->status_name); ?>
+												<?php echo $this->escape((string) $item->status_name); ?>
 											</a>
 										</td>
-
-										<td class="text-center">
-											<?php echo $item->notify_seller ? '✓' : '✗'; ?>
-										</td>
-
-										<td class="text-center">
-											<?php echo $item->notify_buyer ? '✓' : '✗'; ?>
-										</td>
-
-										<td class="text-center">
-											<?php echo $item->create_invoice ? '✓' : '✗'; ?>
-										</td>
-
 										<td>
-											<?php echo $this->escape($item->stock_action); ?>
+											<?php echo $this->escape((string) ($item->seller_email_mode_label ?? '')); ?>
+											<?php if (($item->seller_email_mode ?? '') === 'custom' && !empty($item->seller_email_address)) : ?>
+												<div class="small text-muted">
+													<?php echo $this->escape((string) $item->seller_email_address); ?>
+												</div>
+											<?php endif; ?>
+										</td>
+										<td>
+											<?php echo $this->escape((string) ($item->buyer_email_mode_label ?? '')); ?>
+										</td>
+										<td>
+											<?php echo $this->escape((string) ($item->create_invoice_label ?? '')); ?>
+										</td>
+										<td>
+											<?php echo $this->escape((string) ($item->stock_action_label ?? '')); ?>
 										</td>
 									</tr>
 								<?php endforeach; ?>
@@ -334,11 +334,10 @@ $paymentSearchView = (object) [
 						</tbody>
 					</table>
 				</div>
-
 			</div>
 		</div>
 	<?php echo HTMLHelper::_('uitab.endTab'); ?>
-	
+
 	<?php echo HTMLHelper::_('uitab.endTabSet'); ?>
 
 	<?php echo $this->form->renderField('id'); ?>
