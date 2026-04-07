@@ -21,14 +21,17 @@ class HtmlView extends BaseHtmlView
 
     public $orderHistory = [];
 
+    public $availableProducts = [];
+
     public function display($tpl = null)
     {
         $model = $this->getModel();
 
-        $this->item          = $model->getItem();
-        $this->orderItems    = $model->getOrderItems();
-        $this->statusHistory = $model->getStatusHistory();
-        $this->orderHistory  = $model->getOrderHistory();
+        $this->item              = $model->getItem();
+        $this->orderItems        = $model->getOrderItems();
+        $this->statusHistory     = $model->getStatusHistory();
+        $this->orderHistory      = $model->getOrderHistory();
+        $this->availableProducts = $model->getAvailableProducts();
 
         $title = 'FDShop - Bestellung';
 
