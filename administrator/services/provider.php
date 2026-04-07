@@ -13,6 +13,8 @@ use FDShop\Component\FDShop\Administrator\Service\ManufacturerService;
 use FDShop\Component\FDShop\Administrator\Service\ManufacturerServiceInterface;
 use FDShop\Component\FDShop\Administrator\Service\ProductService;
 use FDShop\Component\FDShop\Administrator\Service\ProductServiceInterface;
+use FDShop\Component\FDShop\Administrator\Service\OrderService;
+use FDShop\Component\FDShop\Administrator\Service\OrderServiceInterface;
 use Joomla\CMS\Dispatcher\ComponentDispatcherFactoryInterface;
 use Joomla\CMS\Extension\ComponentInterface;
 use Joomla\CMS\Extension\Service\Provider\ComponentDispatcherFactory;
@@ -21,6 +23,7 @@ use Joomla\CMS\MVC\Factory\MVCFactoryInterface;
 use Joomla\Database\DatabaseInterface;
 use Joomla\DI\Container;
 use Joomla\DI\ServiceProviderInterface;
+
 
 return new class () implements ServiceProviderInterface {
     public function register(Container $container): void
@@ -82,6 +85,22 @@ return new class () implements ServiceProviderInterface {
                 return $container->get(ProductServiceInterface::class);
             }
         );
+		
+		$container->set(
+			OrderServiceInterface::class,
+			function (Container $container): OrderServiceInterface {
+				return new OrderService(
+					$container->get(DatabaseInterface::class)
+				);
+			}
+		);
+
+		$container->set(
+			OrderService::class,
+			function (Container $container): OrderService {
+				return $container->get(OrderServiceInterface::class);
+			}
+		);
 
         $container->set(
             ComponentInterface::class,
