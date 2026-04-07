@@ -60,7 +60,7 @@ class OrderstatusModel extends AdminModel
                 'status_name',
                 'seller_email_mode',
                 'seller_email_address',
-                'buyer_email_mode',
+                'notify_buyer',
                 'create_invoice',
                 'stock_action',
             ];

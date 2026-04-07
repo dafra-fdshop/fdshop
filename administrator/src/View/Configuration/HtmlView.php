@@ -77,7 +77,7 @@ class HtmlView extends BaseHtmlView
 
         foreach ($this->orderStatuses as $item) {
             $item->seller_email_mode_label = $this->mapSellerEmailMode($item->seller_email_mode ?? null);
-            $item->buyer_email_mode_label  = $this->mapBuyerEmailMode($item->buyer_email_mode ?? null);
+            $item->notify_buyer_label      = $this->mapBuyerEmailMode($item->notify_buyer ?? 0);
             $item->create_invoice_label    = $this->mapYesNo((int) ($item->create_invoice ?? 0));
             $item->stock_action_label      = $this->mapStockAction($item->stock_action ?? null);
         }
@@ -100,13 +100,9 @@ class HtmlView extends BaseHtmlView
         };
     }
 
-    private function mapBuyerEmailMode(?string $value): string
-    {
-        return match ((string) $value) {
-            'account' => 'Ja',
-            'none'    => 'Nein',
-            default   => (string) $value,
-        };
+    private function mapBuyerEmailMode(int $value): string
+    {  
+		return $value === 1 ? 'Ja' : 'Nein';
     }
 
     private function mapYesNo(int $value): string

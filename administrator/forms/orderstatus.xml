@@ -33,6 +33,17 @@
                 label="Verkäufer E-Mail-Adresse"
                 size="60"
             />
+			
+			<field
+                name="notify_buyer"
+                type="radio"
+                label="E-Mail Käufer"
+                default="0"
+                class="btn-group btn-group-yesno"
+            >
+                <option value="1">Ja</option>
+                <option value="0">Nein</option>
+            </field>
 
             <field
                 name="create_invoice"

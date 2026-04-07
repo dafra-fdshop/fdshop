@@ -314,7 +314,7 @@ $paymentSearchView = (object) [
 											<?php endif; ?>
 										</td>
 										<td>
-											<?php echo $this->escape((string) ($item->buyer_email_mode_label ?? '')); ?>
+											<?php echo $this->escape((string) ($item->notify_buyer_label ?? '')); ?>
 										</td>
 										<td>
 											<?php echo $this->escape((string) ($item->create_invoice_label ?? '')); ?>

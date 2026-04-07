@@ -23,7 +23,7 @@ class OrderstatusesModel extends ListModel
             $db->quoteName('a.status_name'),
             $db->quoteName('a.seller_email_mode'),
             $db->quoteName('a.seller_email_address'),
-            $db->quoteName('a.buyer_email_mode'),
+			$db->quoteName('a.notify_buyer'),
             $db->quoteName('a.create_invoice'),
             $db->quoteName('a.stock_action'),
         ])
