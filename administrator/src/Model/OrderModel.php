@@ -166,6 +166,30 @@ class OrderModel extends BaseDatabaseModel
         return $db->loadObjectList() ?: [];
     }
 
+    public function getAvailableProducts(): array
+    {
+        $db    = $this->getDatabase();
+        $query = $db->getQuery(true);
+
+        $query->select([
+            $db->quoteName('a.id'),
+            $db->quoteName('a.product_name'),
+            $db->quoteName('a.sku'),
+            $db->quoteName('a.active_price_net'),
+            $db->quoteName('a.active_price_gross'),
+            $db->quoteName('a.currency'),
+            $db->quoteName('a.state'),
+        ])
+            ->from($db->quoteName('#__fdshop_products', 'a'))
+            ->where($db->quoteName('a.state') . ' = 1')
+            ->order($db->quoteName('a.product_name') . ' ASC')
+            ->order($db->quoteName('a.id') . ' ASC');
+
+        $db->setQuery($query);
+
+        return $db->loadObjectList() ?: [];
+    }
+
     private function resolveOrderId($pk = null): int
     {
         if ($pk !== null) {
