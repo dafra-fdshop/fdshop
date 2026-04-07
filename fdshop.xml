@@ -27,6 +27,7 @@
 			<menu view="dashboard">dashboard</menu>
 			<menu view="categories">Kategorien</menu>
 			<menu view="products">Produkte</menu>
+			<menu view="orders">Bestellungen</menu>
 			<menu view="manufacturers">Hersteller</menu>
 			<menu view="configuration">Konfiguration</menu>
 		</submenu>
