@@ -101,8 +101,8 @@ if (!empty($order->user_id)) {
                                 <td>
                                     <form action="<?php echo Route::_('index.php?option=com_fdshop&task=order.updateItemQuantity'); ?>" method="post" class="d-flex gap-2 align-items-center">
                                         <input type="number" name="quantity" class="form-control" min="1" step="1" value="<?php echo (int) ($item->quantity ?? 1); ?>">
-                                        <input type="hidden" name="order_id" value="<?php echo (int) ($order->id ?? 0); ?>">
-                                        <input type="hidden" name="item_id" value="<?php echo (int) ($item->id ?? 0); ?>">
+                                        <input type="hidden" name="id" value="<?php echo (int) ($order->id ?? 0); ?>">
+                                        <input type="hidden" name="order_item_id" value="<?php echo (int) ($item->id ?? 0); ?>">
                                         <button type="submit" class="btn btn-outline-primary btn-sm">Speichern</button>
                                         <?php echo HTMLHelper::_('form.token'); ?>
                                     </form>
@@ -111,8 +111,8 @@ if (!empty($order->user_id)) {
                                 <td><?php echo number_format((float) ($item->line_total_gross ?? 0), 2, ',', '.'); ?></td>
                                 <td>
                                     <form action="<?php echo Route::_('index.php?option=com_fdshop&task=order.removeItem'); ?>" method="post">
-                                        <input type="hidden" name="order_id" value="<?php echo (int) ($order->id ?? 0); ?>">
-                                        <input type="hidden" name="item_id" value="<?php echo (int) ($item->id ?? 0); ?>">
+                                        <input type="hidden" name="id" value="<?php echo (int) ($order->id ?? 0); ?>">
+                                        <input type="hidden" name="order_item_id" value="<?php echo (int) ($item->id ?? 0); ?>">
                                         <button type="submit" class="btn btn-outline-danger btn-sm">Entfernen</button>
                                         <?php echo HTMLHelper::_('form.token'); ?>
                                     </form>
@@ -165,7 +165,7 @@ if (!empty($order->user_id)) {
                 </div>
             </div>
 
-            <input type="hidden" name="order_id" value="<?php echo (int) ($order->id ?? 0); ?>">
+            <input type="hidden" name="id" value="<?php echo (int) ($order->id ?? 0); ?>">
             <?php echo HTMLHelper::_('form.token'); ?>
         </form>
 
