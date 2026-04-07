@@ -11,6 +11,7 @@ use Joomla\CMS\Router\Route;
 
 $order = $this->item;
 $userLink = '';
+$availableProducts = $this->availableProducts ?? [];
 
 if (!empty($order->user_id)) {
     $userLink = Route::_('index.php?option=com_users&task=user.edit&id=' . (int) $order->user_id);
@@ -80,7 +81,7 @@ if (!empty($order->user_id)) {
     <div class="card-header">Bestellpositionen</div>
     <div class="card-body">
         <div class="table-responsive">
-            <table class="table table-striped">
+            <table class="table table-striped align-middle">
                 <thead>
                     <tr>
                         <th>Produktname</th>
@@ -88,6 +89,7 @@ if (!empty($order->user_id)) {
                         <th>Menge</th>
                         <th>Einzelpreis (Brutto)</th>
                         <th>Gesamtpreis Position</th>
+                        <th>Aktion</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -96,19 +98,80 @@ if (!empty($order->user_id)) {
                             <tr>
                                 <td><?php echo $this->escape((string) ($item->product_name ?? '')); ?></td>
                                 <td><?php echo $this->escape((string) ($item->sku ?? '')); ?></td>
-                                <td><?php echo $this->escape((string) ($item->quantity ?? '')); ?></td>
+                                <td>
+                                    <form action="<?php echo Route::_('index.php?option=com_fdshop&task=order.updateItemQuantity'); ?>" method="post" class="d-flex gap-2 align-items-center">
+                                        <input type="number" name="quantity" class="form-control" min="1" step="1" value="<?php echo (int) ($item->quantity ?? 1); ?>">
+                                        <input type="hidden" name="order_id" value="<?php echo (int) ($order->id ?? 0); ?>">
+                                        <input type="hidden" name="item_id" value="<?php echo (int) ($item->id ?? 0); ?>">
+                                        <button type="submit" class="btn btn-outline-primary btn-sm">Speichern</button>
+                                        <?php echo HTMLHelper::_('form.token'); ?>
+                                    </form>
+                                </td>
                                 <td><?php echo number_format((float) ($item->unit_price_gross ?? 0), 2, ',', '.'); ?></td>
                                 <td><?php echo number_format((float) ($item->line_total_gross ?? 0), 2, ',', '.'); ?></td>
+                                <td>
+                                    <form action="<?php echo Route::_('index.php?option=com_fdshop&task=order.removeItem'); ?>" method="post">
+                                        <input type="hidden" name="order_id" value="<?php echo (int) ($order->id ?? 0); ?>">
+                                        <input type="hidden" name="item_id" value="<?php echo (int) ($item->id ?? 0); ?>">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm">Entfernen</button>
+                                        <?php echo HTMLHelper::_('form.token'); ?>
+                                    </form>
+                                </td>
                             </tr>
                         <?php endforeach; ?>
                     <?php else : ?>
                         <tr>
-                            <td colspan="5" class="text-center">Keine Bestellpositionen vorhanden.</td>
+                            <td colspan="6" class="text-center">Keine Bestellpositionen vorhanden.</td>
                         </tr>
                     <?php endif; ?>
                 </tbody>
             </table>
         </div>
+    </div>
+</div>
+
+<div class="card mb-3">
+    <div class="card-header">Neues Produkt hinzufügen</div>
+    <div class="card-body">
+        <form action="<?php echo Route::_('index.php?option=com_fdshop&task=order.addItem'); ?>" method="post">
+            <div class="row g-3 align-items-end">
+                <div class="col-12 col-xl-7">
+                    <label for="jform_product_id" class="form-label">Produktauswahl</label>
+                    <select name="product_id" id="jform_product_id" class="form-select">
+                        <option value="">- Produkt wählen -</option>
+                        <?php foreach ($availableProducts as $product) : ?>
+                            <option value="<?php echo (int) ($product->id ?? 0); ?>">
+                                <?php
+                                $optionText = (string) ($product->product_name ?? '');
+
+                                if (!empty($product->sku)) {
+                                    $optionText .= ' (' . (string) $product->sku . ')';
+                                }
+
+                                echo $this->escape($optionText);
+                                ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+
+                <div class="col-12 col-md-4 col-xl-3">
+                    <label for="jform_quantity" class="form-label">Menge</label>
+                    <input type="number" name="quantity" id="jform_quantity" class="form-control" min="1" step="1" value="1">
+                </div>
+
+                <div class="col-12 col-md-8 col-xl-2">
+                    <button type="submit" class="btn btn-success w-100">Hinzufügen</button>
+                </div>
+            </div>
+
+            <input type="hidden" name="order_id" value="<?php echo (int) ($order->id ?? 0); ?>">
+            <?php echo HTMLHelper::_('form.token'); ?>
+        </form>
+
+        <?php if (empty($availableProducts)) : ?>
+            <div class="text-muted small mt-3">Keine Produktauswahl verfügbar.</div>
+        <?php endif; ?>
     </div>
 </div>
 
