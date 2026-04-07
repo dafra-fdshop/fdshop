@@ -13,7 +13,7 @@
 			type="sql"
 			label="Status"
 			class="js-select-submit-on-change"
-			query="SELECT status_code AS value, status_name AS text FROM #__fdshop_order_statuses ORDER BY ordering ASC, id ASC"
+			query="SELECT id AS value, status_name AS text FROM #__fdshop_order_statuses ORDER BY ordering ASC, id ASC"
 			key_field="value"
 			value_field="text"
 			header="Status auswählen"

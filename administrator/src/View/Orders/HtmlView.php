@@ -33,9 +33,11 @@ class HtmlView extends BaseHtmlView
         $this->filterForm    = $model->getFilterForm();
         $this->activeFilters = $model->getActiveFilters();
 
-        $this->filterForm
-            ->addControlField('task', '')
-            ->addControlField('boxchecked', '0');
+        if (is_object($this->filterForm)) {
+            $this->filterForm
+                ->addControlField('task', '')
+                ->addControlField('boxchecked', '0');
+        }
 
         ToolbarHelper::title('FDShop - Bestellungen');
 
