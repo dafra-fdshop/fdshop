@@ -23,6 +23,8 @@ class HtmlView extends BaseHtmlView
 
     public $activeFilters = [];
 
+    public $statusOptions = [];
+
     public function display($tpl = null)
     {
         $model = $this->getModel();
@@ -37,9 +39,17 @@ class HtmlView extends BaseHtmlView
             $this->filterForm
                 ->addControlField('task', '')
                 ->addControlField('boxchecked', '0');
+
+            $statusField = $this->filterForm->getField('status', 'filter');
+
+            if (is_object($statusField) && method_exists($statusField, 'getOptions')) {
+                $this->statusOptions = $statusField->getOptions();
+            }
         }
 
         ToolbarHelper::title('FDShop - Bestellungen');
+        ToolbarHelper::custom('orders.save', 'save', '', 'JTOOLBAR_SAVE', true);
+        ToolbarHelper::trash('orders.trash');
 
         parent::display($tpl);
     }
