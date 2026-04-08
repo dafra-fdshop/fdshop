@@ -43,7 +43,7 @@ class HtmlView extends BaseHtmlView
             $statusField = $this->filterForm->getField('status', 'filter');
 
             if (is_object($statusField) && method_exists($statusField, 'getOptions')) {
-                $this->statusOptions = $statusField->getOptions();
+                $this->statusOptions = $model->getStatusOptions();
             }
         }
 

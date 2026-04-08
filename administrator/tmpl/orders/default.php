@@ -20,6 +20,27 @@ $statusOptions = $this->statusOptions ?? [];
 
 <form action="<?php echo Route::_('index.php?option=com_fdshop&view=orders'); ?>" method="post" name="adminForm" id="adminForm">
 	<?php echo LayoutHelper::render('joomla.searchtools.default', ['view' => $this]); ?>
+	
+	<div class="row mb-3">
+		<div class="col-12 col-md-4 col-xl-3">
+			<label for="bulk_order_status_id" class="form-label">Neuer Bestellstatus für markierte</label>
+			<select name="order_status_id" id="bulk_order_status_id" class="form-select">
+				<option value="0">— Bitte wählen —</option>
+				<?php foreach ($statusOptions as $option) : ?>
+					<?php
+					$optionValue = (int) ($option->value ?? 0);
+
+					if ($optionValue <= 0) {
+						continue;
+					}
+					?>
+					<option value="<?php echo $optionValue; ?>">
+						<?php echo $this->escape((string) ($option->text ?? '')); ?>
+					</option>
+				<?php endforeach; ?>
+			</select>
+		</div>
+	</div>
 
 	<div class="table-responsive">
 		<table class="table itemList" id="orderList">
@@ -94,7 +115,7 @@ $statusOptions = $this->statusOptions ?? [];
 
 							<td>
 								<select class="form-select form-select-sm" disabled>
-									<?php foreach ($statusOptions as $option) : ?>
+									<?php foreach ($this->statusOptions as $option) : ?>
 										<?php
 										$optionValue = (int) ($option->value ?? 0);
 
@@ -172,5 +193,45 @@ $statusOptions = $this->statusOptions ?? [];
 		</table>
 	</div>
 
+	<input type="hidden" name="confirm_trash" id="confirm_trash" value="0">
+
 	<?php echo $this->filterForm->renderControlFields(); ?>
 </form>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var adminForm = document.getElementById('adminForm');
+    var confirmTrashField = document.getElementById('confirm_trash');
+
+    if (!adminForm || !confirmTrashField || typeof Joomla === 'undefined') {
+        return;
+    }
+
+    var originalSubmitbutton = Joomla.submitbutton;
+
+    Joomla.submitbutton = function (task) {
+        if (task === 'orders.trash') {
+            var confirmed = window.confirm('ACHTUNG sind sie sicher, dass sie die Bestellung in den Papierkorb verschieben wollen!');
+
+            if (!confirmed) {
+                return false;
+            }
+
+            confirmTrashField.value = '1';
+            Joomla.submitform(task, adminForm);
+
+            return true;
+        }
+
+        confirmTrashField.value = '0';
+
+        if (typeof originalSubmitbutton === 'function') {
+            return originalSubmitbutton(task);
+        }
+
+        Joomla.submitform(task, adminForm);
+
+        return true;
+    };
+});
+</script>

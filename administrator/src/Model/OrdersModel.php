@@ -65,6 +65,19 @@ class OrdersModel extends ListModel
 
         parent::populateState($ordering, $direction);
     }
+	
+	public function getStatusOptions(): array
+	{
+		$db = $this->getDatabase();
+		$query = $db->getQuery(true)
+			->select('id AS value, status_name AS text')
+			->from('#__fdshop_order_statuses')
+			->order('ordering ASC, id ASC');
+
+		$db->setQuery($query);
+
+		return $db->loadObjectList();
+	}
 
     protected function getListQuery()
     {
