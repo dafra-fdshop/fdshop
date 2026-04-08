@@ -277,9 +277,12 @@ CREATE TABLE IF NOT EXISTS `#__fdshop_orders` (
 
   `user_id` INT UNSIGNED NOT NULL DEFAULT 0,
   `buyer_group_id` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  `payment_method_id` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  `shipment_id` BIGINT UNSIGNED NOT NULL DEFAULT 0,
 
   `order_status` VARCHAR(32) NOT NULL DEFAULT 'pending',
   `order_status_id` INT UNSIGNED NOT NULL,
+  `state` TINYINT NOT NULL DEFAULT 1,
   `currency` CHAR(3) NOT NULL DEFAULT 'EUR',
 
   `grand_total` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
@@ -291,8 +294,11 @@ CREATE TABLE IF NOT EXISTS `#__fdshop_orders` (
   UNIQUE KEY `uk_fdshop_orders_order_number` (`order_number`),
   KEY `idx_fdshop_orders_user_id` (`user_id`),
   KEY `idx_fdshop_orders_buyer_group_id` (`buyer_group_id`),
+  KEY `idx_fdshop_orders_payment_method_id` (`payment_method_id`),
+  KEY `idx_fdshop_orders_shipment_id` (`shipment_id`),
   KEY `idx_fdshop_orders_order_status` (`order_status`),
   KEY `idx_fdshop_orders_order_status_id` (`order_status_id`),
+  KEY `idx_fdshop_orders_state` (`state`),
   KEY `idx_fdshop_orders_created` (`created`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
