@@ -25,14 +25,24 @@ class OrdersModel extends ListModel
                 'a.user_id',
                 'customer_name',
                 'u.name',
+                'customer_email',
+                'u.email',
                 'order_status_id',
                 'a.order_status_id',
                 'status_name',
                 'os.status_name',
+                'payment_name',
+                'pm.payment_name',
+                'shipment_name',
+                's.shipment_name',
+                'shipment_color',
+                's.shipment_color',
                 'grand_total',
                 'a.grand_total',
                 'currency',
                 'a.currency',
+                'state',
+                'a.state',
                 'created',
                 'a.created',
                 'modified',
@@ -66,18 +76,29 @@ class OrdersModel extends ListModel
             $db->quoteName('a.order_number'),
             $db->quoteName('a.user_id'),
             $db->quoteName('a.buyer_group_id'),
+            $db->quoteName('a.payment_method_id'),
+            $db->quoteName('a.shipment_id'),
             $db->quoteName('a.order_status'),
             $db->quoteName('a.order_status_id'),
+            $db->quoteName('a.state'),
             $db->quoteName('a.currency'),
             $db->quoteName('a.grand_total'),
             $db->quoteName('a.created'),
             $db->quoteName('a.modified'),
             $db->quoteName('u.name', 'customer_name'),
+            $db->quoteName('u.email', 'customer_email'),
             $db->quoteName('os.status_name'),
+            $db->quoteName('os.status_code'),
+            $db->quoteName('pm.payment_name'),
+            $db->quoteName('s.shipment_name'),
+            $db->quoteName('s.shipment_color'),
+            'CASE WHEN ' . $db->quoteName('os.status_code') . ' IN (' . $db->quote('paid') . ', ' . $db->quote('shipped') . ', ' . $db->quote('completed') . ') THEN 1 ELSE 0 END AS ' . $db->quoteName('is_paid'),
         ])
             ->from($db->quoteName('#__fdshop_orders', 'a'))
             ->join('LEFT', $db->quoteName('#__users', 'u') . ' ON ' . $db->quoteName('u.id') . ' = ' . $db->quoteName('a.user_id'))
-            ->join('LEFT', $db->quoteName('#__fdshop_order_statuses', 'os') . ' ON ' . $db->quoteName('os.id') . ' = ' . $db->quoteName('a.order_status_id'));
+            ->join('LEFT', $db->quoteName('#__fdshop_order_statuses', 'os') . ' ON ' . $db->quoteName('os.id') . ' = ' . $db->quoteName('a.order_status_id'))
+            ->join('LEFT', $db->quoteName('#__fdshop_payment_methods', 'pm') . ' ON ' . $db->quoteName('pm.id') . ' = ' . $db->quoteName('a.payment_method_id'))
+            ->join('LEFT', $db->quoteName('#__fdshop_shipments', 's') . ' ON ' . $db->quoteName('s.id') . ' = ' . $db->quoteName('a.shipment_id'));
 
         $search = trim((string) $this->getState('filter.search'));
 
