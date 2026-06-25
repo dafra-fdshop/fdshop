@@ -16,6 +16,13 @@
                 min="0"
                 required="true"
             />
+			
+			<field
+                name="general_currency"
+                type="currency"
+                label="Allgemeiner Währung"
+                required="true"
+            />
 
             <field
                 name="image_size_default"

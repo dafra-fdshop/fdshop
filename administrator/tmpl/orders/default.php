@@ -50,30 +50,32 @@ $statusOptions = $this->statusOptions ?? [];
 						<?php echo HTMLHelper::_('grid.checkall'); ?>
 					</td>
 					<th scope="col">
-						<?php echo HTMLHelper::_('searchtools.sort', 'Bestellnummer/Rechnungsnummer', 'a.order_number', $listDirn, $listOrder); ?>
+						<?php echo HTMLHelper::_('searchtools.sort', 'Bestellnummer/', 'a.order_number', $listDirn, $listOrder); ?><br>
+						<span class="small text-muted">Rechnungsnummer</span>
 					</th>
-					<th scope="col">
+					<th scope="col" class="align-top">
 						<?php echo HTMLHelper::_('searchtools.sort', 'Bestellstatus', 'os.status_name', $listDirn, $listOrder); ?>
 					</th>
 					<th scope="col">
-						<?php echo HTMLHelper::_('searchtools.sort', 'Kunde/Email', 'u.name', $listDirn, $listOrder); ?>
+						<?php echo HTMLHelper::_('searchtools.sort', 'Kunde/', 'u.name', $listDirn, $listOrder); ?><br>
+						<span class="small text-muted">Email</span>
 					</th>
-					<th scope="col">
+					<th scope="col" class="align-top">
 						<?php echo HTMLHelper::_('searchtools.sort', 'Zahlungsart', 'pm.payment_name', $listDirn, $listOrder); ?>
 					</th>
-					<th scope="col">
+					<th scope="col" class="align-top">
 						<?php echo HTMLHelper::_('searchtools.sort', 'Versandart', 's.shipment_name', $listDirn, $listOrder); ?>
 					</th>
-					<th scope="col">
+					<th scope="col" class="align-top">
 						<?php echo HTMLHelper::_('searchtools.sort', 'Datum (bestellt)', 'a.created', $listDirn, $listOrder); ?>
 					</th>
-					<th scope="col">
+					<th scope="col" class="align-top">
 						<?php echo HTMLHelper::_('searchtools.sort', 'Datum (geändert)', 'a.modified', $listDirn, $listOrder); ?>
 					</th>
-					<th scope="col" class="text-center">
+					<th scope="col" class="align-top">
 						Bezahlt
 					</th>
-					<th scope="col">
+					<th scope="col" class="align-top">
 						<?php echo HTMLHelper::_('searchtools.sort', 'Betrag', 'a.grand_total', $listDirn, $listOrder); ?>
 					</th>
 				</tr>
@@ -210,7 +212,10 @@ document.addEventListener('DOMContentLoaded', function () {
     var originalSubmitbutton = Joomla.submitbutton;
 
     Joomla.submitbutton = function (task) {
-        if (task === 'orders.trash') {
+		
+		console.log('Task:', task);
+		
+        if (task === 'orders.trashconfirm') {
             var confirmed = window.confirm('ACHTUNG sind sie sicher, dass sie die Bestellung in den Papierkorb verschieben wollen!');
 
             if (!confirmed) {

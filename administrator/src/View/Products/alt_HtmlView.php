@@ -34,12 +34,10 @@ class HtmlView extends BaseHtmlView
         $this->pagination    = $model->getPagination();
         $this->filterForm    = $model->getFilterForm();
         $this->activeFilters = $model->getActiveFilters();
-
-        if (is_object($this->filterForm)) {
-            $this->filterForm
-                ->addControlField('task', '')
-                ->addControlField('boxchecked', '0');
-        }
+		
+		$this->filterForm
+			->addControlField('task', '')
+			->addControlField('boxchecked', '0');
 
         $this->attachProductImages();
 

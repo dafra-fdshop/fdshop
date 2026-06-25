@@ -1,47 +1,59 @@
 <?xml version="1.0" encoding="utf-8"?>
 <form>
-	<fields name="filter">		
-		<field
-			name="search"
-			type="text"
-			inputmode="search"
-			label="COM_FDSHOP_FILTER_SEARCH_LABEL"
-			description="Suche eingeben"
-			hint="JSEARCH_FILTER"
-		/>
-		<field
-			name="published"
-			type="status"
-			label="JOPTION_SELECT_PUBLISHED"
-			class="js-select-submit-on-change"
-			extension="com_fdshop"
-			>
-			<option value="">JOPTION_SELECT_PUBLISHED</option> <!--ACHTUNG: class="js-select-submit-on-change" ist Wichtig!    -->
-		</field>
-		
-	</fields>
-	
-	<fields name="list">
-		<field
-			name="fullordering"
-			type="list"
-			label="JGLOBAL_SORT_BY"
-			default="a.ordering ASC"
-			class="js-select-submit-on-change"
-		>
-			<option value="a.ordering ASC">Sortierung ASC</option>
-			<option value="a.ordering DESC">Sortierung DESC</option>
-			<option value="a.product_name ASC">Name ASC</option>
-			<option value="a.product_name DESC">Name DESC</option>
-			<option value="a.id ASC">ID ASC</option>
-			<option value="a.id DESC">ID DESC</option>
-		</field>
+    <fields name="filter">
+        <field
+            name="search"
+            type="text"
+            inputmode="search"
+            label="COM_FDSHOP_FILTER_SEARCH_LABEL"
+            description="Hier können Sie nach dem Produktnamen, der Artikelnummer oder der GTIN suchen"
+            hint="Suche eingeben"
+        />
 
-		<field
-			name="limit"
-			type="limitbox"
-			default="20"
-			class="js-select-submit-on-change"
-		/>
-	</fields>
+        <field
+            name="published"
+            type="status"
+            label="JOPTION_SELECT_PUBLISHED"
+            class="js-select-submit-on-change"
+            extension="com_fdshop"
+        >
+            <option value="">JOPTION_SELECT_PUBLISHED</option>
+        </field>
+    </fields>
+
+    <fields name="list">
+        <field
+            name="fullordering"
+            type="list"
+            label="JGLOBAL_SORT_BY"
+            default="a.id DESC"
+            class="js-select-submit-on-change"
+        >
+            <option value="a.id DESC">ID DESC</option>
+            <option value="a.id ASC">ID ASC</option>
+            <option value="a.product_name ASC">Name ASC</option>
+            <option value="a.product_name DESC">Name DESC</option>
+            <option value="d.sku ASC">Artikelnummer ASC</option>
+            <option value="d.sku DESC">Artikelnummer DESC</option>
+            <option value="a.sale_price ASC">Preis ASC</option>
+            <option value="a.sale_price DESC">Preis DESC</option>
+            <option value="a.in_stock ASC">Bestand ASC</option>
+            <option value="a.in_stock DESC">Bestand DESC</option>
+            <option value="m.manufacturer_name ASC">Hersteller ASC</option>
+            <option value="m.manufacturer_name DESC">Hersteller DESC</option>
+            <option value="a.is_active ASC">Status ASC</option>
+            <option value="a.is_active DESC">Status DESC</option>
+            <option value="a.created DESC">Erstellt DESC</option>
+            <option value="a.created ASC">Erstellt ASC</option>
+            <option value="a.modified DESC">Geändert DESC</option>
+            <option value="a.modified ASC">Geändert ASC</option>
+        </field>
+
+        <field
+            name="limit"
+            type="limitbox"
+            default="20"
+            class="js-select-submit-on-change"
+        />
+    </fields>
 </form>

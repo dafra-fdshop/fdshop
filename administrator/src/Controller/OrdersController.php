@@ -127,8 +127,9 @@ class OrdersController extends AdminController
         return true;
     }
 
-    public function trash(): bool
+    public function trashconfirm(): bool
     {
+		
         $cid = $this->input->post->get('cid', [], 'array');
         $cid = array_values(array_filter(array_map('intval', $cid)));
 
@@ -167,4 +168,36 @@ class OrdersController extends AdminController
 
         return true;
     }
+	
+	public function restore(): bool
+	{
+		$cid = $this->input->post->get('cid', [], 'array');
+		$cid = array_values(array_filter(array_map('intval', $cid)));
+
+		if (empty($cid)) {
+			$this->setMessage('Keine Bestellungen markiert.', 'warning');
+			$this->setRedirect('index.php?option=com_fdshop&view=orders');
+
+			return false;
+		}
+
+		$db   = Factory::getContainer()->get('DatabaseDriver');
+		$date = Factory::getDate()->toSql();
+
+		foreach ($cid as $orderId) {
+			$query = $db->getQuery(true)
+				->update($db->quoteName('#__fdshop_orders'))
+				->set($db->quoteName('state') . ' = 1')
+				->set($db->quoteName('modified') . ' = ' . $db->quote($date))
+				->where($db->quoteName('id') . ' = ' . (int) $orderId);
+
+			$db->setQuery($query);
+			$db->execute();
+		}
+
+		$this->setMessage('Markierte Bestellungen wurden wiederhergestellt.');
+		$this->setRedirect('index.php?option=com_fdshop&view=orders');
+
+		return true;
+	}
 }

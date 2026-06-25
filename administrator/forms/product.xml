@@ -26,8 +26,9 @@
             <field
                 name="gtin"
                 type="text"
-                label="GTIN"
+                label="GTIN/EAN"
                 size="40"
+				description="EAN Code"
             />
 
             <field
@@ -35,6 +36,7 @@
                 type="text"
                 label="Alias"
                 size="40"
+				description="Leer = Wird automatisch gefüllt"
             />
 
             <field
@@ -55,59 +57,42 @@
                 key_field="value"
                 value_field="text"
                 multiple="true"
-                size="8"
+                size="12"
+				description="Mehrfachauswahl durch drücken der 'Strg'-Taste"
             />
 
             <field
                 name="buyer_group_ids"
                 type="sql"
-                label="Käufergruppe"
+                label="Käufergruppen"
                 query="SELECT id AS value, group_name AS text FROM #__fdshop_buyer_groups WHERE is_active = 1 ORDER BY ordering ASC, group_name ASC"
                 key_field="value"
                 value_field="text"
                 multiple="true"
-                size="8"
+                size="12"
+				description="Mehrfachauswahl durch drücken der 'Strg'-Taste"
             />
 
             <field
-                name="active_price_net"
-                type="number"
-                label="Preis netto"
-                step="0.01"
-                min="0"
+                name="short_description"
+                type="textarea"
+                label="Kurzbeschreibung"
+                rows="4"
+                cols="60"
+                filter="raw"
             />
 
             <field
-                name="active_price_gross"
-                type="number"
-                label="Preis brutto"
-                step="0.01"
-                min="0"
+                name="description"
+                type="textarea"
+                label="Produktbeschreibung"
+                rows="8"
+                cols="60"
+                filter="raw"
             />
+        </fieldset>
 
-            <field
-                name="active_tax_rate"
-                type="number"
-                label="Steuersatz"
-                step="0.01"
-                min="0"
-            />
-
-            <field
-                name="currency"
-                type="text"
-                label="Währung"
-                size="10"
-            />
-
-            <field
-                name="purchase_price"
-                type="number"
-                label="Einkaufspreis"
-                step="0.01"
-                min="0"
-            />
-
+        <fieldset name="pricing" label="Preis">
             <field
                 name="sale_price"
                 type="number"
@@ -136,23 +121,144 @@
             </field>
 
             <field
-                name="short_description"
-                type="textarea"
-                label="Kurzbeschreibung"
-                rows="4"
-                cols="60"
-                filter="raw"
+                name="currency"
+                type="text"
+                label="Währung"
+                size="10"
+                default="EUR"
+            />
+        </fieldset>
+
+        <fieldset name="stock" label="Lager">
+            <field
+                name="stock_quantity"
+                type="number"
+                label="Lagerbestand"
+                step="1"
+                min="0"
             />
 
             <field
-                name="description"
-                type="textarea"
-                label="Produktbeschreibung"
-                rows="8"
-                cols="60"
-                filter="raw"
+                name="low_stock"
+                type="number"
+                label="Schwellwert wenig Bestand"
+                step="1"
+                min="0"
             />
 
+            <field
+                name="reserved_quantity"
+                type="number"
+                label="Reserviert"
+                step="0.001"
+                min="0"
+            />
+
+            <field
+                name="sold_quantity"
+                type="number"
+                label="Verkaufte Menge"
+                step="0.001"
+                min="0"
+            />
+
+            <field
+                name="is_in_stock"
+                type="radio"
+                label="Direkt auf Lager"
+                default="0"
+                class="btn-group btn-group-yesno"
+            >
+                <option value="1">Ja</option>
+                <option value="0">Nein</option>
+            </field>
+
+            <field
+                name="available_from"
+                type="calendar"
+                label="Verfügbar ab"
+                format="%Y-%m-%d %H:%M:%S"
+                filter="user_utc"
+				description="Ab wann vorraussichtlich im Lager"
+            />
+
+            <field
+                name="min_order_qty"
+                type="number"
+                label="Mindestbestellmenge"
+                step="0.001"
+                min="0"
+            />
+
+            <field
+                name="max_order_qty"
+                type="number"
+                label="Maximalbestellmenge"
+                step="0.001"
+                min="0"
+            />
+
+            <field
+                name="step_order_qty"
+                type="number"
+                label="Bestellschritt"
+                step="0.001"
+                min="0"
+            />
+			
+			<field
+				name="in_stock"
+				type="text"
+				label="Bestandsstatus"
+				readonly="true"
+				class="readonly"
+				description="Wird automatisch aus Lagerdaten berechnet"
+			/>	
+			
+        </fieldset>
+
+        <fieldset name="publishing" label="Veröffentlichung">
+            <field
+                name="katalog_active"
+                type="radio"
+                label="Katalogmodus aktiv"
+				readonly="true"
+                class="btn-group btn-group-yesno"
+				description="Nur Anzeige. Kann nur Global (Konfiguration) geändert werden"
+            >
+                <option value="1">Ja</option>
+                <option value="0">Nein</option>
+            </field>
+
+            <field
+                name="is_active"
+                type="radio"
+                label="Veröffentlicht"
+                default="0"
+                class="btn-group btn-group-yesno"
+            >
+                <option value="1">Ja</option>
+                <option value="0">Nein</option>
+            </field>
+
+            <field
+                name="publish_up"
+                type="calendar"
+                label="Veröffentlichen ab"
+                format="%Y-%m-%d %H:%M:%S"
+                filter="user_utc"
+            />
+
+            <field
+                name="publish_down"
+                type="calendar"
+                label="Veröffentlichen bis"
+                format="%Y-%m-%d %H:%M:%S"
+                filter="user_utc"
+            />
+        </fieldset>
+
+        <fieldset name="beschreibung" label="Beschreibung">
             <field
                 name="meta_title"
                 type="text"
@@ -177,125 +283,9 @@
                 cols="60"
                 filter="raw"
             />
+        </fieldset>
 
-            <field
-                name="stock_quantity"
-                type="number"
-                label="Lagerbestand"
-                step="1"
-                min="0"
-            />
-
-            <field
-                name="reserved_quantity"
-                type="number"
-                label="Reserviert"
-                step="1"
-                min="0"
-            />
-
-            <field
-                name="min_order_qty"
-                type="number"
-                label="Mindestbestellmenge"
-                step="1"
-                min="0"
-            />
-
-            <field
-                name="max_order_qty"
-                type="number"
-                label="Maximalbestellmenge"
-                step="1"
-                min="0"
-            />
-
-            <field
-                name="step_order_qty"
-                type="number"
-                label="Bestellschritt"
-                step="1"
-                min="0"
-            />
-
-            <field
-                name="is_in_stock"
-                type="radio"
-                label="Auf Lager"
-                default="1"
-                class="btn-group btn-group-yesno"
-            >
-                <option value="1">Ja</option>
-                <option value="0">Nein</option>
-            </field>
-
-            <field
-                name="available_from"
-                type="calendar"
-                label="Verfügbar ab"
-                format="%Y-%m-%d %H:%M:%S"
-                filter="user_utc"
-            />
-
-            <field
-                name="sold_quantity"
-                type="number"
-                label="Verkaufte Menge"
-                step="1"
-                min="0"
-            />
-
-            <field
-                name="ordering"
-                type="number"
-                label="Reihenfolge"
-                step="1"
-            />
-
-            <field
-                name="publish_up"
-                type="calendar"
-                label="Veröffentlichen ab"
-                format="%Y-%m-%d %H:%M:%S"
-                filter="user_utc"
-            />
-
-            <field
-                name="publish_down"
-                type="calendar"
-                label="Veröffentlichen bis"
-                format="%Y-%m-%d %H:%M:%S"
-                filter="user_utc"
-            />
-
-            <field
-                name="access"
-                type="accesslevel"
-                label="Zugriff"
-            />
-
-            <field
-                name="is_featured"
-                type="radio"
-                label="Hervorgehoben"
-                default="0"
-                class="btn-group btn-group-yesno"
-            >
-                <option value="1">Ja</option>
-                <option value="0">Nein</option>
-            </field>
-
-            <field
-                name="is_active"
-                type="radio"
-                label="Veröffentlicht"
-                default="1"
-                class="btn-group btn-group-yesno"
-            >
-                <option value="1">Ja</option>
-                <option value="0">Nein</option>
-            </field>
-
+        <fieldset name="special" label="Besondere Felder">
             <field
                 name="unit_type"
                 type="text"
@@ -315,7 +305,7 @@
                 name="nem"
                 type="number"
                 label="NEM"
-                step="0.01"
+                step="0.001"
                 min="0"
             />
 
@@ -323,7 +313,7 @@
                 name="shot_count"
                 type="number"
                 label="Schussanzahl"
-                step="1"
+                step="0.001"
                 min="0"
             />
 
@@ -349,10 +339,34 @@
             />
 
             <field
+                name="ribbon_new"
+                type="radio"
+                label="Ribbon Neu"
+                default="0"
+                class="btn-group btn-group-yesno"
+            >
+                <option value="1">Ja</option>
+                <option value="0">Nein</option>
+            </field>
+
+            <field
+                name="ribbon_hot"
+                type="radio"
+                label="Ribbon Hot"
+                default="0"
+                class="btn-group btn-group-yesno"
+            >
+                <option value="1">Ja</option>
+                <option value="0">Nein</option>
+            </field>
+        </fieldset>
+
+        <fieldset name="dimensions" label="Maße">
+            <field
                 name="weight"
                 type="number"
                 label="Gewicht"
-                step="0.01"
+                step="0.001"
                 min="0"
             />
 
@@ -360,7 +374,7 @@
                 name="length"
                 type="number"
                 label="Länge"
-                step="0.01"
+                step="0.001"
                 min="0"
             />
 
@@ -368,7 +382,7 @@
                 name="width"
                 type="number"
                 label="Breite"
-                step="0.01"
+                step="0.001"
                 min="0"
             />
 
@@ -376,10 +390,12 @@
                 name="height"
                 type="number"
                 label="Höhe"
-                step="0.01"
+                step="0.001"
                 min="0"
             />
+        </fieldset>
 
+        <fieldset name="media" label="Medien">
             <field
                 name="product_image"
                 type="file"

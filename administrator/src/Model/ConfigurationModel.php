@@ -54,6 +54,7 @@ class ConfigurationModel extends AdminModel
             $item = (object) [
                 'id'                      => 1,
                 'general_vat_rate'        => '',
+				'general_currency'		  => '',
                 'image_size_default'      => '',
                 'image_size_small'        => '',
                 'image_size_mobile'       => '',

@@ -11,7 +11,7 @@ defined('_JEXEC') or die;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Form\Form;
 use Joomla\CMS\MVC\Model\AdminModel;
-use FDShop\Component\FDShop\Administrator\Service\ProductService;
+use FDShop\Component\FDShop\Administrator\Service\ProductServiceInterface;
 
 class ProductModel extends AdminModel
 {
@@ -42,7 +42,7 @@ class ProductModel extends AdminModel
 
     protected function loadFormData()
     {
-        $app = Factory::getApplication();
+        $app  = Factory::getApplication();
         $data = $app->getUserState('com_fdshop.edit.product.data', []);
 
         if (!empty($data)) {
@@ -55,8 +55,7 @@ class ProductModel extends AdminModel
             return $item;
         }
 
-        $service = $this->getProductService();
-        $loadedItem = $service->getProductById((int) $item->id);
+        $loadedItem = $this->getProductService()->getProductById((int) $item->id);
 
         if (!$loadedItem) {
             return $item;
@@ -114,13 +113,11 @@ class ProductModel extends AdminModel
         return array_values(array_unique($ids));
     }
 
-    private function getProductService(): ProductService
+    private function getProductService(): ProductServiceInterface
     {
         $component = Factory::getApplication()->bootComponent('com_fdshop');
+        $container = $component->getContainer();
 
-        return new ProductService(
-            $component->getMVCFactory(),
-            $this->getDatabase()
-        );
+        return $container->get(ProductServiceInterface::class);
     }
 }

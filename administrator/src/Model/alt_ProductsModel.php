@@ -29,14 +29,12 @@ class ProductsModel extends ListModel
                 'a.alias',
                 'manufacturer_name',
                 'm.manufacturer_name',
-                'sale_price',
-                'a.sale_price',
-                'discount_price',
-                'a.discount_price',
-                'in_stock',
-                'a.in_stock',
-                'is_active',
-                'a.is_active',
+                'active_price_gross',
+                'a.active_price_gross',
+                'state',
+                'a.state',
+                'ordering',
+                'a.ordering',
                 'created',
                 'a.created',
                 'modified',
@@ -47,7 +45,7 @@ class ProductsModel extends ListModel
         parent::__construct($config);
     }
 
-    protected function populateState($ordering = 'a.id', $direction = 'DESC'): void
+    protected function populateState($ordering = 'a.ordering', $direction = 'ASC'): void
     {
         $app = Factory::getApplication();
 
@@ -68,88 +66,54 @@ class ProductsModel extends ListModel
         $categorySubquery = $db->getQuery(true)
             ->select([
                 $db->quoteName('pcm.product_id'),
-                'GROUP_CONCAT('
-                    . $db->quoteName('c.category_name')
-                    . ' ORDER BY ' . $db->quoteName('c.ordering') . ' ASC SEPARATOR '
-                    . $db->quote(', ')
-                    . ') AS ' . $db->quoteName('category_names'),
+                'GROUP_CONCAT(' . $db->quoteName('c.category_name') . ' ORDER BY ' . $db->quoteName('c.ordering') . ' ASC SEPARATOR ' . $db->quote(', ') . ') AS ' . $db->quoteName('category_names'),
             ])
             ->from($db->quoteName('#__fdshop_product_category_map', 'pcm'))
-            ->join(
-                'LEFT',
-                $db->quoteName('#__fdshop_categories', 'c')
-                . ' ON ' . $db->quoteName('c.id') . ' = ' . $db->quoteName('pcm.category_id')
-            )
+            ->join('LEFT', $db->quoteName('#__fdshop_categories', 'c') . ' ON ' . $db->quoteName('c.id') . ' = ' . $db->quoteName('pcm.category_id'))
             ->group($db->quoteName('pcm.product_id'));
 
         $query->select([
             $db->quoteName('a.id'),
+            $db->quoteName('d.sku'),
+            $db->quoteName('d.gtin'),
             $db->quoteName('a.manufacturer_id'),
             $db->quoteName('a.product_name'),
             $db->quoteName('a.alias'),
             $db->quoteName('a.short_description'),
             $db->quoteName('a.description'),
-            $db->quoteName('a.buyer_group_id'),
-            $db->quoteName('a.sale_price'),
-            $db->quoteName('a.discount_price'),
-            $db->quoteName('a.discount_active'),
+            $db->quoteName('a.active_price_net'),
+            $db->quoteName('a.active_price_gross'),
+            $db->quoteName('a.active_tax_rate'),
             $db->quoteName('a.currency'),
+            $db->quoteName('a.stock_quantity'),
+            $db->quoteName('a.reserved_quantity'),
             $db->quoteName('a.min_order_qty'),
             $db->quoteName('a.max_order_qty'),
             $db->quoteName('a.step_order_qty'),
-            $db->quoteName('a.katalog_active'),
             $db->quoteName('a.is_active'),
+            $db->quoteName('a.state'),
+            $db->quoteName('a.is_featured'),
+            $db->quoteName('a.access'),
+            $db->quoteName('a.ordering'),
             $db->quoteName('a.publish_up'),
             $db->quoteName('a.publish_down'),
-            $db->quoteName('a.meta_title'),
-            $db->quoteName('a.meta_keywords'),
-            $db->quoteName('a.meta_description'),
-            $db->quoteName('a.in_stock'),
-            $db->quoteName('a.available_from'),
-            $db->quoteName('a.unit_type'),
-            $db->quoteName('a.unit_quantity'),
-            $db->quoteName('a.nem'),
-            $db->quoteName('a.shot_count'),
-            $db->quoteName('a.caliber'),
-            $db->quoteName('a.burn_time'),
-            $db->quoteName('a.rise_height'),
-            $db->quoteName('a.ribbon_new'),
-            $db->quoteName('a.ribbon_hot'),
-            $db->quoteName('d.sku'),
-            $db->quoteName('d.gtin'),
-            $db->quoteName('d.stock_quantity'),
-            $db->quoteName('d.low_stock'),
-            $db->quoteName('d.reserved_quantity'),
-            $db->quoteName('d.sold_quantity'),
-            $db->quoteName('d.is_in_stock'),
-            $db->quoteName('d.weight'),
-            $db->quoteName('d.length'),
-            $db->quoteName('d.width'),
-            $db->quoteName('d.height'),
+            $db->quoteName('a.created'),
+            $db->quoteName('a.created_by'),
+            $db->quoteName('a.modified'),
+            $db->quoteName('a.modified_by'),
             $db->quoteName('m.manufacturer_name'),
             $db->quoteName('catmap.category_names'),
         ])
             ->from($db->quoteName('#__fdshop_products', 'a'))
-            ->join(
-                'LEFT',
-                $db->quoteName('#__fdshop_products_details', 'd')
-                . ' ON ' . $db->quoteName('d.product_id') . ' = ' . $db->quoteName('a.id')
-            )
-            ->join(
-                'LEFT',
-                $db->quoteName('#__fdshop_manufacturers', 'm')
-                . ' ON ' . $db->quoteName('m.id') . ' = ' . $db->quoteName('a.manufacturer_id')
-            )
-            ->join(
-                'LEFT',
-                '(' . $categorySubquery . ') AS ' . $db->quoteName('catmap')
-                . ' ON ' . $db->quoteName('catmap.product_id') . ' = ' . $db->quoteName('a.id')
-            );
+			->join('LEFT', $db->quoteName('#__fdshop_products_details', 'd') . ' ON ' . $db->quoteName('d.product_id') . ' = ' . $db->quoteName('a.id')
+    )
+            ->join('LEFT', $db->quoteName('#__fdshop_manufacturers', 'm') . ' ON ' . $db->quoteName('m.id') . ' = ' . $db->quoteName('a.manufacturer_id'))
+            ->join('LEFT', '(' . $categorySubquery . ') AS ' . $db->quoteName('catmap') . ' ON ' . $db->quoteName('catmap.product_id') . ' = ' . $db->quoteName('a.id'));
 
         $published = $this->getState('filter.published');
 
         if ($published !== '') {
-            $query->where($db->quoteName('a.is_active') . ' = ' . (int) $published);
+            $query->where($db->quoteName('a.state') . ' = ' . (int) $published);
         }
 
         $search = trim((string) $this->getState('filter.search'));
@@ -158,7 +122,7 @@ class ProductsModel extends ListModel
             if (stripos($search, 'id:') === 0) {
                 $query->where($db->quoteName('a.id') . ' = ' . (int) substr($search, 3));
             } else {
-                $token       = '%' . str_replace(' ', '%', $search) . '%';
+                $token = '%' . str_replace(' ', '%', $search) . '%';
                 $quotedToken = $db->quote($token);
 
                 $query->where(
@@ -167,17 +131,16 @@ class ProductsModel extends ListModel
                     . ' OR ' . $db->quoteName('d.sku') . ' LIKE ' . $quotedToken
                     . ' OR ' . $db->quoteName('a.alias') . ' LIKE ' . $quotedToken
                     . ' OR ' . $db->quoteName('d.gtin') . ' LIKE ' . $quotedToken
-                    . ' OR ' . $db->quoteName('a.in_stock') . ' LIKE ' . $quotedToken
                     . ')'
                 );
             }
         }
 
-        $orderCol  = $this->state->get('list.ordering', 'a.id');
-        $orderDirn = strtoupper($this->state->get('list.direction', 'DESC'));
+        $orderCol  = $this->state->get('list.ordering', 'a.ordering');
+        $orderDirn = strtoupper($this->state->get('list.direction', 'ASC'));
 
         if (!in_array($orderDirn, ['ASC', 'DESC'], true)) {
-            $orderDirn = 'DESC';
+            $orderDirn = 'ASC';
         }
 
         $query->order($db->escape($orderCol) . ' ' . $db->escape($orderDirn));

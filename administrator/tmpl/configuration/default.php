@@ -41,6 +41,7 @@ $paymentSearchView = (object) [
 					<div class="card-header">Allgemein</div>
 					<div class="card-body">
 						<?php echo $this->form->renderField('general_vat_rate'); ?>
+						<?php echo $this->form->renderField('general_currency'); ?>
 						<?php echo $this->form->renderField('show_terms_checkbox'); ?>
 						<?php echo $this->form->renderField('require_terms_checkbox'); ?>
 					</div>

@@ -22,7 +22,7 @@ class ProductTable extends Table
     public function getColumnAlias($column)
     {
         if ($column === 'published') {
-            return 'is_active';
+            return 'state';
         }
 
         return parent::getColumnAlias($column);
@@ -30,22 +30,28 @@ class ProductTable extends Table
 
     public function check()
     {
+        // Felder die auf Null gestellt werden wenn leer
         $numericFields = [
-            'manufacturer_id',
-            'buyer_group_id',
-            'sale_price',
-            'discount_price',
-            'discount_active',
+            'active_price_net',
+            'active_price_gross',
+            'active_tax_rate',
+            'stock_quantity',
+            'reserved_quantity',
             'min_order_qty',
             'max_order_qty',
             'step_order_qty',
-            'is_active',
+            'purchase_price',
+            'sale_price',
+            'discount_price',
+            'discount_active',
+            'sold_quantity',
             'unit_quantity',
-			'in_stock',
             'nem',
             'shot_count',
-            'ribbon_new',
-            'ribbon_hot',
+            'weight',
+            'length',
+            'width',
+            'height',
         ];
 
         foreach ($numericFields as $field) {
@@ -56,6 +62,7 @@ class ProductTable extends Table
             }
         }
 
+        // Normalize datetime fields
         if (!isset($this->publish_up) || $this->publish_up === '') {
             $this->publish_up = null;
         }
@@ -68,38 +75,34 @@ class ProductTable extends Table
             $this->available_from = null;
         }
 
+        // Fügt Erstellt hinzu, wenn fehlt
         if (empty($this->created)) {
             $this->created = Factory::getDate()->toSql();
         }
 
         if (empty($this->created_by)) {
             $user = Factory::getApplication()->getIdentity();
-            $this->created_by = (int) $user->id;
+            $this->created_by = $user->id;
         }
 
-        $this->product_name = trim((string) ($this->product_name ?? ''));
+        $this->product_name = trim((string) $this->product_name);
 
         if ($this->product_name === '') {
             $this->setError('product_name darf nicht leer sein.');
+
             return false;
         }
-
-        $this->alias = trim((string) ($this->alias ?? ''));
-        $this->short_description = (string) ($this->short_description ?? '');
-        $this->description = (string) ($this->description ?? '');
 
         if (!isset($this->manufacturer_id) || $this->manufacturer_id === '') {
             $this->manufacturer_id = 0;
         }
 
-        if (!isset($this->buyer_group_id) || $this->buyer_group_id === '') {
-            $this->buyer_group_id = 1;
+        if (!isset($this->stock_quantity) || $this->stock_quantity === '') {
+            $this->stock_quantity = 0;
         }
 
-        if (!isset($this->currency) || trim((string) $this->currency) === '') {
-            $this->currency = 'EUR';
-        } else {
-            $this->currency = strtoupper(trim((string) $this->currency));
+        if (!isset($this->reserved_quantity) || $this->reserved_quantity === '') {
+            $this->reserved_quantity = 0;
         }
 
         if (!isset($this->min_order_qty) || $this->min_order_qty === '') {
@@ -114,57 +117,24 @@ class ProductTable extends Table
             $this->step_order_qty = 0;
         }
 
-        /*if (!isset($this->katalog_active) || $this->katalog_active === '') {
-            $this->katalog_active = 0;
-        }*/
-
         if (!isset($this->is_active) || $this->is_active === '') {
             $this->is_active = 1;
         }
 
-        if (!isset($this->in_stock) || trim((string) $this->in_stock) === '') {
-            $this->in_stock = 'Ausverkauft';
+        if (!isset($this->state) || $this->state === '') {
+            $this->state = 1;
         }
 
-        if (!isset($this->unit_type) || trim((string) $this->unit_type) === '') {
-            $this->unit_type = 'Stück';
+        if (!isset($this->is_featured) || $this->is_featured === '') {
+            $this->is_featured = 0;
         }
 
-        if (!isset($this->unit_quantity) || $this->unit_quantity === '') {
-            $this->unit_quantity = 1;
+        if (!isset($this->access) || $this->access === '') {
+            $this->access = 1;
         }
 
-        if (!isset($this->meta_title) || $this->meta_title === null) {
-            $this->meta_title = '';
-        }
-
-
-        if (!isset($this->meta_keywords) || $this->meta_keywords === null) {
-            $this->meta_keywords = '';
-        }
-
-        if (!isset($this->meta_description) || $this->meta_description === null) {
-            $this->meta_description = '';
-        }
-
-        if (!isset($this->caliber) || $this->caliber === null || $this->caliber === '') {
-            $this->caliber = '0.000';
-        }
-
-        if (!isset($this->burn_time) || $this->burn_time === null || $this->burn_time === '') {
-            $this->burn_time = '0.000';
-        }
-
-        if (!isset($this->rise_height) || $this->rise_height === null || $this->rise_height === '') {
-            $this->rise_height = '0.000';
-        }
-
-        if (!isset($this->ribbon_new) || $this->ribbon_new === '') {
-            $this->ribbon_new = 0;
-        }
-
-        if (!isset($this->ribbon_hot) || $this->ribbon_hot === '') {
-            $this->ribbon_hot = 0;
+        if (!isset($this->ordering) || $this->ordering === '') {
+            $this->ordering = 0;
         }
 
         return true;

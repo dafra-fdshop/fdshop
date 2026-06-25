@@ -15,8 +15,14 @@ use Joomla\CMS\Uri\Uri;
 HTMLHelper::_('bootstrap.tooltip');
 
 $user      = $this->getCurrentUser();
+$userId    = (int) $user->id;
 $listOrder = $this->state->get('list.ordering');
 $listDirn  = $this->state->get('list.direction');
+$saveOrder = $listOrder === 'a.ordering';
+
+if ($saveOrder) {
+    HTMLHelper::_('draggablelist.draggable');
+}
 ?>
 
 <form action="<?php echo Route::_('index.php?option=com_fdshop&view=products'); ?>" method="post" name="adminForm" id="adminForm">
@@ -25,7 +31,9 @@ $listDirn  = $this->state->get('list.direction');
     <div class="table-responsive">
         <table class="table itemList" id="productList">
             <caption class="visually-hidden">
-                Produktliste
+                <?php echo Text::_('COM_FDSHOP_PRODUCTS_TABLE_CAPTION'); ?>,
+                <span id="orderedBy"><?php echo Text::_('JGLOBAL_SORTED_BY'); ?> </span>,
+                <span id="filteredBy"><?php echo Text::_('JGLOBAL_FILTERED_BY'); ?></span>
             </caption>
             <thead>
                 <tr>
@@ -33,31 +41,64 @@ $listDirn  = $this->state->get('list.direction');
                         <?php echo HTMLHelper::_('grid.checkall'); ?>
                     </td>
                     <th scope="col">
-                        <?php echo HTMLHelper::_('searchtools.sort', 'Produktname', 'a.product_name', $listDirn, $listOrder); ?>
+                        <?php echo HTMLHelper::_(
+                            'searchtools.sort',
+                            Text::_('Produktname'),
+                            'a.product_name',
+                            $listDirn,
+                            $listOrder
+                        ); ?>
                     </th>
                     <th scope="col" class="text-center">
-                        Bild
+                        <?php echo Text::_('Bild'); ?>
                     </th>
                     <th scope="col">
-                        <?php echo HTMLHelper::_('searchtools.sort', 'Artikelnr.', 'd.sku', $listDirn, $listOrder); ?>
+                        <?php echo HTMLHelper::_(
+                            'searchtools.sort',
+                            Text::_('Artikelnr.'),
+                            'a.sku',
+                            $listDirn,
+                            $listOrder
+                        ); ?>
                     </th>
                     <th scope="col">
-                        <?php echo HTMLHelper::_('searchtools.sort', 'Verkaufspreis', 'a.sale_price', $listDirn, $listOrder); ?>
+                        <?php echo HTMLHelper::_(
+                            'searchtools.sort',
+                            Text::_('Verkaufspreiß'),
+                            'a.active_price_gross',
+                            $listDirn,
+                            $listOrder
+                        ); ?>
                     </th>
                     <th scope="col">
-                        <?php echo HTMLHelper::_('searchtools.sort', 'Bestand', 'a.in_stock', $listDirn, $listOrder); ?>
+                        <?php echo Text::_('Kategorien'); ?>
                     </th>
                     <th scope="col">
-                        Kategorien
-                    </th>
-                    <th scope="col">
-                        <?php echo HTMLHelper::_('searchtools.sort', 'Hersteller', 'm.manufacturer_name', $listDirn, $listOrder); ?>
+                        <?php echo HTMLHelper::_(
+                            'searchtools.sort',
+                            Text::_('Hersteller'),
+                            'm.manufacturer_name',
+                            $listDirn,
+                            $listOrder
+                        ); ?>
                     </th>
                     <th scope="col" class="w-1 text-center">
-                        <?php echo HTMLHelper::_('searchtools.sort', Text::_('JPUBLISHED'), 'a.is_active', $listDirn, $listOrder); ?>
+                        <?php echo HTMLHelper::_(
+                            'searchtools.sort',
+                            Text::_('JPUBLISHED'),
+                            'a.state',
+                            $listDirn,
+                            $listOrder
+                        ); ?>
                     </th>
                     <th scope="col" class="w-1 text-center">
-                        <?php echo HTMLHelper::_('searchtools.sort', Text::_('JGRID_HEADING_ID'), 'a.id', $listDirn, $listOrder); ?>
+                        <?php echo HTMLHelper::_(
+                            'searchtools.sort',
+                            Text::_('JGRID_HEADING_ID'),
+                            'a.id',
+                            $listDirn,
+                            $listOrder
+                        ); ?>
                     </th>
                 </tr>
             </thead>
@@ -71,11 +112,6 @@ $listDirn  = $this->state->get('list.direction');
                         $canChange  = $user->authorise('core.edit.state', 'com_fdshop');
                         $imageSrc   = !empty($item->image_path_mobile) ? Uri::root() . ltrim((string) $item->image_path_mobile, '/') : '';
                         $categories = trim((string) ($item->category_names ?? ''));
-                        $price      = number_format((float) ($item->sale_price ?? 0), 2, ',', '.');
-
-                        if (!empty($item->currency)) {
-                            $price .= ' ' . $this->escape((string) $item->currency);
-                        }
                         ?>
                         <tr class="row<?php echo $i % 2; ?>">
                             <td class="text-center">
@@ -85,10 +121,10 @@ $listDirn  = $this->state->get('list.direction');
                             <th scope="row">
                                 <?php if ($canEdit) : ?>
                                     <a href="<?php echo $editLink; ?>">
-                                        <?php echo $this->escape((string) ($item->product_name ?? '')); ?>
+                                        <?php echo $this->escape((string) $item->product_name); ?>
                                     </a>
                                 <?php else : ?>
-                                    <?php echo $this->escape((string) ($item->product_name ?? '')); ?>
+                                    <?php echo $this->escape((string) $item->product_name); ?>
                                 <?php endif; ?>
 
                                 <?php if (!empty($item->alias)) : ?>
@@ -109,15 +145,11 @@ $listDirn  = $this->state->get('list.direction');
                             </td>
 
                             <td>
-                                <?php echo $this->escape((string) ($item->sku ?? '')); ?>
+                                <?php echo $this->escape((string) $item->sku); ?>
                             </td>
 
                             <td>
-                                <?php echo $price; ?>
-                            </td>
-
-                            <td>
-                                <?php echo $this->escape((string) ($item->in_stock ?? '')); ?>
+                                <?php echo number_format((float) ($item->active_price_gross ?? 0), 2, ',', '.') . ' €'; ?>
                             </td>
 
                             <td>
@@ -131,7 +163,7 @@ $listDirn  = $this->state->get('list.direction');
                             </td>
 
                             <td class="text-center">
-                                <?php echo HTMLHelper::_('jgrid.published', $item->is_active, $i, 'products.', $canChange, 'cb'); ?>
+                                <?php echo HTMLHelper::_('jgrid.published', $item->state, $i, 'products.', $canChange, 'cb'); ?>
                             </td>
 
                             <td class="text-center">
@@ -141,7 +173,7 @@ $listDirn  = $this->state->get('list.direction');
                     <?php endforeach; ?>
                 <?php else : ?>
                     <tr>
-                        <td colspan="10" class="text-center">
+                        <td colspan="9" class="text-center">
                             <?php echo Text::_('JGLOBAL_NO_MATCHING_RESULTS'); ?>
                         </td>
                     </tr>
@@ -150,8 +182,9 @@ $listDirn  = $this->state->get('list.direction');
 
             <?php if (!empty($this->items)) : ?>
                 <tfoot>
+
                     <tr>
-                        <td colspan="10">
+                        <td colspan="9">
                             <?php echo $this->pagination->getListFooter(); ?>
                         </td>
                     </tr>

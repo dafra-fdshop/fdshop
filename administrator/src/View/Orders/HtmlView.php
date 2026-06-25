@@ -49,7 +49,14 @@ class HtmlView extends BaseHtmlView
 
         ToolbarHelper::title('FDShop - Bestellungen');
         ToolbarHelper::custom('orders.save', 'save', '', 'JTOOLBAR_SAVE', true);
-        ToolbarHelper::trash('orders.trash');
+		ToolbarHelper::custom('orders.trashconfirm', 'trash', '', 'JTOOLBAR_TRASH', true);
+		
+		$stateFilter = $this->state->get('filter.state', '');
+
+		if ((string) $stateFilter === '-2') {
+			ToolbarHelper::custom('orders.restore', 'refresh', '', 'Wiederherstellen', true);
+		}
+		
 
         parent::display($tpl);
     }

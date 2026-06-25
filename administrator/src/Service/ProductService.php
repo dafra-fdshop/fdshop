@@ -10,7 +10,6 @@ defined('_JEXEC') or die;
 
 use InvalidArgumentException;
 use Joomla\CMS\Factory;
-use Joomla\CMS\Filesystem\File;
 use Joomla\CMS\Filesystem\Folder;
 use Joomla\CMS\MVC\Factory\MVCFactoryInterface;
 use Joomla\Database\DatabaseInterface;
@@ -52,36 +51,64 @@ class ProductService implements ProductServiceInterface
             $primaryCategoryId = (int) $data['primary_category_id'];
         }
 
-        $table = $this->mvcFactory->createTable('Product', 'Administrator');
+        [$productData, $detailsData] = $this->splitProductData($data);
+        $productData['product_name'] = $productName;
+        $productData['in_stock'] = $this->calculateInStock($detailsData);
 
-        if (!$table) {
+        $productTable = $this->mvcFactory->createTable('Product', 'Administrator');
+        $detailsTable = $this->mvcFactory->createTable('ProductDetails', 'Administrator');
+
+        if (!$productTable) {
             throw new RuntimeException('ProductTable konnte nicht erstellt werden.');
         }
 
-        $bindData = $data;
-        $bindData['product_name'] = $productName;
-
-        unset($bindData['category_ids'], $bindData['buyer_group_ids'], $bindData['primary_category_id']);
-
-        if (!$table->bind($bindData)) {
-            throw new RuntimeException($table->getError());
+        if (!$detailsTable) {
+            throw new RuntimeException('ProductDetailsTable konnte nicht erstellt werden.');
         }
 
-        if (!$table->check()) {
-            throw new RuntimeException($table->getError());
+        $this->db->transactionStart();
+
+        try {
+            if (!$productTable->bind($productData)) {
+                throw new RuntimeException($productTable->getError());
+            }
+
+            if (!$productTable->check()) {
+                throw new RuntimeException($productTable->getError());
+            }
+
+            if (!$productTable->store()) {
+                throw new RuntimeException($productTable->getError());
+            }
+
+            $productId = (int) $productTable->id;
+
+            $detailsData['product_id'] = $productId;
+            $detailsData['id'] = $this->getProductDetailsRecordId($productId);
+
+            if (!$detailsTable->bind($detailsData)) {
+                throw new RuntimeException($detailsTable->getError());
+            }
+
+            if (!$detailsTable->check()) {
+                throw new RuntimeException($detailsTable->getError());
+            }
+
+            if (!$detailsTable->store()) {
+                throw new RuntimeException($detailsTable->getError());
+            }
+
+            $this->saveProductCategoryAssignments($productId, $categoryIds, $primaryCategoryId);
+            $this->saveProductBuyerGroupAssignments($productId, $buyerGroupIds);
+            $this->processUploadedProductImage($productId);
+
+            $this->db->transactionCommit();
+
+            return $productId;
+        } catch (\Throwable $e) {
+            $this->db->transactionRollback();
+            throw $e;
         }
-
-        if (!$table->store()) {
-            throw new RuntimeException($table->getError());
-        }
-
-        $productId = (int) $table->id;
-
-        $this->saveProductCategoryAssignments($productId, $categoryIds, $primaryCategoryId);
-        $this->saveProductBuyerGroupAssignments($productId, $buyerGroupIds);
-        $this->processUploadedProductImage($productId);
-
-        return $productId;
     }
 
     public function saveProductCategoryAssignments(
@@ -221,17 +248,186 @@ class ProductService implements ProductServiceInterface
             ->where($this->db->quoteName('id') . ' = ' . (int) $productId);
 
         $this->db->setQuery($query);
-
         $item = $this->db->loadObject();
 
         if (!$item) {
             return null;
         }
 
+        $details = $this->getProductDetailsByProductId($productId);
+
+        if ($details) {
+            foreach (get_object_vars($details) as $property => $value) {
+                if ($property === 'id') {
+                    $item->product_details_id = $value;
+                    continue;
+                }
+
+                if ($property === 'product_id') {
+                    continue;
+                }
+
+                $item->$property = $value;
+            }
+        } else {
+            $item->product_details_id = 0;
+            $item->sku = '';
+            $item->gtin = '';
+            $item->stock_quantity = 0;
+            $item->low_stock = 0;
+            $item->reserved_quantity = 0;
+            $item->sold_quantity = 0;
+            $item->is_in_stock = 0;
+            $item->weight = 0;
+            $item->length = 0;
+            $item->width = 0;
+            $item->height = 0;
+        }
+
         $item->category_ids = $this->getAssignedCategoryIds($productId);
         $item->buyer_group_ids = $this->getAssignedBuyerGroupIds($productId);
 
         return $item;
+    }
+
+    private function splitProductData(array $data): array
+    {
+        $productFields = [
+            'id',
+            'manufacturer_id',
+            'product_name',
+            'alias',
+            'short_description',
+            'description',
+            'buyer_group_id',
+            'sale_price',
+            'discount_price',
+            'discount_active',
+            'currency',
+            'min_order_qty',
+            'max_order_qty',
+            'step_order_qty',
+            'is_active',
+            'publish_up',
+            'publish_down',
+            'meta_title',
+            'meta_keywords',
+            'meta_description',
+            'in_stock',
+            'available_from',
+            'unit_type',
+            'unit_quantity',
+            'nem',
+            'shot_count',
+            'caliber',
+            'burn_time',
+            'rise_height',
+            'ribbon_new',
+            'ribbon_hot',
+        ];
+
+        $detailFields = [
+            'id',
+            'product_id',
+            'sku',
+            'gtin',
+            'stock_quantity',
+            'low_stock',
+            'reserved_quantity',
+            'sold_quantity',
+            'is_in_stock',
+            'created',
+            'created_by',
+            'modified',
+            'modified_by',
+            'weight',
+            'length',
+            'width',
+            'height',
+        ];
+
+        $productData = [];
+        $detailsData = [];
+
+        foreach ($productFields as $field) {
+            if (array_key_exists($field, $data)) {
+                $productData[$field] = $data[$field];
+            }
+        }
+
+        foreach ($detailFields as $field) {
+            if (array_key_exists($field, $data)) {
+                $detailsData[$field] = $data[$field];
+            }
+        }
+
+        unset(
+            $productData['in_stock'],
+            $detailsData['id'],
+            $detailsData['product_id'],
+            $detailsData['created'],
+            $detailsData['created_by'],
+            $detailsData['modified'],
+            $detailsData['modified_by']
+        );
+
+        return [$productData, $detailsData];
+    }
+
+    private function getProductDetailsByProductId(int $productId): ?object
+    {
+        $query = $this->db->getQuery(true)
+            ->select('*')
+            ->from($this->db->quoteName('#__fdshop_products_details'))
+            ->where($this->db->quoteName('product_id') . ' = ' . (int) $productId);
+
+        $this->db->setQuery($query);
+
+        $details = $this->db->loadObject();
+
+        return $details ?: null;
+    }
+
+    private function getProductDetailsRecordId(int $productId): int
+    {
+        $query = $this->db->getQuery(true)
+            ->select($this->db->quoteName('id'))
+            ->from($this->db->quoteName('#__fdshop_products_details'))
+            ->where($this->db->quoteName('product_id') . ' = ' . (int) $productId);
+
+        $this->db->setQuery($query);
+
+        return (int) $this->db->loadResult();
+    }
+
+    private function calculateInStock(array $detailsData): string
+    {
+        $stockQuantity = (float) ($detailsData['stock_quantity'] ?? 0);
+        $reservedQuantity = (float) ($detailsData['reserved_quantity'] ?? 0);
+        $lowStock = (float) ($detailsData['low_stock'] ?? 0);
+        $isInStock = (int) ($detailsData['is_in_stock'] ?? 0);
+
+        if ($reservedQuantity >= $stockQuantity) {
+            return 'Ausverkauft';
+        }
+
+        if ($reservedQuantity < $stockQuantity && $reservedQuantity < $lowStock && $isInStock === 1) {
+            return 'Verfügbar';
+        }
+
+        if ($reservedQuantity < $stockQuantity && $reservedQuantity < $lowStock && $isInStock === 0) {
+            return 'Bestellbar';
+        }
+
+        if ($reservedQuantity < $stockQuantity && $reservedQuantity >= $lowStock && $isInStock === 1) {
+            return 'wenige Verfügbar';
+        }
+
+        if ($reservedQuantity < $stockQuantity && $reservedQuantity >= $lowStock && $isInStock === 0) {
+            return 'wenige Bestellbar';
+        }
+
+        return 'Ausverkauft';
     }
 
     private function processUploadedProductImage(int $productId): void
@@ -585,7 +781,6 @@ class ProductService implements ProductServiceInterface
         $ids = array_filter(
             $ids,
             static fn (int $id): bool => $id > 0
-
         );
 
         return array_values(array_unique($ids));

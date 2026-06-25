@@ -62,6 +62,9 @@ class OrdersModel extends ListModel
 
         $status = $this->getUserStateFromRequest($this->context . '.filter.status', 'filter_status', '');
         $this->setState('filter.status', $status);
+		
+		$state = $this->getUserStateFromRequest($this->context . '.filter.state', 'filter_state', '');
+		$this->setState('filter.state', $state);
 
         parent::populateState($ordering, $direction);
     }
@@ -112,6 +115,15 @@ class OrdersModel extends ListModel
             ->join('LEFT', $db->quoteName('#__fdshop_order_statuses', 'os') . ' ON ' . $db->quoteName('os.id') . ' = ' . $db->quoteName('a.order_status_id'))
             ->join('LEFT', $db->quoteName('#__fdshop_payment_methods', 'pm') . ' ON ' . $db->quoteName('pm.id') . ' = ' . $db->quoteName('a.payment_method_id'))
             ->join('LEFT', $db->quoteName('#__fdshop_shipments', 's') . ' ON ' . $db->quoteName('s.id') . ' = ' . $db->quoteName('a.shipment_id'));
+			
+		$state = $this->getState('filter.state');
+
+		if ($state === '') {
+			// Standard: alles außer Papierkorb
+			$query->where($db->quoteName('a.state') . ' != -2');
+		} else {
+			$query->where($db->quoteName('a.state') . ' = ' . (int) $state);
+		}
 
         $search = trim((string) $this->getState('filter.search'));
 

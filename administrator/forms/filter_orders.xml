@@ -7,6 +7,16 @@
 			inputmode="search"
 			hint="Bestellnummer suchen"
 		/>
+		
+		<field
+			name="state"
+			type="status"
+			label="JOPTION_SELECT_PUBLISHED"
+			class="js-select-submit-on-change"
+			extension="com_fdshop"
+		>
+			<option value="">JOPTION_SELECT_PUBLISHED</option>
+		</field>
 
 		<field
 			name="status"

@@ -3,8 +3,8 @@
 	<name>com_fdshop</name>
 	<author>FDShop</author>
 	<creationDate>2026-03-19</creationDate>
-	<version>0.0.25</version>
-	<description>COM_FDSHOP_XML_DESCRIPTION</description>
+	<version>0.0.41</version>
+	<description>Neuer schneller Shop</description>
 
 	<namespace path="src">FDShop\Component\FDShop</namespace>
 	<scriptfile>script.php</scriptfile>

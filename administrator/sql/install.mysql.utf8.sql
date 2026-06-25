@@ -6,76 +6,143 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `#__fdshop_products` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `sku` VARCHAR(64) NOT NULL,
-  `gtin` VARCHAR(32) NOT NULL DEFAULT '',
   `manufacturer_id` BIGINT UNSIGNED NOT NULL DEFAULT 0,
   `product_name` VARCHAR(255) NOT NULL,
   `alias` VARCHAR(191) NOT NULL,
   `short_description` TEXT NULL,
   `description` MEDIUMTEXT NULL,
+  `buyer_group_id` BIGINT UNSIGNED NOT NULL DEFAULT 1,
 
-  `active_price_net` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
-  `active_price_gross` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
-  `active_tax_rate` DECIMAL(7,4) NOT NULL DEFAULT 0.0000,
-  `currency` CHAR(3) NOT NULL DEFAULT 'EUR',
+  `sale_price` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
+  `discount_price` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
+  `discount_active` TINYINT(1) NOT NULL DEFAULT 0,
+  `currency` CHAR(3) NOT NULL,
 
-  `stock_quantity` INT NOT NULL DEFAULT 0,
-  `reserved_quantity` INT NOT NULL DEFAULT 0,
+  `min_order_qty` DECIMAL(12,3) NOT NULL,
+  `max_order_qty` DECIMAL(12,3) NOT NULL,
+  `step_order_qty` DECIMAL(12,3) NOT NULL,
 
-  `min_order_qty` DECIMAL(12,3) NOT NULL DEFAULT 1.000,
-  `max_order_qty` DECIMAL(12,3) NOT NULL DEFAULT 0.000,
-  `step_order_qty` DECIMAL(12,3) NOT NULL DEFAULT 1.000,
-
-  `is_active` TINYINT(1) NOT NULL DEFAULT 1,
-  `state` TINYINT NOT NULL DEFAULT 1,
-  `is_featured` TINYINT(1) NOT NULL DEFAULT 0,
-  `access` INT UNSIGNED NOT NULL DEFAULT 1,
-  `ordering` INT NOT NULL DEFAULT 0,
-
+  `katalog_active` TINYINT(1) NOT NULL DEFAULT 0,
+  `is_active` TINYINT(1) NOT NULL DEFAULT 0,
   `publish_up` DATETIME NULL DEFAULT NULL,
   `publish_down` DATETIME NULL DEFAULT NULL,
 
-  `created` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `created_by` INT UNSIGNED NOT NULL DEFAULT 0,
-  `modified` DATETIME NULL DEFAULT NULL,
-  `modified_by` INT UNSIGNED NOT NULL DEFAULT 0,
-
-  `meta_title` VARCHAR(255) NOT NULL DEFAULT '',
+  `meta_title` VARCHAR(255) NOT NULL,
   `meta_keywords` TEXT NULL,
   `meta_description` TEXT NULL,
 
-  `discount_price` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
-  `discount_active` TINYINT(1) NOT NULL DEFAULT 0,
-
-  `is_in_stock` TINYINT(1) NOT NULL DEFAULT 1,
+  `in_stock` VARCHAR(50) NOT NULL,
   `available_from` DATETIME NULL DEFAULT NULL,
-  `sold_quantity` INT NOT NULL DEFAULT 0,
+  `unit_type` VARCHAR(100) NOT NULL DEFAULT 'Stück',
+  `unit_quantity` INT UNSIGNED NOT NULL DEFAULT 1,
 
-  `unit_type` VARCHAR(255) NOT NULL DEFAULT '',
-  `unit_quantity` INT NOT NULL DEFAULT 0,
+  `nem` DECIMAL(12,3) NOT NULL DEFAULT 0.000,
+  `shot_count` DECIMAL(12,3) NOT NULL DEFAULT 0.000,
+  `caliber` VARCHAR(100) NOT NULL DEFAULT '0.000',
+  `burn_time` VARCHAR(100) NOT NULL DEFAULT '0.000',
+  `rise_height` VARCHAR(100) NOT NULL DEFAULT '0.000',
 
-  `nem` FLOAT NOT NULL DEFAULT 0,
-  `shot_count` INT NOT NULL DEFAULT 0,
-  `caliber` VARCHAR(255) NOT NULL DEFAULT '',
-  `burn_time` VARCHAR(255) NOT NULL DEFAULT '',
-  `rise_height` VARCHAR(255) NOT NULL DEFAULT '',
-
-  `weight` FLOAT NOT NULL DEFAULT 0,
-  `length` FLOAT NOT NULL DEFAULT 0,
-  `width` FLOAT NOT NULL DEFAULT 0,
-  `height` FLOAT NOT NULL DEFAULT 0,
-
-  `purchase_price` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
-  `sale_price` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
-
+  `ribbon_new` TINYINT(1) NOT NULL DEFAULT 0,
+  `ribbon_hot` TINYINT(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_fdshop_products_sku` (`sku`),
   KEY `idx_fdshop_products_manufacturer_id` (`manufacturer_id`),
-  KEY `idx_fdshop_products_alias` (`alias`),
-  KEY `idx_fdshop_products_is_active` (`is_active`),
-  KEY `idx_fdshop_products_state` (`state`),
-  KEY `idx_fdshop_products_is_featured` (`is_featured`),
-  KEY `idx_fdshop_products_ordering` (`ordering`)
+  KEY `idx_fdshop_products_buyer_group_id` (`buyer_group_id`),
+  KEY `idx_fdshop_products_is_active` (`is_active`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- --------------------------------------------------------
+-- #__fdshop_products_details
+-- --------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `#__fdshop_products_details` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `product_id` BIGINT UNSIGNED NOT NULL,
+  `sku` VARCHAR(64) NOT NULL,
+  `gtin` VARCHAR(32) NOT NULL,
+  `stock_quantity` INT UNSIGNED NOT NULL,
+  `low_stock` INT UNSIGNED NOT NULL,
+  `reserved_quantity` DECIMAL(12,3) NOT NULL DEFAULT 0.000,
+  `sold_quantity` DECIMAL(12,3) NOT NULL DEFAULT 0.000,
+  `is_in_stock` TINYINT(1) NOT NULL DEFAULT 0,
+  `created` DATETIME NOT NULL,
+  `created_by` INT UNSIGNED NOT NULL,
+  `modified` DATETIME NULL DEFAULT NULL,
+  `modified_by` INT UNSIGNED NULL DEFAULT NULL,
+  `weight` DECIMAL(12,3) NOT NULL DEFAULT 0.000,
+  `length` DECIMAL(12,3) NOT NULL DEFAULT 0.000,
+  `width` DECIMAL(12,3) NOT NULL DEFAULT 0.000,
+  `height` DECIMAL(12,3) NOT NULL DEFAULT 0.000,
+  PRIMARY KEY (`id`),
+  KEY `idx_fdshop_products_details_product_id` (`product_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+-- --------------------------------------------------------
+-- #__fdshop_product_prices
+-- --------------------------------------------------------
+CREATE TABLE `#__fdshop_product_prices` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `product_id` BIGINT UNSIGNED NOT NULL,
+
+  `currency` CHAR(3) NOT NULL,
+  `calc_price_net` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
+  `calc_price_gross` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
+  `calc_stock_cost_net` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
+  `calc_shipping_cost_net` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
+  `calc_other_cost_net` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
+  `calc_target_margin` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
+
+  `manu_price_net` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
+  `manu_price_gross` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
+  `manu_stock_cost_net` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
+  `manu_shipping_cost_net` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
+  `manu_other_cost_net` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
+
+  `stock_rule_overridden` TINYINT(1) NOT NULL DEFAULT 0,
+  `stock_rule_value` DECIMAL(12,4) NOT NULL,
+  `shipping_rule_overridden` TINYINT(1) NOT NULL DEFAULT 0,
+  `shipping_rule_value` DECIMAL(12,4) NOT NULL,
+  `other_rule_overridden` TINYINT(1) NOT NULL DEFAULT 0,
+  `other_rule_value` DECIMAL(12,4) NOT NULL,
+  `tax_rate` DECIMAL(7,4) NOT NULL,
+  `purchase_price_net` DECIMAL(12,4) NOT NULL,
+  `margin_effective` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
+  `created` DATETIME NOT NULL,
+  `created_by` INT UNSIGNED NOT NULL,
+  `modified` DATETIME NULL DEFAULT NULL,
+  `modified_by` INT UNSIGNED NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_fdshop_product_prices_product_id` (`product_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+-- #__fdshop_price_calc_rules
+-- --------------------------------------------------------
+CREATE TABLE `#__fdshop_price_calc_rules` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `stock_cost_pct` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
+  `shipping_cost_pct` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
+  `other_cost_pct` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
+  `target_margin_pct` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+-- #__fdshop_product_prices_research
+-- --------------------------------------------------------
+CREATE TABLE `#__fdshop_product_prices_research` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `product_id` BIGINT UNSIGNED NOT NULL,
+  `research_data` JSON NOT NULL,
+  `checked_at` DATETIME NULL DEFAULT NULL,
+  `note` TEXT NULL,
+  `created` DATETIME NOT NULL,
+  `created_by` INT UNSIGNED NOT NULL,
+  `modified` DATETIME NULL DEFAULT NULL,
+  `modified_by` INT UNSIGNED NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_fdshop_product_prices_research_product_id` (`product_id`),
+  KEY `idx_fdshop_product_prices_research_checked_at` (`checked_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -195,77 +262,6 @@ CREATE TABLE IF NOT EXISTS `#__fdshop_product_buyer_group_map` (
   UNIQUE KEY `uk_fdshop_product_buyer_group_map_product_group` (`product_id`, `buyer_group_id`),
   KEY `idx_fdshop_product_buyer_group_map_product_id` (`product_id`),
   KEY `idx_fdshop_product_buyer_group_map_buyer_group_id` (`buyer_group_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- --------------------------------------------------------
--- #__fdshop_product_prices
--- --------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `#__fdshop_product_prices` (
-  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `product_id` BIGINT UNSIGNED NOT NULL,
-  `buyer_group_id` BIGINT UNSIGNED NOT NULL DEFAULT 0,
-  `price_type` VARCHAR(32) NOT NULL DEFAULT 'base',
-  `currency` CHAR(3) NOT NULL DEFAULT 'EUR',
-
-  `price_net` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
-  `price_gross` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
-  `tax_rate` DECIMAL(7,4) NOT NULL DEFAULT 0.0000,
-
-  `min_qty` DECIMAL(12,3) NOT NULL DEFAULT 1.000,
-  `max_qty` DECIMAL(12,3) NOT NULL DEFAULT 0.000,
-
-  `valid_from` DATETIME NULL DEFAULT NULL,
-  `valid_to` DATETIME NULL DEFAULT NULL,
-
-  `priority` INT NOT NULL DEFAULT 0,
-  `is_active` TINYINT(1) NOT NULL DEFAULT 1,
-
-  PRIMARY KEY (`id`),
-  KEY `idx_fdshop_product_prices_product_id` (`product_id`),
-  KEY `idx_fdshop_product_prices_buyer_group_id` (`buyer_group_id`),
-  KEY `idx_fdshop_product_prices_price_type` (`price_type`),
-  KEY `idx_fdshop_product_prices_valid_from` (`valid_from`),
-  KEY `idx_fdshop_product_prices_valid_to` (`valid_to`),
-  KEY `idx_fdshop_product_prices_is_active` (`is_active`),
-  KEY `idx_fdshop_product_prices_priority` (`priority`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- --------------------------------------------------------
--- #__fdshop_product_price_calc
--- --------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `#__fdshop_product_price_calc` (
-  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `product_id` BIGINT UNSIGNED NOT NULL,
-
-  `price_type` VARCHAR(32) NOT NULL DEFAULT '',
-  `source` VARCHAR(64) NOT NULL DEFAULT '',
-  `label` VARCHAR(255) NOT NULL DEFAULT '',
-  `competitor_name` VARCHAR(255) NOT NULL DEFAULT '',
-  `source_url` VARCHAR(1024) NOT NULL DEFAULT '',
-
-  `price_net` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
-  `price_gross` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
-  `currency` CHAR(3) NOT NULL DEFAULT 'EUR',
-  `checked_at` DATETIME NULL DEFAULT NULL,
-  `note` TEXT NULL,
-
-  `supplier_cost_net` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
-  `shipping_cost_net` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
-  `other_cost_net` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
-  `target_margin_percent` DECIMAL(7,4) NOT NULL DEFAULT 0.0000,
-
-  `calc_price_net` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
-  `calc_price_gross` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
-  `tax_rate` DECIMAL(7,4) NOT NULL DEFAULT 0.0000,
-
-  `is_current` TINYINT(1) NOT NULL DEFAULT 1,
-
-  PRIMARY KEY (`id`),
-  KEY `idx_fdshop_product_price_calc_product_id` (`product_id`),
-  KEY `idx_fdshop_product_price_calc_price_type` (`price_type`),
-  KEY `idx_fdshop_product_price_calc_source` (`source`),
-  KEY `idx_fdshop_product_price_calc_checked_at` (`checked_at`),
-  KEY `idx_fdshop_product_price_calc_is_current` (`is_current`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -660,22 +656,23 @@ CREATE TABLE IF NOT EXISTS `#__fdshop_order_status_history` (
 -- #__fdshop_config
 -- globale Einzel-Datensatz-Konfiguration
 -- --------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `#__fdshop_config` (
+CREATE TABLE `#__fdshop_config` (
   `id` TINYINT UNSIGNED NOT NULL DEFAULT 1,
   `general_vat_rate` DECIMAL(7,4) NOT NULL DEFAULT 19.0000,
+  `general_currency` CHAR(3) NOT NULL DEFAULT 'EUR',
   `image_size_default` INT UNSIGNED NOT NULL DEFAULT 400,
   `image_size_small` INT UNSIGNED NOT NULL DEFAULT 250,
   `image_size_mobile` INT UNSIGNED NOT NULL DEFAULT 100,
   `image_size_manufacturer` INT UNSIGNED NOT NULL DEFAULT 400,
   `show_terms_checkbox` TINYINT(1) NOT NULL DEFAULT 0,
   `require_terms_checkbox` TINYINT(1) NOT NULL DEFAULT 0,
-
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 INSERT INTO `#__fdshop_config` (
   `id`,
   `general_vat_rate`,
+  `general_currency`,
   `image_size_default`,
   `image_size_small`,
   `image_size_mobile`,
@@ -686,6 +683,7 @@ INSERT INTO `#__fdshop_config` (
 SELECT
   1,
   19.0000,
+  'EUR',
   400,
   250,
   100,
@@ -701,7 +699,7 @@ WHERE NOT EXISTS (
 
 -- --------------------------------------------------------
 -- #__fdshop_media
--- Produktbilder / Medienverwaltung
+-- Produktbilder / Medienverwaltun
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `#__fdshop_media` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,

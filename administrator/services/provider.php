@@ -103,18 +103,20 @@ return new class () implements ServiceProviderInterface {
 		);
 
         $container->set(
-            ComponentInterface::class,
-            function (Container $container): ComponentInterface {
-                $component = new FdshopComponent(
-                    $container->get(ComponentDispatcherFactoryInterface::class)
-                );
+			ComponentInterface::class,
+			function (Container $container): ComponentInterface {
+				$component = new FdshopComponent(
+					$container->get(ComponentDispatcherFactoryInterface::class)
+				);
 
-                $component->setMVCFactory(
-                    $container->get(MVCFactoryInterface::class)
-                );
+				$component->setMVCFactory(
+					$container->get(MVCFactoryInterface::class)
+				);
 
-                return $component;
-            }
-        );
+				$component->setContainer($container);
+
+				return $component;
+			}
+		);
     }
 };

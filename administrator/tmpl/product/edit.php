@@ -17,7 +17,7 @@ use Joomla\CMS\Uri\Uri;
         <div class="row">
             <div class="col-12 col-xl-6">
                 <div class="card mb-3">
-                    <div class="card-header">Allgemeine Felder</div>
+                    <div class="card-header">Grunddaten</div>
                     <div class="card-body">
                         <?php echo $this->form->renderField('product_name'); ?>
                         <?php echo $this->form->renderField('sku'); ?>
@@ -25,53 +25,35 @@ use Joomla\CMS\Uri\Uri;
                         <?php echo $this->form->renderField('alias'); ?>
                         <?php echo $this->form->renderField('manufacturer_id'); ?>
                         <?php echo $this->form->renderField('category_ids'); ?>
-                        <?php echo $this->form->renderField('is_active'); ?>
+                        <?php echo $this->form->renderField('buyer_group_ids'); ?>
                     </div>
                 </div>
             </div>
 
             <div class="col-12 col-xl-6">
                 <div class="card mb-3">
-                    <div class="card-header">Preis</div>
+                    <div class="card-header">Veröffentlichung</div>
                     <div class="card-body">
-                        <?php echo $this->form->renderField('active_price_net'); ?>
-                        <?php echo $this->form->renderField('active_price_gross'); ?>
-                        <?php echo $this->form->renderField('active_tax_rate'); ?>
-                        <?php echo $this->form->renderField('currency'); ?>
-                        <?php echo $this->form->renderField('purchase_price'); ?>
+                        <?php echo $this->form->renderField('katalog_active'); ?>
+                        <?php echo $this->form->renderField('is_active'); ?>
+                        <?php echo $this->form->renderField('publish_up'); ?>
+                        <?php echo $this->form->renderField('publish_down'); ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <?php echo HTMLHelper::_('uitab.endTab'); ?>
+
+    <?php echo HTMLHelper::_('uitab.addTab', 'fdshopProductTabs', 'pricing', 'Preis'); ?>
+        <div class="row">
+            <div class="col-12 col-xl-6">
+                <div class="card mb-3">
+                    <div class="card-header">Preisangaben</div>
+                    <div class="card-body">
                         <?php echo $this->form->renderField('sale_price'); ?>
                         <?php echo $this->form->renderField('discount_price'); ?>
                         <?php echo $this->form->renderField('discount_active'); ?>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-12 col-xl-6">
-                <div class="card mb-3">
-                    <div class="card-header">Beschreibungen</div>
-                    <div class="card-body">
-                        <?php echo $this->form->renderField('short_description'); ?>
-                        <?php echo $this->form->renderField('description'); ?>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-12 col-xl-6">
-                <div class="card mb-3">
-                    <div class="card-header">Meta</div>
-                    <div class="card-body">
-                        <?php echo $this->form->renderField('meta_title'); ?>
-                        <?php echo $this->form->renderField('meta_keywords'); ?>
-                        <?php echo $this->form->renderField('meta_description'); ?>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-12">
-                <div class="card mb-3">
-                    <div class="card-header">Käufergruppe</div>
-                    <div class="card-body">
-                        <?php echo $this->form->renderField('buyer_group_ids'); ?>
+                        <?php echo $this->form->renderField('currency'); ?>
                     </div>
                 </div>
             </div>
@@ -82,29 +64,54 @@ use Joomla\CMS\Uri\Uri;
         <div class="row">
             <div class="col-12 col-xl-6">
                 <div class="card mb-3">
-                    <div class="card-header">Lager / Status</div>
+                    <div class="card-header">Lagerdaten</div>
                     <div class="card-body">
                         <?php echo $this->form->renderField('stock_quantity'); ?>
+                        <?php echo $this->form->renderField('low_stock'); ?>
                         <?php echo $this->form->renderField('reserved_quantity'); ?>
-                        <?php echo $this->form->renderField('min_order_qty'); ?>
-                        <?php echo $this->form->renderField('max_order_qty'); ?>
-                        <?php echo $this->form->renderField('step_order_qty'); ?>
-                        <?php echo $this->form->renderField('is_in_stock'); ?>
-                        <?php echo $this->form->renderField('available_from'); ?>
                         <?php echo $this->form->renderField('sold_quantity'); ?>
+                        <?php echo $this->form->renderField('is_in_stock'); ?>
+						<?php echo $this->form->renderField('available_from'); ?>
                     </div>
                 </div>
             </div>
 
             <div class="col-12 col-xl-6">
                 <div class="card mb-3">
-                    <div class="card-header">Produktinformationen</div>
+                    <div class="card-header">Bestellmengen</div>
                     <div class="card-body">
-                        <?php echo $this->form->renderField('ordering'); ?>
-                        <?php echo $this->form->renderField('publish_up'); ?>
-                        <?php echo $this->form->renderField('publish_down'); ?>
-                        <?php echo $this->form->renderField('access'); ?>
-                        <?php echo $this->form->renderField('is_featured'); ?>
+                        <p class="mb-0 text-muted">
+						<?php echo $this->form->renderField('min_order_qty'); ?>
+                        <?php echo $this->form->renderField('max_order_qty'); ?>
+                        <?php echo $this->form->renderField('step_order_qty'); ?>
+						<?php echo $this->form->renderField('in_stock'); ?>
+						<p><strong>Bestandsstatus:</strong> <?php echo htmlspecialchars((string) ($this->item->in_stock ?? ''), ENT_QUOTES, 'UTF-8'); ?></p>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <?php echo HTMLHelper::_('uitab.endTab'); ?>
+
+    <?php echo HTMLHelper::_('uitab.addTab', 'fdshopProductTabs', 'beschreibung', 'Beschreibung'); ?>
+        <div class="row">
+			<div class="col-12">
+                <div class="card mb-3">
+                    <div class="card-header">Produktbeschreibungen</div>
+                    <div class="card-body">
+                        <?php echo $this->form->renderField('short_description'); ?>
+                        <?php echo $this->form->renderField('description'); ?>
+                    </div>
+                </div>
+            </div>
+			
+            <div class="col-12">
+                <div class="card mb-3">
+                    <div class="card-header">Meta-Daten</div>
+                    <div class="card-body">
+                        <?php echo $this->form->renderField('meta_title'); ?>
+                        <?php echo $this->form->renderField('meta_keywords'); ?>
+                        <?php echo $this->form->renderField('meta_description'); ?>
                     </div>
                 </div>
             </div>
@@ -160,6 +167,8 @@ use Joomla\CMS\Uri\Uri;
                         <?php echo $this->form->renderField('caliber'); ?>
                         <?php echo $this->form->renderField('burn_time'); ?>
                         <?php echo $this->form->renderField('rise_height'); ?>
+                        <?php echo $this->form->renderField('ribbon_new'); ?>
+                        <?php echo $this->form->renderField('ribbon_hot'); ?>
                     </div>
                 </div>
             </div>

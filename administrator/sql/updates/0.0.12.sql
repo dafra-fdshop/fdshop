@@ -1,0 +1,2 @@
+-- FDShop update 0.0.12
+-- Reorganize documented product-related tables and add general_currency to config
