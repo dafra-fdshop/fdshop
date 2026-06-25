@@ -3,7 +3,7 @@
 	<name>com_fdshop</name>
 	<author>FDShop</author>
 	<creationDate>2026-03-19</creationDate>
-	<version>0.0.41</version>
+	<version>0.1.50</version>
 	<description>Neuer schneller Shop</description>
 
 	<namespace path="src">FDShop\Component\FDShop</namespace>
@@ -27,6 +27,7 @@
 			<menu view="dashboard">dashboard</menu>
 			<menu view="categories">Kategorien</menu>
 			<menu view="products">Produkte</menu>
+			<menu view="bundles">Bundels</menu>
 			<menu view="orders">Bestellungen</menu>
 			<menu view="manufacturers">Hersteller</menu>
 			<menu view="configuration">Konfiguration</menu>
