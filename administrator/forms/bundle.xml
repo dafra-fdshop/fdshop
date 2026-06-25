@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<form>
+    <fields>
+        <fieldset name="basic" label="Grunddaten">
+            <field
+                name="id"
+                type="hidden"
+                default="0"
+            />
+
+            <field
+                name="bundle_number"
+                type="text"
+                label="Bundle-Nummer"
+                readonly="true"
+                hint="Wird beim Speichern automatisch erzeugt"
+                size="40"
+            />
+
+            <field
+                name="bundle_name"
+                type="text"
+                label="Bundle-Name"
+                required="true"
+                size="40"
+            />
+
+            <field
+                name="alias"
+                type="text"
+                label="Alias"
+                size="40"
+            />
+
+            <field
+                name="description"
+                type="textarea"
+                label="Beschreibung"
+                rows="6"
+                cols="60"
+                filter="raw"
+            />
+
+            <field
+                name="is_active"
+                type="radio"
+                label="Aktiv"
+                default="1"
+                class="btn-group btn-group-yesno"
+            >
+                <option value="1">Ja</option>
+                <option value="0">Nein</option>
+            </field>
+        </fieldset>
+    </fields>
+</form>
