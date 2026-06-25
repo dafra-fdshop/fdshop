@@ -11,6 +11,8 @@ use FDShop\Component\FDShop\Administrator\Service\CategoryService;
 use FDShop\Component\FDShop\Administrator\Service\CategoryServiceInterface;
 use FDShop\Component\FDShop\Administrator\Service\ManufacturerService;
 use FDShop\Component\FDShop\Administrator\Service\ManufacturerServiceInterface;
+use FDShop\Component\FDShop\Administrator\Service\BundleService;
+use FDShop\Component\FDShop\Administrator\Service\BundleServiceInterface;
 use FDShop\Component\FDShop\Administrator\Service\ProductService;
 use FDShop\Component\FDShop\Administrator\Service\ProductServiceInterface;
 use FDShop\Component\FDShop\Administrator\Service\OrderService;
@@ -83,6 +85,23 @@ return new class () implements ServiceProviderInterface {
             ProductService::class,
             function (Container $container): ProductService {
                 return $container->get(ProductServiceInterface::class);
+            }
+        );
+
+        $container->set(
+            BundleServiceInterface::class,
+            function (Container $container): BundleServiceInterface {
+                return new BundleService(
+                    $container->get(MVCFactoryInterface::class),
+                    $container->get(DatabaseInterface::class)
+                );
+            }
+        );
+
+        $container->set(
+            BundleService::class,
+            function (Container $container): BundleService {
+                return $container->get(BundleServiceInterface::class);
             }
         );
 		
