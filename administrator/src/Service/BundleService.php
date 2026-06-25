@@ -261,17 +261,25 @@ class BundleService implements BundleServiceInterface
 
         $query = $this->db->getQuery(true)
             ->select([
-                'p.' . $this->db->quoteName('id'),
+                'p.' . $this->db->quoteName('id') . ' AS ' . $this->db->quoteName('product_id'),
                 'p.' . $this->db->quoteName('product_name'),
-                'p.' . $this->db->quoteName('alias'),
-                'p.' . $this->db->quoteName('is_active'),
-                'p.' . $this->db->quoteName('in_stock'),
                 'd.' . $this->db->quoteName('sku'),
-                'd.' . $this->db->quoteName('gtin'),
+                'COALESCE(pp.' . $this->db->quoteName('calc_price_net') . ', 0.0000) AS ' . $this->db->quoteName('price_net'),
+                'COALESCE(pp.' . $this->db->quoteName('calc_price_gross') . ', 0.0000) AS ' . $this->db->quoteName('price_gross'),
             ])
             ->from($this->db->quoteName('#__fdshop_products_details', 'd'))
-            ->join('INNER', $this->db->quoteName('#__fdshop_products', 'p') . ' ON p.' . $this->db->quoteName('id') . ' = d.' . $this->db->quoteName('product_id'))
-            ->where('d.' . $this->db->quoteName('sku') . ' = ' . $this->db->quote($sku));
+            ->join(
+                'INNER',
+                $this->db->quoteName('#__fdshop_products', 'p')
+                . ' ON p.' . $this->db->quoteName('id') . ' = d.' . $this->db->quoteName('product_id')
+            )
+            ->join(
+                'LEFT',
+                $this->db->quoteName('#__fdshop_product_prices', 'pp')
+                . ' ON pp.' . $this->db->quoteName('product_id') . ' = p.' . $this->db->quoteName('id')
+            )
+            ->where('d.' . $this->db->quoteName('sku') . ' = ' . $this->db->quote($sku))
+            ->order('pp.' . $this->db->quoteName('id') . ' DESC');
 
         $this->db->setQuery($query, 0, 1);
         $product = $this->db->loadObject();
