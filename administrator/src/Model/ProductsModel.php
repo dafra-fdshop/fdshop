@@ -97,7 +97,6 @@ class ProductsModel extends ListModel
             $db->quoteName('a.min_order_qty'),
             $db->quoteName('a.max_order_qty'),
             $db->quoteName('a.step_order_qty'),
-            $db->quoteName('a.katalog_active'),
             $db->quoteName('a.is_active'),
             $db->quoteName('a.publish_up'),
             $db->quoteName('a.publish_down'),

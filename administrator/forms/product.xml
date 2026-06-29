@@ -218,19 +218,8 @@
         </fieldset>
 
         <fieldset name="publishing" label="Veröffentlichung">
-            <field
-                name="katalog_active"
-                type="radio"
-                label="Katalogmodus aktiv"
-				readonly="true"
-                class="btn-group btn-group-yesno"
-				description="Nur Anzeige. Kann nur Global (Konfiguration) geändert werden"
-            >
-                <option value="1">Ja</option>
-                <option value="0">Nein</option>
-            </field>
 
-            <field
+<field
                 name="is_active"
                 type="radio"
                 label="Veröffentlicht"

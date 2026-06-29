@@ -24,6 +24,20 @@
                 required="true"
             />
 
+
+
+            <field
+                name="katalog_active"
+                type="radio"
+                label="Katalogmodus aktiv"
+                description="Aktiviert den globalen Katalogmodus. Ist der Katalogmodus aktiv, werden im Frontend keine Warenkorb-Buttons angezeigt."
+                default="0"
+                class="btn-group btn-group-yesno"
+            >
+                <option value="0">Nein</option>
+                <option value="1">Ja</option>
+            </field>
+
             <field
                 name="image_size_default"
                 type="number"

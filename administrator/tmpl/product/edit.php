@@ -34,8 +34,7 @@ use Joomla\CMS\Uri\Uri;
                 <div class="card mb-3">
                     <div class="card-header">Veröffentlichung</div>
                     <div class="card-body">
-                        <?php echo $this->form->renderField('katalog_active'); ?>
-                        <?php echo $this->form->renderField('is_active'); ?>
+<?php echo $this->form->renderField('is_active'); ?>
                         <?php echo $this->form->renderField('publish_up'); ?>
                         <?php echo $this->form->renderField('publish_down'); ?>
                     </div>

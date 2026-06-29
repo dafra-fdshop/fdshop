@@ -114,9 +114,6 @@ class ProductTable extends Table
             $this->step_order_qty = 0;
         }
 
-        /*if (!isset($this->katalog_active) || $this->katalog_active === '') {
-            $this->katalog_active = 0;
-        }*/
 
         if (!isset($this->is_active) || $this->is_active === '') {
             $this->is_active = 1;
