@@ -22,7 +22,6 @@ CREATE TABLE IF NOT EXISTS `#__fdshop_products` (
   `max_order_qty` DECIMAL(12,3) NOT NULL,
   `step_order_qty` DECIMAL(12,3) NOT NULL,
 
-  `katalog_active` TINYINT(1) NOT NULL DEFAULT 0,
   `is_active` TINYINT(1) NOT NULL DEFAULT 0,
   `publish_up` DATETIME NULL DEFAULT NULL,
   `publish_down` DATETIME NULL DEFAULT NULL,
@@ -783,6 +782,7 @@ CREATE TABLE `#__fdshop_config` (
   `image_size_manufacturer` INT UNSIGNED NOT NULL DEFAULT 400,
   `show_terms_checkbox` TINYINT(1) NOT NULL DEFAULT 0,
   `require_terms_checkbox` TINYINT(1) NOT NULL DEFAULT 0,
+  `katalog_active` TINYINT(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -795,7 +795,8 @@ INSERT INTO `#__fdshop_config` (
   `image_size_mobile`,
   `image_size_manufacturer`,
   `show_terms_checkbox`,
-  `require_terms_checkbox`
+  `require_terms_checkbox`,
+  `katalog_active`
 )
 SELECT
   1,
@@ -805,6 +806,7 @@ SELECT
   250,
   100,
   400,
+  0,
   0,
   0
 FROM DUAL
