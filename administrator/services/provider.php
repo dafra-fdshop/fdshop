@@ -13,6 +13,8 @@ use FDShop\Component\FDShop\Administrator\Service\CouponService;
 use FDShop\Component\FDShop\Administrator\Service\CouponServiceInterface;
 use FDShop\Component\FDShop\Administrator\Service\ManufacturerService;
 use FDShop\Component\FDShop\Administrator\Service\ManufacturerServiceInterface;
+use FDShop\Component\FDShop\Administrator\Service\SupplierService;
+use FDShop\Component\FDShop\Administrator\Service\SupplierServiceInterface;
 use FDShop\Component\FDShop\Administrator\Service\BundleService;
 use FDShop\Component\FDShop\Administrator\Service\BundleServiceInterface;
 use FDShop\Component\FDShop\Administrator\Service\ProductService;
@@ -87,6 +89,23 @@ return new class () implements ServiceProviderInterface {
             ManufacturerService::class,
             function (Container $container): ManufacturerService {
                 return $container->get(ManufacturerServiceInterface::class);
+            }
+        );
+
+        $container->set(
+            SupplierServiceInterface::class,
+            function (Container $container): SupplierServiceInterface {
+                return new SupplierService(
+                    $container->get(MVCFactoryInterface::class),
+                    $container->get(DatabaseInterface::class)
+                );
+            }
+        );
+
+        $container->set(
+            SupplierService::class,
+            function (Container $container): SupplierService {
+                return $container->get(SupplierServiceInterface::class);
             }
         );
 

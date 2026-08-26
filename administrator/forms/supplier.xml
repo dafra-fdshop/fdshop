@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<form>
+    <fields>
+        <fieldset name="basic" label="Lieferant">
+            <field name="id" type="hidden" default="0" />
+
+            <field
+                name="supplier_name"
+                type="text"
+                label="Lieferantenname"
+                required="true"
+                maxlength="255"
+            />
+
+            <field
+                name="alias"
+                type="text"
+                label="Alias"
+                maxlength="191"
+                hint="Wird bei leerer Eingabe automatisch erzeugt"
+            />
+
+            <field
+                name="contact_name"
+                type="text"
+                label="Ansprechpartner"
+                maxlength="255"
+            />
+
+            <field
+                name="email"
+                type="email"
+                label="E-Mail"
+                maxlength="255"
+                validate="email"
+            />
+
+            <field
+                name="phone"
+                type="tel"
+                label="Telefon"
+                maxlength="100"
+            />
+
+            <field
+                name="website"
+                type="url"
+                label="Website"
+                maxlength="2048"
+                validate="url"
+            />
+
+            <field
+                name="customer_number"
+                type="text"
+                label="Kundennummer"
+                maxlength="100"
+            />
+
+            <field
+                name="note"
+                type="textarea"
+                label="Notiz"
+                rows="8"
+                filter="string"
+            />
+
+            <field
+                name="is_active"
+                type="radio"
+                label="Aktiv"
+                default="1"
+                class="btn-group btn-group-yesno"
+            >
+                <option value="1">Ja</option>
+                <option value="0">Nein</option>
+            </field>
+
+            <field
+                name="ordering"
+                type="number"
+                label="Reihenfolge"
+                default="0"
+            />
+        </fieldset>
+    </fields>
+</form>
