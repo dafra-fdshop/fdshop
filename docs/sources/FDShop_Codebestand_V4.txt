@@ -1,0 +1,781 @@
+[QUELLE] FDShop_Codebestand_V4
+
+===================================================================== 1.
+ZWECK DER QUELLE
+=====================================================================
+
+Diese Quelle dokumentiert den aktuell nachweisbaren Codebestand des
+FDShop-Projektes.
+
+Sie dient dazu,
+
+• vorhandene Klassen • Controller • Models • Views • Templates •
+Services • Interfaces • Tables • Formulare • SQL-/Installationsbestand •
+Media-/Asset-Bestand
+
+zentral zu erfassen.
+
+Maßgebliche technische Grundlage dieser Version ist:
+
+fdshop_Projektstand_Aktuell.zip
+
+Die Quelle beschreibt ausschließlich tatsächlich im aktuellen
+Projekt-ZIP vorhandenen Code.
+
+Sie definiert keine neue Architektur und keine neuen Fachregeln.
+
+===================================================================== 2.
+VERBINDLICHKEIT
+=====================================================================
+
+Status
+
+VERBINDLICHE PROJEKTQUELLE
+
+Version
+
+V4
+
+Regel
+
+Neue Versionen ersetzen ältere Versionen vollständig.
+
+FDShop_Codebestand_V4 ersetzt damit FDShop_Codebestand_V3.
+
+Bei Widersprüchen zwischen dieser Quelle und dem nachweisbaren aktuellen
+Projekt-ZIP gilt gemäß Governance der tatsächliche Projektstand.
+
+===================================================================== 3.
+AKTUELLER TECHNISCHER BASISSTAND
+=====================================================================
+
+Manifest
+
+fdshop.xml
+
+Nachweisbarer Manifest-Stand
+
+Version 0.1.10
+
+Installationsstruktur
+
+• administrator/ • site/ • media/ • fdshop.xml • script.php
+
+SQL
+
+administrator/sql/install.mysql.utf8.sql
+administrator/sql/uninstall.mysql.utf8.sql
+
+Update-SQLs vorhanden von
+
+0.0.2.sql
+
+bis
+
+0.0.16.sql
+
+===================================================================== 4.
+ADMINISTRATOR — CONTROLLER
+=====================================================================
+
+Pfad
+
+administrator/src/Controller/
+
+Vorhanden
+
+BundleController.php BundlesController.php
+
+CategoriesController.php CategoryController.php
+
+ConfigurationController.php
+
+CouponController.php CouponsController.php
+
+DisplayController.php
+
+ManufacturerController.php ManufacturersController.php
+
+OrderController.php OrdersController.php
+
+OrderstatusController.php
+
+PaymentmethodController.php PaymentmethodsController.php
+
+ProductController.php ProductsController.php
+
+ShipmentController.php ShipmentsController.php
+
+Nachweisbare besondere Aufgaben
+
+BundleController • Speichern • Abbrechen • Produkt-SKU-Lookup
+
+CategoryController • Speichern
+
+CouponController • Speichern • Abbrechen
+
+ManufacturerController • Speichern
+
+OrderController • Bestellposition hinzufügen • Bestellposition entfernen
+• Menge einer Bestellposition ändern
+
+OrdersController • Listen-/Model-Anbindung • Bestellbearbeitung •
+Papierkorb-/Wiederherstellungsabläufe
+
+OrderstatusController • Speichern
+
+PaymentmethodController • Speichern
+
+ProductController • Speichern
+
+ShipmentController • Speichern
+
+Listencontroller stellen jeweils die Verbindung zu den zugehörigen
+Edit-Models her, soweit im aktuellen Code vorhanden.
+
+===================================================================== 5.
+ADMINISTRATOR — MODELS
+=====================================================================
+
+Pfad
+
+administrator/src/Model/
+
+Aktive Models
+
+BundleModel.php BundlesModel.php
+
+CategoriesModel.php CategoryModel.php
+
+ConfigurationModel.php
+
+CouponModel.php CouponsModel.php
+
+ManufacturerModel.php ManufacturersModel.php
+
+OrderModel.php OrdersModel.php
+
+OrderstatusModel.php OrderstatusesModel.php
+
+PaymentmethodModel.php PaymentmethodsModel.php
+
+ProductModel.php ProductsModel.php
+
+ShipmentModel.php ShipmentsModel.php
+
+Zusätzlich im ZIP vorhandene Alt-/Sicherungsstände
+
+alt_ProductsModel.php alt2_ProductsModel.php
+
+Wichtige Regel
+
+Dateien mit Präfix alt_ oder alt2_ sind nicht als aktiver Referenzcode
+zu behandeln. Sie sind nachweisbar im Projekt-ZIP vorhanden, stellen
+aber Entwicklungs-/Sicherungsaltstände dar.
+
+===================================================================== 6.
+ADMINISTRATOR — SERVICES
+=====================================================================
+
+Pfad
+
+administrator/src/Service/
+
+Vorhandene Services
+
+BundleService.php BundleServiceInterface.php
+
+CategoryService.php CategoryServiceInterface.php
+
+CouponService.php CouponServiceInterface.php
+
+ManufacturerService.php ManufacturerServiceInterface.php
+
+OrderService.php OrderServiceInterface.php
+
+ProductService.php ProductServiceInterface.php
+
+  --------------------
+  6.1 ProductService
+  --------------------
+
+Nachweisbare Aufgaben
+
+• Produkt speichern • Produktdaten auf Produkte / Produktdetails
+aufteilen • Produkt-Kategorie-Zuordnungen speichern •
+Produkt-Käufergruppen-Zuordnungen speichern • zugewiesene Kategorie-IDs
+laden • zugewiesene Käufergruppen-IDs laden • Produkt laden • in_stock
+aus Bestandsdaten ableiten • Produktbild-Upload verarbeiten •
+Bildvarianten erzeugen • Media-Datensatz anlegen
+
+  ---------------------
+  6.2 CategoryService
+  ---------------------
+
+Nachweisbare Aufgaben
+
+• Kategorie speichern
+
+  -------------------------
+  6.3 ManufacturerService
+  -------------------------
+
+Nachweisbare Aufgaben
+
+• Hersteller speichern • Hersteller laden
+
+  -------------------
+  6.4 BundleService
+  -------------------
+
+Nachweisbare Aufgaben
+
+• Bundle speichern • Bundle-Produkte speichern • Bundle-Rabattregeln
+speichern • nächste Bundle-Nummer erzeugen • Bundle laden • passende
+Rabattregel ermitteln • Produkt über SKU suchen
+
+  ------------------
+  6.5 OrderService
+  ------------------
+
+Nachweisbare Schnittstellen/Aufgaben
+
+• Bestellposition hinzufügen • Bestellposition entfernen •
+Positionsmenge ändern • Bestell-Gesamtsumme neu berechnen •
+Order-History schreiben • Orders-History schreiben
+
+  -------------------
+  6.6 CouponService
+  -------------------
+
+Nachweisbare Aufgaben
+
+• Gutschein speichern • Gutscheine löschen • Gutschein über ID laden •
+Gutschein über Code laden • Gutscheindaten validieren • vorbereitende
+Einlöseprüfung • User-Zuordnungen laden • Käufergruppen-Zuordnungen
+laden • Produkt-Zuordnungen laden • Kategorie-Zuordnungen laden •
+Mappingdaten laden • Mappingdaten speichern • Mappingdaten löschen •
+Nutzungszahlen intern ermitteln • Gutscheincode / Rabattart
+normalisieren
+
+Wichtige Abgrenzung
+
+Eine vollständige Frontend-Einlösung von Gutscheinen ist damit nicht als
+fertig implementiert dokumentiert.
+
+===================================================================== 7.
+ADMINISTRATOR — TABLES
+=====================================================================
+
+Pfad
+
+administrator/src/Table/
+
+Aktive Tables
+
+BundleTable.php BundleItemTable.php BundleDiscountRuleTable.php
+
+CategoryTable.php
+
+ConfigurationTable.php
+
+CouponTable.php
+
+ManufacturerTable.php
+
+OrderstatusTable.php
+
+PaymentmethodTable.php
+
+ProductTable.php ProductDetailsTable.php
+
+ShipmentTable.php
+
+Zusätzlich im ZIP vorhanden
+
+alt_ProductTable.php
+
+Regel
+
+alt_ProductTable.php ist nicht als aktiver Referenzcode zu behandeln.
+
+===================================================================== 8.
+ADMINISTRATOR — VIEWS
+=====================================================================
+
+Pfad
+
+administrator/src/View/
+
+Vorhandene Views
+
+Bundle/HtmlView.php Bundles/HtmlView.php
+
+Category/HtmlView.php Categories/HtmlView.php
+
+Configuration/HtmlView.php
+
+Coupon/HtmlView.php Coupons/HtmlView.php
+
+Dashboard/HtmlView.php
+
+Manufacturer/HtmlView.php Manufacturers/HtmlView.php
+
+Order/HtmlView.php Orders/HtmlView.php
+
+Orderstatus/HtmlView.php
+
+Paymentmethod/HtmlView.php
+
+Product/HtmlView.php Products/HtmlView.php
+
+Shipment/HtmlView.php
+
+Zusätzlich vorhanden
+
+Products/alt_HtmlView.php
+
+Regel
+
+Products/alt_HtmlView.php ist ein Alt-/Sicherungsstand und keine aktive
+Referenzimplementierung.
+
+===================================================================== 9.
+ADMINISTRATOR — TEMPLATES
+=====================================================================
+
+Pfad
+
+administrator/tmpl/
+
+Aktive Templates
+
+bundle/edit.php bundles/default.php
+
+categories/default.php category/edit.php
+
+configuration/default.php
+
+coupon/edit.php coupons/default.php
+
+dashboard/default.php
+
+manufacturer/edit.php manufacturers/default.php
+
+order/default.php orders/default.php
+
+orderstatus/edit.php
+
+paymentmethod/edit.php
+
+product/edit.php products/default.php
+
+shipment/edit.php
+
+Zusätzlich vorhanden
+
+products/alt_default.php products/alt2_default.php
+
+Regel
+
+alt_default.php und alt2_default.php sind Alt-/Sicherungsstände und
+keine aktive Referenzimplementierung.
+
+=====================================================================
+10. ADMINISTRATOR — FORMULARE UND FILTER
+=====================================================================
+
+Pfad
+
+administrator/forms/
+
+Edit-/Konfigurationsformulare
+
+bundle.xml category.xml configuration.xml coupon.xml manufacturer.xml
+orderstatus.xml paymentmethod.xml product.xml shipment.xml
+
+Filterformulare
+
+filter_bundles.xml filter_categories.xml filter_coupons.xml
+filter_manufacturers.xml filter_orders.xml filter_paymentmethods.xml
+filter_products.xml filter_shipments.xml
+
+=====================================================================
+11. ADMINISTRATOR — DI / COMPONENT BOOT
+=====================================================================
+
+Vorhanden
+
+administrator/services/provider.php
+administrator/src/Extension/FdshopComponent.php
+
+provider.php registriert nachweisbar
+
+• ComponentDispatcherFactory • MVCFactory • CategoryServiceInterface /
+CategoryService • CouponServiceInterface / CouponService •
+ManufacturerServiceInterface / ManufacturerService •
+ProductServiceInterface / ProductService • BundleServiceInterface /
+BundleService • OrderServiceInterface / OrderService •
+ComponentInterface
+
+Namespace-Basis
+
+FDShop
+
+Administrator-Klassen
+
+FDShop...
+
+=====================================================================
+12. KONFIGURATIONSBEREICH
+=====================================================================
+
+Vorhanden
+
+ConfigurationController.php ConfigurationModel.php
+ConfigurationTable.php View/Configuration/HtmlView.php
+tmpl/configuration/default.php forms/configuration.xml
+
+Der aktuelle Konfigurationsbereich bindet zusätzlich nachweisbar
+Verwaltungsbereiche ein für
+
+• Versandarten • Zahlungsarten • Bestellstatus
+
+Versandarten
+
+ShipmentController.php ShipmentsController.php ShipmentModel.php
+ShipmentsModel.php ShipmentTable.php View/Shipment/HtmlView.php
+tmpl/shipment/edit.php forms/shipment.xml forms/filter_shipments.xml
+
+Zahlungsarten
+
+PaymentmethodController.php PaymentmethodsController.php
+PaymentmethodModel.php PaymentmethodsModel.php PaymentmethodTable.php
+View/Paymentmethod/HtmlView.php tmpl/paymentmethod/edit.php
+forms/paymentmethod.xml forms/filter_paymentmethods.xml
+
+Bestellstatus
+
+OrderstatusController.php OrderstatusModel.php OrderstatusesModel.php
+OrderstatusTable.php View/Orderstatus/HtmlView.php
+tmpl/orderstatus/edit.php forms/orderstatus.xml
+
+=====================================================================
+13. PRODUKTBEREICH
+=====================================================================
+
+Nachweisbar vorhanden
+
+Controller • ProductController • ProductsController
+
+Models • ProductModel • ProductsModel
+
+Services • ProductService • ProductServiceInterface
+
+Tables • ProductTable • ProductDetailsTable
+
+Views • Product • Products
+
+Templates • product/edit.php • products/default.php
+
+Formulare • product.xml • filter_products.xml
+
+Nachweisbare Funktionsbereiche
+
+• Produktliste • Produkterfassung / Produktbearbeitung • Produkt
+speichern • Herstellerbezug • eigene FDShop-Kategorien •
+Mehrfach-Kategoriezuordnung • Käufergruppen-Zuordnung •
+Bestands-/Detaildaten • Produktbildverarbeitung • Media-Datensatz •
+Listenfilter / Sortierung
+
+=====================================================================
+14. KATEGORIEBEREICH
+=====================================================================
+
+Nachweisbar vorhanden
+
+Controller • CategoryController • CategoriesController
+
+Models • CategoryModel • CategoriesModel
+
+Service • CategoryService • CategoryServiceInterface
+
+Table • CategoryTable
+
+Views • Category • Categories
+
+Templates • category/edit.php • categories/default.php
+
+Formulare • category.xml • filter_categories.xml
+
+Kategorien sind FDShop-eigene Kategorien.
+
+Es wird keine Joomla-Core-Kategorieverwaltung als Shop-Kategoriesystem
+dokumentiert.
+
+=====================================================================
+15. HERSTELLERBEREICH
+=====================================================================
+
+Nachweisbar vorhanden
+
+Controller • ManufacturerController • ManufacturersController
+
+Models • ManufacturerModel • ManufacturersModel
+
+Service • ManufacturerService • ManufacturerServiceInterface
+
+Table • ManufacturerTable
+
+Views • Manufacturer • Manufacturers
+
+Templates • manufacturer/edit.php • manufacturers/default.php
+
+Formulare • manufacturer.xml • filter_manufacturers.xml
+
+=====================================================================
+16. BUNDLEBEREICH
+=====================================================================
+
+Nachweisbar vorhanden
+
+Controller • BundleController • BundlesController
+
+Models • BundleModel • BundlesModel
+
+Service • BundleService • BundleServiceInterface
+
+Tables • BundleTable • BundleItemTable • BundleDiscountRuleTable
+
+Views • Bundle • Bundles
+
+Templates • bundle/edit.php • bundles/default.php
+
+Formulare • bundle.xml • filter_bundles.xml
+
+Media-JavaScript
+
+media/js/admin-bundle.js
+
+Nachweisbare Funktionen
+
+• Bundle speichern • Bundle-Produkte verwalten • Bundle-Rabattregeln
+verwalten • Bundle-Nummer erzeugen • Produkt-SKU-Lookup • Bundle laden •
+Rabattregel ermitteln
+
+=====================================================================
+17. BESTELLBEREICH
+=====================================================================
+
+Nachweisbar vorhanden
+
+Controller • OrderController • OrdersController
+
+Models • OrderModel • OrdersModel
+
+Service • OrderService • OrderServiceInterface
+
+Views • Order • Orders
+
+Templates • order/default.php • orders/default.php
+
+Filter • filter_orders.xml
+
+Nachweisbare Funktionen
+
+• Bestellliste • Bestelldetail • Filterung / Sortierung •
+Bestellpositionen laden • Statushistorie laden • Bestellhistorie laden •
+verfügbare Produkte laden • Bestellposition hinzufügen • Bestellposition
+entfernen • Positionsmenge ändern • Gesamtsumme neu berechnen •
+History-Einträge • Papierkorb-/Wiederherstellungsabläufe
+
+=====================================================================
+18. GUTSCHEINBEREICH
+=====================================================================
+
+Nachweisbar vorhanden
+
+Controller • CouponController • CouponsController
+
+Models • CouponModel • CouponsModel
+
+Service • CouponService • CouponServiceInterface
+
+Table • CouponTable
+
+Views • Coupon • Coupons
+
+Templates • coupon/edit.php • coupons/default.php
+
+Formulare • coupon.xml • filter_coupons.xml
+
+Nachweisbare Funktionsbereiche
+
+• Gutscheinliste • Gutscheinformular • Gutschein speichern • Gutschein
+löschen • Gutschein über ID / Code laden • Validierung auf Service-Ebene
+• Mapping zu Usern • Mapping zu Käufergruppen • Mapping zu Produkten •
+Mapping zu Kategorien • vorbereitende Einlöseprüfung
+
+Frontend-Einlösung ist nicht als fertig implementiert dokumentiert.
+
+=====================================================================
+19. DATENBANKBESTAND
+=====================================================================
+
+Die Install-SQL enthält nachweisbar folgende Tabellen:
+
+#__fdshop_products #__fdshop_products_details
+
+#__fdshop_product_prices #__fdshop_price_calc_rules
+#__fdshop_product_prices_research
+
+#__fdshop_categories #__fdshop_product_category_map
+
+#__fdshop_manufacturers
+
+#__fdshop_buyer_groups #__fdshop_user_buyer_group_map
+#__fdshop_product_buyer_group_map
+
+#__fdshop_bundles #__fdshop_bundle_items #__fdshop_bundle_discount_rules
+
+#__fdshop_orders #__fdshop_order_items #__fdshop_order_bundles
+#__fdshop_order_bundle_items #__fdshop_order_statuses
+#__fdshop_order_history #__fdshop_order_status_history
+#__fdshop_orders_history
+
+#__fdshop_config #__fdshop_media
+
+#__fdshop_coupons #__fdshop_coupon_user_map
+#__fdshop_coupon_buyer_group_map #__fdshop_coupon_product_map
+#__fdshop_coupon_category_map #__fdshop_coupon_usage
+
+#__fdshop_cart
+
+#__fdshop_shipments #__fdshop_payment_methods
+
+Hinweis
+
+Diese Quelle dokumentiert nur die Existenz der Tabellen. Die
+verbindliche Feld-/Datenmodellbeschreibung gehört in die zuständige
+Fachquelle bzw. SQL-Struktur und wird hier nicht dupliziert.
+
+=====================================================================
+20. MEDIA / ASSETS
+=====================================================================
+
+Vorhanden
+
+media/css/site.css media/js/site.js media/js/admin-bundle.js
+media/joomla.asset.json
+
+Zusätzlich
+
+media/images/index.html
+
+=====================================================================
+21. SITE / FRONTEND
+=====================================================================
+
+Die Site-Struktur ist vorhanden.
+
+Nachweisbare Dateien
+
+site/src/Controller/index.html site/src/Helper/index.html
+site/src/Model/index.html site/src/Router/index.html
+site/src/Service/index.html site/src/View/index.html
+site/tmpl/index.html
+
+Bewertung
+
+Es existiert damit eine Frontend-Grundstruktur.
+
+Es sind im aktuellen ZIP keine fachlichen Site-Controller, Models, Views
+oder Templates für Produktdarstellung, Warenkorb oder Checkout
+nachweisbar.
+
+=====================================================================
+22. ALT-/SICHERUNGSDATEIEN
+=====================================================================
+
+Im aktuellen ZIP befinden sich folgende eindeutig benannte Altstände:
+
+administrator/src/Model/alt_ProductsModel.php
+administrator/src/Model/alt2_ProductsModel.php
+administrator/src/Table/alt_ProductTable.php
+administrator/src/View/Products/alt_HtmlView.php
+administrator/tmpl/products/alt_default.php
+administrator/tmpl/products/alt2_default.php
+
+Regel für Fach-KIs
+
+Diese Dateien dürfen nicht als aktueller Referenzcode verwendet werden.
+
+Sie bleiben in dieser Quelle dokumentiert, solange sie im aktuellen
+Projekt-ZIP vorhanden sind.
+
+Eine Löschung oder Bereinigung ist eine separate Projektentscheidung.
+
+=====================================================================
+23. DOKUMENTATIONSABGRENZUNG
+=====================================================================
+
+Diese Quelle beschreibt
+
+WAS
+
+im aktuellen Projektcode vorhanden ist.
+
+Sie beschreibt nicht verbindlich
+
+• warum eine Architekturentscheidung getroffen wurde • welche
+Businessregel gelten soll • welche Datenbankfelder fachlich
+vorgeschrieben sind • welche zukünftigen Funktionen geplant sind
+
+Dafür gelten die jeweils zuständigen FDShop-Projektquellen.
+
+=====================================================================
+24. ÄNDERUNGSPROTOKOLL
+=====================================================================
+
+V3
+
+Bisheriger dokumentierter Codebestand.
+
+------------------------------------------------------------------------
+
+V4
+
+Vollständiger Abgleich gegen
+
+fdshop_Projektstand_Aktuell.zip
+
+Ergänzt bzw. aktualisiert wurden insbesondere
+
+• Gutscheinbereich • Bestellbereich • Herstellerverwaltung •
+Versandarten • Zahlungsarten • Bestellstatus • zusätzliche Services und
+Interfaces • zusätzliche Tables • Bundle-Erweiterungen •
+ProductDetailsTable • ConfigurationTable • aktuelle Formulare und Filter
+• aktuelle SQL-Tabellen • Manifest-Version 0.1.10 • SQL-Updates bis
+0.0.16 • Alt-/Sicherungsdateien als nicht aktive Referenzstände
+
+=====================================================================
+25. SCHLUSSBESTIMMUNG
+=====================================================================
+
+FDShop_Codebestand_V4 dokumentiert den nachweisbaren Codebestand des
+aktuellen Projekt-ZIP.
+
+Neue Versionen ersetzen ältere Versionen vollständig.
+
+=====================================================================
+ENDE DER QUELLE
+
+FDShop_Codebestand_V4
+
+Status
+
+VERBINDLICHE PROJEKTQUELLE
+
+Version
+
+V4
