@@ -1,0 +1,1043 @@
+=====================================================================
+FDShop_Admin_List_Standard_V3
+=====================================================================
+
+Status: VERBINDLICHE PROJEKTQUELLE
+
+Version: V3
+
+Diese Quelle ersetzt vollständig:
+
+FDShop_Admin_List_Standard_V2
+
+=====================================================================
+1. ZWECK
+=====================================================================
+
+Diese Quelle definiert den verbindlichen
+FDShop-Standard für sämtliche
+Administrationslisten.
+
+Sie beschreibt ausschließlich
+
+• Listenarchitektur
+
+• SearchTools
+
+• Filter
+
+• Sortierung
+
+• Pagination
+
+• Listen-Formulare
+
+• ListModel-Regeln
+
+• Filterzustände
+
+• Mehrlisten-Ansichten
+
+Sie beschreibt ausdrücklich keine
+
+• Edit-Formulare
+
+• Businesslogik
+
+• Datenmodell
+
+• SQL-Struktur
+
+• Architekturentscheidungen
+  außerhalb von Administrationslisten.
+
+Diese Themen werden in den
+jeweils zuständigen Projektquellen
+beschrieben.
+
+=====================================================================
+2. GELTUNGSBEREICH
+=====================================================================
+
+Diese Quelle ist verbindlich
+für sämtliche Administrationslisten
+der FDShop-Komponente.
+
+Insbesondere gilt sie für
+
+• Model-KI
+
+• Controller-KI
+
+• View-/Form-KI
+
+• Service-/Logik-KI
+
+• Test-/Integrations-KI
+
+• Dokumentation / Quellenpflege
+
+Temporäre Umsetzungsrollen
+ändern diese Zuständigkeiten nicht.
+
+=====================================================================
+3. GRUNDPRINZIPIEN
+=====================================================================
+
+Administrationslisten folgen
+einem einheitlichen
+Joomla-konformen Aufbau.
+
+Alle Listen verwenden
+denselben technischen Standard.
+
+=====================================================================
+3.1 LISTENSTANDARD
+=====================================================================
+
+Jede Administrationsliste besitzt
+mindestens folgende Bestandteile.
+
+MODEL
+
+liefert Daten,
+Filter,
+Sortierung
+und Pagination.
+
+VIEW
+
+stellt Listeninformationen
+für das Template bereit.
+
+FILTER-XML
+
+definiert sämtliche
+Filter-
+und Sortierfelder.
+
+TEMPLATE
+
+stellt die Liste dar.
+
+Alle vier Bestandteile
+sind verpflichtend.
+
+=====================================================================
+3.2 JOOMLA-KOMPATIBILITÄT
+=====================================================================
+
+Alle Listen orientieren sich
+an der aktuellen
+Joomla-5-Architektur.
+
+Neue Entwicklungen
+werden nach Möglichkeit
+bereits Joomla-6-kompatibel
+umgesetzt.
+
+=====================================================================
+3.3 SINGLE SOURCE OF TRUTH
+=====================================================================
+
+Jede Administrationsliste
+besitzt ihre eigene
+technische Verantwortung.
+
+Filterdefinitionen
+
+werden ausschließlich
+innerhalb der zugehörigen
+Filter-XML gepflegt.
+
+Filterzustände
+
+werden ausschließlich
+durch das zugehörige
+ListModel verwaltet.
+
+Views
+
+stellen ausschließlich
+die vom Model
+bereitgestellten Daten dar.
+
+=====================================================================
+4. PFLICHTARCHITEKTUR
+=====================================================================
+
+Jede Administrationsliste
+besteht aus vier
+verpflichtenden Ebenen.
+
+=====================================================================
+4.1 MODEL
+=====================================================================
+
+Das ListModel ist verantwortlich für
+
+• filter_fields
+
+• populateState()
+
+• getListQuery()
+
+• Filter
+
+• Sortierung
+
+• Pagination
+
+Es besitzt keine
+Darstellungsverantwortung.
+
+=====================================================================
+4.2 VIEW
+=====================================================================
+
+Die View stellt
+dem Template mindestens bereit.
+
+$this->items
+
+$this->state
+
+$this->pagination
+
+$this->filterForm
+
+$this->activeFilters
+
+Zusätzlich werden
+die erforderlichen
+ControlFields
+vorbereitet.
+
+=====================================================================
+4.3 TEMPLATE
+=====================================================================
+
+Das Template ist verantwortlich für
+
+• Tabellenlayout
+
+• SearchTools
+
+• Sortierlinks
+
+• Pagination
+
+• renderControlFields()
+
+Es enthält
+
+keine Businesslogik,
+
+keine Datenbankzugriffe,
+
+keine Filterlogik.
+
+=====================================================================
+4.4 FILTER-XML
+=====================================================================
+
+Jede Liste besitzt
+eine eigene Filterdefinition.
+
+Diese enthält mindestens
+
+<fields name="filter">
+
+und
+
+<fields name="list">
+
+Hierüber werden
+
+Suche,
+
+Filter,
+
+Sortierung
+
+und
+
+Limit
+
+definiert.
+
+
+=====================================================================
+5. MODEL-STANDARD
+=====================================================================
+
+Das ListModel bildet die technische
+Grundlage jeder Administrationsliste.
+
+Es verwaltet ausschließlich
+
+• Filterzustände
+
+• Sortierung
+
+• Pagination
+
+• Datenbereitstellung
+
+=====================================================================
+5.1 FILTERFIELDS
+=====================================================================
+
+Jedes ListModel definiert
+sämtliche unterstützten
+Sortierfelder über
+
+filter_fields.
+
+Nur dort definierte Felder
+dürfen für Sortierungen
+verwendet werden.
+
+=====================================================================
+5.2 POPULATESTATE()
+=====================================================================
+
+populateState() verwaltet
+sämtliche Listenzustände.
+
+Hierzu gehören insbesondere
+
+• filter.search
+
+• filter.published
+
+• list.ordering
+
+• list.direction
+
+• list.limit
+
+Weitere Listenfilter
+werden ausschließlich
+innerhalb des jeweiligen
+ListModels ergänzt.
+
+=====================================================================
+5.3 LISTQUERY
+=====================================================================
+
+getListQuery() ist ausschließlich
+für den Aufbau
+der Listenabfrage verantwortlich.
+
+Hier erfolgen
+
+• Filter
+
+• Sortierung
+
+• Joins
+
+• Where-Bedingungen
+
+Businesslogik
+ist unzulässig.
+
+=====================================================================
+6. VIEW-STANDARD
+=====================================================================
+
+Die Listen-View
+stellt sämtliche Informationen
+für das Template bereit.
+
+=====================================================================
+6.1 PFLICHTEIGENSCHAFTEN
+=====================================================================
+
+Jede Listen-View
+stellt mindestens bereit.
+
+$this->items
+
+$this->state
+
+$this->pagination
+
+$this->filterForm
+
+$this->activeFilters
+
+Diese Eigenschaften
+müssen öffentlich
+für das Template
+verfügbar sein.
+
+=====================================================================
+6.2 SEARCHTOOLS
+=====================================================================
+
+SearchTools werden ausschließlich
+
+über
+
+LayoutHelper::render()
+
+eingebunden.
+
+Hierbei wird
+die View selbst
+an das Joomla-Layout
+übergeben.
+
+SearchTools bilden
+den einzigen
+zulässigen Standard
+für Filter
+und Sortierung.
+
+=====================================================================
+6.3 CONTROLFIELDS
+=====================================================================
+
+Vor der Ausgabe
+werden die notwendigen
+ControlFields ergänzt.
+
+Insbesondere
+
+task
+
+und
+
+boxchecked.
+
+Die Ausgabe erfolgt
+ausschließlich über
+
+renderControlFields().
+
+Manuelle Hidden-Fields
+sind unzulässig.
+
+=====================================================================
+7. LISTENREGELN
+=====================================================================
+
+Die folgenden Regeln
+gelten verbindlich
+für sämtliche
+FDShop-Administrationslisten.
+
+=====================================================================
+REGEL 1
+Veraltete Sortierung
+=====================================================================
+
+searchtools.sortlist
+
+ist nicht mehr Bestandteil
+der aktuellen Joomla-Architektur.
+
+Die Verwendung
+ist projektweit verboten.
+
+Es wird ausschließlich
+
+HTMLHelper::_('searchtools.sort', ...)
+
+verwendet.
+
+=====================================================================
+REGEL 2
+SearchTools vollständig bereitstellen
+=====================================================================
+
+SearchTools funktionieren
+nur dann vollständig,
+
+wenn mindestens vorhanden sind
+
+• filterForm
+
+• activeFilters
+
+• vollständige Filter-XML
+
+• renderControlFields()
+
+Fehlt einer dieser Bestandteile,
+
+ist die Listenfunktion
+nicht vollständig gewährleistet.
+
+=====================================================================
+REGEL 3
+List-Definition
+=====================================================================
+
+Jede Filter-XML
+enthält zwingend
+
+<fields name="list">
+
+Fehlt dieser Bereich,
+
+funktionieren insbesondere
+
+• Sortierung
+
+• Limit
+
+• Pagination
+
+nicht korrekt.
+
+=====================================================================
+REGEL 4
+renderControlFields()
+=====================================================================
+
+renderControlFields()
+
+ist verpflichtender Bestandteil
+jeder Administrationsliste.
+
+Ohne diese Ausgabe
+arbeitet Joomla
+nicht vollständig korrekt.
+
+=====================================================================
+REGEL 5
+Keine manuellen Hidden-Fields
+=====================================================================
+
+Technische Hidden-Fields
+
+werden ausschließlich
+
+über
+
+renderControlFields()
+
+bereitgestellt.
+
+Eigene Hidden-Fields
+dürfen diese Mechanik
+nicht ersetzen.
+
+
+=====================================================================
+REGEL 6
+Eigenständige ControlFields
+=====================================================================
+
+Jede Administrationsliste
+verwendet ausschließlich
+
+ihre eigenen
+
+ControlFields.
+
+Insbesondere dürfen
+
+task
+
+token
+
+boxchecked
+
+und weitere technische
+Steuerfelder
+
+nicht zwischen
+verschiedenen Listen
+geteilt werden.
+
+Jede Liste verwaltet
+ihre technische Steuerung
+vollständig selbst.
+
+=====================================================================
+REGEL 7
+Eigenständiger Form-Kontext
+=====================================================================
+
+Jede Administrationsliste
+besitzt einen vollständig
+eigenständigen Form-Kontext.
+
+Hierzu gehören insbesondere
+
+• eigene filterForm
+
+• eigene activeFilters
+
+• eigenes populateState()
+
+• eigene Request-Parameter
+
+• eigener Filterzustand
+
+Filterzustände
+verschiedener Listen
+
+dürfen niemals
+
+gemeinsam verwendet,
+
+gegenseitig beeinflusst
+
+oder
+
+gegenseitig überschrieben werden.
+
+Jede Liste arbeitet
+vollständig unabhängig.
+
+=====================================================================
+REGEL 8
+SearchTools ausschließlich für Listen
+=====================================================================
+
+SearchTools gehören
+ausschließlich
+zu Administrationslisten.
+
+Edit-Formulare
+
+dürfen insbesondere
+
+keine
+
+• SearchTools
+
+• Listenfilter
+
+• Pagination
+
+• List-ControlFields
+
+rendern.
+
+Bearbeitungsformulare
+und Listenansichten
+
+werden technisch
+vollständig getrennt.
+
+=====================================================================
+REGEL 9
+Listen dürfen Speichervorgänge nicht beeinflussen
+=====================================================================
+
+Eine Administrationsliste
+
+darf niemals
+
+den Speichervorgang
+eines Formulars
+beeinflussen.
+
+Insbesondere dürfen
+
+• Hidden-Fields
+
+• Task-Felder
+
+• ControlFields
+
+• Filterzustände
+
+keinen Einfluss
+auf das Speichern
+anderer Formulare besitzen.
+
+Diese Trennung
+ist verbindlicher Bestandteil
+der FDShop-Architektur.
+
+=====================================================================
+REGEL 10
+Mehrere Listen innerhalb einer Ansicht
+=====================================================================
+
+Werden mehrere
+Administrationslisten
+
+innerhalb einer gemeinsamen
+Ansicht dargestellt,
+
+beispielsweise
+innerhalb einer
+Konfigurationsansicht,
+
+besitzt jede Liste
+
+• ein eigenes <form>
+
+• eigene SearchTools
+
+• eigene ControlFields
+
+• eigene Filterzustände
+
+• eigene Pagination
+
+Mehrere Listen
+
+dürfen niemals
+
+ihre Formulare,
+
+Filter,
+
+Request-Parameter,
+
+ControlFields
+
+oder
+
+Pagination
+
+gegenseitig verwenden.
+
+Jede Liste arbeitet
+technisch vollständig
+eigenständig.
+
+=====================================================================
+REGEL 11
+renderControlFields()
+=====================================================================
+
+Ein adminForm
+
+darf ausschließlich
+
+die
+
+renderControlFields()
+
+des eigenen
+ListModels rendern.
+
+Die renderControlFields()
+
+eines anderen
+ListModels
+
+dürfen niemals
+
+innerhalb
+einer fremden
+Administrationsliste
+verwendet werden.
+
+Jede Liste
+verwaltet ihre
+ControlFields
+vollständig selbst.
+
+Diese Regel verhindert
+die Vermischung
+mehrerer Listenkontexte
+innerhalb einer Ansicht.
+
+=====================================================================
+8. QUALITÄTSSICHERUNG
+=====================================================================
+
+=====================================================================
+8.1 LISTENPRÜFUNG
+=====================================================================
+
+Vor der Freigabe
+einer neuen
+Administrationsliste
+ist mindestens zu prüfen,
+
+• besitzt die Liste
+  eine eigene Filter-XML,
+
+• besitzt sie
+  eine eigene filterForm,
+
+• besitzt sie
+  eigene activeFilters,
+
+• verwendet sie
+  renderControlFields(),
+
+• besitzt sie
+  ein eigenes populateState(),
+
+• sind SearchTools
+  vollständig eingebunden,
+
+• ist die Pagination
+  funktionsfähig,
+
+• arbeitet die Liste
+  unabhängig von
+  anderen Listen.
+
+=====================================================================
+8.2 KONSISTENZ
+=====================================================================
+
+Administrationslisten
+
+müssen jederzeit
+
+mit
+
+der Architektur,
+
+den Fachregeln
+
+und
+
+der Governance
+
+vereinbar sein.
+
+Werden Widersprüche erkannt,
+
+erfolgt keine
+eigenständige Änderung,
+
+sondern
+
+ein dokumentierter Einwand.
+
+
+=====================================================================
+8.3 DOKUMENTATIONSREGEL
+=====================================================================
+
+Diese Quelle beschreibt ausschließlich
+
+den technischen Standard
+
+für Administrationslisten.
+
+Nicht Bestandteil sind
+
+• Businesslogik
+
+• Datenmodell
+
+• Formularregeln
+  außerhalb von Listen
+
+• Governance
+
+• Projektorganisation
+
+• Installationsstruktur
+
+Hierfür existieren
+eigene Projektquellen.
+
+=====================================================================
+9. PROJEKTQUELLEN
+=====================================================================
+
+Der Listenstandard
+ist Bestandteil
+der zentralen
+FDShop-Projektdokumentation.
+
+Er ergänzt insbesondere
+
+FDShop_Governance_und_Dokumentation
+
+FDShop_Dokumentationsstandard
+
+FDShop_Fachregeln_Daten_und_Formulare
+
+FDShop_Architektur_Struktur_Installation
+
+FDShop_Implementierungsstand
+
+FDShop_Codebestand
+
+Er ersetzt
+keine dieser Quellen.
+
+=====================================================================
+10. ÄNDERUNGSPROTOKOLL
+=====================================================================
+
+V1
+
+Erste Definition
+des FDShop-Listenstandards.
+
+------------------------------------------------------------
+
+V2
+
+Anpassung
+an Joomla-5-SearchTools.
+
+Filterstruktur
+vereinheitlicht.
+
+renderControlFields()
+als Standard ergänzt.
+
+------------------------------------------------------------
+
+V3
+
+Vollständiges Refactoring
+gemäß
+FDShop_Dokumentationsstandard_V1.
+
+Kapitel
+neu strukturiert.
+
+Doppelte Inhalte
+zusammengeführt.
+
+Listenarchitektur
+klar von
+Edit-Formularen
+abgegrenzt.
+
+Eigenständiger
+Form-Kontext
+ergänzt.
+
+SearchTools
+ausschließlich
+für Listen
+festgeschrieben.
+
+Verbindliche Trennung
+zwischen Listen
+und Speichervorgängen
+ergänzt.
+
+Regeln
+für mehrere
+Administrationslisten
+innerhalb
+einer gemeinsamen
+Ansicht ergänzt.
+
+Regel
+zu renderControlFields()
+
+sprachlich
+präzisiert,
+
+fachlich
+unverändert übernommen.
+
+=====================================================================
+11. EINWÄNDE
+=====================================================================
+
+Während der Aktualisierung
+wurden folgende
+Verbesserungsmöglichkeiten erkannt.
+
+------------------------------------------------------------
+
+Einwand 1
+
+Thema
+
+Gemeinsame Listenbibliothek
+
+Begründung
+
+Mit zunehmender Anzahl
+von Administrationslisten
+
+werden wiederkehrende
+Listenbestandteile
+
+immer häufiger.
+
+Alternative
+
+Langfristig könnte
+eine gemeinsame
+FDShop-Listenbasis
+
+für
+
+ListModel,
+
+Filter,
+
+SearchTools
+
+und
+
+Standard-Layouts
+
+entstehen.
+
+Dadurch könnten
+
+Code-Doppelungen
+
+weiter reduziert
+
+und
+
+die Wartbarkeit
+
+verbessert werden.
+
+Dieser Vorschlag
+
+stellt keine
+Projektentscheidung dar.
+
+=====================================================================
+12. SCHLUSSBESTIMMUNGEN
+=====================================================================
+
+Diese Quelle definiert
+
+den verbindlichen
+FDShop-Standard
+
+für sämtliche
+Administrationslisten.
+
+Sie dokumentiert
+
+ausschließlich
+
+den nachweisbaren
+Projektstand.
+
+Neue Versionen
+
+ersetzen
+
+vorherige Versionen
+
+vollständig.
+
+=====================================================================
+ENDE DER QUELLE
+
+FDShop_Admin_List_Standard_V3
+
+Status
+
+VERBINDLICHE PROJEKTQUELLE
+
+Version
+
+V3
+
+=====================================================================

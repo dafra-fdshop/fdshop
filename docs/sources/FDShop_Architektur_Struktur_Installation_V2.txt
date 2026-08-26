@@ -1,0 +1,1640 @@
+=====================================================================
+FDShop_Architektur_Struktur_Installation_V2
+=====================================================================
+
+Status: VERBINDLICHE PROJEKTQUELLE
+Version: V2
+
+Diese Quelle ersetzt vollständig:
+
+FDShop_Architektur_Struktur_Installation_V1
+
+=====================================================================
+1. ZWECK
+=====================================================================
+
+Diese Quelle definiert die verbindliche technische Architektur,
+Installationsstruktur und Zielstruktur der FDShop-Komponente.
+
+Sie beschreibt insbesondere:
+
+• Joomla-Komponentenarchitektur
+
+• Administrator- und Site-Struktur
+
+• Dependency Injection
+
+• MVCFactory
+
+• Service Layer
+
+• Manifest-Regeln
+
+• Installationsstruktur
+
+• Server-Zielstruktur
+
+• WebAssetManager
+
+• technische Entwicklungsstruktur
+
+• Projektworkflow
+
+Diese Quelle beschreibt keine fachlichen Geschäftsregeln,
+keine Datenbank-Fachstruktur und keine Formularregeln.
+
+Diese Inhalte werden in den jeweils zuständigen Projektquellen
+dokumentiert.
+
+=====================================================================
+2. GELTUNGSBEREICH
+=====================================================================
+
+Diese Quelle ist verbindlich für alle Fach-KIs,
+die an technischer Struktur, Installation oder Architektur arbeiten.
+
+Insbesondere:
+
+• Struktur-/Install-KI
+
+• Architektur-/Core-KI
+
+• Service-/Logik-KI
+
+• Controller-KI
+
+• Model-KI
+
+• View-/Form-KI
+
+• Test-/Integrations-KI
+
+• Dokumentation / Quellenpflege
+
+Temporäre Umsetzungsrollen verändern diese Zuständigkeiten nicht.
+
+=====================================================================
+3. GRUNDPRINZIPIEN
+=====================================================================
+
+=====================================================================
+3.1 INSTALLATIONSSTRUKTUR ≠ SERVERSTRUKTUR
+=====================================================================
+
+Die Installations-ZIP-Struktur ist nicht identisch mit der späteren
+Serverstruktur nach Joomla-Installation.
+
+Die ZIP enthält:
+
+administrator/
+
+site/
+
+media/
+
+fdshop.xml
+
+Die ZIP enthält ausdrücklich nicht:
+
+components/com_fdshop/
+
+administrator/components/com_fdshop/
+
+media/com_fdshop/
+
+com_fdshop/
+
+Joomla erzeugt die Zielpfade während der Installation automatisch.
+
+=====================================================================
+3.2 JOOMLA-KONFORME KOMPONENTENSTRUKTUR
+=====================================================================
+
+FDShop folgt der Joomla-Komponentenstruktur mit klarer Trennung von:
+
+administrator
+
+und
+
+site
+
+Administrator ist zuständig für:
+
+• Backend
+
+• Verwaltung
+
+• Konfiguration
+
+• Admin-Views
+
+• technische Komponentenbasis
+
+Site ist zuständig für:
+
+• Frontend
+
+• spätere Shop-Ausgabe
+
+• Routing
+
+• Site-Views
+
+Die aktuelle Site-Struktur ist vorbereitet,
+aber noch nicht vollständig implementiert.
+
+=====================================================================
+3.3 SERVICE LAYER
+=====================================================================
+
+Der Service Layer ist verpflichtender Bestandteil der Architektur.
+
+Businesslogik liegt ausschließlich in Services.
+
+Nicht zulässig ist Businesslogik in:
+
+• Views
+
+• Templates
+
+• Formularen
+
+• Table-Klassen
+
+• JavaScript
+
+• Controllern
+
+Controller koordinieren.
+
+Models liefern Daten.
+
+Views bereiten Daten für die Ausgabe vor.
+
+Templates stellen Daten dar.
+
+Services enthalten fachliche Logik.
+
+=====================================================================
+3.4 SINGLE SOURCE OF TRUTH IN DER ARCHITEKTUR
+=====================================================================
+
+Jede technische Verantwortung besitzt genau eine führende Stelle.
+
+Beispiele:
+
+Komponenten-Boot
+
+→ services/provider.php und Extension-Klasse
+
+Service-Registrierung
+
+→ services/provider.php
+
+Installationsstruktur
+
+→ Installationsstruktur dieser Quelle
+
+Manifest
+
+→ fdshop.xml
+
+Assets
+
+→ media/joomla.asset.json
+
+Codebasis
+
+→ aktueller lokaler Projektstand
+
+Projektworkflow
+
+→ FDShop_Projektworkflow
+
+Doppelte technische Strukturen
+sind zu vermeiden.
+
+=====================================================================
+3.5 KEINE STILLEN STRUKTURÄNDERUNGEN
+=====================================================================
+
+Fach-KIs dürfen keine eigenständigen Änderungen an
+
+• Ordnerstruktur
+
+• Manifest
+
+• Namespace
+
+• Installationspfaden
+
+• Architekturgrundlagen
+
+vornehmen.
+
+Verbesserungsvorschläge werden ausschließlich als Einwand
+dokumentiert.
+
+
+=====================================================================
+4. KOMPONENTENARCHITEKTUR
+=====================================================================
+
+Die FDShop-Komponente folgt vollständig
+der Joomla-Komponentenarchitektur.
+
+Alle Projektbestandteile besitzen
+eine klar definierte technische Aufgabe.
+
+=====================================================================
+4.1 MVC-ARCHITEKTUR
+=====================================================================
+
+PRINZIP
+
+FDShop verwendet konsequent
+das MVC-Architekturmuster.
+
+Die Verantwortlichkeiten sind
+streng voneinander getrennt.
+
+MODEL
+
+Verantwortung
+
+• Daten laden
+
+• Daten vorbereiten
+
+• Formulare bereitstellen
+
+• Listen bereitstellen
+
+Modelle treffen keine
+fachlichen Entscheidungen.
+
+------------------------------------------------------------
+
+CONTROLLER
+
+Verantwortung
+
+• Benutzeraktionen entgegennehmen
+
+• Services aufrufen
+
+• Navigation steuern
+
+• Redirects
+
+• Nachrichten
+
+Controller enthalten
+keine Businesslogik.
+
+------------------------------------------------------------
+
+VIEW
+
+Verantwortung
+
+• Daten aufbereiten
+
+• Anzeige vorbereiten
+
+• Übergabe an Templates
+
+Views verändern
+keine Daten.
+
+------------------------------------------------------------
+
+TEMPLATE
+
+Verantwortung
+
+• HTML-Ausgabe
+
+• Layout
+
+• Darstellung
+
+Templates enthalten
+
+keine Datenbankzugriffe,
+
+keine Businesslogik,
+
+keine Berechnungen.
+
+=====================================================================
+4.2 MVCFACTORY
+=====================================================================
+
+Die Joomla MVCFactory
+ist verbindlicher Bestandteil
+der Projektarchitektur.
+
+Sie dient der Erzeugung von
+
+• Models
+
+• Views
+
+• Controllern
+
+• Tables
+
+Direkte Instanziierungen
+dieser Komponenten
+sind zu vermeiden.
+
+Neue Komponenten
+werden grundsätzlich
+über die MVCFactory erzeugt.
+
+=====================================================================
+4.3 DEPENDENCY INJECTION
+=====================================================================
+
+Dependency Injection
+ist verpflichtender Bestandteil
+der Projektarchitektur.
+
+Die Registrierung erfolgt
+zentral.
+
+Neue Services
+
+werden ausschließlich
+über den Joomla-DI-Container
+registriert.
+
+Manuelle Singleton-Strukturen
+
+oder
+
+globale Instanzen
+
+sind nicht zulässig.
+
+=====================================================================
+4.4 SERVICE-ARCHITEKTUR
+=====================================================================
+
+Services bilden
+die zentrale Business-Ebene
+der Anwendung.
+
+Sie koordinieren
+
+• Geschäftsregeln
+
+• Berechnungen
+
+• Validierungen
+
+• fachliche Abläufe
+
+Services besitzen
+keine HTML-Ausgabe.
+
+Services besitzen
+keine Formularlogik.
+
+Services besitzen
+keine Templateverantwortung.
+
+=====================================================================
+4.5 TABLE-KLASSEN
+=====================================================================
+
+Jede Table-Klasse
+verwaltet genau
+
+eine Datenbanktabelle.
+
+Aufgaben
+
+• Laden
+
+• Speichern
+
+• technische Validierung
+
+Nicht zulässig
+
+• Businesslogik
+
+• Preisberechnung
+
+• Bundlelogik
+
+• Workflowsteuerung
+
+=====================================================================
+4.6 FORMULARE
+=====================================================================
+
+XML-Formulare
+
+beschreiben ausschließlich
+
+die Benutzereingabe.
+
+Sie enthalten
+
+keine Berechnungen,
+
+keine Geschäftsregeln,
+
+keine Datenbanklogik.
+
+Fachliche Regeln
+werden ausschließlich
+außerhalb der Formulare
+umgesetzt.
+
+=====================================================================
+4.7 WEBASSETMANAGER
+=====================================================================
+
+Der Joomla WebAssetManager
+ist der verbindliche Standard
+für die Einbindung
+von Ressourcen.
+
+Hierzu gehören
+
+• CSS
+
+• JavaScript
+
+• Abhängigkeiten
+
+Assets werden
+nicht manuell
+innerhalb der Views
+registriert.
+
+Die zentrale Definition erfolgt
+über
+
+joomla.asset.json
+
+=====================================================================
+4.8 NAMESPACES
+=====================================================================
+
+Die gesamte Komponente
+verwendet Joomla-konforme
+PHP-Namespaces.
+
+Neue Klassen
+werden ausschließlich
+innerhalb der bestehenden
+Projektstruktur ergänzt.
+
+Abweichende
+Namespace-Strukturen
+
+sind unzulässig.
+
+=====================================================================
+4.9 AUTOLOADING
+=====================================================================
+
+Autoloading erfolgt
+über die Joomla-
+Komponentenstruktur.
+
+Eigene Autoloader
+
+werden nicht eingeführt.
+
+=====================================================================
+5. VERZEICHNISSTRUKTUR
+=====================================================================
+
+Die Projektstruktur
+folgt einer klaren
+Verzeichnisaufteilung.
+
+=====================================================================
+5.1 ADMINISTRATOR
+=====================================================================
+
+Der Administratorbereich
+enthält sämtliche
+
+Backend-Funktionen,
+
+Administration,
+
+Konfiguration,
+
+Modelle,
+
+Controller,
+
+Views,
+
+Services,
+
+Tables,
+
+SQL,
+
+Formulare,
+
+Sprachdateien.
+
+=====================================================================
+5.2 SITE
+=====================================================================
+
+Der Site-Bereich
+enthält ausschließlich
+
+Frontend-Funktionen.
+
+Die Trennung
+zwischen Administrator
+
+und
+
+Site
+
+bleibt dauerhaft erhalten.
+
+=====================================================================
+5.3 MEDIA
+=====================================================================
+
+Der Media-Bereich
+enthält ausschließlich
+
+statische Ressourcen.
+
+Hierzu gehören insbesondere
+
+• CSS
+
+• JavaScript
+
+• Bilder
+
+• Icons
+
+• WebAssets
+
+=====================================================================
+6. INSTALLATIONSARCHITEKTUR
+=====================================================================
+
+Die Installationsarchitektur definiert
+den technischen Aufbau
+des Installationspaketes
+sowie dessen Zielstruktur
+nach erfolgreicher Joomla-Installation.
+
+=====================================================================
+6.1 INSTALLATIONSPAKET
+=====================================================================
+
+Das Installationspaket
+folgt vollständig
+dem Joomla-Komponentenstandard.
+
+Die oberste Ebene
+des Installationspaketes
+enthält ausschließlich
+die für Joomla erforderlichen
+Bestandteile.
+
+Beispielstruktur
+
+fdshop.xml
+
+administrator/
+
+site/
+
+media/
+
+language/
+
+script.php (optional)
+
+Es werden keine
+bereits installierten
+Serverpfade
+innerhalb der ZIP-Datei verwendet.
+
+=====================================================================
+6.2 SERVER-ZIELSTRUKTUR
+=====================================================================
+
+Nach erfolgreicher Installation
+werden die Dateien
+automatisch
+durch Joomla
+in die Zielstruktur übernommen.
+
+Administrator
+
+administrator/components/com_fdshop/
+
+------------------------------------------------------------
+
+Frontend
+
+components/com_fdshop/
+
+------------------------------------------------------------
+
+Medien
+
+media/com_fdshop/
+
+------------------------------------------------------------
+
+Sprachdateien
+
+administrator/language/
+
+language/
+
+=====================================================================
+6.3 MANIFESTDATEI
+=====================================================================
+
+Die Manifestdatei
+
+fdshop.xml
+
+bildet die zentrale
+Installationsbeschreibung
+der Komponente.
+
+Sie definiert insbesondere
+
+• Komponenteninformationen
+
+• Version
+
+• Installationsdateien
+
+• SQL-Dateien
+
+• Sprachdateien
+
+• Medien
+
+• Scriptfile
+
+Die Manifestdatei
+enthält keine
+Businesslogik.
+
+=====================================================================
+6.4 SQL-STRUKTUR
+=====================================================================
+
+SQL-Dateien
+werden ausschließlich
+für Installation,
+Updates
+und Deinstallation
+verwendet.
+
+Standardstruktur
+
+administrator/sql/
+
+------------------------------------------------------------
+
+install.mysql.utf8.sql
+
+------------------------------------------------------------
+
+updates/
+
+------------------------------------------------------------
+
+uninstall.mysql.utf8.sql
+
+Neue Datenbankänderungen
+werden grundsätzlich
+
+über Update-SQL
+
+bereitgestellt.
+
+Die Installationsdatei
+bildet stets
+den vollständigen
+aktuellen Datenbestand ab.
+
+=====================================================================
+6.5 SCRIPTFILE
+=====================================================================
+
+Wird ein Scriptfile verwendet,
+
+enthält dieses ausschließlich
+
+technische Installationsabläufe.
+
+Hierzu gehören beispielsweise
+
+• Vorprüfungen
+
+• Nacharbeiten
+
+• Installationskontrollen
+
+Nicht zulässig sind
+
+fachliche Entscheidungen
+
+oder
+
+Businesslogik.
+
+=====================================================================
+7. ENTWICKLUNGSSTRUKTUR
+=====================================================================
+
+Die Entwicklungsstruktur
+beschreibt den Aufbau
+des eigentlichen
+Projektrepositories.
+
+Sie unterscheidet sich
+bewusst
+von der späteren
+Installationsstruktur.
+
+=====================================================================
+7.1 LOKALER PROJEKTSTAND ALS FÜHRENDE CODEBASIS
+=====================================================================
+
+Der aktuelle
+lokale Projektstand
+
+ist die führende
+technische Arbeitsgrundlage.
+
+Alle Änderungen
+
+erfolgen zunächst
+
+innerhalb
+des lokalen Projektes.
+
+Projekt-ZIP-Dateien
+
+werden aus diesem
+Projektstand erstellt
+
+und dienen
+
+als technische
+Arbeitsgrundlage
+für Fach-KIs.
+
+Der lokale Projektstand
+
+besitzt die technische
+
+Single Source of Truth.
+
+Der organisatorische
+Projektablauf
+
+ist in
+
+FDShop_Projektworkflow
+
+definiert.
+
+
+=====================================================================
+7.2 ENTWICKLUNGSABLAUF
+=====================================================================
+
+Die Entwicklung
+erfolgt grundsätzlich
+in folgender Reihenfolge.
+
+1.
+
+Projektänderung
+
+↓
+
+2.
+
+Codeänderung
+
+↓
+
+3.
+
+Test
+
+↓
+
+4.
+
+Dokumentation
+
+↓
+
+5.
+
+Versionsanpassung
+
+↓
+
+6.
+
+Installationspaket
+
+Dadurch bleiben
+
+Code
+
+Dokumentation
+
+und
+
+Installation
+
+dauerhaft synchron.
+
+=====================================================================
+7.3 PROJEKTSTRUKTUR
+=====================================================================
+
+Neue Dateien
+werden ausschließlich
+
+innerhalb
+der vorhandenen
+Projektstruktur
+
+angelegt.
+
+Neue Hauptverzeichnisse
+
+werden nicht
+eigenständig eingeführt.
+
+=====================================================================
+7.4 NAMENSKONVENTIONEN
+=====================================================================
+
+Dateien
+
+Ordner
+
+Namespaces
+
+Klassen
+
+Methoden
+
+folgen den
+Joomla-Konventionen.
+
+Projektinterne
+Namenskonventionen
+
+werden projektweit
+einheitlich verwendet.
+
+=====================================================================
+7.5 ERWEITERBARKEIT
+=====================================================================
+
+Die Architektur
+ist so aufgebaut,
+
+dass zukünftige
+Erweiterungen
+
+ohne grundlegende
+Strukturänderungen
+
+integriert werden können.
+
+Neue Bereiche
+werden bevorzugt
+
+durch Erweiterung
+
+bestehender Strukturen
+
+realisiert.
+
+=====================================================================
+8. JOOMLA-KOMPATIBILITÄT
+=====================================================================
+
+Die Projektarchitektur
+orientiert sich
+an Joomla 5.
+
+Dabei werden
+bereits heute
+Architekturentscheidungen
+berücksichtigt,
+
+welche einen späteren
+Wechsel auf Joomla 6
+vereinfachen.
+
+=====================================================================
+8.1 JOOMLA-5-KOMPATIBILITÄT
+=====================================================================
+
+Die aktuelle
+Produktivversion
+arbeitet
+auf Joomla 5.
+
+Alle neuen
+Projektbestandteile
+
+müssen mit Joomla 5
+kompatibel sein.
+
+=====================================================================
+8.2 JOOMLA-6-VORBEREITUNG
+=====================================================================
+
+Neue Entwicklungen
+werden nach Möglichkeit
+
+so umgesetzt,
+
+dass spätere
+Migrationen
+auf Joomla 6
+
+vereinfacht werden.
+
+Hierzu gehören insbesondere
+
+• moderne Joomla-APIs
+
+• Dependency Injection
+
+• MVCFactory
+
+• WebAssetManager
+
+• aktuelle Namespace-Strukturen
+
+=====================================================================
+8.3 RÜCKWÄRTSKOMPATIBILITÄT
+=====================================================================
+
+Neue Entwicklungen
+
+dürfen bestehende
+Projektbereiche
+
+nicht unnötig
+inkompatibel machen.
+
+Architekturänderungen
+
+sind möglichst
+abwärtskompatibel
+umzusetzen.
+
+
+=====================================================================
+9. ARCHITEKTURREGELN
+=====================================================================
+
+Die folgenden Architekturregeln
+gelten projektweit
+für sämtliche technischen
+Projektbestandteile.
+
+Sie bilden die Grundlage
+für alle zukünftigen
+Erweiterungen.
+
+=====================================================================
+9.1 SINGLE SOURCE OF TRUTH
+=====================================================================
+
+Auch innerhalb
+der technischen Architektur
+
+gilt konsequent
+
+Single Source of Truth.
+
+Jede technische Verantwortung
+
+besitzt genau
+eine führende Stelle.
+
+Beispiele
+
+Manifest
+
+→ fdshop.xml
+
+Dependency Injection
+
+→ services/provider.php
+
+Assets
+
+→ media/joomla.asset.json
+
+Installation
+
+→ SQL + Manifest
+
+Businesslogik
+
+→ Service Layer
+
+Modelle
+
+→ Datenbereitstellung
+
+Controller
+
+→ Ablaufsteuerung
+
+Views
+
+→ Darstellung
+
+Technische Zuständigkeiten
+werden nicht mehrfach
+implementiert.
+
+=====================================================================
+9.2 TRENNUNG DER VERANTWORTLICHKEITEN
+=====================================================================
+
+Jede technische Ebene
+besitzt eine klar definierte Aufgabe.
+
+MODEL
+
+liefert Daten.
+
+CONTROLLER
+
+koordiniert Abläufe.
+
+SERVICE
+
+führt Geschäftslogik aus.
+
+VIEW
+
+bereitet Daten auf.
+
+TEMPLATE
+
+stellt Daten dar.
+
+TABLE
+
+verwaltet Datenbanktabellen.
+
+Diese Verantwortlichkeiten
+dürfen nicht vermischt werden.
+
+=====================================================================
+9.3 ERWEITERUNGEN
+=====================================================================
+
+Neue Funktionen
+werden grundsätzlich
+
+innerhalb
+der bestehenden Architektur
+
+ergänzt.
+
+Neue Hauptstrukturen
+
+werden nur eingeführt,
+
+wenn hierfür
+eine offizielle
+Projektentscheidung vorliegt.
+
+=====================================================================
+9.4 WIEDERVERWENDBARKEIT
+=====================================================================
+
+Technische Lösungen
+
+werden möglichst
+wiederverwendbar entwickelt.
+
+Doppelte Implementierungen
+
+sind zu vermeiden.
+
+Bestehende Services
+
+werden erweitert,
+
+bevor neue
+parallele Lösungen
+entstehen.
+
+=====================================================================
+9.5 KOMPATIBILITÄT
+=====================================================================
+
+Neue Entwicklungen
+
+dürfen bestehende
+Projektbereiche
+
+nicht unnötig
+beeinträchtigen.
+
+Architekturänderungen
+
+sollen möglichst
+
+kompatibel
+
+und
+
+erweiterbar
+
+umgesetzt werden.
+
+=====================================================================
+10. INSTALLATIONSREGELN
+=====================================================================
+
+=====================================================================
+10.1 INSTALLATION
+=====================================================================
+
+Eine Installation
+muss jederzeit
+
+über das offizielle
+Joomla-Installationssystem
+
+möglich sein.
+
+Manuelle Nacharbeiten
+
+sollen auf ein Minimum
+reduziert werden.
+
+=====================================================================
+10.2 UPDATES
+=====================================================================
+
+Datenbankänderungen
+
+werden grundsätzlich
+
+über Update-SQL-Dateien
+
+bereitgestellt.
+
+Bestehende Installationen
+
+müssen aktualisierbar bleiben.
+
+=====================================================================
+10.3 DEINSTALLATION
+=====================================================================
+
+Eine Deinstallation
+
+muss sämtliche
+
+projektbezogenen
+Installationsbestandteile
+
+ordnungsgemäß entfernen.
+
+Projektfremde Daten
+
+dürfen hierbei
+
+nicht verändert werden.
+
+=====================================================================
+10.4 DATEISTRUKTUR
+=====================================================================
+
+Dateien
+
+werden ausschließlich
+
+innerhalb
+der vorgesehenen
+Joomla-Struktur
+
+installiert.
+
+Eigene Zielpfade
+
+außerhalb
+der Joomla-Komponente
+
+werden nicht verwendet.
+
+=====================================================================
+11. QUALITÄTSSICHERUNG
+=====================================================================
+
+=====================================================================
+11.1 ARCHITEKTURPRÜFUNG
+=====================================================================
+
+Vor jeder Freigabe
+
+ist zu prüfen,
+
+ob
+
+• die Joomla-Struktur
+  eingehalten wurde,
+
+• MVC korrekt umgesetzt wurde,
+
+• Dependency Injection
+  verwendet wird,
+
+• Businesslogik
+  ausschließlich
+  im Service Layer liegt,
+
+• Installationsstruktur
+  und Serverstruktur
+  korrekt getrennt sind.
+
+=====================================================================
+11.2 KONSISTENZ
+=====================================================================
+
+Die Architekturquelle
+
+muss jederzeit
+
+mit
+
+Codebestand,
+
+Implementierungsstand,
+
+Governance
+
+und
+
+Fachregeln
+
+vereinbar sein.
+
+Werden Widersprüche erkannt,
+
+erfolgt keine
+eigenständige Änderung,
+
+sondern
+
+ein dokumentierter Einwand.
+
+=====================================================================
+11.3 DOKUMENTATION
+=====================================================================
+
+Diese Quelle
+
+beschreibt ausschließlich
+
+die technische Architektur.
+
+Nicht Bestandteil sind
+
+• Governance
+
+• Datenmodell
+
+• Formularregeln
+
+• Geschäftsregeln
+
+• Projektorganisation
+
+Hierfür existieren
+eigene Projektquellen.
+
+
+=====================================================================
+12. PROJEKTQUELLEN
+=====================================================================
+
+Die Architekturquelle ist Bestandteil
+der zentralen FDShop-Projektdokumentation.
+
+Jede Projektquelle besitzt
+einen eindeutig definierten
+Verantwortungsbereich.
+
+Diese Quelle beschreibt ausschließlich
+
+• technische Architektur
+
+• Installationsstruktur
+
+• Komponentenstruktur
+
+• Zielstruktur
+
+• technische Projektgrundlagen
+
+Andere Themenbereiche
+werden nicht erneut dokumentiert.
+
+Stattdessen erfolgt
+ein Verweis
+auf die zuständige Projektquelle.
+
+=====================================================================
+12.1 ZUGEHÖRIGE PROJEKTQUELLEN
+=====================================================================
+
+FDShop_Governance_und_Dokumentation
+
+Projektorganisation
+
+Rollen
+
+Governance
+
+Dokumentationsabläufe
+
+------------------------------------------------------------
+
+FDShop_Dokumentationsstandard
+
+Dokumentationsregeln
+
+Qualitätsregeln
+
+Versionierung
+
+------------------------------------------------------------
+
+FDShop_Fachregeln_Daten_und_Formulare
+
+fachliche Projektregeln
+
+Datenmodell
+
+Formularregeln
+
+------------------------------------------------------------
+
+FDShop_Implementierungsstand
+
+aktueller Entwicklungsstand
+
+bereits umgesetzte Funktionen
+
+offene Implementierungen
+
+------------------------------------------------------------
+
+FDShop_Codebestand
+
+Projektstruktur
+
+Klassenübersicht
+
+Komponentenübersicht
+
+------------------------------------------------------------
+
+FDShop_Projektworkflow
+
+Projektworkflow
+
+Arbeitsgrundlagen
+
+Projekt-ZIP
+
+lokaler Projektstand
+
+------------------------------------------------------------
+
+FDShop_Admin_List_Standard
+
+Administrationslisten
+
+Search Tools
+
+Filter
+
+------------------------------------------------------------
+
+FDShop_Temporaere_Umsetzungsrollen
+
+temporäre Projektrollen
+
+Arbeitsbereiche
+
+=====================================================================
+12.2 QUERVERWEISE
+=====================================================================
+
+Die Architekturquelle
+ergänzt die übrigen Projektquellen.
+
+Sie ersetzt insbesondere nicht
+
+• Governance
+
+• Fachregeln
+
+• Dokumentationsstandard
+
+• Implementierungsstand
+
+• Codebestand
+
+Technische Informationen
+werden ausschließlich
+an der fachlich richtigen Stelle
+vollständig beschrieben.
+
+=====================================================================
+13. ÄNDERUNGSPROTOKOLL
+=====================================================================
+
+V1
+
+Erste Architekturbeschreibung
+des Projektes.
+
+------------------------------------------------------------
+
+V2
+
+Vollständige Überarbeitung
+auf Basis
+des aktuellen Projektstandes.
+
+Ergänzt wurden insbesondere
+
+• Service Layer
+
+• Single Source of Truth
+  innerhalb der Architektur
+
+• MVCFactory
+
+• Dependency Injection
+
+• Joomla WebAssetManager
+
+• Installationsarchitektur
+
+• Trennung
+  Installationsstruktur ↔ Serverstruktur
+
+• lokaler Projektstand als führende Codebasis
+
+• Joomla-6-Vorbereitung
+
+• Qualitätsregeln
+
+• Architekturregeln
+
+• Quellentrennung
+  entsprechend
+  Dokumentationsstandard V1
+
+=====================================================================
+14. EINWÄNDE
+=====================================================================
+
+Während der Aktualisierung
+wurden folgende
+Verbesserungsmöglichkeiten erkannt.
+
+------------------------------------------------------------
+
+Einwand 1
+
+Thema
+
+Architekturübersicht
+
+Begründung
+
+Mit wachsender Projektgröße
+nimmt die Anzahl
+der Architekturbausteine
+kontinuierlich zu.
+
+Alternative
+
+Langfristig könnte
+eine eigenständige
+
+FDShop_Architekturübersicht
+
+entstehen.
+
+Diese würde
+
+Services
+
+Controller
+
+Models
+
+Views
+
+Tabellen
+
+Namespaces
+
+Ordner
+
+sowie deren Beziehungen
+grafisch dokumentieren.
+
+Dadurch könnten
+neue Entwickler
+und Fach-KIs
+die technische Struktur
+noch schneller erfassen.
+
+Dieser Vorschlag
+
+stellt keine
+Projektentscheidung dar.
+
+=====================================================================
+15. SCHLUSSBESTIMMUNGEN
+=====================================================================
+
+Diese Quelle definiert
+
+die verbindliche
+technische Architektur
+des Projektes FDShop.
+
+Sie dokumentiert ausschließlich
+
+den nachweisbaren
+aktuellen Projektstand.
+
+Architekturentscheidungen
+
+werden dokumentiert,
+
+jedoch nicht
+eigenständig getroffen.
+
+Neue Versionen
+
+ersetzen
+
+ältere Versionen
+
+vollständig.
+
+=====================================================================
+ENDE DER QUELLE
+
+FDShop_Architektur_Struktur_Installation_V2
+
+Status
+
+VERBINDLICHE PROJEKTQUELLE
+
+Version
+
+V2
+
+=====================================================================
