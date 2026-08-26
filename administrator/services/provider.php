@@ -9,6 +9,8 @@ defined('_JEXEC') or die;
 use FDShop\Component\FDShop\Administrator\Extension\FdshopComponent;
 use FDShop\Component\FDShop\Administrator\Service\CategoryService;
 use FDShop\Component\FDShop\Administrator\Service\CategoryServiceInterface;
+use FDShop\Component\FDShop\Administrator\Service\CouponService;
+use FDShop\Component\FDShop\Administrator\Service\CouponServiceInterface;
 use FDShop\Component\FDShop\Administrator\Service\ManufacturerService;
 use FDShop\Component\FDShop\Administrator\Service\ManufacturerServiceInterface;
 use FDShop\Component\FDShop\Administrator\Service\BundleService;
@@ -51,6 +53,23 @@ return new class () implements ServiceProviderInterface {
             CategoryService::class,
             function (Container $container): CategoryService {
                 return $container->get(CategoryServiceInterface::class);
+            }
+        );
+
+        $container->set(
+            CouponServiceInterface::class,
+            function (Container $container): CouponServiceInterface {
+                return new CouponService(
+                    $container->get(MVCFactoryInterface::class),
+                    $container->get(DatabaseInterface::class)
+                );
+            }
+        );
+
+        $container->set(
+            CouponService::class,
+            function (Container $container): CouponService {
+                return $container->get(CouponServiceInterface::class);
             }
         );
 

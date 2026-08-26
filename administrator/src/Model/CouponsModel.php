@@ -10,7 +10,7 @@ defined('_JEXEC') or die;
 
 use Joomla\CMS\MVC\Model\ListModel;
 
-class ShipmentsModel extends ListModel
+class CouponsModel extends ListModel
 {
     public function __construct($config = [])
     {
@@ -18,18 +18,30 @@ class ShipmentsModel extends ListModel
             $config['filter_fields'] = [
                 'id',
                 'a.id',
-                'shipment_name',
-                'a.shipment_name',
-                'shipment_description',
-                'a.shipment_description',
-                'shipment_color',
-                'a.shipment_color',
-                'shipment_price',
-                'a.shipment_price',
+                'coupon_code',
+                'a.coupon_code',
+                'coupon_name',
+                'a.coupon_name',
+                'alias',
+                'a.alias',
+                'description',
+                'a.description',
+                'discount_type',
+                'a.discount_type',
+                'discount_value',
+                'a.discount_value',
+                'minimum_order_total',
+                'a.minimum_order_total',
+                'usage_limit_total',
+                'a.usage_limit_total',
+                'usage_limit_per_user',
+                'a.usage_limit_per_user',
+                'valid_from',
+                'a.valid_from',
+                'valid_to',
+                'a.valid_to',
                 'published',
                 'a.published',
-                'is_default',
-                'a.is_default',
                 'ordering',
                 'a.ordering',
                 'created',
@@ -42,7 +54,7 @@ class ShipmentsModel extends ListModel
         parent::__construct($config);
     }
 
-    protected function populateState($ordering = 'a.ordering', $direction = 'ASC'): void
+    protected function populateState($ordering = 'a.id', $direction = 'DESC'): void
     {
         $search = $this->getUserStateFromRequest($this->context . '.filter.search', 'filter_search');
         $this->setState('filter.search', $search);
@@ -60,19 +72,25 @@ class ShipmentsModel extends ListModel
 
         $query->select([
             $db->quoteName('a.id'),
-            $db->quoteName('a.shipment_name'),
-            $db->quoteName('a.shipment_description'),
-            $db->quoteName('a.shipment_color'),
-            $db->quoteName('a.shipment_price'),
+            $db->quoteName('a.coupon_code'),
+            $db->quoteName('a.coupon_name'),
+            $db->quoteName('a.alias'),
+            $db->quoteName('a.description'),
+            $db->quoteName('a.discount_type'),
+            $db->quoteName('a.discount_value'),
+            $db->quoteName('a.minimum_order_total'),
+            $db->quoteName('a.usage_limit_total'),
+            $db->quoteName('a.usage_limit_per_user'),
+            $db->quoteName('a.valid_from'),
+            $db->quoteName('a.valid_to'),
             $db->quoteName('a.published'),
-            $db->quoteName('a.is_default'),
             $db->quoteName('a.ordering'),
             $db->quoteName('a.created'),
             $db->quoteName('a.created_by'),
             $db->quoteName('a.modified'),
             $db->quoteName('a.modified_by'),
         ])
-            ->from($db->quoteName('#__fdshop_shipments', 'a'));
+            ->from($db->quoteName('#__fdshop_coupons', 'a'));
 
         $published = $this->getState('filter.published');
 
@@ -91,23 +109,23 @@ class ShipmentsModel extends ListModel
 
                 $query->where(
                     '('
-                    . $db->quoteName('a.shipment_name') . ' LIKE ' . $quotedToken
-                    . ' OR ' . $db->quoteName('a.shipment_description') . ' LIKE ' . $quotedToken
-                    . ' OR ' . $db->quoteName('a.shipment_color') . ' LIKE ' . $quotedToken
+                    . $db->quoteName('a.coupon_code') . ' LIKE ' . $quotedToken
+                    . ' OR ' . $db->quoteName('a.coupon_name') . ' LIKE ' . $quotedToken
+                    . ' OR ' . $db->quoteName('a.alias') . ' LIKE ' . $quotedToken
+                    . ' OR ' . $db->quoteName('a.description') . ' LIKE ' . $quotedToken
                     . ')'
                 );
             }
         }
 
-        $orderCol  = $this->state->get('list.ordering', 'a.ordering');
-        $orderDirn = strtoupper($this->state->get('list.direction', 'ASC'));
+        $orderCol  = $this->state->get('list.ordering', 'a.id');
+        $orderDirn = strtoupper($this->state->get('list.direction', 'DESC'));
 
         if (!in_array($orderDirn, ['ASC', 'DESC'], true)) {
-            $orderDirn = 'ASC';
+            $orderDirn = 'DESC';
         }
 
         $query->order($db->escape($orderCol) . ' ' . $db->escape($orderDirn));
-        $query->order($db->quoteName('a.id') . ' DESC');
 
         return $query;
     }

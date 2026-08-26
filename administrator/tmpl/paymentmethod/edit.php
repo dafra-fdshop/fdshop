@@ -19,7 +19,7 @@ use Joomla\CMS\HTML\HTMLHelper;
                     <?php echo $this->form->renderField('payment_description'); ?>
                     <?php echo $this->form->renderField('payment_fee'); ?>
                     <?php echo $this->form->renderField('paypal_enabled'); ?>
-                    <?php echo $this->form->renderField('is_published'); ?>
+                    <?php echo $this->form->renderField('published'); ?>
                 </div>
             </div>
         </div>

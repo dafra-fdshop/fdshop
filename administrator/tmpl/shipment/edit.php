@@ -19,7 +19,7 @@ use Joomla\CMS\HTML\HTMLHelper;
                     <?php echo $this->form->renderField('shipment_description'); ?>
                     <?php echo $this->form->renderField('shipment_color'); ?>
                     <?php echo $this->form->renderField('shipment_price'); ?>
-                    <?php echo $this->form->renderField('is_published'); ?>
+                    <?php echo $this->form->renderField('published'); ?>
                 </div>
             </div>
         </div>

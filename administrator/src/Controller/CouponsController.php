@@ -10,13 +10,13 @@ defined('_JEXEC') or die;
 
 use Joomla\CMS\MVC\Controller\AdminController;
 
-class ManufacturersController extends AdminController
+class CouponsController extends AdminController
 {
-    protected $text_prefix = 'COM_FDSHOP_MANUFACTURERS';
+    protected $text_prefix = 'COM_FDSHOP_COUPONS';
 
-    protected $default_view = 'manufacturers';
+    protected $default_view = 'coupons';
 
-    public function getModel($name = 'Manufacturer', $prefix = 'Administrator', $config = ['ignore_request' => true])
+    public function getModel($name = 'Coupon', $prefix = 'Administrator', $config = ['ignore_request' => true])
     {
         return parent::getModel($name, $prefix, $config);
     }

@@ -41,7 +41,7 @@
             </field>
 
             <field
-                name="is_published"
+                name="published"
                 type="radio"
                 label="Veröffentlicht"
                 default="1"

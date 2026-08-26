@@ -13,4 +13,5 @@ use Joomla\CMS\MVC\Controller\FormController;
 class ConfigurationController extends FormController
 {
     protected $view_list = 'configuration';
+	
 }

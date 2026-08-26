@@ -52,6 +52,7 @@ class HtmlView extends BaseHtmlView
         $shipmentsModel = new ShipmentsModel();
         $paymentmethodsModel = new PaymentmethodsModel();
         $orderstatusesModel = new OrderstatusesModel();
+		
 
         $this->shipments              = $shipmentsModel->getItems();
         $this->shipmentState          = $shipmentsModel->getState();

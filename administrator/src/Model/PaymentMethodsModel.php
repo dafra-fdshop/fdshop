@@ -24,10 +24,18 @@ class PaymentmethodsModel extends ListModel
                 'a.payment_description',
                 'payment_fee',
                 'a.payment_fee',
+                'paypal_enabled',
+                'a.paypal_enabled',
                 'published',
-                'a.is_published',
+                'a.published',
+                'is_default',
+                'a.is_default',
                 'ordering',
                 'a.ordering',
+                'created',
+                'a.created',
+                'modified',
+                'a.modified',
             ];
         }
 
@@ -56,7 +64,8 @@ class PaymentmethodsModel extends ListModel
             $db->quoteName('a.payment_description'),
             $db->quoteName('a.payment_fee'),
             $db->quoteName('a.paypal_enabled'),
-            $db->quoteName('a.is_published', 'published'),
+            $db->quoteName('a.published'),
+            $db->quoteName('a.is_default'),
             $db->quoteName('a.ordering'),
             $db->quoteName('a.created'),
             $db->quoteName('a.created_by'),
@@ -68,7 +77,7 @@ class PaymentmethodsModel extends ListModel
         $published = $this->getState('filter.published');
 
         if ($published !== '') {
-            $query->where($db->quoteName('a.is_published') . ' = ' . (int) $published);
+            $query->where($db->quoteName('a.published') . ' = ' . (int) $published);
         }
 
         $search = trim((string) $this->getState('filter.search'));

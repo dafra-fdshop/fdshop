@@ -26,6 +26,8 @@ class CategoriesModel extends ListModel
                 'a.description',
                 'published',
                 'a.is_active',
+                'is_active',
+                'a.is_active',
                 'ordering',
                 'a.ordering',
             ];

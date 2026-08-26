@@ -55,7 +55,7 @@ class ConfigurationModel extends AdminModel
                 'id'                      => 1,
                 'general_vat_rate'        => '',
 				'general_currency'		  => '',
-                'katalog_active'          => 0,
+                'katalog_active'          => '',
                 'image_size_default'      => '',
                 'image_size_small'        => '',
                 'image_size_mobile'       => '',
@@ -75,8 +75,9 @@ class ConfigurationModel extends AdminModel
 
     public function save($data): bool
     {
+		
         $data['id'] = 1;
-        $data['katalog_active'] = !empty($data['katalog_active']) ? 1 : 0;
+        //$data['katalog_active'] = !empty($data['katalog_active']) ? 1 : 0;
 
         return parent::save($data);
     }

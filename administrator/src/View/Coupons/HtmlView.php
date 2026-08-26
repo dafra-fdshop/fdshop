@@ -4,7 +4,7 @@
  * @subpackage  com_fdshop
  */
 
-namespace FDShop\Component\FDShop\Administrator\View\Manufacturers;
+namespace FDShop\Component\FDShop\Administrator\View\Coupons;
 
 defined('_JEXEC') or die;
 
@@ -39,8 +39,11 @@ class HtmlView extends BaseHtmlView
                 ->addControlField('boxchecked', '0');
         }
 
-        ToolbarHelper::title('FDShop - Hersteller');
-        ToolbarHelper::addNew('manufacturer.add');
+        ToolbarHelper::title('FDShop - Gutscheine');
+        ToolbarHelper::addNew('coupon.add');
+        ToolbarHelper::publish('coupons.publish', 'JTOOLBAR_PUBLISH', true);
+        ToolbarHelper::unpublish('coupons.unpublish', 'JTOOLBAR_UNPUBLISH', true);
+        ToolbarHelper::deleteList('JGLOBAL_CONFIRM_DELETE', 'coupons.delete', 'JTOOLBAR_DELETE');
 
         parent::display($tpl);
     }

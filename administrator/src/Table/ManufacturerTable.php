@@ -15,6 +15,16 @@ use Joomla\Database\DatabaseDriver;
 
 class ManufacturerTable extends Table
 {
+
+    public function getColumnAlias($column)
+    {
+        if ($column === 'published') {
+            return 'is_active';
+        }
+
+        return parent::getColumnAlias($column);
+    }
+
     public function __construct(DatabaseDriver $db)
     {
         parent::__construct('#__fdshop_manufacturers', 'id', $db);

@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+<form>
+    <fields>
+        <fieldset name="general" label="Allgemein">
+            <field
+                name="id"
+                type="hidden"
+                default="0"
+            />
+
+            <field
+                name="coupon_name"
+                type="text"
+                label="Name"
+                required="true"
+                size="40"
+            />
+
+            <field
+                name="coupon_code"
+                type="text"
+                label="Code"
+                required="true"
+                size="40"
+            />
+
+            <field
+                name="alias"
+                type="text"
+                label="Alias"
+                size="40"
+            />
+
+            <field
+                name="description"
+                type="textarea"
+                label="Beschreibung"
+                rows="6"
+                cols="60"
+                filter="raw"
+            />
+
+            <field
+                name="published"
+                type="radio"
+                label="Veröffentlicht"
+                default="1"
+                class="btn-group btn-group-yesno"
+            >
+                <option value="1">Ja</option>
+                <option value="0">Nein</option>
+            </field>
+        </fieldset>
+
+        <fieldset name="discount" label="Rabatt">
+            <field
+                name="discount_type"
+                type="list"
+                label="Rabatt-Typ"
+                default="percent"
+                required="true"
+            >
+                <option value="percent">Prozent</option>
+                <option value="fixed">Festbetrag</option>
+            </field>
+
+            <field
+                name="discount_value"
+                type="number"
+                label="Rabattwert"
+                required="true"
+                step="0.0001"
+                min="0"
+            />
+
+            <field
+                name="minimum_order_total"
+                type="number"
+                label="Mindestbestellwert"
+                step="0.0001"
+                min="0"
+                default="0"
+            />
+        </fieldset>
+
+        <fieldset name="restrictions" label="Einschränkungen">
+            <field
+                name="user_ids"
+                type="sql"
+                label="Benutzer"
+                query="SELECT id AS value, name AS text FROM #__users ORDER BY name ASC"
+                key_field="value"
+                value_field="text"
+                multiple="true"
+                size="10"
+            />
+
+            <field
+                name="buyer_group_ids"
+                type="sql"
+                label="Käufergruppen"
+                query="SELECT id AS value, group_name AS text FROM #__fdshop_buyer_groups WHERE is_active = 1 ORDER BY ordering ASC, group_name ASC"
+                key_field="value"
+                value_field="text"
+                multiple="true"
+                size="10"
+            />
+
+            <field
+                name="product_ids"
+                type="sql"
+                label="Produkte"
+                query="SELECT p.id AS value, CONCAT(p.product_name, ' (', d.sku, ')') AS text FROM #__fdshop_products AS p LEFT JOIN #__fdshop_products_details AS d ON d.product_id = p.id ORDER BY p.product_name ASC"
+                key_field="value"
+                value_field="text"
+                multiple="true"
+                size="10"
+            />
+
+            <field
+                name="category_ids"
+                type="sql"
+                label="Kategorien"
+                query="SELECT id AS value, category_name AS text FROM #__fdshop_categories WHERE is_active = 1 ORDER BY category_name ASC"
+                key_field="value"
+                value_field="text"
+                multiple="true"
+                size="10"
+            />
+        </fieldset>
+
+        <fieldset name="validity" label="Gültigkeit">
+            <field
+                name="valid_from"
+                type="calendar"
+                label="Gültig ab"
+                format="%Y-%m-%d %H:%M:%S"
+                filter="user_utc"
+                showtime="true"
+            />
+
+            <field
+                name="valid_to"
+                type="calendar"
+                label="Gültig bis"
+                format="%Y-%m-%d %H:%M:%S"
+                filter="user_utc"
+                showtime="true"
+            />
+        </fieldset>
+
+        <fieldset name="usage" label="Nutzung">
+            <field
+                name="usage_limit_total"
+                type="number"
+                label="Nutzungslimit gesamt"
+                step="1"
+                min="0"
+                default="0"
+            />
+
+            <field
+                name="usage_limit_per_user"
+                type="number"
+                label="Nutzungslimit pro Benutzer"
+                step="1"
+                min="0"
+                default="0"
+            />
+        </fieldset>
+    </fields>
+</form>

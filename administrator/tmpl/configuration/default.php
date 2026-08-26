@@ -99,7 +99,7 @@ $paymentSearchView = (object) [
 									<?php echo HTMLHelper::_('searchtools.sort', 'Gebühr', 'a.shipment_price', $shipmentListDirn, $shipmentListOrder); ?>
 								</th>
 								<th scope="col" class="w-1 text-center">
-									<?php echo HTMLHelper::_('searchtools.sort', 'Veröffentlicht', 'a.is_published', $shipmentListDirn, $shipmentListOrder); ?>
+									<?php echo HTMLHelper::_('searchtools.sort', 'Veröffentlicht', 'a.published', $shipmentListDirn, $shipmentListOrder); ?>
 								</th>
 								<th scope="col" class="w-1 text-center">
 									<?php echo HTMLHelper::_('searchtools.sort', 'ID', 'a.id', $shipmentListDirn, $shipmentListOrder); ?>
@@ -118,7 +118,7 @@ $paymentSearchView = (object) [
 									?>
 									<tr class="row<?php echo $i % 2; ?>">
 										<td class="text-center">
-											<?php echo HTMLHelper::_('grid.id', $i, (int) $item->id); ?>
+											<?php echo HTMLHelper::_('grid.id', $i, (int) $item->id, false, 'cid', 'shipmentCb'); ?>
 										</td>
 
 										<th scope="row">
@@ -146,7 +146,7 @@ $paymentSearchView = (object) [
 										</td>
 
 										<td class="text-center">
-											<?php echo HTMLHelper::_('jgrid.published', (int) $item->published, $i, 'shipments.', $canChange, 'cb'); ?>
+											<?php echo HTMLHelper::_('jgrid.published', (int) $item->published, $i, 'shipments.', $canChange, 'shipmentCb'); ?>
 										</td>
 
 										<td class="text-center">
@@ -175,7 +175,7 @@ $paymentSearchView = (object) [
 					</table>
 				</div>
 
-				<?php echo $this->shipmentFilterForm->renderControlFields(); ?>
+				<?php //echo $this->shipmentFilterForm->renderControlFields(); ?>
 			</div>
 		</div>
 	<?php echo HTMLHelper::_('uitab.endTab'); ?>
@@ -209,7 +209,7 @@ $paymentSearchView = (object) [
 									<?php echo HTMLHelper::_('searchtools.sort', 'Gebühr', 'a.payment_fee', $paymentListDirn, $paymentListOrder); ?>
 								</th>
 								<th scope="col" class="w-1 text-center">
-									<?php echo HTMLHelper::_('searchtools.sort', 'Veröffentlicht', 'a.is_published', $paymentListDirn, $paymentListOrder); ?>
+									<?php echo HTMLHelper::_('searchtools.sort', 'Veröffentlicht', 'a.published', $paymentListDirn, $paymentListOrder); ?>
 								</th>
 								<th scope="col" class="w-1 text-center">
 									<?php echo HTMLHelper::_('searchtools.sort', 'ID', 'a.id', $paymentListDirn, $paymentListOrder); ?>
@@ -227,7 +227,7 @@ $paymentSearchView = (object) [
 									?>
 									<tr class="row<?php echo $i % 2; ?>">
 										<td class="text-center">
-											<?php echo HTMLHelper::_('grid.id', $i, (int) $item->id); ?>
+											<?php echo HTMLHelper::_('grid.id', $i, (int) $item->id, false, 'cid', 'paymentCb'); ?>
 										</td>
 
 										<th scope="row">
@@ -249,7 +249,7 @@ $paymentSearchView = (object) [
 										</td>
 
 										<td class="text-center">
-											<?php echo HTMLHelper::_('jgrid.published', (int) $item->published, $i, 'paymentmethods.', $canChange, 'cb'); ?>
+											<?php echo HTMLHelper::_('jgrid.published', (int) $item->published, $i, 'paymentmethods.', $canChange, 'paymentCb'); ?>
 										</td>
 
 										<td class="text-center">
@@ -278,7 +278,7 @@ $paymentSearchView = (object) [
 					</table>
 				</div>
 
-				<?php echo $this->paymentFilterForm->renderControlFields(); ?>
+				<?php //echo $this->paymentFilterForm->renderControlFields(); ?>
 			</div>
 		</div>
 	<?php echo HTMLHelper::_('uitab.endTab'); ?>
@@ -341,9 +341,12 @@ $paymentSearchView = (object) [
 	<?php echo HTMLHelper::_('uitab.endTab'); ?>
 
 	<?php echo HTMLHelper::_('uitab.endTabSet'); ?>
+	
+	<input type="hidden" name="task" value="">
+	<input type="hidden" name="boxchecked" value="0">
 
 	<?php echo $this->form->renderField('id'); ?>
-	<?php echo HTMLHelper::_('form.token'); ?>
+	<?php echo HTMLHelper::_('form.token'); ?>	
 </form>
 
 <script>
