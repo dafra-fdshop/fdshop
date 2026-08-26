@@ -32,6 +32,7 @@
 			<menu view="orders">Bestellungen</menu>
 			<menu view="manufacturers">Hersteller</menu>
 			<menu view="suppliers">Lieferanten</menu>
+			<menu view="storage_locations">Lagerorte</menu>
 			<menu view="configuration">Konfiguration</menu>
 		</submenu>
 

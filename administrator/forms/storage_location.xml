@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<form>
+    <fields>
+        <fieldset name="basic" label="Lagerort">
+            <field name="id" type="hidden" default="0" />
+
+            <field
+                name="location_name"
+                type="text"
+                label="Lagerortname"
+                required="true"
+            />
+
+            <field
+                name="code"
+                type="text"
+                label="Code"
+            />
+
+            <field
+                name="description"
+                type="textarea"
+                label="Beschreibung"
+                rows="8"
+                filter="raw"
+            />
+
+            <field
+                name="is_active"
+                type="radio"
+                label="Aktiv"
+                default="1"
+                class="btn-group btn-group-yesno"
+            >
+                <option value="1">Ja</option>
+                <option value="0">Nein</option>
+            </field>
+
+            <field
+                name="ordering"
+                type="number"
+                label="Reihenfolge"
+                default="0"
+            />
+        </fieldset>
+    </fields>
+</form>

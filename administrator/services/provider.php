@@ -15,6 +15,8 @@ use FDShop\Component\FDShop\Administrator\Service\ManufacturerService;
 use FDShop\Component\FDShop\Administrator\Service\ManufacturerServiceInterface;
 use FDShop\Component\FDShop\Administrator\Service\SupplierService;
 use FDShop\Component\FDShop\Administrator\Service\SupplierServiceInterface;
+use FDShop\Component\FDShop\Administrator\Service\StorageLocationService;
+use FDShop\Component\FDShop\Administrator\Service\StorageLocationServiceInterface;
 use FDShop\Component\FDShop\Administrator\Service\BundleService;
 use FDShop\Component\FDShop\Administrator\Service\BundleServiceInterface;
 use FDShop\Component\FDShop\Administrator\Service\ProductService;
@@ -106,6 +108,23 @@ return new class () implements ServiceProviderInterface {
             SupplierService::class,
             function (Container $container): SupplierService {
                 return $container->get(SupplierServiceInterface::class);
+            }
+        );
+
+        $container->set(
+            StorageLocationServiceInterface::class,
+            function (Container $container): StorageLocationServiceInterface {
+                return new StorageLocationService(
+                    $container->get(MVCFactoryInterface::class),
+                    $container->get(DatabaseInterface::class)
+                );
+            }
+        );
+
+        $container->set(
+            StorageLocationService::class,
+            function (Container $container): StorageLocationService {
+                return $container->get(StorageLocationServiceInterface::class);
             }
         );
 
