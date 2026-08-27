@@ -1,0 +1,2126 @@
+=====================================================================
+FDShop_Fachregeln_Daten_und_Formulare_V7
+=====================================================================
+
+Status: VERBINDLICHE PROJEKTQUELLE
+Priorität: SEHR HOCH
+Version: V7
+
+Diese Quelle ersetzt vollständig:
+
+FDShop_Fachregeln_Daten_und_Formulare_V6
+
+=====================================================================
+1. ZWECK
+=====================================================================
+
+Diese Quelle definiert die fachlich verbindlichen Daten-, Formular-
+und Verantwortungsregeln des Projektes FDShop.
+
+Sie beschreibt insbesondere
+
+• fachliche Datenverantwortung
+• Single Source of Truth
+• fachliche Zuordnungen
+• Snapshot-Prinzipien
+• Formularregeln
+• fachliche Abgrenzung der technischen Ebenen
+• zentrale Regeln der vorhandenen Shop-Fachbereiche
+
+Sie beschreibt keine vollständige technische Komponentenstruktur,
+keinen Codebestand und keinen Implementierungsstatus.
+
+Dafür gelten die jeweils zuständigen Projektquellen.
+
+V7 wurde auf Grundlage des bisherigen V6-Standes sowie des
+nachweisbaren aktuellen Projektstandes aktualisiert.
+
+Technische Hauptreferenzen für die Aktualisierung:
+
+• FDShop_Codebestand_V4
+• FDShop_Implementierungsstand_V4
+• der diesen V4-Quellen zugrunde liegende aktuelle Projektstand
+  fdshop_Projektstand_Aktuell.zip
+
+=====================================================================
+2. GELTUNGSBEREICH
+=====================================================================
+
+Diese Quelle ist verbindlich für sämtliche dauerhaften Fach-KIs
+des Projektes.
+
+Insbesondere:
+
+• Projektleiter-KI
+• Dokumentation / Quellenpflege
+• DB-KI
+• Service-/Logik-KI
+• Controller-KI
+• Model-KI
+• View-/Form-KI
+• Test-/Integrations-KI
+
+Temporäre Umsetzungsrollen verändern diese Struktur nicht.
+
+Eigene Interpretationen oder projektverändernde Entscheidungen
+sind unzulässig.
+
+=====================================================================
+3. GRUNDPRINZIPIEN
+=====================================================================
+
+=====================================================================
+3.1 SINGLE SOURCE OF TRUTH
+=====================================================================
+
+PRIORITÄT
+
+KRITISCH
+
+Jede fachliche Information besitzt genau eine führende Datenquelle.
+
+Eine Information darf niemals gleichzeitig an mehreren Stellen
+führend gespeichert werden.
+
+Redundante Informationen sind ausschließlich zulässig
+
+• als Snapshot
+• zur Performanceoptimierung
+• für historische Nachvollziehbarkeit
+
+Die führende Datenquelle bleibt dabei immer eindeutig definiert.
+
+Beispiele:
+
+Produktname
+→ #__fdshop_products
+
+Katalogmodus
+→ #__fdshop_config
+
+Produkt-Kategorie-Zuordnung
+→ #__fdshop_product_category_map
+
+Bundle-Zuordnung
+→ #__fdshop_bundle_items
+
+Preisrecherche
+→ #__fdshop_product_prices_research
+
+Gutschein-Stammdaten
+→ #__fdshop_coupons
+
+Gutschein-Benutzer-Zuordnung
+→ #__fdshop_coupon_user_map
+
+Gutschein-Käufergruppen-Zuordnung
+→ #__fdshop_coupon_buyer_group_map
+
+Gutschein-Produkt-Zuordnung
+→ #__fdshop_coupon_product_map
+
+Gutschein-Kategorie-Zuordnung
+→ #__fdshop_coupon_category_map
+
+Gutschein-Nutzung
+→ #__fdshop_coupon_usage
+
+Verstöße gegen dieses Prinzip gelten als Architektur- bzw.
+Datenmodellfehler.
+
+=====================================================================
+3.2 TRENNUNG DER VERANTWORTLICHKEITEN
+=====================================================================
+
+PRIORITÄT
+
+KRITISCH
+
+Jede Tabelle besitzt genau eine fachliche Verantwortung.
+
+Eine Tabelle übernimmt niemals die Aufgaben einer anderen Tabelle.
+
+Unterschieden werden insbesondere
+
+• Stammdaten
+• Detaildaten
+• Konfiguration
+• Snapshots
+• Zuordnungen
+• Historie
+• Preisdaten
+• Bundleinformationen
+• Bestelldaten
+• Gutscheindaten
+• Nutzungsdaten
+
+Neue Felder sind grundsätzlich der Tabelle zuzuordnen,
+deren fachliche Verantwortung betroffen ist.
+
+=====================================================================
+3.3 GLOBALE EINSTELLUNGEN
+=====================================================================
+
+PRIORITÄT
+
+KRITISCH
+
+Führende Tabelle:
+
+#__fdshop_config
+
+Globale Einstellungen gelten niemals nur für ein einzelnes Produkt.
+
+Sie werden ausschließlich zentral gespeichert.
+
+Hierzu gehören insbesondere
+
+• Standardsteuer
+• Standardwährung
+• Bildgrößen
+• globale Checkboxen
+• globale Shopoptionen
+• Katalogmodus
+
+Produkte, Bundles, Bestellungen, Kategorien oder Gutscheine
+dürfen globale Einstellungen niemals als führende Daten speichern.
+
+=====================================================================
+3.4 BUSINESSLOGIK
+=====================================================================
+
+PRIORITÄT
+
+KRITISCH
+
+Businesslogik wird ausschließlich im Service Layer implementiert.
+
+Businessregeln gehören niemals in
+
+• Datenbanktabellen
+• Table-Klassen
+• XML-Dateien
+• Views
+• Templates
+• JavaScript
+• Controller
+
+Models liefern und bereiten Daten vor.
+
+Controller koordinieren Abläufe.
+
+Views bereiten Daten für die Darstellung auf.
+
+Templates stellen Daten dar.
+
+Services treffen fachliche Entscheidungen und koordinieren
+fachliche Abläufe über mehrere Datenbereiche.
+
+=====================================================================
+3.5 TABLE-KLASSEN
+=====================================================================
+
+PRIORITÄT
+
+HOCH
+
+Eine Table-Klasse verwaltet genau eine Tabelle.
+
+Ihre Aufgaben beschränken sich auf
+
+• Laden
+• Speichern
+• Datenvalidierung
+• technische Integritätsprüfungen
+
+Komplexe Geschäftsentscheidungen gehören niemals in Table-Klassen.
+
+=====================================================================
+3.6 SNAPSHOT-PRINZIP
+=====================================================================
+
+PRIORITÄT
+
+KRITISCH
+
+Snapshotfelder dokumentieren einen fachlichen Zustand
+zu einem bestimmten Zeitpunkt.
+
+Snapshots ersetzen niemals die führende Datenquelle.
+
+Sie dienen insbesondere
+
+• Historie
+• Performance
+• Bestellungen
+• Auswertungen
+
+Snapshots dürfen bewusst von aktuellen Stammdaten abweichen.
+
+=====================================================================
+3.7 PRODUKTSTATUS
+=====================================================================
+
+PRIORITÄT
+
+KRITISCH
+
+Verbindlicher Veröffentlichungsstatus im Produktbereich ist
+
+is_active
+
+Das frühere Feld
+
+state
+
+ist im Produktbereich keine gültige Projektregel mehr.
+
+Neue Entwicklungen dürfen state im Produktbereich nicht erneut
+als Veröffentlichungsstatus einführen.
+
+=====================================================================
+3.8 KATALOGMODUS
+=====================================================================
+
+PRIORITÄT
+
+KRITISCH
+
+Verbindliche Datenquelle:
+
+#__fdshop_config.katalog_active
+
+Der Katalogmodus ist ausschließlich eine globale Systemeinstellung.
+
+Nicht zulässig sind insbesondere
+
+• Produktfelder als führende Quelle
+• Bundlefelder als führende Quelle
+• Mehrfachspeicherung
+• produktbezogene Katalogmodus-Logik
+
+Ein Verstoß verletzt das Single-Source-of-Truth-Prinzip.
+
+=====================================================================
+4. DATENMODELL
+=====================================================================
+
+Das FDShop-Datenmodell folgt einer klaren fachlichen Trennung.
+
+Jede Tabelle besitzt genau eine definierte Verantwortung.
+
+Redundante Daten sind ausschließlich zulässig,
+wenn sie ausdrücklich als Snapshot oder Historie begründet sind.
+
+=====================================================================
+4.1 PRODUKTE
+=====================================================================
+
+PRIORITÄT
+
+KRITISCH
+
+Führende Tabelle:
+
+#__fdshop_products
+
+---------------------------------------------------------------------
+ZWECK
+---------------------------------------------------------------------
+
+Die Produkttabelle bildet die zentrale fachliche Identität
+eines Produktes.
+
+Jedes Produkt besitzt genau einen Datensatz innerhalb dieser Tabelle.
+
+Weitere Produkttabellen erweitern diese Stammdaten,
+ersetzen sie jedoch nicht.
+
+---------------------------------------------------------------------
+VERANTWORTUNG
+---------------------------------------------------------------------
+
+Die Tabelle verwaltet fachliche Produktstammdaten.
+
+Hierzu gehören insbesondere
+
+• Produktidentität
+• Verkaufsinformationen
+• Veröffentlichungsinformationen
+• Darstellung
+• Produktmerkmale
+
+---------------------------------------------------------------------
+WICHTIGE FELDGRUPPEN
+---------------------------------------------------------------------
+
+IDENTITÄT
+
+id
+product_name
+alias
+
+ZUORDNUNG
+
+manufacturer_id
+buyer_group_id
+
+VERKAUF
+
+sale_price
+discount_price
+discount_active
+currency
+
+MENGEN
+
+min_order_qty
+max_order_qty
+step_order_qty
+
+VERÖFFENTLICHUNG
+
+is_active
+publish_up
+publish_down
+
+DARSTELLUNG
+
+short_description
+description
+
+SEO
+
+meta_title
+meta_keywords
+meta_description
+
+PRODUKTMERKMALE
+
+available_from
+unit_type
+unit_quantity
+nem
+shot_count
+caliber
+burn_time
+rise_height
+
+KENNZEICHNUNGEN
+
+ribbon_new
+ribbon_hot
+ribbon_bundle
+
+SNAPSHOT
+
+in_stock
+
+HISTORIE
+
+created
+created_by
+modified
+modified_by
+
+---------------------------------------------------------------------
+NICHT BESTANDTEIL
+---------------------------------------------------------------------
+
+• SKU
+• GTIN
+• führende Lagerbestände
+• reservierte Mengen
+• verkaufte Mengen
+• Gewicht
+• Abmessungen
+• Preisrecherche
+• Produkt-Kategorie-Zuordnungen
+• Produkt-Käufergruppen-Zuordnungen
+• Bundle-Zuordnungen
+• globale Konfiguration
+
+---------------------------------------------------------------------
+PROJEKTREGELN
+---------------------------------------------------------------------
+
+Produkte speichern ausschließlich produktbezogene Informationen.
+
+Globale Einstellungen dürfen niemals innerhalb eines Produktes
+führend gespeichert werden.
+
+Kategorie- und Käufergruppenbeziehungen werden über die dafür
+vorgesehenen Mappingtabellen verwaltet.
+
+=====================================================================
+4.2 PRODUKTDETAILS
+=====================================================================
+
+PRIORITÄT
+
+KRITISCH
+
+Führende Tabelle:
+
+#__fdshop_products_details
+
+---------------------------------------------------------------------
+ZWECK
+---------------------------------------------------------------------
+
+Die Detailtabelle erweitert die Produktstammdaten um technische
+Informationen und Lagerdaten.
+
+---------------------------------------------------------------------
+VERANTWORTUNG
+---------------------------------------------------------------------
+
+Die Tabelle verwaltet insbesondere
+
+• Artikelidentifikatoren
+• technische Produktinformationen
+• Lagerdaten
+• Abmessungen
+
+---------------------------------------------------------------------
+WICHTIGE FELDGRUPPEN
+---------------------------------------------------------------------
+
+IDENTITÄT
+
+id
+product_id
+
+ARTIKELDATEN
+
+sku
+gtin
+
+LAGER
+
+stock_quantity
+reserved_quantity
+sold_quantity
+
+Weitere Bestandssteuerungsfelder sind Bestandteil der
+Produktdetail-/Lagerverantwortung, soweit sie im aktuellen SQL
+definiert sind.
+
+ABMESSUNGEN
+
+weight
+length
+width
+height
+
+HISTORIE
+
+created
+created_by
+modified
+modified_by
+
+---------------------------------------------------------------------
+PROJEKTREGELN
+---------------------------------------------------------------------
+
+Produkte und Produktdetails bilden gemeinsam genau ein Produkt.
+
+Keine der beiden Tabellen ersetzt die andere.
+
+Die Ableitung des Produkt-Snapshots in_stock erfolgt fachlich
+über den Service Layer auf Grundlage der führenden Bestandsdaten.
+
+=====================================================================
+4.3 PRODUKT ↔ KATEGORIE
+=====================================================================
+
+PRIORITÄT
+
+HOCH
+
+Führende Tabelle:
+
+#__fdshop_product_category_map
+
+---------------------------------------------------------------------
+ZWECK
+---------------------------------------------------------------------
+
+Die Mappingtabelle verwaltet ausschließlich die Beziehung
+zwischen Produkten und Kategorien.
+
+---------------------------------------------------------------------
+PROJEKTREGELN
+---------------------------------------------------------------------
+
+Produkte besitzen bewusst kein führendes catid.
+
+Mehrfachzuordnungen sind zulässig.
+
+Eine Zuordnung kann is_primary als Hauptkategorie kennzeichnen,
+soweit dies im aktuellen Datenmodell vorgesehen ist.
+
+Die Mappingtabelle ist die führende Datenquelle der Beziehung.
+
+=====================================================================
+4.4 KATEGORIEN
+=====================================================================
+
+PRIORITÄT
+
+HOCH
+
+Führende Tabelle:
+
+#__fdshop_categories
+
+---------------------------------------------------------------------
+ZWECK
+---------------------------------------------------------------------
+
+Kategorien bilden die fachliche Struktur des Produktkataloges.
+
+FDShop verwendet ein eigenes Kategoriesystem.
+
+Joomla-Core-Kategorien sind derzeit nicht das Shop-Kategoriesystem.
+
+---------------------------------------------------------------------
+VERANTWORTUNG
+---------------------------------------------------------------------
+
+Kategorien verwalten insbesondere
+
+• Kategorieinformationen
+• Hierarchien
+• Navigationsstruktur
+• Sortierung
+
+---------------------------------------------------------------------
+WICHTIGE FELDGRUPPEN
+---------------------------------------------------------------------
+
+IDENTITÄT
+
+id
+category_name
+alias
+
+HIERARCHIE
+
+parent_id
+path
+level
+
+DARSTELLUNG
+
+description
+
+STATUS
+
+is_active
+
+SORTIERUNG
+
+ordering
+
+HISTORIE
+
+created
+created_by
+modified
+modified_by
+
+---------------------------------------------------------------------
+PROJEKTREGELN
+---------------------------------------------------------------------
+
+Produkte werden nicht innerhalb der Kategorietabelle gespeichert.
+
+Die Produktbeziehung wird ausschließlich über
+
+#__fdshop_product_category_map
+
+abgebildet.
+
+Mehrfachzuordnungen werden ausschließlich über die Mappingtabelle
+verwaltet.
+
+=====================================================================
+4.5 HERSTELLER
+=====================================================================
+
+PRIORITÄT
+
+MITTEL
+
+Führende Tabelle:
+
+#__fdshop_manufacturers
+
+---------------------------------------------------------------------
+ZWECK
+---------------------------------------------------------------------
+
+Hersteller stellen eigenständige Stammdatenobjekte dar.
+
+Produkte referenzieren Hersteller über manufacturer_id.
+
+---------------------------------------------------------------------
+VERANTWORTUNG
+---------------------------------------------------------------------
+
+Die Tabelle verwaltet insbesondere
+
+• Herstellerinformationen
+• SEO-Informationen
+• Veröffentlichungsstatus
+• Sortierung
+
+---------------------------------------------------------------------
+WICHTIGE FELDGRUPPEN
+---------------------------------------------------------------------
+
+IDENTITÄT
+
+id
+manufacturer_name
+alias
+
+DARSTELLUNG
+
+description
+
+SEO
+
+meta_title
+meta_keywords
+meta_description
+
+STATUS
+
+is_active
+
+SORTIERUNG
+
+ordering
+
+HISTORIE
+
+created
+created_by
+modified
+modified_by
+
+---------------------------------------------------------------------
+PROJEKTREGELN
+---------------------------------------------------------------------
+
+Hersteller speichern ausschließlich Herstellerinformationen.
+
+Produktdaten verbleiben in den zuständigen Produkttabellen.
+
+=====================================================================
+4.6 KÄUFERGRUPPEN
+=====================================================================
+
+PRIORITÄT
+
+KRITISCH
+
+Führende Tabellen:
+
+#__fdshop_buyer_groups
+#__fdshop_user_buyer_group_map
+#__fdshop_product_buyer_group_map
+
+---------------------------------------------------------------------
+ZWECK
+---------------------------------------------------------------------
+
+Käufergruppen bilden die Grundlage geschäftlicher Regeln des Shops.
+
+Sie besitzen keine technische ACL-Berechtigungsfunktion.
+
+---------------------------------------------------------------------
+VERANTWORTUNG
+---------------------------------------------------------------------
+
+Sie dienen insbesondere der fachlichen Grundlage für
+
+• Produktsichtbarkeit
+• Preisfreigaben
+• Einkaufsberechtigungen
+• geschäftliche Freigaben
+
+---------------------------------------------------------------------
+PROJEKTREGELN
+---------------------------------------------------------------------
+
+Joomla ACL und FDShop-Käufergruppen bleiben strikt getrennt.
+
+Joomla ACL regelt technische Rechte.
+
+FDShop-Käufergruppen regeln geschäftliche Prozesse.
+
+Benutzerbeziehungen werden über
+
+#__fdshop_user_buyer_group_map
+
+verwaltet.
+
+Produktbeziehungen werden über
+
+#__fdshop_product_buyer_group_map
+
+verwaltet.
+
+Die Käufergruppen-Administration und der vollständige
+Frontend-/Checkout-Workflow sind dadurch nicht automatisch als
+fachlich fertig definiert.
+
+=====================================================================
+4.7 PREISARCHITEKTUR
+=====================================================================
+
+PRIORITÄT
+
+KRITISCH
+
+Führende Tabellen:
+
+#__fdshop_product_prices
+#__fdshop_price_calc_rules
+#__fdshop_product_prices_research
+
+---------------------------------------------------------------------
+ZWECK
+---------------------------------------------------------------------
+
+Die Preisarchitektur trennt
+
+• produktbezogene Preisdaten
+• globale Kalkulationsregeln
+• Markt-/Rechercheinformationen
+
+voneinander.
+
+Berechnungen erfolgen im Service Layer.
+
+=====================================================================
+4.7.1 PRODUKTPREISE
+=====================================================================
+
+Führende Tabelle:
+
+#__fdshop_product_prices
+
+Die Tabelle speichert produktbezogene Preisdaten und
+Kalkulationsergebnisse.
+
+Wichtige Feldgruppen des dokumentierten Datenmodells:
+
+IDENTITÄT
+
+id
+product_id
+currency
+
+BERECHNETE PREISE
+
+calc_price_net
+calc_price_gross
+calc_stock_cost_net
+calc_shipping_cost_net
+calc_other_cost_net
+calc_target_margin
+
+MANUELLE PREISE
+
+manu_price_net
+manu_price_gross
+manu_stock_cost_net
+manu_shipping_cost_net
+manu_other_cost_net
+
+REGELÜBERSCHREIBUNGEN
+
+stock_rule_overridden
+stock_rule_value
+shipping_rule_overridden
+shipping_rule_value
+other_rule_overridden
+other_rule_value
+
+KALKULATION
+
+purchase_price_net
+tax_rate
+margin_effective
+
+PROJEKTREGELN
+
+Die Tabelle speichert Daten und Ergebnisse.
+
+Preisberechnungen und fachliche Entscheidungen erfolgen
+ausschließlich innerhalb der Businesslogik.
+
+=====================================================================
+4.7.2 PREISREGELN
+=====================================================================
+
+Führende Tabelle:
+
+#__fdshop_price_calc_rules
+
+Die Tabelle verwaltet globale Berechnungsregeln.
+
+Dokumentierte Regelbereiche:
+
+stock_cost_pct
+shipping_cost_pct
+other_cost_pct
+target_margin_pct
+
+Globale Preisregeln werden nicht innerhalb einzelner Produkte
+als führende Information gespeichert.
+
+=====================================================================
+4.7.3 PREISRECHERCHE
+=====================================================================
+
+Führende Tabelle:
+
+#__fdshop_product_prices_research
+
+Die Tabelle verwaltet Markt- und Wettbewerbsinformationen.
+
+Dokumentierte Kernfelder:
+
+id
+product_id
+research_data
+checked_at
+note
+created
+created_by
+modified
+modified_by
+
+Rechercheinformationen besitzen keine fachliche Hoheit
+über Produktpreise.
+
+Sie dienen als Entscheidungsgrundlage.
+
+=====================================================================
+4.8 GLOBALE KONFIGURATION
+=====================================================================
+
+PRIORITÄT
+
+KRITISCH
+
+Führende Tabelle:
+
+#__fdshop_config
+
+---------------------------------------------------------------------
+ZWECK
+---------------------------------------------------------------------
+
+Die Konfiguration verwaltet sämtliche global gültigen
+Einstellungen des Shops.
+
+---------------------------------------------------------------------
+WICHTIGE FELDGRUPPEN
+---------------------------------------------------------------------
+
+SYSTEM
+
+id
+
+WÄHRUNG
+
+general_currency
+
+STEUER
+
+general_vat_rate
+
+BILDER
+
+image_size_default
+image_size_small
+image_size_mobile
+image_size_manufacturer
+
+SHOPOPTIONEN
+
+show_terms_checkbox
+require_terms_checkbox
+katalog_active
+
+---------------------------------------------------------------------
+PROJEKTREGELN
+---------------------------------------------------------------------
+
+Globale Einstellungen werden ausschließlich innerhalb der
+Konfiguration führend gespeichert.
+
+Der Katalogmodus besitzt ausschließlich
+
+#__fdshop_config.katalog_active
+
+als führende Datenquelle.
+
+=====================================================================
+4.9 MEDIEN
+=====================================================================
+
+PRIORITÄT
+
+MITTEL
+
+Führende Tabelle:
+
+#__fdshop_media
+
+---------------------------------------------------------------------
+ZWECK
+---------------------------------------------------------------------
+
+Die Medientabelle verwaltet Produktmedien und deren Zuordnung.
+
+---------------------------------------------------------------------
+WICHTIGE FELDGRUPPEN
+---------------------------------------------------------------------
+
+IDENTITÄT
+
+id
+product_id
+
+DATEIEN
+
+file_name
+file_type
+
+PFADE
+
+path_standard
+path_small
+path_mobile
+path_invoice
+
+DARSTELLUNG
+
+is_primary
+ordering
+
+HISTORIE
+
+created
+created_by
+
+---------------------------------------------------------------------
+PROJEKTREGELN
+---------------------------------------------------------------------
+
+Ein Produkt kann mehrere Medien besitzen.
+
+Produktbildverarbeitung und die Erzeugung von Bildvarianten
+sind fachliche Service-Aufgaben.
+
+Die Medientabelle speichert die zugehörigen Dateiinformationen
+und Produktbeziehungen.
+
+=====================================================================
+4.10 BUNDLE-SYSTEM
+=====================================================================
+
+PRIORITÄT
+
+KRITISCH
+
+Führende Tabellen:
+
+#__fdshop_bundles
+#__fdshop_bundle_items
+#__fdshop_bundle_discount_rules
+
+---------------------------------------------------------------------
+ZWECK
+---------------------------------------------------------------------
+
+Bundles bilden eigenständige Verkaufseinheiten aus mehreren Produkten.
+
+Bundle-Stammdaten, Produktzuordnungen und Rabattregeln
+werden getrennt gespeichert.
+
+=====================================================================
+4.10.1 BUNDLES
+=====================================================================
+
+Führende Tabelle:
+
+#__fdshop_bundles
+
+Verantwortung:
+
+• Bundle-Identität
+• Bundle-Stammdaten
+• Darstellung
+• Veröffentlichungsstatus
+
+Dokumentierte Kernfelder:
+
+id
+bundle_number
+bundle_name
+alias
+description
+is_active
+created
+created_by
+modified
+modified_by
+
+Bundles speichern keine Produktstammdaten.
+
+=====================================================================
+4.10.2 BUNDLEPOSITIONEN
+=====================================================================
+
+Führende Tabelle:
+
+#__fdshop_bundle_items
+
+Diese Tabelle verwaltet ausschließlich die Beziehung
+
+Bundle ↔ Produkt
+
+Produkte werden ausschließlich über diese Beziehung einem Bundle
+zugeordnet.
+
+=====================================================================
+4.10.3 BUNDLERABATTREGELN
+=====================================================================
+
+Führende Tabelle:
+
+#__fdshop_bundle_discount_rules
+
+Die Tabelle verwaltet Bundle-Rabattregeln.
+
+Dokumentierte Kernbereiche:
+
+bundle_id
+min_quantity
+discount_percent
+ordering
+
+Die Auswahl und Anwendung einer Rabattregel erfolgt im Service Layer.
+
+=====================================================================
+4.11 WARENKORB
+=====================================================================
+
+PRIORITÄT
+
+HOCH
+
+Führende Tabelle:
+
+#__fdshop_cart
+
+---------------------------------------------------------------------
+ZWECK
+---------------------------------------------------------------------
+
+Der Warenkorb speichert temporäre Kaufpositionen.
+
+Er stellt keine Bestellung dar.
+
+---------------------------------------------------------------------
+WICHTIGE FELDGRUPPEN
+---------------------------------------------------------------------
+
+IDENTITÄT
+
+id
+
+BENUTZER / SITZUNG
+
+user_id
+session_id
+
+PRODUKT
+
+product_id
+buyer_group_id
+
+KAUF
+
+quantity
+unit_price_net
+unit_price_gross
+currency
+
+HISTORIE
+
+created
+modified
+
+---------------------------------------------------------------------
+PROJEKTREGELN
+---------------------------------------------------------------------
+
+Warenkorbdaten besitzen temporären Charakter.
+
+Nach einem späteren verbindlichen Bestellabschluss werden
+rechtlich bzw. historisch relevante Daten in die zuständigen
+Bestelltabellen übernommen.
+
+Die vorhandene Tabelle allein definiert noch keinen vollständigen
+Warenkorb-/Checkout-Workflow.
+
+=====================================================================
+4.12 BESTELLUNGEN
+=====================================================================
+
+PRIORITÄT
+
+KRITISCH
+
+Zugehörige Tabellen:
+
+#__fdshop_orders
+#__fdshop_order_items
+#__fdshop_order_bundles
+#__fdshop_order_bundle_items
+#__fdshop_order_statuses
+#__fdshop_order_history
+#__fdshop_order_status_history
+#__fdshop_orders_history
+
+---------------------------------------------------------------------
+ZWECK
+---------------------------------------------------------------------
+
+Bestellungen dokumentieren den verbindlichen Kauf- und
+Bearbeitungszustand.
+
+Bestellbezogene Historien dienen der Nachvollziehbarkeit
+früherer Zustände und Änderungen.
+
+---------------------------------------------------------------------
+PROJEKTREGELN
+---------------------------------------------------------------------
+
+Bestellinformationen, die einen abgeschlossenen historischen
+Kaufzustand dokumentieren, dürfen nicht durch spätere Änderungen
+an Produktstammdaten rückwirkend verändert werden.
+
+Bestellpositionen und Historien sind von aktuellen
+Produktstammdaten fachlich zu trennen.
+
+Bestellstatus besitzen eine eigene Datenbasis.
+
+Bundleinformationen innerhalb einer Bestellung besitzen eigene
+Bestelltabellen und ersetzen nicht die aktuellen Bundle-Stammdaten.
+
+Die vollständige Checkout-Erzeugung und der vollständige
+Bestellworkflow sind noch nicht als fertige Fachfunktion
+zu behandeln.
+
+=====================================================================
+4.13 VERSANDARTEN
+=====================================================================
+
+PRIORITÄT
+
+MITTEL
+
+Führende Tabelle:
+
+#__fdshop_shipments
+
+---------------------------------------------------------------------
+ZWECK
+---------------------------------------------------------------------
+
+Versandarten verwalten die Stammdaten und Gebührenbasis
+der verfügbaren Versandmöglichkeiten.
+
+---------------------------------------------------------------------
+PROJEKTREGELN
+---------------------------------------------------------------------
+
+Versandarten und Zahlungsarten bleiben vollständig getrennte
+fachliche Bereiche.
+
+Die vorhandene Admin-Grundverwaltung definiert noch keine
+vollständige Versandentscheidung im Checkout.
+
+Automatische Auswahl, Einschränkungen und Bestellintegration
+bedürfen einer eigenen fachlichen Checkout-Logik im Service Layer.
+
+=====================================================================
+4.14 ZAHLUNGSARTEN
+=====================================================================
+
+PRIORITÄT
+
+MITTEL
+
+Führende Tabelle:
+
+#__fdshop_payment_methods
+
+---------------------------------------------------------------------
+ZWECK
+---------------------------------------------------------------------
+
+Zahlungsarten verwalten die Stammdaten und Gebührenbasis
+der verfügbaren Zahlungsmöglichkeiten.
+
+---------------------------------------------------------------------
+PROJEKTREGELN
+---------------------------------------------------------------------
+
+Zahlungsarten speichern keine Versandlogik.
+
+Versand- und Zahlungsarten werden erst durch die zuständige
+Businesslogik miteinander und mit einer Bestellung verknüpft.
+
+Die vorhandene Admin-Grundverwaltung stellt noch keine
+vollständige Zahlungsabwicklung oder Provider-Integration dar.
+
+=====================================================================
+4.15 BESTELLSTATUS
+=====================================================================
+
+PRIORITÄT
+
+HOCH
+
+Führende Tabelle:
+
+#__fdshop_order_statuses
+
+---------------------------------------------------------------------
+ZWECK
+---------------------------------------------------------------------
+
+Bestellstatus bilden die fachlich verfügbaren Statusdefinitionen
+für Bestellungen.
+
+---------------------------------------------------------------------
+PROJEKTREGELN
+---------------------------------------------------------------------
+
+Statusdefinition und Statushistorie sind getrennte Verantwortungen.
+
+Die Definition eines Status erfolgt in
+
+#__fdshop_order_statuses
+
+Historische Statusänderungen einer Bestellung werden in der
+dafür vorgesehenen Statushistorie dokumentiert.
+
+Automatische Folgeaktionen eines Statuswechsels gehören in den
+Service Layer und dürfen nicht aus der reinen Statusdefinition
+abgeleitet oder dort implementiert werden.
+
+=====================================================================
+4.16 GUTSCHEINE
+=====================================================================
+
+PRIORITÄT
+
+KRITISCH
+
+Zugehörige Tabellen:
+
+#__fdshop_coupons
+#__fdshop_coupon_user_map
+#__fdshop_coupon_buyer_group_map
+#__fdshop_coupon_product_map
+#__fdshop_coupon_category_map
+#__fdshop_coupon_usage
+
+---------------------------------------------------------------------
+ZWECK
+---------------------------------------------------------------------
+
+Der Gutscheinbereich verwaltet eigenständige Gutscheine sowie deren
+fachliche Einschränkungen und spätere Nutzungsnachweise.
+
+Gutschein-Stammdaten, Zielgruppen-/Objektzuordnungen und Nutzung
+werden bewusst getrennt gespeichert.
+
+---------------------------------------------------------------------
+4.16.1 GUTSCHEIN-STAMMDATEN
+---------------------------------------------------------------------
+
+Führende Tabelle:
+
+#__fdshop_coupons
+
+Die Tabelle verwaltet ausschließlich Gutschein-Stammdaten und
+unmittelbare Gutscheinregeln.
+
+Dokumentierte Kernfelder des aktuellen Gutscheinmodells:
+
+IDENTITÄT
+
+id
+name
+alias
+code
+
+STATUS
+
+published
+
+RABATT
+
+discount_value
+discount_type
+
+GUTSCHEINART
+
+coupon_type
+
+BESTELLBEZOGENE GRENZEN
+
+minimum_order_total
+maximum_discount_amount
+
+NUTZUNGSBEGRENZUNG
+
+max_usage_per_user
+
+GÜLTIGKEIT
+
+valid_from
+valid_until
+
+SORTIERUNG
+
+ordering
+
+HISTORIE
+
+created
+created_by
+modified
+modified_by
+
+Dokumentierte Wertebereiche:
+
+discount_type
+
+• percent
+• amount
+
+coupon_type
+
+• gift
+• permanent
+
+PROJEKTREGELN
+
+Gutscheincodes und Rabattarten werden fachlich im Service Layer
+validiert bzw. normalisiert.
+
+Die Gutscheintabelle speichert keine Benutzer-, Käufergruppen-,
+Produkt- oder Kategoriebeziehungen direkt.
+
+=====================================================================
+4.16.2 GUTSCHEIN ↔ JOOMLA-BENUTZER
+=====================================================================
+
+Führende Tabelle:
+
+#__fdshop_coupon_user_map
+
+Zweck:
+
+Verwaltung der Beziehung zwischen Gutschein und Joomla-Benutzer.
+
+Kernbeziehung:
+
+coupon_id
+user_id
+
+Joomla bleibt die führende Benutzerverwaltung.
+
+FDShop dupliziert keine vollständigen Benutzerstammdaten
+für die Gutscheinzuordnung.
+
+=====================================================================
+4.16.3 GUTSCHEIN ↔ KÄUFERGRUPPE
+=====================================================================
+
+Führende Tabelle:
+
+#__fdshop_coupon_buyer_group_map
+
+Zweck:
+
+Verwaltung der Beziehung zwischen Gutschein und FDShop-Käufergruppe.
+
+Kernbeziehung:
+
+coupon_id
+buyer_group_id
+
+Zusätzlich ist im aktuellen Gutscheinmodell ein Zuordnungsmodus
+vorgesehen:
+
+mode
+
+mit den dokumentierten Bedeutungen
+
+• allow
+• exclude
+
+Die Käufergruppe selbst bleibt führend in
+
+#__fdshop_buyer_groups
+
+=====================================================================
+4.16.4 GUTSCHEIN ↔ PRODUKT
+=====================================================================
+
+Führende Tabelle:
+
+#__fdshop_coupon_product_map
+
+Zweck:
+
+Verwaltung der Beziehung zwischen Gutschein und Produkt.
+
+Kernbeziehung:
+
+coupon_id
+product_id
+
+Produktstammdaten werden nicht in der Mappingtabelle dupliziert.
+
+=====================================================================
+4.16.5 GUTSCHEIN ↔ KATEGORIE
+=====================================================================
+
+Führende Tabelle:
+
+#__fdshop_coupon_category_map
+
+Zweck:
+
+Verwaltung der Beziehung zwischen Gutschein und Kategorie.
+
+Kernbeziehung:
+
+coupon_id
+category_id
+
+Kategoriedaten verbleiben ausschließlich in
+
+#__fdshop_categories
+
+=====================================================================
+4.16.6 GUTSCHEIN-NUTZUNG
+=====================================================================
+
+Führende Tabelle:
+
+#__fdshop_coupon_usage
+
+---------------------------------------------------------------------
+ZWECK
+---------------------------------------------------------------------
+
+Die Nutzungstabelle dient der Nachvollziehbarkeit tatsächlich
+verwendeter Gutscheine.
+
+Dokumentierte Kernfelder:
+
+coupon_id
+user_id
+order_id
+discount_amount
+used_at
+
+---------------------------------------------------------------------
+PROJEKTREGELN
+---------------------------------------------------------------------
+
+Die Nutzungstabelle ersetzt nicht die Gutschein-Stammdaten.
+
+Nutzungszahlen werden aus den Nutzungsdaten ermittelt
+und nicht als zweite führende Gutscheinwahrheit gepflegt.
+
+Eine verbindliche Verbuchung der Nutzung gehört in den späteren
+vollständigen Bestell-/Checkout-Prozess.
+
+=====================================================================
+4.16.7 GUTSCHEIN-PRÜFUNG UND EINLÖSUNG
+=====================================================================
+
+Die fachliche Gutscheinprüfung gehört ausschließlich in den
+Service Layer.
+
+Der aktuelle Adminbereich besitzt eine vorbereitende Einlöseprüfung
+und Service-Validierung.
+
+Daraus folgt ausdrücklich noch keine vollständig implementierte
+
+• Frontend-Einlösung
+• Warenkorb-Integration
+• Checkout-Prüfung
+• Rabattberechnung im Frontend
+• verbindliche Nutzungsverbuchung im fertigen Bestellprozess
+
+Diese Funktionen dürfen erst nach ihrer tatsächlichen Umsetzung
+als verbindlicher Fachworkflow dokumentiert werden.
+
+=====================================================================
+5. FORMULARSTANDARD
+=====================================================================
+
+PRIORITÄT
+
+KRITISCH
+
+=====================================================================
+5.1 GRUNDREGEL
+=====================================================================
+
+Administrationsformulare bearbeiten ausschließlich die für den
+jeweiligen Fachbereich vorgesehenen führenden Datenquellen.
+
+Formulare enthalten keine Businesslogik.
+
+Ein Formular darf Mappingdaten erfassen oder darstellen,
+wenn die Speicherung fachlich über Model/Service in die zuständige
+Mappingtabelle erfolgt.
+
+=====================================================================
+5.2 XML-STANDARD
+=====================================================================
+
+Alle XML-Formulare verwenden den projektweit festgelegten Aufbau.
+
+Verwendet wird
+
+<fields>
+
+ohne
+
+name="jform"
+
+Die Formularbindung erfolgt im jeweiligen Model.
+
+Doppelte Formularverschachtelungen sind unzulässig.
+
+=====================================================================
+5.3 FORMULARFELDER
+=====================================================================
+
+Jedes Formularfeld besitzt genau eine fachliche Aufgabe.
+
+Ein Formularfeld bearbeitet ausschließlich die dafür vorgesehene
+führende Datenquelle.
+
+Mehrere Felder dürfen dieselbe fachliche Information nicht
+unabhängig voneinander als führenden Wert speichern.
+
+=====================================================================
+5.4 INFORMATIONSFELDER
+=====================================================================
+
+Informationsfelder dienen ausschließlich der Anzeige.
+
+Sie werden nicht als fachliche Eingabe gespeichert.
+
+Sie besitzen keinen Einfluss auf Datenbankinhalte.
+
+=====================================================================
+5.5 READONLY-FELDER
+=====================================================================
+
+Readonly-Felder dienen der Darstellung vorhandener Daten.
+
+Sie überschreiben keine Daten allein aufgrund ihrer Darstellung.
+
+=====================================================================
+5.6 HIDDEN-FELDER
+=====================================================================
+
+Hidden-Felder dürfen ausschließlich technische Informationen
+transportieren.
+
+Sie enthalten keine eigenständigen Geschäftsentscheidungen.
+
+=====================================================================
+5.7 MAPPING-FELDER
+=====================================================================
+
+Auswahlfelder für Beziehungen, beispielsweise
+
+• Produkt ↔ Kategorie
+• Produkt ↔ Käufergruppe
+• Gutschein ↔ Benutzer
+• Gutschein ↔ Käufergruppe
+• Gutschein ↔ Produkt
+• Gutschein ↔ Kategorie
+
+dürfen die Beziehung im Formular abbilden.
+
+Die führende Speicherung erfolgt ausschließlich in der jeweils
+zuständigen Mappingtabelle.
+
+Die Stammdaten der verknüpften Objekte werden nicht in die
+Mappingtabelle kopiert.
+
+=====================================================================
+5.8 LISTENSTANDARD
+=====================================================================
+
+Administrationslisten folgen dem verbindlichen
+
+FDShop_Admin_List_Standard
+
+Die vollständigen technischen Listenregeln werden dort gepflegt
+und nicht in dieser Quelle dupliziert.
+
+Fachlich gilt:
+
+Jede Liste besitzt einen eigenständigen Kontext und darf andere
+Listen oder Edit-Formulare nicht fachlich beeinflussen.
+
+=====================================================================
+6. ARCHITEKTURBEZOGENE FACHREGELN
+=====================================================================
+
+Diese Quelle definiert keine eigenständige technische Architektur.
+
+Die vollständige technische Architektur wird in
+
+FDShop_Architektur_Struktur_Installation
+
+geführt.
+
+Für die fachliche Umsetzung gelten folgende Grenzen:
+
+=====================================================================
+6.1 DATENBANK
+=====================================================================
+
+Die Datenbank speichert Daten.
+
+Sie trifft keine Geschäftsentscheidungen.
+
+=====================================================================
+6.2 TABLE
+=====================================================================
+
+Table-Klassen verwalten genau eine Tabelle.
+
+Businesslogik ist unzulässig.
+
+=====================================================================
+6.3 MODEL
+=====================================================================
+
+Models laden und bereiten Daten und Formulare vor.
+
+Sie treffen keine fachlichen Geschäftsentscheidungen.
+
+=====================================================================
+6.4 CONTROLLER
+=====================================================================
+
+Controller koordinieren Abläufe und rufen die zuständige
+Businesslogik auf.
+
+Sie speichern keine Businessregeln.
+
+=====================================================================
+6.5 SERVICE LAYER
+=====================================================================
+
+Der Service Layer bildet die fachliche Mitte der Anwendung.
+
+Hier liegen insbesondere
+
+• Validierungen über mehrere Tabellen
+• Preislogik
+• Produktlogik
+• Bundlelogik
+• Bestelllogik
+• Gutscheinlogik
+• fachliche Mappingkoordination
+
+=====================================================================
+6.6 VIEW
+=====================================================================
+
+Views bereiten Daten für die Ausgabe vor.
+
+Sie speichern keine fachlichen Daten.
+
+=====================================================================
+6.7 TEMPLATE
+=====================================================================
+
+Templates stellen Daten dar.
+
+Sie führen keine Geschäftsentscheidungen und keine
+Datenbankoperationen aus.
+
+=====================================================================
+7. ZENTRALE FACHREGELN
+=====================================================================
+
+=====================================================================
+7.1 SINGLE SOURCE OF TRUTH
+=====================================================================
+
+Jede fachliche Information besitzt genau eine führende Datenquelle.
+
+=====================================================================
+7.2 SNAPSHOTS UND HISTORIE
+=====================================================================
+
+Snapshots und Historien dokumentieren Zustände.
+
+Sie ersetzen niemals die führenden Stammdaten.
+
+=====================================================================
+7.3 GLOBALE KONFIGURATION
+=====================================================================
+
+Globale Einstellungen werden ausschließlich innerhalb
+
+#__fdshop_config
+
+führend verwaltet.
+
+=====================================================================
+7.4 MAPPING
+=====================================================================
+
+Beziehungen zwischen eigenständigen fachlichen Objekten werden
+über die dafür vorgesehenen Mappingtabellen abgebildet.
+
+Mappingtabellen speichern Beziehungen und keine duplizierten
+Stammdaten.
+
+=====================================================================
+7.5 JOOMLA-BENUTZER UND FDSHOP-KÄUFERGRUPPEN
+=====================================================================
+
+Joomla-Benutzerverwaltung und FDShop-Käufergruppen erfüllen
+unterschiedliche Aufgaben.
+
+Joomla-Benutzer bleiben die führenden Benutzeridentitäten.
+
+FDShop-Käufergruppen bilden geschäftliche Gruppierungen.
+
+Joomla ACL bleibt von geschäftlichen Käufergruppenregeln getrennt.
+
+=====================================================================
+7.6 SERVICE-REGEL
+=====================================================================
+
+Businesslogik gehört in den Service Layer.
+
+Dies gilt insbesondere auch für
+
+• Produktvalidierung über mehrere Tabellen
+• Bestandsableitung
+• Bundle-Rabattlogik
+• Bestellberechnung
+• Gutscheinvalidierung
+• Gutscheinprüfung
+• spätere Gutschein-Rabattberechnung
+• spätere Checkout-Entscheidungen
+
+=====================================================================
+7.7 BESTELLHISTORIE
+=====================================================================
+
+Historische Bestellinformationen dürfen nicht durch spätere
+Änderungen an aktuellen Produkt-, Bundle-, Versand-, Zahlungs-
+oder Gutscheinstammdaten rückwirkend verfälscht werden.
+
+=====================================================================
+7.8 GUTSCHEINREGEL
+=====================================================================
+
+Gutschein-Stammdaten, Gutschein-Zuordnungen und Gutschein-Nutzung
+sind getrennte Verantwortungen.
+
+Die führenden Datenquellen sind:
+
+Stammdaten
+→ #__fdshop_coupons
+
+Benutzer
+→ #__fdshop_coupon_user_map
+
+Käufergruppen
+→ #__fdshop_coupon_buyer_group_map
+
+Produkte
+→ #__fdshop_coupon_product_map
+
+Kategorien
+→ #__fdshop_coupon_category_map
+
+Nutzung
+→ #__fdshop_coupon_usage
+
+Eine spätere Einlöseentscheidung wird im Service Layer getroffen.
+
+=====================================================================
+7.9 FORMULARREGEL
+=====================================================================
+
+Formulare bearbeiten ausschließlich die fachlich zuständigen
+Datenquellen.
+
+Darstellung und Speicherung bleiben getrennt.
+
+=====================================================================
+7.10 FRONTEND-ABGRENZUNG
+=====================================================================
+
+Die vorhandene Site-Struktur ist noch keine fachlich implementierte
+Shop-Frontend-Funktion.
+
+Insbesondere sind derzeit nicht als vollständig umgesetzt zu behandeln:
+
+• Produkt-Frontend
+• Kategorie-Frontend
+• Warenkorb-Workflow
+• Checkout
+• Gutschein-Einlösung
+• Käufergruppenprüfung im Checkout
+• vollständige Versandlogik
+• vollständige Zahlungsabwicklung
+
+Fachregeln für diese Prozesse dürfen erst nach Projektentscheidung
+und tatsächlicher Umsetzung verbindlich ergänzt werden.
+
+=====================================================================
+8. ÄNDERUNGSREGELN
+=====================================================================
+
+Neue Projektentscheidungen werden ausschließlich nach offizieller
+Freigabe übernommen.
+
+Dokumentationsquellen bilden ausschließlich den tatsächlichen
+Projektstand ab.
+
+Die Dokumentationspflege trifft keine eigenen Projektentscheidungen.
+
+Neue Versionen ersetzen die vorherige Version vollständig.
+
+Bei nicht eindeutig nachweisbaren Details erfolgt keine Erfindung.
+
+Der Sachverhalt wird entweder
+
+• aus der führenden Quelle verifiziert
+oder
+• als offener Punkt / Einwand dokumentiert.
+
+=====================================================================
+9. SCHNELLCHECK FÜR FACH-KIs
+=====================================================================
+
+Vor jeder Änderung prüfen:
+
+□ Existiert bereits eine führende Datenquelle?
+
+□ Wird Single Source of Truth eingehalten?
+
+□ Gehört die Businesslogik in den Service Layer?
+
+□ Gehört das neue Feld wirklich in diese Tabelle?
+
+□ Handelt es sich um Stammdaten, Mapping, Snapshot oder Historie?
+
+□ Wird eine bestehende Mappingtabelle verwendet?
+
+□ Werden Joomla-Benutzer und FDShop-Käufergruppen sauber getrennt?
+
+□ Wird ein Snapshot benötigt?
+
+□ Muss ein Formular angepasst werden?
+
+□ Sind weitere Fachbereiche betroffen?
+
+□ Muss die Dokumentation aktualisiert werden?
+
+□ Entsteht eine neue Projektentscheidung?
+
+□ Sind weitere Fach-KIs betroffen?
+
+□ Wird bei Gutscheinen zwischen Stammdaten, Zuordnung, Prüfung
+   und tatsächlicher Nutzung unterschieden?
+
+□ Wird eine noch nicht implementierte Frontend-Funktion
+   versehentlich als verbindlicher Ist-Workflow behandelt?
+
+=====================================================================
+10. ÄNDERUNGSPROTOKOLL
+=====================================================================
+
+V6
+
+Bisherige verbindliche Fachquelle.
+
+Enthielt insbesondere
+
+• Single Source of Truth
+• Produkt-/Produktdetailtrennung
+• Produkt-Kategorie-Mapping
+• Kategorien
+• Hersteller
+• Käufergruppen
+• Preisarchitektur
+• globale Konfiguration
+• Medien
+• Bundles
+• Warenkorb
+• Bestellungen
+• Versand
+• Zahlungsarten
+• Formularstandard
+• fachliche Architekturregeln
+
+---------------------------------------------------------------------
+
+V7
+
+Aktualisierung gegen den nachweisbaren Projektstand aus
+FDShop_Codebestand_V4 und FDShop_Implementierungsstand_V4,
+deren technische Hauptgrundlage
+fdshop_Projektstand_Aktuell.zip ist.
+
+Wesentliche Änderungen:
+
+• Gutscheinbereich als eigenständiger Fachbereich aufgenommen
+• sechs vorhandene Gutschein-Tabellen fachlich abgegrenzt
+• Gutschein-Stammdaten von Mapping und Nutzung getrennt
+• Benutzer-, Käufergruppen-, Produkt- und Kategorie-Mappings
+  für Gutscheine dokumentiert
+• Gutschein-Nutzung als eigenständige historische Verantwortung
+  dokumentiert
+• vorbereitende Gutscheinprüfung klar von noch nicht implementierter
+  Frontend-Einlösung abgegrenzt
+• Bestellbereich an den nachweisbar erweiterten Tabellenbestand
+  angepasst
+• Order-Bundle-Tabellen berücksichtigt
+• Bestellstatus als eigener fachlicher Datenbereich präzisiert
+• Versandarten und Zahlungsarten an vorhandene Admin-Grundverwaltung
+  angepasst, ohne nicht vorhandene Checkout-Logik zu erfinden
+• Produkt-/Käufergruppen-Mapping deutlicher abgegrenzt
+• Medienregel an vorhandene Produktbildverarbeitung angepasst
+• Frontend-Abgrenzung an aktuellen Implementierungsstand angepasst
+• Listenregeln auf die führende Spezialquelle
+  FDShop_Admin_List_Standard verwiesen
+• technische Architekturdetails stärker auf die zuständige
+  Architekturquelle verwiesen
+• Struktur gemäß Dokumentationsstandard konsolidiert
+
+=====================================================================
+11. EINWÄNDE / OFFENE PRÜFPUNKTE
+=====================================================================
+
+EINWAND 1
+
+Thema:
+
+Einzelne Feldbezeichnungen im älteren V6-Datenmodell.
+
+Begründung:
+
+V6 enthält teilweise detaillierte Feldlisten, während die aktuellen
+V4-Übersichtsquellen bewusst nicht sämtliche SQL-Felder duplizieren.
+
+V7 übernimmt deshalb nur solche Detailfelder unverändert,
+die aus V6 als bestehende Fachregel vorliegen, oder die aus dem
+aktuellen dokumentierten Projektstand eindeutig ableitbar sind.
+
+Bei späteren Änderungen an der SQL-Struktur ist ein erneuter
+Feldabgleich gegen die dann aktuelle Install-/Update-SQL erforderlich.
+
+Dieser Hinweis trifft keine neue Projektentscheidung.
+
+---------------------------------------------------------------------
+
+EINWAND 2
+
+Thema:
+
+Noch nicht vollständig implementierte Frontend-Fachregeln.
+
+Begründung:
+
+Warenkorb, Checkout, Gutschein-Einlösung, Käufergruppenprüfung,
+Versandentscheidung und Zahlungsabwicklung sind noch nicht als
+vollständige Frontend-Funktionen implementiert.
+
+V7 definiert deshalb bewusst keinen hypothetischen vollständigen
+Frontend-Workflow.
+
+Die entsprechenden Fachregeln müssen bei Beginn der
+Frontend-Entwicklung durch offizielle Projektentscheidungen
+konkretisiert und anschließend in einer neuen Version dokumentiert
+werden.
+
+Dieser Hinweis trifft keine neue Projektentscheidung.
+
+=====================================================================
+12. SCHLUSSBESTIMMUNGEN
+=====================================================================
+
+FDShop_Fachregeln_Daten_und_Formulare_V7 definiert die aktuell
+verbindlichen fachlichen Daten-, Formular- und Verantwortungsregeln
+des FDShop-Projektes.
+
+Sie ersetzt
+
+FDShop_Fachregeln_Daten_und_Formulare_V6
+
+vollständig.
+
+Sie dokumentiert ausschließlich nachweisbare Fachregeln und
+trifft keine eigenständigen Architektur- oder Projektentscheidungen.
+
+Für den technischen Ist-Code gilt FDShop_Codebestand.
+
+Für den funktionalen Umsetzungsgrad gilt FDShop_Implementierungsstand.
+
+Für technische Architekturdetails gilt
+FDShop_Architektur_Struktur_Installation.
+
+Für Administrationslisten gilt
+FDShop_Admin_List_Standard.
+
+Für Governance und Dokumentationsverfahren gelten die jeweils
+zuständigen Governance- und Dokumentationsquellen.
+
+=====================================================================
+ENDE DER QUELLE
+
+FDShop_Fachregeln_Daten_und_Formulare_V7
+
+Status: VERBINDLICHE PROJEKTQUELLE
+Version: V7
+=====================================================================

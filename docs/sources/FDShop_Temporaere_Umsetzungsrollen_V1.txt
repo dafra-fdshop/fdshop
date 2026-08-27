@@ -1,0 +1,33 @@
+[QUELLE] FDShop_Temporaere_Umsetzungsrollen_V1
+
+STATUS: AKTIV
+
+ZIEL
+
+Klare Trennung zwischen dauerhaft definierten Fach-KIs und temporären Arbeitsschnitten innerhalb einzelner Aufträge.
+
+GRUNDREGEL
+
+Dauerhafte Fach-KIs bleiben die verbindliche Projektstruktur.
+
+Der Projektleiter darf innerhalb eines einzelnen Auftrags zusätzliche temporäre Umsetzungsrollen verwenden, wenn eine feinere technische Aufteilung notwendig ist.
+
+BEISPIELE
+
+- Temporäre Umsetzungsrolle: Model
+- Temporäre Umsetzungsrolle: View
+- Temporäre Umsetzungsrolle: Template
+- Temporäre Umsetzungsrolle: Form
+- Temporäre Umsetzungsrolle: Controller
+
+WICHTIG
+
+Diese Rollen sind KEINE neuen dauerhaften Fach-KIs.
+
+Sie gelten nur für den jeweiligen Einzelauftrag und dürfen nicht still als feste Projektstruktur übernommen werden.
+
+ZIEL
+
+- feinere Aufteilung ohne Strukturbruch
+- keine Verwechslung mit dauerhaften Fach-KIs
+- saubere Projektsteuerung

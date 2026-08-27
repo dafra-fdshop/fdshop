@@ -1,0 +1,97 @@
+=====================================================================
+FDShop_Projektworkflow_V1
+=====================================================================
+
+Status: VERBINDLICHE PROJEKTQUELLE
+Version: V1
+
+=====================================================================
+1. ZWECK
+=====================================================================
+
+Diese Quelle definiert den verbindlichen Arbeitsworkflow des
+FDShop-Projekts.
+
+Sie beschreibt, welche Arbeitsgrundlagen maßgeblich sind und
+wie Fach-KIs mit dem Projekt arbeiten.
+
+=====================================================================
+2. MASSGEBLICHER PROJEKTSTAND
+=====================================================================
+
+Der maßgebliche Projektstand ist grundsätzlich das lokale
+Entwicklungsprojekt.
+
+Alle Änderungen werden zunächst dort umgesetzt.
+
+=====================================================================
+3. VERBINDLICHE ARBEITSGRUNDLAGEN
+=====================================================================
+
+Fach-KIs arbeiten ausschließlich mit:
+
+• aktuellen Projektquellen
+• aktuellem Projekt-ZIP
+• bereitgestellten Einzeldateien
+
+=====================================================================
+4. PROJEKTQUELLEN
+=====================================================================
+
+Die Projektquellen bilden die verbindliche Wissensbasis
+des Projekts.
+
+Neue Projektentscheidungen werden zuerst in den
+Projektquellen dokumentiert.
+
+=====================================================================
+5. PROJEKT-ZIP
+=====================================================================
+
+Das Projekt-ZIP wird aus dem aktuellen lokalen
+Projektstand erstellt.
+
+Es dient den Fach-KIs als technische Arbeitsgrundlage.
+
+=====================================================================
+6. VERSIONSSICHERUNG
+=====================================================================
+
+Versionen und Sicherungen erfolgen lokal und unabhängig
+vom eigentlichen Entwicklungsworkflow.
+
+=====================================================================
+7. ARBEITSABLAUF
+=====================================================================
+
+1. Projektentscheidung
+2. Projektquellen aktualisieren
+3. Fach-KI-Aufträge erstellen
+4. Umsetzung
+5. Aktuelles Projekt-ZIP bereitstellen
+6. Dokumentation fortschreiben
+
+=====================================================================
+8. NICHT BESTANDTEIL
+=====================================================================
+
+Nicht Bestandteil dieses Projektworkflows sind:
+
+• Team-Workflows
+• Branching
+• Pull Requests
+• Merge-Prozesse
+• Repository-Regeln
+
+=====================================================================
+9. SCHLUSSBESTIMMUNGEN
+=====================================================================
+
+Diese Quelle definiert den verbindlichen Projektworkflow
+des FDShop-Projekts.
+
+Neue Versionen ersetzen ältere Versionen vollständig.
+
+=====================================================================
+ENDE DER QUELLE
+=====================================================================

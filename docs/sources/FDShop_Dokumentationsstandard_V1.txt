@@ -1,0 +1,73 @@
+FDShop_Dokumentationsstandard_V1
+=================================
+
+Status: Verbindliche Projektquelle
+Version: V1
+
+ZWECK
+-----
+Diese Quelle definiert den verbindlichen Standard für die Erstellung, Pflege und Weiterentwicklung sämtlicher FDShop-Projektquellen.
+
+GRUNDPRINZIPIEN
+---------------
+1. Dokumentiert wird ausschließlich der tatsächliche Projektstand.
+2. Es werden keine Funktionen, Tabellen oder Regeln erfunden.
+3. Änderungen erfolgen nur auf Basis nachweisbarer Projektänderungen.
+4. Bestehende Quellen werden weiterentwickelt (Refactoring), nicht unnötig neu erstellt.
+
+DOKUMENTATIONSABLAUF
+--------------------
+1. Bestehende Quelle vollständig analysieren.
+2. Aktuellen Projektstand (Code, SQL, ZIP, Quellen) prüfen.
+3. Veraltete Inhalte entfernen oder aktualisieren.
+4. Neue nachweisbare Inhalte ergänzen.
+5. Kapitel logisch strukturieren.
+6. Doppelte Informationen zusammenführen.
+7. Neue Version bereitstellen.
+
+QUALITÄTSREGELN
+---------------
+- Eine Information wird vollständig genau einmal beschrieben.
+- Wiederholungen vermeiden.
+- Statt Wiederholungen auf das führende Kapitel verweisen.
+- Jede Quelle besitzt einen klar definierten Zweck.
+- Die Informationsdichte darf bei neuen Versionen nicht sinken.
+
+KAPITELSTANDARD
+---------------
+Jedes Fachkapitel folgt möglichst diesem Aufbau:
+1. Zweck
+2. Verantwortung
+3. Wichtige Inhalte / Feldgruppen
+4. Nicht Bestandteil
+5. Projektregeln
+6. Hinweise
+
+PROJEKTREGELN
+-------------
+- Single Source of Truth konsequent einhalten.
+- Dokumentation beschreibt den Ist-Zustand.
+- Architekturentscheidungen werden dokumentiert, nicht neu erfunden.
+- Offene Punkte werden als Einwand gekennzeichnet.
+
+VERSIONIERUNG
+-------------
+- Neue Versionen ersetzen ältere Versionen vollständig.
+- Keine Dateinamen mit _neu, _final, _fixed oder _update.
+- Versionsschema: V1, V2, V3 ...
+
+ROLLE DER DOKUMENTATIONS-KI
+---------------------------
+Die Dokumentations-KI dokumentiert, prüft und strukturiert.
+Sie trifft keine eigenständigen Architekturentscheidungen.
+
+ARCHITEKTURVERANTWORTUNG
+------------------------
+Projektarchitektur und Grundsatzentscheidungen werden durch die Projektleitung
+und die Projektarchitektur festgelegt. Die Dokumentations-KI setzt diese
+nachweisbar in den Quellen um.
+
+ZIEL
+----
+Alle FDShop-Quellen sollen einheitlich aufgebaut, leicht wartbar und sowohl
+für Menschen als auch für KI-Systeme eindeutig verständlich sein.
