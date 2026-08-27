@@ -824,13 +824,16 @@ CREATE TABLE IF NOT EXISTS `#__fdshop_media` (
   `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   `product_id` BIGINT UNSIGNED NOT NULL,
 
-  `file_name` VARCHAR(255) NOT NULL,
-  `file_type` VARCHAR(50) NOT NULL,
+  `media_type` VARCHAR(20) NOT NULL DEFAULT 'image',
+  `external_url` VARCHAR(500) NULL DEFAULT NULL,
 
-  `path_standard` VARCHAR(500) NOT NULL,
-  `path_small` VARCHAR(500) NOT NULL,
-  `path_mobile` VARCHAR(500) NOT NULL,
-  `path_invoice` VARCHAR(500) NOT NULL,
+  `file_name` VARCHAR(255) NULL DEFAULT NULL,
+  `file_type` VARCHAR(50) NULL DEFAULT NULL,
+
+  `path_standard` VARCHAR(500) NULL DEFAULT NULL,
+  `path_small` VARCHAR(500) NULL DEFAULT NULL,
+  `path_mobile` VARCHAR(500) NULL DEFAULT NULL,
+  `path_invoice` VARCHAR(500) NULL DEFAULT NULL,
 
   `is_primary` TINYINT(1) NOT NULL DEFAULT 0,
   `ordering` INT NOT NULL DEFAULT 0,

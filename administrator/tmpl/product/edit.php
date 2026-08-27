@@ -142,6 +142,17 @@ use Joomla\CMS\Uri\Uri;
                     </div>
                 </div>
             </div>
+
+            <div class="col-12">
+                <div class="card mb-3">
+                    <div class="card-header">YouTube-Videos</div>
+                    <div class="card-body">
+                        <?php echo $this->form->renderField('video_1'); ?>
+                        <?php echo $this->form->renderField('video_2'); ?>
+                        <?php echo $this->form->renderField('video_3'); ?>
+                    </div>
+                </div>
+            </div>
         </div>
     <?php echo HTMLHelper::_('uitab.endTab'); ?>
 
@@ -168,6 +179,7 @@ use Joomla\CMS\Uri\Uri;
                         <?php echo $this->form->renderField('rise_height'); ?>
                         <?php echo $this->form->renderField('ribbon_new'); ?>
                         <?php echo $this->form->renderField('ribbon_hot'); ?>
+                        <?php echo $this->form->renderField('ribbon_bundle'); ?>
                     </div>
                 </div>
             </div>

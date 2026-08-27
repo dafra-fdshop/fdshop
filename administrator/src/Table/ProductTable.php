@@ -46,6 +46,7 @@ class ProductTable extends Table
             'shot_count',
             'ribbon_new',
             'ribbon_hot',
+            'ribbon_bundle',
         ];
 
         foreach ($numericFields as $field) {
@@ -162,6 +163,10 @@ class ProductTable extends Table
 
         if (!isset($this->ribbon_hot) || $this->ribbon_hot === '') {
             $this->ribbon_hot = 0;
+        }
+
+        if (!isset($this->ribbon_bundle) || $this->ribbon_bundle === '') {
+            $this->ribbon_bundle = 0;
         }
 
         return true;

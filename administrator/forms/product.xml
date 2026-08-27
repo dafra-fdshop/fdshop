@@ -348,6 +348,17 @@
                 <option value="1">Ja</option>
                 <option value="0">Nein</option>
             </field>
+
+            <field
+                name="ribbon_bundle"
+                type="radio"
+                label="Ribbon Bündel"
+                default="0"
+                class="btn-group btn-group-yesno"
+            >
+                <option value="1">Ja</option>
+                <option value="0">Nein</option>
+            </field>
         </fieldset>
 
         <fieldset name="dimensions" label="Maße">
@@ -390,6 +401,30 @@
                 type="file"
                 label="Produktbild"
                 accept="image/*"
+            />
+
+            <field
+                name="video_1"
+                type="textarea"
+                label="Video 1"
+                rows="4"
+                filter="raw"
+            />
+
+            <field
+                name="video_2"
+                type="textarea"
+                label="Video 2"
+                rows="4"
+                filter="raw"
+            />
+
+            <field
+                name="video_3"
+                type="textarea"
+                label="Video 3"
+                rows="4"
+                filter="raw"
             />
         </fieldset>
     </fields>

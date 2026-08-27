@@ -1,0 +1,12 @@
+-- FDShop update 0.0.17
+-- Extend product media with YouTube embed URLs
+
+ALTER TABLE `#__fdshop_media`
+  ADD COLUMN `media_type` VARCHAR(20) NOT NULL DEFAULT 'image' AFTER `product_id`,
+  ADD COLUMN `external_url` VARCHAR(500) NULL DEFAULT NULL AFTER `media_type`,
+  MODIFY COLUMN `file_name` VARCHAR(255) NULL DEFAULT NULL,
+  MODIFY COLUMN `file_type` VARCHAR(50) NULL DEFAULT NULL,
+  MODIFY COLUMN `path_standard` VARCHAR(500) NULL DEFAULT NULL,
+  MODIFY COLUMN `path_small` VARCHAR(500) NULL DEFAULT NULL,
+  MODIFY COLUMN `path_mobile` VARCHAR(500) NULL DEFAULT NULL,
+  MODIFY COLUMN `path_invoice` VARCHAR(500) NULL DEFAULT NULL;

@@ -35,6 +35,8 @@ class ProductService implements ProductServiceInterface
             throw new InvalidArgumentException('product_name darf nicht leer sein.');
         }
 
+        $youtubeUrls = $this->extractYoutubeMediaUrls($data);
+
         if ($categoryIds === [] && array_key_exists('category_ids', $data)) {
             $categoryIds = $this->normalizeIds($data['category_ids']);
         } else {
@@ -101,6 +103,7 @@ class ProductService implements ProductServiceInterface
             $this->saveProductCategoryAssignments($productId, $categoryIds, $primaryCategoryId);
             $this->saveProductBuyerGroupAssignments($productId, $buyerGroupIds);
             $this->processUploadedProductImage($productId);
+            $this->synchronizeYoutubeMedia($productId, $youtubeUrls);
 
             $this->db->transactionCommit();
 
@@ -287,6 +290,12 @@ class ProductService implements ProductServiceInterface
         $item->category_ids = $this->getAssignedCategoryIds($productId);
         $item->buyer_group_ids = $this->getAssignedBuyerGroupIds($productId);
 
+        $youtubeUrls = $this->getYoutubeMediaUrls($productId);
+
+        for ($index = 1; $index <= 3; $index++) {
+            $item->{'video_' . $index} = $youtubeUrls[$index] ?? '';
+        }
+
         return $item;
     }
 
@@ -324,6 +333,7 @@ class ProductService implements ProductServiceInterface
             'rise_height',
             'ribbon_new',
             'ribbon_hot',
+            'ribbon_bundle',
         ];
 
         $detailFields = [
@@ -718,7 +728,8 @@ class ProductService implements ProductServiceInterface
                 'COALESCE(MAX(' . $this->db->quoteName('ordering') . '), 0) AS max_ordering',
             ])
             ->from($this->db->quoteName('#__fdshop_media'))
-            ->where($this->db->quoteName('product_id') . ' = ' . (int) $productId);
+            ->where($this->db->quoteName('product_id') . ' = ' . (int) $productId)
+            ->where($this->db->quoteName('media_type') . ' = ' . $this->db->quote('image'));
 
         $this->db->setQuery($query);
         $stats = (array) $this->db->loadAssoc();
@@ -740,6 +751,8 @@ class ProductService implements ProductServiceInterface
                 $this->db->quoteName('ordering'),
                 $this->db->quoteName('created'),
                 $this->db->quoteName('created_by'),
+                $this->db->quoteName('media_type'),
+                $this->db->quoteName('external_url'),
             ])
             ->values(
                 implode(', ', [
@@ -754,10 +767,125 @@ class ProductService implements ProductServiceInterface
                     (int) $ordering,
                     $this->db->quote($created),
                     (int) $userId,
+                    $this->db->quote('image'),
+                    'NULL',
                 ])
             );
 
         $this->db->setQuery($insertQuery)->execute();
+    }
+
+    private function getYoutubeMediaUrls(int $productId): array
+    {
+        $query = $this->db->getQuery(true)
+            ->select([
+                $this->db->quoteName('external_url'),
+                $this->db->quoteName('ordering'),
+            ])
+            ->from($this->db->quoteName('#__fdshop_media'))
+            ->where($this->db->quoteName('product_id') . ' = ' . (int) $productId)
+            ->where($this->db->quoteName('media_type') . ' = ' . $this->db->quote('youtube'))
+            ->order($this->db->quoteName('ordering') . ' ASC, ' . $this->db->quoteName('id') . ' ASC');
+
+        $this->db->setQuery($query, 0, 3);
+
+        $urls = [];
+
+        foreach ((array) $this->db->loadObjectList() as $row) {
+            $position = (int) ($row->ordering ?? 0);
+
+            if ($position >= 1 && $position <= 3 && !isset($urls[$position])) {
+                $urls[$position] = (string) ($row->external_url ?? '');
+            }
+        }
+
+        return $urls;
+    }
+
+    private function extractYoutubeMediaUrls(array $data): array
+    {
+        $urls = [];
+
+        for ($index = 1; $index <= 3; $index++) {
+            $input = trim((string) ($data['video_' . $index] ?? ''));
+
+            if ($input !== '') {
+                $urls[$index] = $this->extractYoutubeEmbedUrl($input);
+            }
+        }
+
+        return $urls;
+    }
+
+    private function synchronizeYoutubeMedia(int $productId, array $urls): void
+    {
+
+        $deleteQuery = $this->db->getQuery(true)
+            ->delete($this->db->quoteName('#__fdshop_media'))
+            ->where($this->db->quoteName('product_id') . ' = ' . (int) $productId)
+            ->where($this->db->quoteName('media_type') . ' = ' . $this->db->quote('youtube'));
+
+        $this->db->setQuery($deleteQuery)->execute();
+
+        if ($urls === []) {
+            return;
+        }
+
+        $userId = (int) Factory::getApplication()->getIdentity()->id;
+        $created = Factory::getDate()->toSql();
+
+        foreach ($urls as $position => $url) {
+            $insertQuery = $this->db->getQuery(true)
+                ->insert($this->db->quoteName('#__fdshop_media'))
+                ->columns([
+                    $this->db->quoteName('product_id'),
+                    $this->db->quoteName('media_type'),
+                    $this->db->quoteName('external_url'),
+                    $this->db->quoteName('is_primary'),
+                    $this->db->quoteName('ordering'),
+                    $this->db->quoteName('created'),
+                    $this->db->quoteName('created_by'),
+                ])
+                ->values(implode(', ', [
+                    (int) $productId,
+                    $this->db->quote('youtube'),
+                    $this->db->quote($url),
+                    0,
+                    (int) $position,
+                    $this->db->quote($created),
+                    $userId,
+                ]));
+
+            $this->db->setQuery($insertQuery)->execute();
+        }
+    }
+
+    private function extractYoutubeEmbedUrl(string $input): string
+    {
+        $url = $input;
+
+        if (stripos($input, '<iframe') !== false) {
+            if (!preg_match('/\\bsrc\\s*=\\s*(["\'])(.*?)\\1/is', $input, $matches)) {
+                throw new InvalidArgumentException('Der YouTube-Embed-Code enthält keine gültige src-URL.');
+            }
+
+            $url = $matches[2];
+        }
+
+        $url = html_entity_decode(trim($url), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $parts = parse_url($url);
+        $host = strtolower((string) ($parts['host'] ?? ''));
+        $path = (string) ($parts['path'] ?? '');
+
+        if (
+            ($parts['scheme'] ?? '') !== 'https'
+            || !in_array($host, ['youtube.com', 'www.youtube.com'], true)
+            || !preg_match('~^/embed/[^/]+$~', $path)
+        ) {
+            throw new InvalidArgumentException('Bitte einen gültigen YouTube-Embed-Code oder eine YouTube-Embed-URL eingeben.');
+        }
+
+        return $url;
     }
 
     private function getExtensionForMime(string $mime): string

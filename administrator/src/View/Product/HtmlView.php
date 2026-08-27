@@ -55,6 +55,7 @@ class HtmlView extends BaseHtmlView
             ->select($db->quoteName('path_small'))
             ->from($db->quoteName('#__fdshop_media'))
             ->where($db->quoteName('product_id') . ' = ' . (int) $productId)
+            ->where($db->quoteName('media_type') . ' = ' . $db->quote('image'))
             ->where($db->quoteName('path_small') . " <> " . $db->quote(''))
             ->order(
                 $db->quoteName('is_primary') . ' DESC, '
