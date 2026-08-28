@@ -1,0 +1,855 @@
+=====================================================================
+FDShop_Governance_und_Dokumentation_V4
+=====================================================================
+
+Status: VERBINDLICHE PROJEKTQUELLE
+Version: V4
+
+Diese Quelle ersetzt vollständig:
+
+FDShop_Governance_und_Dokumentation_V3
+
+=====================================================================
+1. ZWECK
+=====================================================================
+
+Diese Quelle definiert die verbindlichen organisatorischen Regeln für
+
+• Projektgovernance
+• Projektorganisation
+• Rollen
+• Verantwortlichkeiten
+• Freigaben
+• Zusammenarbeit der Projektbeteiligten
+• organisatorische Dokumentationsabläufe
+• Quellenhierarchie
+
+Technische Architektur, Fachregeln, Codebestand, Implementierungsstand,
+Listenstandards und konkrete Arbeitsabläufe werden ausschließlich in
+den jeweils zuständigen Projektquellen vollständig beschrieben.
+
+Für Aufbau, Pflege, Qualität und Versionierung der Projektdokumentation
+gilt verbindlich:
+
+FDShop_Dokumentationsstandard_V2
+
+=====================================================================
+2. GELTUNGSBEREICH
+=====================================================================
+
+Diese Quelle ist verbindlich für
+
+• Projektleitung
+• Projektleiter-KI
+• Dokumentation / Quellenpflege
+• sämtliche dauerhaften Fach-KIs
+• temporäre Umsetzungsrollen
+• zukünftige Projekterweiterungen
+
+Alle Projektbeteiligten arbeiten innerhalb der hier festgelegten
+organisatorischen Zuständigkeiten.
+
+=====================================================================
+3. GRUNDPRINZIPIEN
+=====================================================================
+
+=====================================================================
+3.1 NACHWEISBARKEIT
+=====================================================================
+
+Projektarbeit und Projektdokumentation dürfen keine nicht beschlossenen
+Projektinhalte erfinden.
+
+Zulässige Grundlagen sind insbesondere
+
+• offizielle Projektentscheidungen
+• aktueller Projektcode
+• aktuelle SQL-Struktur
+• maßgeblicher Projektstand / Projekt-ZIP
+• verbindliche Projektquellen
+• nachweisbar umgesetzte Projektänderungen
+
+Nicht zulässig sind
+
+• Vermutungen als Projektfakten
+• erfundene Projektentscheidungen
+• hypothetische Implementierungen als Ist-Stand
+• stillschweigend angenommene Architektur- oder Datenmodelländerungen
+
+=====================================================================
+3.2 IST-STAND UND BESCHLOSSENE ZIELREGEL
+=====================================================================
+
+PROJEKTREGEL
+
+Der nachweisbare technische bzw. funktionale Ist-Stand und eine
+offiziell beschlossene, aber noch nicht implementierte Zielregel sind
+organisatorisch strikt zu unterscheiden.
+
+Eine offiziell freigegebene Projektentscheidung ist verbindlich und
+darf in der fachlich zuständigen Projektquelle dokumentiert werden.
+
+Dadurch gilt sie jedoch nicht automatisch als technisch implementiert.
+
+Für den tatsächlichen Codebestand ist die zuständige
+Codebestandsquelle führend.
+
+Für den tatsächlichen funktionalen Umsetzungsgrad ist die zuständige
+Implementierungsstandsquelle führend.
+
+Die vollständigen Dokumentationsregeln für diese Trennung stehen in
+
+FDShop_Dokumentationsstandard_V2.
+
+=====================================================================
+3.3 SINGLE SOURCE OF TRUTH
+=====================================================================
+
+Jede Information besitzt genau eine führende Projektquelle.
+
+Informationen werden nicht mehrfach vollständig dokumentiert.
+
+Andere Quellen dürfen den für ihren eigenen Verantwortungsbereich
+notwendigen Zusammenhang nennen und auf die führende Quelle verweisen.
+
+=====================================================================
+3.4 REFACTORING BESTEHENDER QUELLEN
+=====================================================================
+
+Bestehende Projektquellen werden grundsätzlich weiterentwickelt und
+refaktoriert.
+
+Neue Quellen entstehen nur, wenn hierfür ein eigener klar abgegrenzter
+Verantwortungsbereich erforderlich ist.
+
+Die vollständigen Regeln hierzu definiert
+
+FDShop_Dokumentationsstandard_V2.
+
+=====================================================================
+3.5 VERSIONIERUNG
+=====================================================================
+
+Neue Versionen ersetzen die vorherige Version vollständig.
+
+Es existiert immer genau eine aktuelle verbindliche Version einer
+Projektquelle.
+
+Die vollständigen Versions- und Bereitstellungsregeln definiert
+
+FDShop_Dokumentationsstandard_V2.
+
+=====================================================================
+4. ROLLENMODELL
+=====================================================================
+
+Das FDShop-Projekt verwendet klar definierte Rollen mit abgegrenzten
+Verantwortlichkeiten.
+
+=====================================================================
+4.1 PROJEKTLEITUNG
+=====================================================================
+
+Die Projektleitung besitzt die fachliche Gesamtverantwortung.
+
+Sie entscheidet insbesondere über
+
+• neue Grundsatzentscheidungen
+• Architekturentscheidungen
+• Projektregeln
+• Datenmodellentscheidungen
+• Freigaben
+• neue Fachbereiche
+• Prioritäten
+• Governance
+
+Die Projektleitung ist die Instanz, welche neue Grundsatzentscheidungen
+verbindlich freigibt.
+
+Bereits getroffene Projektentscheidungen müssen nicht bei jeder
+Dokumentations- oder Umsetzungsarbeit erneut entschieden werden.
+
+=====================================================================
+4.2 DOKUMENTATION / QUELLENPFLEGE
+=====================================================================
+
+Dokumentation / Quellenpflege besitzt die Verantwortung für
+
+• Analyse bestehender Projektquellen
+• Pflege bestehender Projektquellen
+• Strukturverbesserungen
+• Refactoring
+• Versionspflege
+• Qualitätsprüfung
+• Zusammenführung doppelter Informationen
+• Vereinheitlichung der Dokumentationsstruktur
+• korrekte Einarbeitung bereits getroffener Projektentscheidungen
+
+Sie darf bereits offiziell getroffene Projektentscheidungen
+selbstständig in die zuständige Projektquelle einarbeiten.
+
+Sie trifft jedoch keine neuen
+
+• Architekturentscheidungen
+• Datenmodellentscheidungen
+• Businessregeln
+• Implementierungsentscheidungen
+• Governance-Grundsätze
+
+Erkennt sie einen noch nicht entschiedenen Grundsatzbedarf, wird dieser
+als Einwand oder offener Prüfpunkt dokumentiert.
+
+WICHTIG
+
+Dokumentation / Quellenpflege darf eine beschlossene Zielregel
+dokumentieren, obwohl deren technische Umsetzung noch aussteht.
+
+Sie darf diese Zielregel jedoch nicht als bereits implementierten
+Ist-Stand darstellen.
+
+Die vollständigen Arbeits-, Qualitäts- und Bereitstellungsregeln
+definiert
+
+FDShop_Dokumentationsstandard_V2.
+
+=====================================================================
+4.3 PROJEKTLEITER-KI
+=====================================================================
+
+Die Projektleiter-KI koordiniert die fachliche Umsetzung des
+Gesamtprojektes.
+
+Aufgaben sind insbesondere
+
+• Projektplanung
+• Auftragsdefinition
+• Koordination der Fach-KIs
+• Priorisierung im Rahmen freigegebener Projektregeln
+• Qualitätssicherung
+• Zusammenführung fachlicher Ergebnisse
+• Erkennen fachübergreifender Abhängigkeiten
+
+Die Projektleiter-KI besitzt keine Sonderrechte gegenüber den
+Projektregeln.
+
+Sie darf keine neue Grundsatzentscheidung eigenständig verbindlich
+machen.
+
+Neue Grundsatzentscheidungen verbleiben bei der Projektleitung.
+
+=====================================================================
+4.4 FACH-KIs
+=====================================================================
+
+Jede Fach-KI besitzt einen eindeutig definierten Verantwortungsbereich.
+
+Fach-KIs arbeiten ausschließlich innerhalb ihres Fachgebietes und der
+für den Auftrag freigegebenen Grenzen.
+
+Bereiche anderer Fach-KIs werden nicht eigenständig verändert, sofern
+dies nicht ausdrücklich Bestandteil eines koordinierten
+fachübergreifenden Auftrages ist.
+
+Erkennt eine Fach-KI außerhalb ihres Zuständigkeitsbereiches
+
+• einen Widerspruch
+• einen Fehler
+• Verbesserungsbedarf
+• einen Entscheidungsbedarf
+
+wird dieser an die zuständige Koordination gemeldet bzw. als Einwand
+dokumentiert.
+
+=====================================================================
+4.5 TEMPORÄRE UMSETZUNGSROLLEN
+=====================================================================
+
+Temporäre Umsetzungsrollen unterstützen die Umsetzung einzelner
+Arbeitspakete.
+
+Sie stellen keine dauerhaften Projektrollen dar.
+
+Temporäre Rollen können beispielsweise Aufgaben übernehmen für
+
+• Datenbank
+• Model
+• Controller
+• View
+• Formulare
+• Templates
+• Mapping
+• Integration
+
+Nach Abschluss des jeweiligen Auftrages endet die temporäre Rolle.
+
+Die dauerhafte Projektstruktur wird dadurch nicht verändert.
+
+Die konkreten temporären Rollen werden in der dafür zuständigen
+Projektquelle geführt.
+
+=====================================================================
+5. PROJEKTENTSCHEIDUNGEN UND FREIGABEN
+=====================================================================
+
+=====================================================================
+5.1 NEUE GRUNDSATZENTSCHEIDUNGEN
+=====================================================================
+
+Neue Grundsatzentscheidungen dürfen ausschließlich durch die
+Projektleitung freigegeben werden.
+
+Hierzu zählen insbesondere neue
+
+• Architekturregeln
+• Datenmodellgrundsätze
+• Businessregeln
+• Governance-Regeln
+• fachübergreifende Projektgrundsätze
+
+Fach-KIs, Projektleiter-KI und Dokumentation / Quellenpflege dürfen
+solche Entscheidungen nicht stillschweigend erzeugen.
+
+=====================================================================
+5.2 BEREITS GETROFFENE PROJEKTENTSCHEIDUNGEN
+=====================================================================
+
+Eine bereits offiziell freigegebene Projektentscheidung ist eine
+zulässige und verbindliche Arbeitsgrundlage.
+
+Sie darf
+
+• in der zuständigen Fachquelle dokumentiert
+• in Aufträgen verwendet
+• in der späteren Umsetzung berücksichtigt
+
+werden, ohne erneut als neue Projektentscheidung behandelt zu werden.
+
+Eine noch nicht erfolgte technische Umsetzung ändert nichts an der
+Verbindlichkeit der beschlossenen Zielregel.
+
+=====================================================================
+5.3 ENTSCHEIDUNGSBEDARF
+=====================================================================
+
+Ist eine erforderliche Grundsatzfrage noch nicht entschieden, darf sie
+nicht eigenständig beantwortet werden.
+
+Stattdessen erfolgt
+
+• ein Einwand
+oder
+• ein offener Prüfpunkt
+
+entsprechend FDShop_Dokumentationsstandard_V2.
+
+=====================================================================
+6. ZUSAMMENARBEIT
+=====================================================================
+
+=====================================================================
+6.1 AUFTRAGSERSTELLUNG
+=====================================================================
+
+Neue Aufträge werden durch die Projektleitung oder die
+Projektleiter-KI erstellt.
+
+Ein Auftrag beschreibt mindestens, soweit für die Aufgabe relevant,
+
+• Ziel
+• Arbeitsgrundlage
+• Zuständigkeit
+• Arbeitsweise
+• Einschränkungen
+• gewünschtes Ergebnis
+
+Aufträge sollen so eindeutig formuliert sein, dass unnötige
+Interpretationen vermieden werden.
+
+=====================================================================
+6.2 AUFTRAGSAUSFÜHRUNG
+=====================================================================
+
+Die zuständige Fach-KI analysiert vor Änderungen die maßgeblichen
+Projektgrundlagen.
+
+Die Bearbeitung erfolgt innerhalb des eigenen bzw. ausdrücklich
+freigegebenen Verantwortungsbereiches.
+
+Bestehende Projektentscheidungen sind zu beachten.
+
+Nicht entschiedene Grundsatzfragen werden nicht eigenständig
+entschieden.
+
+=====================================================================
+6.3 FACHÜBERGREIFENDE ÄNDERUNGEN
+=====================================================================
+
+Betrifft eine Änderung mehrere Fachbereiche, erfolgt die Umsetzung
+koordiniert über
+
+• die Projektleitung
+oder
+• die Projektleiter-KI im Rahmen der freigegebenen Projektregeln.
+
+Die beteiligten Fachbereiche bleiben für ihre jeweiligen Inhalte
+verantwortlich.
+
+=====================================================================
+6.4 QUALITÄTSPRÜFUNG
+=====================================================================
+
+Nach Abschluss eines Arbeitspaketes ist mindestens zu prüfen,
+
+• entspricht das Ergebnis dem Auftrag,
+• entspricht es den verbindlichen Projektentscheidungen,
+• entspricht der behauptete Ist-Stand dem nachweisbaren Projektstand,
+• wurden bestehende Regeln eingehalten,
+• wurden keine neuen Projektentscheidungen erfunden,
+• wurden Zuständigkeitsgrenzen eingehalten,
+• wurden Auswirkungen auf andere Fachbereiche berücksichtigt.
+
+Spezifische Qualitätsregeln der zuständigen Fachquellen gelten
+zusätzlich.
+
+=====================================================================
+7. EINWÄNDE UND OFFENE PRÜFPUNKTE
+=====================================================================
+
+=====================================================================
+7.1 EINWAND
+=====================================================================
+
+Einwände dienen der Qualitätssicherung.
+
+Sie werden verwendet, wenn ein
+
+• Widerspruch
+• Verbesserungspotenzial
+• noch nicht entschiedener Grundsatzbedarf
+• strukturelles Problem
+
+erkannt wird.
+
+Ein Einwand ändert niemals eigenständig den Projektstand.
+
+Die vollständige Definition und Form des Einwandes regelt
+
+FDShop_Dokumentationsstandard_V2.
+
+=====================================================================
+7.2 OFFENER PRÜFPUNKT
+=====================================================================
+
+Kann ein Sachverhalt mit den verfügbaren Grundlagen nicht sicher
+verifiziert werden, wird er als offener Prüfpunkt dokumentiert.
+
+Nicht verifizierbare Details werden nicht erfunden.
+
+Die vollständige Definition regelt
+
+FDShop_Dokumentationsstandard_V2.
+
+=====================================================================
+7.3 BESCHLOSSENE REGEL IST KEIN NEUER EINWAND
+=====================================================================
+
+Eine bereits offiziell getroffene Projektentscheidung wird nicht allein
+deshalb als Einwand behandelt, weil ihre technische Umsetzung noch
+aussteht.
+
+Die beschlossene Zielregel wird in der zuständigen Fachquelle geführt.
+
+Der tatsächliche technische bzw. funktionale Ist-Stand bleibt davon
+getrennt.
+
+=====================================================================
+8. DOKUMENTATIONSORGANISATION
+=====================================================================
+
+=====================================================================
+8.1 VERBINDLICHER DOKUMENTATIONSSTANDARD
+=====================================================================
+
+Für sämtliche FDShop-Projektquellen gilt verbindlich
+
+FDShop_Dokumentationsstandard_V2.
+
+Er regelt insbesondere
+
+• Aufbau
+• Pflege
+• Nachweisbarkeit
+• Ist-Stand / Zielregel-Trennung
+• Single Source of Truth
+• Refactoring
+• Versionierung
+• Änderungsprotokolle
+• Einwände
+• offene Prüfpunkte
+• Qualitätssicherung
+• Bereitstellungsstandard
+
+Diese Governance dupliziert diese Detailregeln nicht.
+
+=====================================================================
+8.2 DOKUMENTATIONSPFLICHT
+=====================================================================
+
+Bestätigte Projektänderungen und offiziell getroffene
+Projektentscheidungen, welche bestehende Projektquellen betreffen,
+führen zu einer Aktualisierung der zuständigen Quelle.
+
+Dabei gilt:
+
+• Fachquellen dürfen beschlossene Zielregeln dokumentieren.
+• Codebestand dokumentiert tatsächlich vorhandenen Code.
+• Implementierungsstand dokumentiert tatsächlich erreichten
+  funktionalen Umsetzungsgrad.
+
+Dadurch bleiben Entscheidung, Zielregel und tatsächlicher
+Implementierungsstand nachvollziehbar voneinander getrennt.
+
+=====================================================================
+8.3 QUERVERWEISE
+=====================================================================
+
+Jede Projektquelle beschreibt ihren eigenen Verantwortungsbereich.
+
+Fremdinhalte werden nicht vollständig dupliziert.
+
+Stattdessen erfolgt ein Verweis auf die zuständige führende Quelle.
+
+=====================================================================
+8.4 DOKUMENTATIONSZYKLUS
+=====================================================================
+
+Der organisatorische Dokumentationszyklus lautet grundsätzlich:
+
+1. Projektentscheidung und/oder Projektänderung
+
+2. Prüfung der maßgeblichen Grundlagen
+
+3. Aktualisierung der zuständigen Projektquelle bzw. Projektquellen
+
+4. Versionsanhebung, sofern nach Dokumentationsstandard erforderlich
+
+5. Qualitäts- und Konsistenzprüfung
+
+6. Bereitstellung und Freigabe der neuen Version
+
+Bei beschlossenen, aber noch nicht implementierten Zielregeln kann die
+zuständige Fachquelle vor der technischen Umsetzung aktualisiert
+werden.
+
+Codebestand und Implementierungsstand werden erst aktualisiert, wenn
+der jeweilige technische bzw. funktionale Ist-Stand dies rechtfertigt.
+
+=====================================================================
+9. PROJEKTQUELLEN
+=====================================================================
+
+Das FDShop-Projekt besteht aus mehreren eigenständigen
+Projektquellen.
+
+Jede Quelle besitzt einen eindeutig definierten Verantwortungsbereich.
+
+=====================================================================
+9.1 AKTUELLE QUELLENBEREICHE
+=====================================================================
+
+FDShop_Governance_und_Dokumentation
+
+→ Projektorganisation
+→ Rollen
+→ Zuständigkeiten
+→ Freigaben
+→ Governance
+→ Quellenhierarchie
+
+---------------------------------------------------------------------
+
+FDShop_Dokumentationsstandard
+
+→ Dokumentationsregeln
+→ Struktur
+→ Versionierung
+→ Qualitätsregeln
+→ Bereitstellungsstandard
+
+---------------------------------------------------------------------
+
+FDShop_Fachregeln_Daten_und_Formulare
+
+→ fachliche Datenregeln
+→ Formularregeln
+→ Businessregeln
+→ fachliche Datenstrukturen
+
+---------------------------------------------------------------------
+
+FDShop_Architektur_Struktur_Installation
+
+→ technische Architektur
+→ Installationsstruktur
+→ Komponentenstruktur
+→ technische Projektgrundlagen
+
+---------------------------------------------------------------------
+
+FDShop_Implementierungsstand
+
+→ tatsächlicher funktionaler Entwicklungsstand
+→ bereits umgesetzte Funktionen
+→ offene Implementierungen
+
+---------------------------------------------------------------------
+
+FDShop_Codebestand
+
+→ tatsächlich vorhandener Code
+→ Klassen
+→ Projektbestandteile
+→ Komponentenstruktur
+
+---------------------------------------------------------------------
+
+FDShop_Admin_List_Standard
+
+→ verbindlicher Standard für Administrationslisten
+→ SearchTools
+→ Filter
+→ ListModel
+→ Listenkontexte
+
+---------------------------------------------------------------------
+
+FDShop_Projektworkflow
+
+→ Projektworkflow
+→ Arbeitsgrundlagen
+→ maßgeblicher Projektstand / Projekt-ZIP
+→ Entwicklungsablauf
+
+---------------------------------------------------------------------
+
+FDShop_Temporaere_Umsetzungsrollen
+
+→ temporäre Rollen
+→ Aufgabenbereiche
+→ Arbeitsweise
+
+=====================================================================
+9.2 QUELLENHIERARCHIE
+=====================================================================
+
+Bei Widersprüchen zwischen Projektquellen gilt grundsätzlich folgende
+Reihenfolge:
+
+1. Offizielle Projektentscheidung
+
+2. Nachweisbarer aktueller technischer bzw. funktionaler Ist-Stand
+   für Aussagen darüber, was tatsächlich implementiert oder vorhanden
+   ist
+
+3. Diese Governance für Projektorganisation, Rollen, Zuständigkeiten,
+   Freigaben und Quellenhierarchie
+
+4. Zuständige führende Fachquelle für ihren Verantwortungsbereich
+
+5. Ältere bzw. ersetzte Dokumentationen
+
+WICHTIG
+
+Die Quellenhierarchie ist themenbezogen anzuwenden.
+
+Eine beschlossene Zielregel wird nicht dadurch unwirksam, dass der
+aktuelle Code sie noch nicht implementiert.
+
+Umgekehrt darf eine beschlossene Zielregel nicht als bereits
+implementierter Ist-Stand ausgegeben werden.
+
+Bei einem Widerspruch zwischen
+
+• beschlossener Zielregel
+und
+• technischem Ist-Stand
+
+ist daher zuerst zu klären, welche Aussage beantwortet werden soll:
+
+SOLL / VERBINDLICHE ZIELREGEL
+→ offizielle Projektentscheidung bzw. zuständige Fachquelle
+
+IST / TATSÄCHLICHE IMPLEMENTIERUNG
+→ aktueller Code, SQL, Codebestand bzw. Implementierungsstand
+
+=====================================================================
+9.3 VERANTWORTUNG DER QUELLEN
+=====================================================================
+
+Jede Projektquelle besitzt genau einen führenden Verantwortungsbereich.
+
+Es existiert genau eine führende Quelle pro Themengebiet.
+
+Notwendige Querverweise sind zulässig.
+
+Konkurrierende vollständige Parallelbeschreibungen sind unzulässig.
+
+=====================================================================
+10. GOVERNANCE-QUALITÄTSSICHERUNG
+=====================================================================
+
+Vor Freigabe einer Governance-Änderung ist mindestens zu prüfen:
+
+□ Bleiben Rollen und Zuständigkeiten eindeutig?
+
+□ Wurde keine fachliche oder technische Detailregel unnötig in die
+   Governance verschoben?
+
+□ Ist die Quellenhierarchie widerspruchsfrei?
+
+□ Werden Ist-Stand und beschlossene Zielregel korrekt unterschieden?
+
+□ Bleibt die Entscheidungsbefugnis der Projektleitung eindeutig?
+
+□ Können Dokumentation und Fach-KIs bereits getroffene Entscheidungen
+   verwenden, ohne daraus neue Entscheidungen abzuleiten?
+
+□ Werden Single Source of Truth und Querverweise eingehalten?
+
+□ Ist der aktuelle Dokumentationsstandard korrekt referenziert?
+
+□ Widerspricht die Governance keiner offiziell getroffenen
+   Projektentscheidung?
+
+=====================================================================
+11. ABGRENZUNG
+=====================================================================
+
+Diese Governance definiert organisatorische Regeln.
+
+Nicht Bestandteil sind insbesondere
+
+• konkrete technische Architektur
+• konkrete SQL-Felder
+• vollständiges Datenmodell
+• konkrete Businesslogik einzelner Fachbereiche
+• Codeinventar
+• funktionaler Implementierungsstatus
+• technische Listenimplementierung
+• konkrete Fach-KI-Arbeitsschritte des Projektworkflows
+
+Hierfür gelten die jeweils zuständigen Projektquellen.
+
+=====================================================================
+12. ÄNDERUNGSPROTOKOLL
+=====================================================================
+
+V1
+
+Erste Projektfassung.
+
+---------------------------------------------------------------------
+
+V2
+
+Erweiterung der Governance.
+
+Projektrollen ergänzt.
+
+Dokumentationsregeln erweitert.
+
+---------------------------------------------------------------------
+
+V3
+
+Vollständiges Refactoring.
+
+Wesentliche Inhalte:
+
+• Kapitel neu strukturiert
+• doppelte Inhalte zusammengeführt
+• Dokumentations-KI aufgenommen
+• Dokumentationsstandard V1 als verbindliche Grundlage ergänzt
+• Projektquellen voneinander abgegrenzt
+• Governance auf Organisation, Rollen, Verantwortlichkeiten und
+  Dokumentationsabläufe fokussiert
+
+---------------------------------------------------------------------
+
+V4
+
+Vollständige Aktualisierung auf Grundlage des neuen verbindlichen
+
+FDShop_Dokumentationsstandard_V2.
+
+Wesentliche Änderungen:
+
+• sämtliche aktiven Verweise von Dokumentationsstandard V1 auf V2
+  aktualisiert
+• Governance und Dokumentationsstandard stärker voneinander abgegrenzt
+• Trennung zwischen nachweisbarem Ist-Stand und beschlossener,
+  noch nicht implementierter Zielregel organisatorisch verankert
+• Dokumentation / Quellenpflege darf bereits getroffene
+  Projektentscheidungen ausdrücklich korrekt einarbeiten
+• bereits beschlossene Regeln von neuen Grundsatzentscheidungen
+  abgegrenzt
+• Einwand und offener Prüfpunkt organisatorisch getrennt
+• Dokumentationszyklus für beschlossene Zielregeln präzisiert
+• Quellenhierarchie themenbezogen präzisiert, damit Zielregel und
+  tatsächliche Implementierung nicht gegeneinander ausgespielt werden
+• Verantwortungsbereiche der Projektquellen klarer abgegrenzt
+• doppelte Detailregeln zum Dokumentationsverfahren reduziert und auf
+  FDShop_Dokumentationsstandard_V2 verwiesen
+• Governance-Qualitätscheck ergänzt
+• veralteter Einwand zur möglichen zentralen Navigationsquelle nicht
+  als aktive Governance-Regel übernommen; die bestehende
+  Projektquellenübersicht bleibt Bestandteil dieser Governance
+
+=====================================================================
+13. EINWÄNDE / OFFENE PRÜFPUNKTE
+=====================================================================
+
+Zum Zeitpunkt der Erstellung von V4 bestehen innerhalb des
+Verantwortungsbereiches dieser Governance keine neuen
+Grundsatzentscheidungen, die durch diese Quelle eigenständig zu treffen
+wären.
+
+Projektbezogene offene Implementierungsfragen werden in den jeweils
+zuständigen Fach- bzw. Implementierungsquellen geführt und nicht in
+dieser Governance dupliziert.
+
+=====================================================================
+14. SCHLUSSBESTIMMUNGEN
+=====================================================================
+
+FDShop_Governance_und_Dokumentation_V4 definiert die verbindlichen
+organisatorischen Regeln des FDShop-Projektes.
+
+Sie ersetzt
+
+FDShop_Governance_und_Dokumentation_V3
+
+vollständig.
+
+Für die Projektdokumentation gilt verbindlich
+
+FDShop_Dokumentationsstandard_V2.
+
+Für fachliche Regeln gelten die jeweils zuständigen Fachquellen.
+
+Für Aussagen über tatsächlich vorhandenen Code gilt
+FDShop_Codebestand.
+
+Für Aussagen über den tatsächlich erreichten funktionalen
+Umsetzungsgrad gilt FDShop_Implementierungsstand.
+
+Neue Versionen ersetzen ältere Versionen vollständig.
+
+=====================================================================
+ENDE DER QUELLE
+
+FDShop_Governance_und_Dokumentation_V4
+
+Status: VERBINDLICHE PROJEKTQUELLE
+Version: V4
+=====================================================================

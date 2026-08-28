@@ -1,0 +1,667 @@
+=====================================================================
+FDShop_Dokumentationsstandard_V2
+=====================================================================
+
+Status: VERBINDLICHE PROJEKTQUELLE
+Version: V2
+
+Diese Quelle ersetzt vollständig:
+
+FDShop_Dokumentationsstandard_V1
+
+=====================================================================
+1. ZWECK
+=====================================================================
+
+Diese Quelle definiert den verbindlichen Standard für die Erstellung,
+Pflege, Prüfung und Weiterentwicklung sämtlicher FDShop-Projektquellen.
+
+Ziel ist eine Projektdokumentation, die
+
+• eindeutig,
+• widerspruchsfrei,
+• nachweisbar,
+• wartbar,
+• versionssicher,
+• für Menschen verständlich
+• und für KI-Systeme möglichst interpretationsarm
+
+ist.
+
+Der Dokumentationsstandard beschreibt ausschließlich, WIE
+Projektquellen dokumentiert werden.
+
+Er entscheidet nicht, WAS fachlich oder technisch umgesetzt werden soll.
+
+=====================================================================
+2. GELTUNGSBEREICH
+=====================================================================
+
+Dieser Standard gilt verbindlich für
+
+• sämtliche bestehenden FDShop-Projektquellen,
+• jede neue Version einer Projektquelle,
+• Dokumentation / Quellenpflege,
+• Projektleitung und Projektleiter-KI bei Dokumentationsaufträgen,
+• Fach-KIs, soweit sie dokumentationsrelevante Ergebnisse liefern,
+• temporäre Umsetzungsrollen, soweit ihre Arbeit dokumentiert wird.
+
+Fachspezifische Inhalte werden weiterhin ausschließlich in der jeweils
+zuständigen Projektquelle geführt.
+
+=====================================================================
+3. GRUNDPRINZIPIEN
+=====================================================================
+
+=====================================================================
+3.1 NACHWEISBARKEIT
+=====================================================================
+
+Dokumentiert werden ausschließlich nachweisbare Inhalte.
+
+Zulässige Grundlagen sind insbesondere
+
+• offizielle Projektentscheidungen,
+• aktueller Projektcode,
+• aktuelle SQL-Struktur,
+• aktuelles Projekt-ZIP,
+• verbindliche Projektquellen,
+• nachweisbar umgesetzte Projektänderungen.
+
+Nicht zulässig sind
+
+• Vermutungen,
+• erfundene Funktionen,
+• erfundene Tabellen oder Felder,
+• hypothetische Implementierungen,
+• stillschweigend angenommene Architekturentscheidungen.
+
+=====================================================================
+3.2 IST-STAND UND BESCHLOSSENE ZIELREGEL
+=====================================================================
+
+Projektquellen müssen eindeutig unterscheiden zwischen
+
+• nachweisbarem technischem bzw. funktionalem Ist-Stand
+und
+• offiziell beschlossener, aber noch nicht implementierter Zielregel.
+
+Eine beschlossene Zielregel darf in der fachlich zuständigen Quelle
+verbindlich dokumentiert werden.
+
+Sie darf dadurch jedoch niemals als bereits implementierte Funktion
+erscheinen.
+
+Für den tatsächlichen Codebestand gilt die zuständige
+Codebestandsquelle.
+
+Für den tatsächlichen funktionalen Umsetzungsgrad gilt die zuständige
+Implementierungsstandsquelle.
+
+Diese Trennung ist ausdrücklich zu kennzeichnen, wenn andernfalls eine
+Verwechslung möglich wäre.
+
+=====================================================================
+3.3 SINGLE SOURCE OF TRUTH
+=====================================================================
+
+Jede Information besitzt genau eine führende Projektquelle.
+
+Eine Information wird vollständig genau einmal dokumentiert.
+
+Andere Quellen
+
+• verweisen auf die führende Quelle,
+• nennen nur den für ihren eigenen Verantwortungsbereich notwendigen
+  Zusammenhang,
+• duplizieren keine vollständigen Fremdinhalte.
+
+Widersprüchliche Parallelbeschreibungen sind zu vermeiden.
+
+=====================================================================
+3.4 REFACTORING VOR NEUER QUELLE
+=====================================================================
+
+Bestehende Projektquellen werden grundsätzlich weiterentwickelt.
+
+Eine neue eigenständige Projektquelle wird nur angelegt, wenn
+
+• ein neuer klar abgegrenzter Verantwortungsbereich entsteht
+und
+• die Information nicht sinnvoll in einer bestehenden führenden Quelle
+  gepflegt werden kann.
+
+Neue Quellen allein zur bequemeren Ablage oder wegen wachsender
+Dateigröße sind nicht automatisch gerechtfertigt.
+
+=====================================================================
+3.5 KEINE STILLEN PROJEKTENTSCHEIDUNGEN
+=====================================================================
+
+Dokumentationsarbeit darf keine neuen
+
+• Architekturentscheidungen,
+• Datenmodellentscheidungen,
+• Businessregeln,
+• Implementierungsentscheidungen,
+• Governance-Grundsätze
+
+erzeugen.
+
+Wird bei der Dokumentation ein solcher Entscheidungsbedarf erkannt,
+wird er als Einwand oder offener Prüfpunkt dokumentiert.
+
+Eine bereits offiziell getroffene Projektentscheidung darf dagegen
+ohne erneute Rückfrage korrekt in die zuständige Quelle eingearbeitet
+werden.
+
+=====================================================================
+4. VERANTWORTUNG DER PROJEKTQUELLEN
+=====================================================================
+
+Jede Projektquelle besitzt einen klar definierten Verantwortungsbereich.
+
+Beispiele:
+
+Governance
+→ Projektorganisation, Rollen, Zuständigkeiten, Freigaben
+
+Dokumentationsstandard
+→ Aufbau, Pflege und Qualität der Projektdokumentation
+
+Fachregeln
+→ fachliche Daten-, Formular- und Businessregeln
+
+Architektur
+→ technische Architektur und Installationsstruktur
+
+Codebestand
+→ tatsächlich vorhandener Code und technische Bestandteile
+
+Implementierungsstand
+→ tatsächlich erreichter funktionaler Umsetzungsgrad
+
+Admin-Listenstandard
+→ verbindliche Regeln für Administrationslisten
+
+Projektworkflow
+→ Arbeitsablauf und maßgebliche Arbeitsgrundlagen
+
+Eine Quelle darf notwendige Querverweise enthalten.
+
+Sie darf den Verantwortungsbereich einer anderen Quelle jedoch nicht
+vollständig erneut dokumentieren.
+
+=====================================================================
+5. DOKUMENTATIONSABLAUF
+=====================================================================
+
+Bei jeder Aktualisierung ist grundsätzlich folgende Reihenfolge
+einzuhalten:
+
+1. Bestehende Quelle vollständig analysieren.
+
+2. Zuständigen Verantwortungsbereich bestimmen.
+
+3. Maßgebliche aktuelle Grundlagen prüfen.
+
+4. Nachweisbaren Ist-Stand und bereits beschlossene Zielregeln
+   voneinander trennen.
+
+5. Veraltete oder nachweislich falsche Inhalte entfernen bzw.
+   korrigieren.
+
+6. Neue nachweisbare Inhalte ergänzen.
+
+7. Doppelte Informationen innerhalb der Quelle zusammenführen.
+
+8. Fremdverantwortungen durch Querverweise statt Vollwiederholungen
+   abgrenzen.
+
+9. Kapitel logisch strukturieren.
+
+10. Einwände und offene Prüfpunkte kennzeichnen.
+
+11. Versionsnummer erhöhen.
+
+12. Vollständigkeits-, Konsistenz- und Widerspruchsprüfung durchführen.
+
+13. Vollständige neue Quelle bereitstellen.
+
+=====================================================================
+6. KAPITELSTANDARD
+=====================================================================
+
+Fachkapitel sollen, soweit für den jeweiligen Inhalt sinnvoll,
+folgendem Aufbau folgen:
+
+1. Zweck
+
+2. Verantwortung
+
+3. Führende Quelle / führende Datenquelle
+
+4. Wichtige Inhalte oder Feldgruppen
+
+5. Nicht Bestandteil
+
+6. Projektregeln
+
+7. Hinweise / Abgrenzungen
+
+Nicht jedes Kapitel muss künstlich sämtliche Unterpunkte enthalten.
+
+Der Aufbau dient der Eindeutigkeit und darf an den tatsächlichen Inhalt
+angepasst werden.
+
+Wichtiger als formale Gleichförmigkeit ist eine klare fachliche
+Abgrenzung.
+
+=====================================================================
+7. SCHREIB- UND STRUKTURREGELN
+=====================================================================
+
+=====================================================================
+7.1 EINDEUTIGKEIT
+=====================================================================
+
+Aussagen müssen so formuliert sein, dass Menschen und KI-Systeme
+möglichst dieselbe Bedeutung daraus ableiten.
+
+Unklare Formulierungen wie
+
+• normalerweise,
+• vermutlich,
+• wahrscheinlich,
+• gegebenenfalls vorhanden
+
+sind bei verbindlichen Regeln zu vermeiden, sofern die Unsicherheit
+nicht selbst der dokumentierte Sachverhalt ist.
+
+=====================================================================
+7.2 VERBINDLICHKEIT KENNZEICHNEN
+=====================================================================
+
+Verbindliche Regeln müssen eindeutig als solche erkennbar sein.
+
+Noch nicht geklärte Sachverhalte dürfen nicht wie verbindliche Regeln
+formuliert werden.
+
+Geeignete Kennzeichnungen sind insbesondere
+
+• PROJEKTREGEL
+• WICHTIG
+• PRIORITÄT
+• HINWEIS
+• EINWAND
+• OFFENER PRÜFPUNKT
+
+Die Kennzeichnung muss der tatsächlichen Bedeutung entsprechen.
+
+=====================================================================
+7.3 BEGRIFFE KONSISTENT VERWENDEN
+=====================================================================
+
+Projektweit festgelegte Begriffe, Tabellen-, Klassen-, Feld- und
+Dateinamen werden exakt und konsistent verwendet.
+
+Veraltete Begriffe dürfen nicht parallel als aktuelle Bezeichnung
+weitergeführt werden.
+
+Historische Bezeichnungen dürfen im Änderungsprotokoll genannt werden,
+wenn dies für die Nachvollziehbarkeit erforderlich ist.
+
+=====================================================================
+7.4 KEINE UNNÖTIGE DOPPELUNG
+=====================================================================
+
+Wiederholungen innerhalb derselben Quelle sind nur zulässig, wenn sie
+für eine kurze Zusammenfassung, einen Schnellcheck oder eine zwingende
+Abgrenzung erforderlich sind.
+
+Dabei darf keine zweite konkurrierende Vollbeschreibung entstehen.
+
+=====================================================================
+7.5 INFORMATIONSDICHTE
+=====================================================================
+
+Die Informationsdichte einer neuen Version darf nicht geringer sein als
+die der ersetzten Version, sofern Inhalte weiterhin gültig und für den
+Verantwortungsbereich relevant sind.
+
+Veraltete, falsche oder fachfremde Inhalte dürfen und sollen entfernt
+werden.
+
+"Informationsdichte darf nicht sinken" bedeutet ausdrücklich nicht,
+dass überholte Informationen aus Vollständigkeitsgründen erhalten
+werden müssen.
+
+=====================================================================
+8. QUELLEN UND NACHWEISE
+=====================================================================
+
+Bei einer Aktualisierung ist zwischen folgenden Arten von Grundlagen zu
+unterscheiden:
+
+OFFIZIELLE PROJEKTENTSCHEIDUNG
+
+→ darf als verbindliche Regel in die zuständige Quelle übernommen
+  werden.
+
+TECHNISCHER IST-STAND
+
+→ wird aus aktuellem Code, SQL oder dem maßgeblichen Projektstand
+  nachgewiesen.
+
+BESTEHENDE VERBINDLICHE PROJEKTQUELLE
+
+→ darf als Grundlage verwendet werden, soweit sie für ihren
+  Verantwortungsbereich zuständig und nicht durch aktuellere
+  Nachweise überholt ist.
+
+ÄLTERE DOKUMENTATION
+
+→ dient nur als historische oder ergänzende Prüfgrundlage und besitzt
+  keine höhere Priorität als aktueller nachweisbarer Projektstand.
+
+Bei Widersprüchen gilt die in der Governance definierte
+Quellenhierarchie.
+
+=====================================================================
+9. VERSIONIERUNG
+=====================================================================
+
+Neue Versionen ersetzen ältere Versionen vollständig.
+
+Versionsschema:
+
+V1
+V2
+V3
+...
+
+Nicht zulässig sind parallele Varianten wie
+
+_neu
+_final
+_fixed
+_update
+_korrigiert
+
+als dauerhafte Projektquellen.
+
+Solche Bezeichnungen dürfen ausschließlich als kurzfristige
+Übergabedatei verwendet werden, wenn der Empfänger sie anschließend
+unter dem verbindlichen Versionsnamen einsetzt.
+
+Die eigentliche Projektquelle besitzt danach ausschließlich ihren
+offiziellen Versionsnamen.
+
+Eine Versionsnummer wird erhöht, wenn
+
+• sich fachlicher Inhalt ändert,
+• neue nachweisbare Inhalte hinzukommen,
+• veraltete Inhalte entfernt werden,
+• eine relevante Strukturverbesserung erfolgt.
+
+Reine Dateitransporte ohne Inhaltsänderung begründen keine neue Version.
+
+=====================================================================
+10. ÄNDERUNGSPROTOKOLL
+=====================================================================
+
+Jede weiterentwickelte Projektquelle soll ein Änderungsprotokoll
+enthalten.
+
+Das Änderungsprotokoll beschreibt
+
+• welche Vorgängerversion ersetzt wird,
+• welche wesentlichen Änderungen vorgenommen wurden,
+• welche wichtigen Präzisierungen erfolgt sind.
+
+Das Änderungsprotokoll ist keine zweite vollständige Beschreibung des
+aktuellen Inhalts.
+
+Es dient ausschließlich der Nachvollziehbarkeit der Entwicklung.
+
+=====================================================================
+11. EINWÄNDE UND OFFENE PRÜFPUNKTE
+=====================================================================
+
+=====================================================================
+11.1 EINWAND
+=====================================================================
+
+Ein Einwand wird verwendet, wenn während der Bearbeitung
+
+• ein Widerspruch,
+• eine Verbesserungschance,
+• ein Entscheidungsbedarf
+• oder eine mögliche strukturelle Schwäche
+
+erkannt wird, deren Änderung nicht bereits verbindlich beschlossen ist.
+
+Ein Einwand enthält möglichst
+
+• Thema / Problem,
+• Begründung,
+• mögliche Alternative oder nächsten Prüfschritt.
+
+Ein Einwand verändert den Projektstand nicht.
+
+=====================================================================
+11.2 OFFENER PRÜFPUNKT
+=====================================================================
+
+Ein offener Prüfpunkt wird verwendet, wenn eine Aussage mit den
+verfügbaren Grundlagen nicht sicher verifiziert werden kann.
+
+Nicht verifizierbare Details werden nicht erfunden.
+
+Der Prüfpunkt beschreibt möglichst konkret,
+
+• was unklar ist,
+• welche Grundlage zur Klärung benötigt wird,
+• welche Auswirkung die Unklarheit besitzt.
+
+=====================================================================
+11.3 BEREITS BESCHLOSSENE REGEL IST KEIN EINWAND
+=====================================================================
+
+Eine bereits offiziell getroffene Projektentscheidung wird nicht allein
+deshalb als Einwand behandelt, weil ihre technische Umsetzung noch
+aussteht.
+
+In diesem Fall gilt:
+
+• Die zuständige Fachquelle dokumentiert die beschlossene Zielregel.
+• Codebestand und Implementierungsstand dokumentieren weiterhin den
+  tatsächlichen Ist-Stand.
+• Die noch offene Umsetzung wird als Implementierungsbedarf bzw.
+  Prüfpunkt gekennzeichnet, soweit dies für die Quelle relevant ist.
+
+=====================================================================
+12. QUALITÄTSSICHERUNG
+=====================================================================
+
+Vor Freigabe jeder neuen oder aktualisierten Projektquelle ist
+mindestens zu prüfen:
+
+□ Ist der Verantwortungsbereich eindeutig?
+
+□ Ist die Quelle vollständig?
+
+□ Sind alle Aussagen nachweisbar oder ausdrücklich als beschlossene
+   Zielregel gekennzeichnet?
+
+□ Werden Ist-Stand und Zielregel sauber getrennt?
+
+□ Wurden keine Funktionen, Felder oder Regeln erfunden?
+
+□ Widerspricht die Quelle keiner höherrangigen Grundlage?
+
+□ Wurden veraltete Inhalte entfernt?
+
+□ Wurden gültige Inhalte der Vorgängerversion vollständig erhalten
+   oder nachvollziehbar weiterentwickelt?
+
+□ Sind doppelte Vollbeschreibungen vermieden?
+
+□ Wird Single Source of Truth eingehalten?
+
+□ Sind Querverweise fachlich korrekt?
+
+□ Sind Begriffe und Namen konsistent?
+
+□ Sind Einwände und offene Prüfpunkte klar gekennzeichnet?
+
+□ Ist das Änderungsprotokoll aktuell?
+
+□ Ist die Versionsnummer korrekt?
+
+□ Ist die Quelle für Menschen und KI-Systeme eindeutig verständlich?
+
+=====================================================================
+13. BEREITSTELLUNGSSTANDARD
+=====================================================================
+
+Aktualisierte FDShop-Projektquellen werden bevorzugt als vollständige
+TXT-Datei bereitgestellt.
+
+Die Datei muss die vollständige neue Version enthalten und darf nicht
+nur aus einem Patch, Diff oder einzelnen Ersatzblöcken bestehen.
+
+Ist die vollständige TXT-Bereitstellung aufgrund technischer Grenzen
+nicht zuverlässig möglich, wird ohne unnötige Zwischendiskussion auf
+eine vollständige Blockausgabe umgestellt.
+
+Dabei gilt:
+
+• direkt mit Block 1 beginnen,
+• alle Blöcke eindeutig nummerieren,
+• keine inhaltlichen Teile auslassen,
+• am Ende klar kennzeichnen, dass die Quelle vollständig ausgegeben
+  wurde.
+
+Diese Bereitstellungsregel betrifft nur die Übergabeform.
+
+Sie verändert nicht die fachliche Versionierung der Projektquelle.
+
+=====================================================================
+14. ROLLE DER DOKUMENTATION / QUELLENPFLEGE
+=====================================================================
+
+Dokumentation / Quellenpflege
+
+• analysiert,
+• prüft,
+• strukturiert,
+• refaktoriert,
+• aktualisiert,
+• vereinheitlicht,
+• versioniert
+
+bestehende Projektquellen.
+
+Sie darf bereits getroffene Projektentscheidungen korrekt und
+selbstständig in die zuständigen Quellen einarbeiten.
+
+Sie trifft jedoch keine neuen Grundsatzentscheidungen.
+
+Bei einem nicht entschiedenen Grundsatzthema erfolgt ein Einwand oder
+offener Prüfpunkt.
+
+=====================================================================
+15. ABGRENZUNG ZU ANDEREN PROJEKTQUELLEN
+=====================================================================
+
+Dieser Dokumentationsstandard beschreibt ausschließlich Regeln für die
+Projektdokumentation.
+
+Nicht Bestandteil sind insbesondere
+
+• technische Architektur,
+• Businesslogik,
+• verbindliches Datenmodell,
+• konkrete SQL-Felddefinitionen,
+• Implementierungsstatus,
+• Codebestand,
+• Listenarchitektur,
+• Projektworkflow,
+• fachliche Löschregeln.
+
+Hierfür gelten die jeweils zuständigen Projektquellen.
+
+=====================================================================
+16. ÄNDERUNGSPROTOKOLL
+=====================================================================
+
+V1
+
+Erste verbindliche Fassung.
+
+Enthielt insbesondere
+
+• Grundprinzipien,
+• Dokumentationsablauf,
+• Qualitätsregeln,
+• Kapitelstandard,
+• Single Source of Truth,
+• Versionierung,
+• Rolle der Dokumentations-KI.
+
+---------------------------------------------------------------------
+
+V2
+
+Vollständiges Refactoring und Präzisierung des Standards.
+
+Wesentliche Änderungen:
+
+• klare Trennung zwischen nachweisbarem Ist-Stand und bereits
+  beschlossener, noch nicht implementierter Zielregel ergänzt
+• Verantwortungsbereiche der Projektquellen präzisiert
+• Nachweisarten und Quellenhierarchie sauber abgegrenzt
+• Kapitelstandard flexibilisiert, ohne die Strukturvorgabe aufzugeben
+• Schreib- und Eindeutigkeitsregeln für Menschen und KI-Systeme ergänzt
+• Bedeutung der Informationsdichte präzisiert
+• Versionsregel für kurzfristige Übergabedateien mit Zusätzen wie
+  "_korrigiert" geklärt
+• Änderungsprotokoll verbindlicher strukturiert
+• Einwand und offener Prüfpunkt voneinander abgegrenzt
+• bereits beschlossene, aber noch nicht implementierte Regeln von
+  echten Einwänden getrennt
+• vollständige Qualitätscheckliste ergänzt
+• bevorzugte vollständige TXT-Bereitstellung und automatischer
+  Fallback auf Blockausgabe festgeschrieben
+• Rolle der Dokumentation / Quellenpflege präzisiert
+• Abgrenzung zu anderen Projektquellen erweitert
+
+=====================================================================
+17. SCHLUSSBESTIMMUNGEN
+=====================================================================
+
+FDShop_Dokumentationsstandard_V2 definiert den verbindlichen Standard
+für die Erstellung, Pflege, Prüfung und Weiterentwicklung sämtlicher
+FDShop-Projektquellen.
+
+Er ersetzt
+
+FDShop_Dokumentationsstandard_V1
+
+vollständig.
+
+Neue Versionen ersetzen ältere Versionen vollständig.
+
+Die fachlichen und technischen Inhalte des FDShop-Projektes werden
+weiterhin ausschließlich in den jeweils zuständigen Projektquellen
+geführt.
+
+=====================================================================
+ENDE DER QUELLE
+
+FDShop_Dokumentationsstandard_V2
+
+Status: VERBINDLICHE PROJEKTQUELLE
+Version: V2
+=====================================================================
