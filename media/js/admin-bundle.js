@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    function formatPrice(value) {
+    function formatPrice(value, currency) {
         if (value === null || value === undefined || value === '') {
             return '—';
         }
@@ -12,10 +12,21 @@
             return '—';
         }
 
-        return number.toLocaleString('de-DE', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        }) + ' €';
+        var currencyCode = String(currency || 'EUR').trim().toUpperCase();
+
+        try {
+            return number.toLocaleString('de-DE', {
+                style: 'currency',
+                currency: currencyCode,
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        } catch (error) {
+            return number.toLocaleString('de-DE', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }) + ' ' + currencyCode;
+        }
     }
 
     function getJsonData(response) {
@@ -26,15 +37,157 @@
         return response || null;
     }
 
+    function appendProductRow(productTable, product) {
+        var tbody = productTable.querySelector('tbody');
+        var row = document.createElement('tr');
+        var nameCell = document.createElement('td');
+        var skuCell = document.createElement('td');
+        var priceCell = document.createElement('td');
+        var actionCell = document.createElement('td');
+        var hiddenInput = document.createElement('input');
+        var removeButton = document.createElement('button');
+
+        row.dataset.productId = String(product.product_id);
+        nameCell.appendChild(document.createTextNode(String(product.product_name || '')));
+
+        hiddenInput.type = 'hidden';
+        hiddenInput.name = 'jform[product_ids][]';
+        hiddenInput.value = String(product.product_id);
+        nameCell.appendChild(hiddenInput);
+
+        skuCell.textContent = String(product.sku || '');
+        priceCell.textContent = formatPrice(product.current_sale_price, product.currency);
+
+        actionCell.className = 'text-center';
+        removeButton.type = 'button';
+        removeButton.className = 'btn btn-sm btn-danger bundle-product-remove';
+        removeButton.textContent = 'Entfernen';
+        actionCell.appendChild(removeButton);
+
+        row.appendChild(nameCell);
+        row.appendChild(skuCell);
+        row.appendChild(priceCell);
+        row.appendChild(actionCell);
+        tbody.appendChild(row);
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
         var productBox = document.getElementById('fdshop-bundle-products');
         var skuInput = document.getElementById('bundle-product-sku');
         var addProductButton = document.getElementById('bundle-product-add');
         var productTable = document.getElementById('bundle-product-table');
+        var productSuggestions = document.getElementById('bundle-product-suggestions');
         var discountTable = document.getElementById('bundle-discount-table');
         var addDiscountButton = document.getElementById('bundle-discount-add');
 
         if (productBox && skuInput && addProductButton && productTable) {
+            var searchTimer = null;
+            var searchRequest = null;
+
+            function clearSuggestions() {
+                if (!productSuggestions) {
+                    return;
+                }
+
+                productSuggestions.replaceChildren();
+                productSuggestions.classList.add('d-none');
+                skuInput.setAttribute('aria-expanded', 'false');
+            }
+
+            function renderSuggestions(products) {
+                clearSuggestions();
+
+                if (!productSuggestions || !Array.isArray(products) || products.length === 0) {
+                    return;
+                }
+
+                products.forEach(function (product) {
+                    var option = document.createElement('button');
+                    var label = String(product.sku || '') + ' - ' + String(product.product_name || '');
+
+                    if (Number(product.is_active) === 0) {
+                        label += ' (inaktiv)';
+                    }
+
+                    option.type = 'button';
+                    option.className = 'list-group-item list-group-item-action text-start';
+                    option.setAttribute('role', 'option');
+                    option.dataset.productId = String(product.product_id || '');
+                    option.dataset.sku = String(product.sku || '');
+                    option.textContent = label;
+
+                    option.addEventListener('click', function () {
+                        skuInput.value = option.dataset.sku;
+                        skuInput.dataset.selectedProductId = option.dataset.productId;
+                        clearSuggestions();
+                        skuInput.focus();
+                    });
+
+                    productSuggestions.appendChild(option);
+                });
+
+                productSuggestions.classList.remove('d-none');
+                skuInput.setAttribute('aria-expanded', 'true');
+            }
+
+            skuInput.addEventListener('input', function () {
+                var prefix = skuInput.value.trim();
+                var searchUrl = productBox.dataset.searchUrl || '';
+                var token = productBox.dataset.token || '';
+
+                delete skuInput.dataset.selectedProductId;
+                window.clearTimeout(searchTimer);
+
+                if (searchRequest) {
+                    searchRequest.abort();
+                    searchRequest = null;
+                }
+
+                if (prefix.length < 2 || searchUrl === '') {
+                    clearSuggestions();
+                    return;
+                }
+
+                searchTimer = window.setTimeout(function () {
+                    var url = searchUrl + '&q=' + encodeURIComponent(prefix);
+                    searchRequest = new AbortController();
+
+                    if (token !== '') {
+                        url += '&' + encodeURIComponent(token) + '=1';
+                    }
+
+                    fetch(url, {
+                        credentials: 'same-origin',
+                        headers: {
+                            'Accept': 'application/json'
+                        },
+                        signal: searchRequest.signal
+                    })
+                        .then(function (result) {
+                            return result.json();
+                        })
+                        .then(function (response) {
+                            if (response.success === false) {
+                                clearSuggestions();
+                                return;
+                            }
+
+                            renderSuggestions(getJsonData(response) || []);
+                        })
+                        .catch(function (error) {
+                            if (error.name !== 'AbortError') {
+                                clearSuggestions();
+                            }
+                        });
+                }, 250);
+            });
+
+            document.addEventListener('click', function (event) {
+                if (!productBox.contains(event.target)) {
+                    clearSuggestions();
+                }
+            });
+
             addProductButton.addEventListener('click', function () {
                 var sku = skuInput.value.trim();
 
@@ -77,21 +230,10 @@
                             return;
                         }
 
-                        var tbody = productTable.querySelector('tbody');
-                        var row = document.createElement('tr');
-                        row.dataset.productId = String(product.product_id);
-
-                        row.innerHTML = ''
-                            + '<td>'
-                            + String(product.product_name || '')
-                            + '<input type="hidden" name="jform[product_ids][]" value="' + String(product.product_id) + '">'
-                            + '</td>'
-                            + '<td>' + String(product.sku || '') + '</td>'
-                            + '<td>' + formatPrice(product.price_gross) + '</td>'
-                            + '<td class="text-center"><button type="button" class="btn btn-sm btn-danger bundle-product-remove">Entfernen</button></td>';
-
-                        tbody.appendChild(row);
+                        appendProductRow(productTable, product);
                         skuInput.value = '';
+                        delete skuInput.dataset.selectedProductId;
+                        clearSuggestions();
                     })
                     .catch(function () {
                         window.alert('Produktlookup konnte nicht ausgeführt werden.');

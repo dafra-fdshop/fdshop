@@ -11,4 +11,6 @@ defined('_JEXEC') or die;
 interface CategoryServiceInterface
 {
     public function saveCategory(array $data): int;
+
+    public function deleteCategories(array $categoryIds): bool;
 }

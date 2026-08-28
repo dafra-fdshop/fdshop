@@ -67,8 +67,8 @@ $listDirn  = $this->state->get('list.direction');
                     <?php foreach ($this->items as $i => $item) : ?>
                         <?php
                         $editLink   = Route::_('index.php?option=com_fdshop&task=product.edit&id=' . (int) $item->id);
-                        $canEdit    = $user->authorise('core.edit', 'com_fdshop');
-                        $canChange  = $user->authorise('core.edit.state', 'com_fdshop');
+                        $canEdit    = !$this->isTrash && $user->authorise('core.edit', 'com_fdshop');
+                        $canChange  = !$this->isTrash && $user->authorise('core.edit.state', 'com_fdshop');
                         $imageSrc   = !empty($item->image_path_mobile) ? Uri::root() . ltrim((string) $item->image_path_mobile, '/') : '';
                         $categories = trim((string) ($item->category_names ?? ''));
                         $price      = number_format((float) ($item->sale_price ?? 0), 2, ',', '.');

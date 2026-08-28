@@ -44,7 +44,8 @@ return new class () implements ServiceProviderInterface {
             CategoryServiceInterface::class,
             function (Container $container): CategoryServiceInterface {
                 return new CategoryService(
-                    $container->get(MVCFactoryInterface::class)
+                    $container->get(MVCFactoryInterface::class),
+                    $container->get(DatabaseInterface::class)
                 );
             }
         );

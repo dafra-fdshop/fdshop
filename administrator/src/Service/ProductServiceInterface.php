@@ -33,4 +33,10 @@ interface ProductServiceInterface
     public function getAssignedBuyerGroupIds(int $productId): array;
 
     public function getProductById(int $productId): ?object;
+
+    public function trashProducts(array $productIds): bool;
+
+    public function restoreProducts(array $productIds): bool;
+
+    public function permanentlyDeleteProducts(array $productIds): bool;
 }

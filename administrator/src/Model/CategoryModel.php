@@ -8,10 +8,10 @@ namespace FDShop\Component\FDShop\Administrator\Model;
 
 defined('_JEXEC') or die;
 
-use RuntimeException;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Form\Form;
 use Joomla\CMS\MVC\Model\AdminModel;
+use FDShop\Component\FDShop\Administrator\Service\CategoryServiceInterface;
 
 class CategoryModel extends AdminModel
 {
@@ -52,38 +52,28 @@ class CategoryModel extends AdminModel
         return $data;
     }
 
-    public function save($data): bool
+    public function delete(&$pks): bool
     {
-        $table = $this->getTable();
-
-        if (!$table) {
-            throw new RuntimeException('CategoryTable konnte nicht geladen werden.');
-        }
-
-        if (!empty($data['id'])) {
-            $table->load((int) $data['id']);
-        }
-
-        if (!$table->bind($data)) {
-            $this->setError($table->getError());
+        if (!Factory::getApplication()->getIdentity()->authorise('core.delete', 'com_fdshop')) {
+            $this->setError('Sie sind nicht berechtigt, Kategorien zu löschen.');
 
             return false;
         }
 
-        if (!$table->check()) {
-            $this->setError($table->getError());
+        try {
+            return $this->getCategoryService()->deleteCategories((array) $pks);
+        } catch (\Throwable $e) {
+            $this->setError($e->getMessage());
 
             return false;
         }
-
-        if (!$table->store()) {
-            $this->setError($table->getError());
-
-            return false;
-        }
-
-        $this->setState($this->getName() . '.id', (int) $table->id);
-
-        return true;
     }
+
+    private function getCategoryService(): CategoryServiceInterface
+    {
+        $component = Factory::getApplication()->bootComponent('com_fdshop');
+
+        return $component->getContainer()->get(CategoryServiceInterface::class);
+    }
+
 }

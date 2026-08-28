@@ -14,6 +14,7 @@ HTMLHelper::_('script', 'com_fdshop/admin-bundle.js', ['version' => 'auto', 'rel
 
 $token = Session::getFormToken();
 $lookupUrl = Route::_('index.php?option=com_fdshop&task=bundle.lookupProduct&format=json', false);
+$searchUrl = Route::_('index.php?option=com_fdshop&task=bundle.searchProducts&format=json', false);
 $products = $this->bundleProducts ?? [];
 $discountRules = $this->discountRules ?? [];
 ?>
@@ -39,13 +40,33 @@ $discountRules = $this->discountRules ?? [];
     <?php echo HTMLHelper::_('uitab.endTab'); ?>
 
     <?php echo HTMLHelper::_('uitab.addTab', 'fdshopBundleTabs', 'products', 'Produkte'); ?>
-        <div class="card mb-3" id="fdshop-bundle-products" data-lookup-url="<?php echo $this->escape($lookupUrl); ?>" data-token="<?php echo $this->escape($token); ?>">
+        <div
+            class="card mb-3"
+            id="fdshop-bundle-products"
+            data-lookup-url="<?php echo $this->escape($lookupUrl); ?>"
+            data-search-url="<?php echo $this->escape($searchUrl); ?>"
+            data-token="<?php echo $this->escape($token); ?>"
+        >
             <div class="card-header">Produkte</div>
             <div class="card-body">
                 <div class="row g-2 align-items-end mb-3">
-                    <div class="col-12 col-md-6 col-xl-4">
+                    <div class="col-12 col-md-6 col-xl-4 position-relative">
                         <label for="bundle-product-sku" class="form-label">SKU / Artikelnummer</label>
-                        <input type="text" id="bundle-product-sku" class="form-control" autocomplete="off">
+                        <input
+                            type="text"
+                            id="bundle-product-sku"
+                            class="form-control"
+                            autocomplete="off"
+                            aria-autocomplete="list"
+                            aria-controls="bundle-product-suggestions"
+                            aria-expanded="false"
+                        >
+                        <div
+                            id="bundle-product-suggestions"
+                            class="list-group position-absolute start-0 end-0 shadow d-none"
+                            role="listbox"
+                            style="z-index: 1050;"
+                        ></div>
                     </div>
                     <div class="col-12 col-md-auto">
                         <button type="button" class="btn btn-secondary" id="bundle-product-add">
@@ -72,7 +93,13 @@ $discountRules = $this->discountRules ?? [];
                                         <input type="hidden" name="jform[product_ids][]" value="<?php echo (int) $product->product_id; ?>">
                                     </td>
                                     <td><?php echo $this->escape((string) ($product->sku ?? '')); ?></td>
-                                    <td>—</td>
+                                    <td>
+                                        <?php
+                                        $price = number_format((float) ($product->current_sale_price ?? 0), 2, ',', '.');
+                                        $currency = trim((string) ($product->currency ?? 'EUR'));
+                                        echo $this->escape($price . ($currency !== '' ? ' ' . $currency : ''));
+                                        ?>
+                                    </td>
                                     <td class="text-center">
                                         <button type="button" class="btn btn-sm btn-danger bundle-product-remove">Entfernen</button>
                                     </td>

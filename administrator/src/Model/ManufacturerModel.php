@@ -12,6 +12,7 @@ use RuntimeException;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Form\Form;
 use Joomla\CMS\MVC\Model\AdminModel;
+use FDShop\Component\FDShop\Administrator\Service\ManufacturerServiceInterface;
 
 class ManufacturerModel extends AdminModel
 {
@@ -85,5 +86,29 @@ class ManufacturerModel extends AdminModel
         $this->setState($this->getName() . '.id', (int) $table->id);
 
         return true;
+    }
+
+    public function delete(&$pks): bool
+    {
+        if (!Factory::getApplication()->getIdentity()->authorise('core.delete', 'com_fdshop')) {
+            $this->setError('Sie sind nicht berechtigt, Hersteller zu löschen.');
+
+            return false;
+        }
+
+        try {
+            return $this->getManufacturerService()->deleteManufacturers((array) $pks);
+        } catch (\Throwable $e) {
+            $this->setError($e->getMessage());
+
+            return false;
+        }
+    }
+
+    private function getManufacturerService(): ManufacturerServiceInterface
+    {
+        $component = Factory::getApplication()->bootComponent('com_fdshop');
+
+        return $component->getContainer()->get(ManufacturerServiceInterface::class);
     }
 }

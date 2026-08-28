@@ -98,6 +98,47 @@ class ProductModel extends AdminModel
         }
     }
 
+    public function delete(&$pks): bool
+    {
+        return $this->runDeleteAction(
+            static fn (ProductServiceInterface $service, array $ids): bool => $service->trashProducts($ids),
+            (array) $pks
+        );
+    }
+
+    public function restore(array $pks): bool
+    {
+        return $this->runDeleteAction(
+            static fn (ProductServiceInterface $service, array $ids): bool => $service->restoreProducts($ids),
+            $pks
+        );
+    }
+
+    public function deletePermanently(array $pks): bool
+    {
+        return $this->runDeleteAction(
+            static fn (ProductServiceInterface $service, array $ids): bool => $service->permanentlyDeleteProducts($ids),
+            $pks
+        );
+    }
+
+    private function runDeleteAction(callable $action, array $pks): bool
+    {
+        if (!Factory::getApplication()->getIdentity()->authorise('core.delete', 'com_fdshop')) {
+            $this->setError('Sie sind nicht berechtigt, Produkte zu löschen oder wiederherzustellen.');
+
+            return false;
+        }
+
+        try {
+            return $action($this->getProductService(), $pks);
+        } catch (\Throwable $e) {
+            $this->setError($e->getMessage());
+
+            return false;
+        }
+    }
+
     private function normalizeIds($ids): array
     {
         if (!is_array($ids)) {

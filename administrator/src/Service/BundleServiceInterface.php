@@ -24,7 +24,11 @@ interface BundleServiceInterface
 
     public function getBundleById(int $bundleId): ?object;
 
+    public function getBundleProducts(int $bundleId): array;
+
     public function getBestDiscountRule(int $bundleId, float $quantity): ?object;
 
     public function findProductBySku(string $sku): ?object;
+
+    public function searchProductsBySkuPrefix(string $skuPrefix, int $limit = 15): array;
 }

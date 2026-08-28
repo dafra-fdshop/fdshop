@@ -7,10 +7,11 @@
 defined('_JEXEC') or die;
 
 use Joomla\CMS\HTML\HTMLHelper;
+use Joomla\CMS\Router\Route;
 use Joomla\CMS\Uri\Uri;
 ?>
 
-<form action="index.php?option=com_fdshop&view=product&layout=edit" method="post" name="adminForm" id="adminForm" enctype="multipart/form-data">
+<form action="<?php echo Route::_('index.php?option=com_fdshop&view=product&layout=edit&id=' . (int) ($this->item->id ?? 0)); ?>" method="post" name="adminForm" id="adminForm" enctype="multipart/form-data">
     <?php echo HTMLHelper::_('uitab.startTabSet', 'fdshopProductTabs', ['active' => 'general']); ?>
 
     <?php echo HTMLHelper::_('uitab.addTab', 'fdshopProductTabs', 'general', 'Allgemein'); ?>

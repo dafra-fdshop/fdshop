@@ -9,6 +9,7 @@ namespace FDShop\Component\FDShop\Administrator\Table;
 defined('_JEXEC') or die;
 
 use Joomla\CMS\Factory;
+use Joomla\CMS\Filter\OutputFilter;
 use Joomla\CMS\Table\Table;
 use Joomla\Database\DatabaseDriver;
 
@@ -40,6 +41,7 @@ class ProductTable extends Table
             'max_order_qty',
             'step_order_qty',
             'is_active',
+            'is_deleted',
             'unit_quantity',
 			'in_stock',
             'nem',
@@ -86,6 +88,17 @@ class ProductTable extends Table
         }
 
         $this->alias = trim((string) ($this->alias ?? ''));
+
+        if ($this->alias === '') {
+            $this->alias = OutputFilter::stringURLSafe($this->product_name);
+        } else {
+            $this->alias = OutputFilter::stringURLSafe($this->alias);
+        }
+
+        if ($this->alias === '') {
+            $this->alias = Factory::getDate()->format('Y-m-d-H-i-s');
+        }
+
         $this->short_description = (string) ($this->short_description ?? '');
         $this->description = (string) ($this->description ?? '');
 
@@ -118,6 +131,10 @@ class ProductTable extends Table
 
         if (!isset($this->is_active) || $this->is_active === '') {
             $this->is_active = 1;
+        }
+
+        if (!isset($this->is_deleted) || $this->is_deleted === '') {
+            $this->is_deleted = 0;
         }
 
         if (!isset($this->in_stock) || trim((string) $this->in_stock) === '') {

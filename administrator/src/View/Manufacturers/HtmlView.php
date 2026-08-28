@@ -42,6 +42,10 @@ class HtmlView extends BaseHtmlView
         ToolbarHelper::title('FDShop - Hersteller');
         ToolbarHelper::addNew('manufacturer.add');
 
+        if ($this->getCurrentUser()->authorise('core.delete', 'com_fdshop')) {
+            ToolbarHelper::deleteList('JGLOBAL_CONFIRM_DELETE', 'manufacturers.delete', 'JTOOLBAR_DELETE');
+        }
+
         parent::display($tpl);
     }
 }

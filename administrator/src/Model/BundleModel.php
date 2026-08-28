@@ -77,39 +77,7 @@ class BundleModel extends AdminModel
             return [];
         }
 
-        $db    = $this->getDatabase();
-        $query = $db->getQuery(true);
-
-        $query->select([
-            $db->quoteName('bi.id'),
-            $db->quoteName('bi.bundle_id'),
-            $db->quoteName('bi.product_id'),
-            $db->quoteName('bi.ordering'),
-            $db->quoteName('p.product_name'),
-            $db->quoteName('p.alias'),
-            $db->quoteName('p.is_active'),
-            $db->quoteName('p.in_stock'),
-            $db->quoteName('d.sku'),
-            $db->quoteName('d.gtin'),
-        ])
-            ->from($db->quoteName('#__fdshop_bundle_items', 'bi'))
-            ->join(
-                'INNER',
-                $db->quoteName('#__fdshop_products', 'p')
-                . ' ON ' . $db->quoteName('p.id') . ' = ' . $db->quoteName('bi.product_id')
-            )
-            ->join(
-                'LEFT',
-                $db->quoteName('#__fdshop_products_details', 'd')
-                . ' ON ' . $db->quoteName('d.product_id') . ' = ' . $db->quoteName('p.id')
-            )
-            ->where($db->quoteName('bi.bundle_id') . ' = ' . (int) $bundleId)
-            ->order($db->quoteName('bi.ordering') . ' ASC')
-            ->order($db->quoteName('bi.id') . ' ASC');
-
-        $db->setQuery($query);
-
-        return $db->loadObjectList() ?: [];
+        return $this->getBundleService()->getBundleProducts($bundleId);
     }
 
     public function getDiscountRules($pk = null): array
