@@ -11,6 +11,7 @@ defined('_JEXEC') or die;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Form\Form;
 use Joomla\CMS\MVC\Model\AdminModel;
+use FDShop\Component\FDShop\Administrator\Service\CategoryServiceInterface;
 
 class CategoryModel extends AdminModel
 {
@@ -49,6 +50,30 @@ class CategoryModel extends AdminModel
         }
 
         return $data;
+    }
+
+    public function delete(&$pks): bool
+    {
+        if (!Factory::getApplication()->getIdentity()->authorise('core.delete', 'com_fdshop')) {
+            $this->setError('Sie sind nicht berechtigt, Kategorien zu löschen.');
+
+            return false;
+        }
+
+        try {
+            return $this->getCategoryService()->deleteCategories((array) $pks);
+        } catch (\Throwable $e) {
+            $this->setError($e->getMessage());
+
+            return false;
+        }
+    }
+
+    private function getCategoryService(): CategoryServiceInterface
+    {
+        $component = Factory::getApplication()->bootComponent('com_fdshop');
+
+        return $component->getContainer()->get(CategoryServiceInterface::class);
     }
 
 }

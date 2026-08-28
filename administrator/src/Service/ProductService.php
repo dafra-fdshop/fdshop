@@ -17,6 +17,16 @@ use RuntimeException;
 
 class ProductService implements ProductServiceInterface
 {
+    private const OPERATIONAL_PRODUCT_TABLES = [
+        '#__fdshop_products_details',
+        '#__fdshop_product_prices',
+        '#__fdshop_product_prices_research',
+        '#__fdshop_product_category_map',
+        '#__fdshop_product_buyer_group_map',
+        '#__fdshop_media',
+        '#__fdshop_cart',
+    ];
+
     public function __construct(
         private readonly MVCFactoryInterface $mvcFactory,
         private readonly DatabaseInterface $db
@@ -297,6 +307,290 @@ class ProductService implements ProductServiceInterface
         }
 
         return $item;
+    }
+
+    public function trashProducts(array $productIds): bool
+    {
+        return $this->setDeletedState($productIds, 1, 0);
+    }
+
+    public function restoreProducts(array $productIds): bool
+    {
+        return $this->setDeletedState($productIds, 0, 1);
+    }
+
+    public function permanentlyDeleteProducts(array $productIds): bool
+    {
+        $productIds = $this->normalizeIds($productIds);
+
+        if ($productIds === []) {
+            return true;
+        }
+
+        foreach ($productIds as $productId) {
+            $product = $this->getProductDeletionRecord($productId);
+
+            if (!$product) {
+                throw new RuntimeException('Das ausgewählte Produkt existiert nicht mehr.');
+            }
+
+            if ((int) $product->is_deleted !== 1) {
+                throw new RuntimeException('Das Produkt "' . $product->product_name . '" muss sich vor der endgültigen Löschung im Papierkorb befinden.');
+            }
+
+            $this->assertProductCanBePermanentlyDeleted($productId, (string) $product->product_name);
+        }
+
+        $mediaPaths = $this->getLocalMediaPaths($productIds);
+        $stagedFiles = [];
+
+        $this->db->transactionStart();
+
+        try {
+            $stagedFiles = $this->stageLocalMediaFiles($mediaPaths);
+
+            foreach ($productIds as $productId) {
+                foreach (self::OPERATIONAL_PRODUCT_TABLES as $table) {
+                    $this->deleteProductRows($table, $productId);
+                }
+
+                $query = $this->db->getQuery(true)
+                    ->delete($this->db->quoteName('#__fdshop_products'))
+                    ->where($this->db->quoteName('id') . ' = ' . $productId)
+                    ->where($this->db->quoteName('is_deleted') . ' = 1');
+
+                $this->db->setQuery($query)->execute();
+
+                if ($this->db->getAffectedRows() !== 1) {
+                    throw new RuntimeException('Das Produkt konnte nicht endgültig gelöscht werden.');
+                }
+            }
+
+            $this->db->transactionCommit();
+        } catch (\Throwable $e) {
+            $this->db->transactionRollback();
+            $this->restoreStagedMediaFiles($stagedFiles);
+            throw $e;
+        }
+
+        $this->removeStagedMediaFiles($stagedFiles);
+
+        return true;
+    }
+
+    private function setDeletedState(array $productIds, int $isDeleted, int $expectedState): bool
+    {
+        $productIds = $this->normalizeIds($productIds);
+
+        if ($productIds === []) {
+            return true;
+        }
+
+        $query = $this->db->getQuery(true)
+            ->select([
+                $this->db->quoteName('id'),
+                $this->db->quoteName('is_deleted'),
+            ])
+            ->from($this->db->quoteName('#__fdshop_products'))
+            ->where($this->db->quoteName('id') . ' IN (' . implode(',', $productIds) . ')');
+
+        $this->db->setQuery($query);
+        $products = (array) $this->db->loadObjectList();
+
+        if (count($products) !== count($productIds)) {
+            throw new RuntimeException('Mindestens ein ausgewähltes Produkt existiert nicht mehr.');
+        }
+
+        foreach ($products as $product) {
+            if ((int) $product->is_deleted !== $expectedState) {
+                throw new RuntimeException(
+                    $expectedState === 1
+                        ? 'Mindestens ein ausgewähltes Produkt befindet sich nicht im Papierkorb.'
+                        : 'Mindestens ein ausgewähltes Produkt befindet sich bereits im Papierkorb.'
+                );
+            }
+        }
+
+        $query = $this->db->getQuery(true)
+            ->update($this->db->quoteName('#__fdshop_products'))
+            ->set($this->db->quoteName('is_deleted') . ' = ' . $isDeleted)
+            ->where($this->db->quoteName('id') . ' IN (' . implode(',', $productIds) . ')')
+            ->where($this->db->quoteName('is_deleted') . ' = ' . $expectedState);
+
+        $this->db->setQuery($query)->execute();
+
+        if ($this->db->getAffectedRows() !== count($productIds)) {
+            throw new RuntimeException('Der Papierkorbstatus der ausgewählten Produkte hat sich zwischenzeitlich geändert.');
+        }
+
+        return true;
+    }
+
+    private function getProductDeletionRecord(int $productId): ?object
+    {
+        $query = $this->db->getQuery(true)
+            ->select([
+                $this->db->quoteName('product_name'),
+                $this->db->quoteName('is_deleted'),
+            ])
+            ->from($this->db->quoteName('#__fdshop_products'))
+            ->where($this->db->quoteName('id') . ' = ' . $productId);
+
+        $this->db->setQuery($query);
+        $product = $this->db->loadObject();
+
+        return $product ?: null;
+    }
+
+    private function assertProductCanBePermanentlyDeleted(int $productId, string $productName): void
+    {
+        $bundleQuery = $this->db->getQuery(true)
+            ->select($this->db->quoteName('b.is_active'))
+            ->from($this->db->quoteName('#__fdshop_bundle_items', 'bi'))
+            ->join(
+                'INNER',
+                $this->db->quoteName('#__fdshop_bundles', 'b')
+                . ' ON ' . $this->db->quoteName('b.id') . ' = ' . $this->db->quoteName('bi.bundle_id')
+            )
+            ->where($this->db->quoteName('bi.product_id') . ' = ' . $productId);
+
+        $this->db->setQuery($bundleQuery);
+        $bundleStates = array_map('intval', (array) $this->db->loadColumn());
+
+        if (in_array(1, $bundleStates, true)) {
+            throw new RuntimeException('Das Produkt "' . $productName . '" kann nicht endgültig gelöscht werden, weil es einem aktiven Bundle zugeordnet ist.');
+        }
+
+        if ($bundleStates !== []) {
+            throw new RuntimeException('Das Produkt "' . $productName . '" kann nicht endgültig gelöscht werden, weil noch eine Bundle-Zuordnung besteht.');
+        }
+
+        if ($this->hasProductReference('#__fdshop_coupon_product_map', $productId)) {
+            throw new RuntimeException('Das Produkt "' . $productName . '" kann nicht endgültig gelöscht werden, weil es von einem Gutschein verwendet wird.');
+        }
+
+        if (
+            $this->hasProductReference('#__fdshop_order_items', $productId)
+            || $this->hasProductReference('#__fdshop_order_bundle_items', $productId)
+        ) {
+            throw new RuntimeException(
+                'Das Produkt "' . $productName . '" kann nicht endgültig gelöscht werden, weil historische Bestellpositionen bestehen und der aktuelle Bestell-Snapshot noch nicht vollständig unabhängig ist.'
+            );
+        }
+    }
+
+    private function hasProductReference(string $table, int $productId): bool
+    {
+        $query = $this->db->getQuery(true)
+            ->select('1')
+            ->from($this->db->quoteName($table))
+            ->where($this->db->quoteName('product_id') . ' = ' . $productId);
+
+        $this->db->setQuery($query, 0, 1);
+
+        return $this->db->loadResult() !== null;
+    }
+
+    private function deleteProductRows(string $table, int $productId): void
+    {
+        $query = $this->db->getQuery(true)
+            ->delete($this->db->quoteName($table))
+            ->where($this->db->quoteName('product_id') . ' = ' . $productId);
+
+        $this->db->setQuery($query)->execute();
+    }
+
+    private function getLocalMediaPaths(array $productIds): array
+    {
+        $query = $this->db->getQuery(true)
+            ->select([
+                $this->db->quoteName('path_standard'),
+                $this->db->quoteName('path_small'),
+                $this->db->quoteName('path_mobile'),
+                $this->db->quoteName('path_invoice'),
+            ])
+            ->from($this->db->quoteName('#__fdshop_media'))
+            ->where($this->db->quoteName('product_id') . ' IN (' . implode(',', $productIds) . ')')
+            ->where($this->db->quoteName('media_type') . ' = ' . $this->db->quote('image'));
+
+        $this->db->setQuery($query);
+        $paths = [];
+
+        foreach ((array) $this->db->loadAssocList() as $row) {
+            foreach ($row as $path) {
+                $path = trim((string) $path);
+
+                if ($path !== '') {
+                    $paths[] = $path;
+                }
+            }
+        }
+
+        return array_values(array_unique($paths));
+    }
+
+    private function stageLocalMediaFiles(array $paths): array
+    {
+        $staged = [];
+
+        try {
+            foreach ($paths as $path) {
+                $relativePath = ltrim(str_replace('\\', '/', $path), '/');
+
+                if (
+                    !str_starts_with($relativePath, 'images/FDShop/products/')
+                    || in_array('..', explode('/', $relativePath), true)
+                    || str_contains($relativePath, "\0")
+                ) {
+                    throw new RuntimeException('Ein lokaler Medienpfad liegt außerhalb des freigegebenen Produktbildbereichs: ' . $path);
+                }
+
+                $source = JPATH_ROOT . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relativePath);
+
+                if (!is_file($source)) {
+                    continue;
+                }
+
+                $temporary = $source . '.fdshop-delete-' . bin2hex(random_bytes(6));
+
+                if (!@rename($source, $temporary)) {
+                    throw new RuntimeException('Die lokale Produktbilddatei konnte nicht für die Löschung vorbereitet werden: ' . $path);
+                }
+
+                $staged[$source] = $temporary;
+            }
+        } catch (\Throwable $e) {
+            $this->restoreStagedMediaFiles($staged);
+            throw $e;
+        }
+
+        return $staged;
+    }
+
+    private function restoreStagedMediaFiles(array $stagedFiles): void
+    {
+        foreach (array_reverse($stagedFiles, true) as $source => $temporary) {
+            if (is_file($temporary)) {
+                @rename($temporary, $source);
+            }
+        }
+    }
+
+    private function removeStagedMediaFiles(array $stagedFiles): void
+    {
+        $failed = [];
+
+        foreach ($stagedFiles as $temporary) {
+            if (is_file($temporary) && !@unlink($temporary)) {
+                $failed[] = $temporary;
+            }
+        }
+
+        if ($failed !== []) {
+            throw new RuntimeException(
+                'Das Produkt wurde endgültig gelöscht, aber mindestens eine vorbereitete lokale Bilddatei konnte nicht entfernt werden.'
+            );
+        }
     }
 
     private function splitProductData(array $data): array

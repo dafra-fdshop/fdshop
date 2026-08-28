@@ -42,6 +42,10 @@ class HtmlView extends BaseHtmlView
         ToolbarHelper::title('FDShop - Kategorien');
         ToolbarHelper::addNew('category.add');
 
+        if ($this->getCurrentUser()->authorise('core.delete', 'com_fdshop')) {
+            ToolbarHelper::deleteList('JGLOBAL_CONFIRM_DELETE', 'categories.delete', 'JTOOLBAR_DELETE');
+        }
+
         parent::display($tpl);
     }
 }

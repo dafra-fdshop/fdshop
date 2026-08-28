@@ -70,4 +70,66 @@ class ManufacturerService implements ManufacturerServiceInterface
 
         return $item ?: null;
     }
+
+    public function deleteManufacturers(array $manufacturerIds): bool
+    {
+        $manufacturerIds = $this->normalizeIds($manufacturerIds);
+
+        if ($manufacturerIds === []) {
+            return true;
+        }
+
+        foreach ($manufacturerIds as $manufacturerId) {
+            $manufacturer = $this->getManufacturerById($manufacturerId);
+
+            if (!$manufacturer) {
+                throw new RuntimeException('Der ausgewählte Hersteller existiert nicht mehr.');
+            }
+
+            $query = $this->db->getQuery(true)
+                ->select('1')
+                ->from($this->db->quoteName('#__fdshop_products'))
+                ->where($this->db->quoteName('manufacturer_id') . ' = ' . $manufacturerId);
+
+            $this->db->setQuery($query, 0, 1);
+
+            if ($this->db->loadResult() !== null) {
+                throw new RuntimeException(
+                    'Der Hersteller "' . (string) $manufacturer->manufacturer_name
+                    . '" kann nicht gelöscht werden, weil er von mindestens einem Produkt verwendet wird.'
+                );
+            }
+        }
+
+        $table = $this->mvcFactory->createTable('Manufacturer', 'Administrator');
+
+        if (!$table) {
+            throw new RuntimeException('ManufacturerTable konnte nicht erstellt werden.');
+        }
+
+        $this->db->transactionStart();
+
+        try {
+            foreach ($manufacturerIds as $manufacturerId) {
+                if (!$table->delete($manufacturerId)) {
+                    throw new RuntimeException($table->getError());
+                }
+            }
+
+            $this->db->transactionCommit();
+
+            return true;
+        } catch (\Throwable $e) {
+            $this->db->transactionRollback();
+            throw $e;
+        }
+    }
+
+    private function normalizeIds(array $ids): array
+    {
+        $ids = array_map('intval', $ids);
+        $ids = array_filter($ids, static fn (int $id): bool => $id > 0);
+
+        return array_values(array_unique($ids));
+    }
 }

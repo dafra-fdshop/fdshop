@@ -41,6 +41,7 @@ class ProductTable extends Table
             'max_order_qty',
             'step_order_qty',
             'is_active',
+            'is_deleted',
             'unit_quantity',
 			'in_stock',
             'nem',
@@ -130,6 +131,10 @@ class ProductTable extends Table
 
         if (!isset($this->is_active) || $this->is_active === '') {
             $this->is_active = 1;
+        }
+
+        if (!isset($this->is_deleted) || $this->is_deleted === '') {
+            $this->is_deleted = 0;
         }
 
         if (!isset($this->in_stock) || trim((string) $this->in_stock) === '') {

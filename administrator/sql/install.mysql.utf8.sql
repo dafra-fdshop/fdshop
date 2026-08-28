@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS `#__fdshop_products` (
   `step_order_qty` DECIMAL(12,3) NOT NULL,
 
   `is_active` TINYINT(1) NOT NULL DEFAULT 0,
+  `is_deleted` TINYINT(1) NOT NULL DEFAULT 0,
   `publish_up` DATETIME NULL DEFAULT NULL,
   `publish_down` DATETIME NULL DEFAULT NULL,
 
@@ -48,6 +49,7 @@ CREATE TABLE IF NOT EXISTS `#__fdshop_products` (
   KEY `idx_fdshop_products_manufacturer_id` (`manufacturer_id`),
   KEY `idx_fdshop_products_buyer_group_id` (`buyer_group_id`),
   KEY `idx_fdshop_products_is_active` (`is_active`),
+  KEY `idx_fdshop_products_is_deleted` (`is_deleted`),
   KEY `idx_fdshop_products_ribbon_bundle` (`ribbon_bundle`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

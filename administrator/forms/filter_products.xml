@@ -19,6 +19,17 @@
         >
             <option value="">JOPTION_SELECT_PUBLISHED</option>
         </field>
+
+        <field
+            name="deleted"
+            type="list"
+            label="Ansicht"
+            default="0"
+            class="js-select-submit-on-change"
+        >
+            <option value="0">Aktuelle Produkte</option>
+            <option value="1">Papierkorb</option>
+        </field>
     </fields>
 
     <fields name="list">

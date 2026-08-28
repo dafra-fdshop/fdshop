@@ -41,6 +41,8 @@ class ProductsModel extends ListModel
                 'a.created',
                 'modified',
                 'a.modified',
+                'is_deleted',
+                'a.is_deleted',
             ];
         }
 
@@ -56,6 +58,9 @@ class ProductsModel extends ListModel
 
         $published = $this->getUserStateFromRequest($this->context . '.filter.published', 'filter_published', '');
         $this->setState('filter.published', $published);
+
+        $deleted = $this->getUserStateFromRequest($this->context . '.filter.deleted', 'filter_deleted', 0, 'int');
+        $this->setState('filter.deleted', $deleted === 1 ? 1 : 0);
 
         parent::populateState($ordering, $direction);
     }
@@ -98,6 +103,7 @@ class ProductsModel extends ListModel
             $db->quoteName('a.max_order_qty'),
             $db->quoteName('a.step_order_qty'),
             $db->quoteName('a.is_active'),
+            $db->quoteName('a.is_deleted'),
             $db->quoteName('a.publish_up'),
             $db->quoteName('a.publish_down'),
             $db->quoteName('a.meta_title'),
@@ -144,6 +150,8 @@ class ProductsModel extends ListModel
                 '(' . $categorySubquery . ') AS ' . $db->quoteName('catmap')
                 . ' ON ' . $db->quoteName('catmap.product_id') . ' = ' . $db->quoteName('a.id')
             );
+
+        $query->where($db->quoteName('a.is_deleted') . ' = ' . (int) $this->getState('filter.deleted', 0));
 
         $published = $this->getState('filter.published');
 

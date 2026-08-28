@@ -13,4 +13,6 @@ interface ManufacturerServiceInterface
     public function saveManufacturer(array $data): int;
 
     public function getManufacturerById(int $manufacturerId): ?object;
+
+    public function deleteManufacturers(array $manufacturerIds): bool;
 }

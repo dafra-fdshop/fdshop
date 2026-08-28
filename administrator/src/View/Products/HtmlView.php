@@ -25,6 +25,8 @@ class HtmlView extends BaseHtmlView
 
     public $activeFilters = [];
 
+    public bool $isTrash = false;
+
     public function display($tpl = null)
     {
         $model = $this->getModel();
@@ -34,6 +36,7 @@ class HtmlView extends BaseHtmlView
         $this->pagination    = $model->getPagination();
         $this->filterForm    = $model->getFilterForm();
         $this->activeFilters = $model->getActiveFilters();
+        $this->isTrash       = (int) $this->state->get('filter.deleted', 0) === 1;
 
         if (is_object($this->filterForm)) {
             $this->filterForm
@@ -43,8 +46,28 @@ class HtmlView extends BaseHtmlView
 
         $this->attachProductImages();
 
-        ToolbarHelper::title('FDShop - Produkte');
-        ToolbarHelper::addNew('product.add');
+        ToolbarHelper::title($this->isTrash ? 'FDShop - Produkte: Papierkorb' : 'FDShop - Produkte');
+
+        if ($this->isTrash) {
+            if ($this->getCurrentUser()->authorise('core.delete', 'com_fdshop')) {
+                ToolbarHelper::custom('products.restore', 'refresh', '', 'Wiederherstellen', true);
+                ToolbarHelper::deleteList(
+                    'Ausgewählte Produkte wirklich endgültig löschen?',
+                    'products.deletePermanently',
+                    'Endgültig löschen'
+                );
+            }
+        } else {
+            ToolbarHelper::addNew('product.add');
+
+            if ($this->getCurrentUser()->authorise('core.delete', 'com_fdshop')) {
+                ToolbarHelper::deleteList(
+                    'Ausgewählte Produkte in den Papierkorb verschieben?',
+                    'products.delete',
+                    'JTOOLBAR_TRASH'
+                );
+            }
+        }
 
         parent::display($tpl);
     }
