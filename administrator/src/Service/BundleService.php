@@ -247,6 +247,47 @@ class BundleService implements BundleServiceInterface
         return $bundle;
     }
 
+    public function getBundleProducts(int $bundleId): array
+    {
+        if ($bundleId <= 0) {
+            return [];
+        }
+
+        $query = $this->db->getQuery(true)
+            ->select([
+                $this->db->quoteName('bi.id'),
+                $this->db->quoteName('bi.bundle_id'),
+                $this->db->quoteName('bi.product_id'),
+                $this->db->quoteName('bi.ordering'),
+                $this->db->quoteName('p.product_name'),
+                $this->db->quoteName('p.alias'),
+                $this->db->quoteName('p.is_active'),
+                $this->db->quoteName('p.in_stock'),
+                $this->db->quoteName('p.currency'),
+                $this->db->quoteName('d.sku'),
+                $this->db->quoteName('d.gtin'),
+                $this->getCurrentSalePriceExpression('p') . ' AS ' . $this->db->quoteName('current_sale_price'),
+            ])
+            ->from($this->db->quoteName('#__fdshop_bundle_items', 'bi'))
+            ->join(
+                'INNER',
+                $this->db->quoteName('#__fdshop_products', 'p')
+                . ' ON ' . $this->db->quoteName('p.id') . ' = ' . $this->db->quoteName('bi.product_id')
+            )
+            ->join(
+                'LEFT',
+                $this->db->quoteName('#__fdshop_products_details', 'd')
+                . ' ON ' . $this->db->quoteName('d.product_id') . ' = ' . $this->db->quoteName('p.id')
+            )
+            ->where($this->db->quoteName('bi.bundle_id') . ' = ' . $bundleId)
+            ->order($this->db->quoteName('bi.ordering') . ' ASC')
+            ->order($this->db->quoteName('bi.id') . ' ASC');
+
+        $this->db->setQuery($query);
+
+        return (array) $this->db->loadObjectList();
+    }
+
     public function getBestDiscountRule(int $bundleId, float $quantity): ?object
     {
         if ($bundleId <= 0 || $quantity <= 0) {
@@ -278,9 +319,10 @@ class BundleService implements BundleServiceInterface
             ->select([
                 'p.' . $this->db->quoteName('id') . ' AS ' . $this->db->quoteName('product_id'),
                 'p.' . $this->db->quoteName('product_name'),
+                'p.' . $this->db->quoteName('is_active'),
+                'p.' . $this->db->quoteName('currency'),
                 'd.' . $this->db->quoteName('sku'),
-                'COALESCE(pp.' . $this->db->quoteName('calc_price_net') . ', 0.0000) AS ' . $this->db->quoteName('price_net'),
-                'COALESCE(pp.' . $this->db->quoteName('calc_price_gross') . ', 0.0000) AS ' . $this->db->quoteName('price_gross'),
+                $this->getCurrentSalePriceExpression('p') . ' AS ' . $this->db->quoteName('current_sale_price'),
             ])
             ->from($this->db->quoteName('#__fdshop_products_details', 'd'))
             ->join(
@@ -288,18 +330,57 @@ class BundleService implements BundleServiceInterface
                 $this->db->quoteName('#__fdshop_products', 'p')
                 . ' ON p.' . $this->db->quoteName('id') . ' = d.' . $this->db->quoteName('product_id')
             )
-            ->join(
-                'LEFT',
-                $this->db->quoteName('#__fdshop_product_prices', 'pp')
-                . ' ON pp.' . $this->db->quoteName('product_id') . ' = p.' . $this->db->quoteName('id')
-            )
             ->where('d.' . $this->db->quoteName('sku') . ' = ' . $this->db->quote($sku))
-            ->order('pp.' . $this->db->quoteName('id') . ' DESC');
+            ->where('p.' . $this->db->quoteName('is_deleted') . ' = 0');
 
         $this->db->setQuery($query, 0, 1);
         $product = $this->db->loadObject();
 
         return $product ?: null;
+    }
+
+    public function searchProductsBySkuPrefix(string $skuPrefix, int $limit = 15): array
+    {
+        $skuPrefix = trim($skuPrefix);
+
+        if (strlen($skuPrefix) < 2) {
+            return [];
+        }
+
+        $limit = max(1, min(20, $limit));
+        $escapedPrefix = $this->db->escape($skuPrefix, true);
+
+        $query = $this->db->getQuery(true)
+            ->select([
+                'p.' . $this->db->quoteName('id') . ' AS ' . $this->db->quoteName('product_id'),
+                'p.' . $this->db->quoteName('product_name'),
+                'p.' . $this->db->quoteName('is_active'),
+                'd.' . $this->db->quoteName('sku'),
+            ])
+            ->from($this->db->quoteName('#__fdshop_products_details', 'd'))
+            ->join(
+                'INNER',
+                $this->db->quoteName('#__fdshop_products', 'p')
+                . ' ON p.' . $this->db->quoteName('id') . ' = d.' . $this->db->quoteName('product_id')
+            )
+            ->where('d.' . $this->db->quoteName('sku') . ' LIKE ' . $this->db->quote($escapedPrefix . '%', false))
+            ->where('p.' . $this->db->quoteName('is_deleted') . ' = 0')
+            ->order('d.' . $this->db->quoteName('sku') . ' ASC')
+            ->order('p.' . $this->db->quoteName('id') . ' ASC');
+
+        $this->db->setQuery($query, 0, $limit);
+
+        return (array) $this->db->loadObjectList();
+    }
+
+    private function getCurrentSalePriceExpression(string $productAlias): string
+    {
+        $discountActive = $productAlias . '.' . $this->db->quoteName('discount_active');
+        $discountPrice = $productAlias . '.' . $this->db->quoteName('discount_price');
+        $salePrice = $productAlias . '.' . $this->db->quoteName('sale_price');
+
+        return 'CASE WHEN ' . $discountActive . ' = 1 AND ' . $discountPrice . ' > 0'
+            . ' THEN ' . $discountPrice . ' ELSE ' . $salePrice . ' END';
     }
 
     private function getBundleProductIds(int $bundleId): array
