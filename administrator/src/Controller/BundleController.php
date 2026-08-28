@@ -20,14 +20,28 @@ class BundleController extends FormController
 
     public function save($key = null, $urlVar = null)
     {
+        $this->checkToken();
+
         $data  = $this->input->post->get('jform', [], 'array');
         $model = $this->getModel();
         $task  = $this->getTask();
+        $id    = (int) ($data['id'] ?? 0);
+        $action = $id > 0 ? 'core.edit' : 'core.create';
+
+        if (!Factory::getApplication()->getIdentity()->authorise($action, 'com_fdshop')) {
+            $this->setMessage('Sie sind nicht berechtigt, dieses Bundle zu speichern.', 'error');
+            $this->setRedirect(
+                $id > 0
+                    ? 'index.php?option=com_fdshop&view=bundle&layout=edit&id=' . $id
+                    : 'index.php?option=com_fdshop&view=bundles'
+            );
+
+            return false;
+        }
 
         if (!$model->save($data)) {
             $this->setMessage($model->getError(), 'error');
 
-            $id       = (int) ($data['id'] ?? 0);
             $redirect = 'index.php?option=com_fdshop&view=bundle&layout=edit';
 
             if ($id > 0) {
@@ -50,15 +64,6 @@ class BundleController extends FormController
 
             return true;
         }
-
-        $this->setRedirect('index.php?option=com_fdshop&view=bundles');
-
-        return true;
-    }
-
-    public function cancel($key = null): bool
-    {
-        parent::cancel($key);
 
         $this->setRedirect('index.php?option=com_fdshop&view=bundles');
 

@@ -52,11 +52,26 @@ class BundleService implements BundleServiceInterface
         $bindData['bundle_name'] = $bundleName;
         $bindData['bundle_number'] = trim((string) ($bindData['bundle_number'] ?? ''));
 
-        if ($bindData['bundle_number'] === '') {
-            $bindData['bundle_number'] = $this->generateNextBundleNumber();
+        $bundleId = (int) ($bindData['id'] ?? 0);
+
+        if ($bundleId > 0 && !$table->load($bundleId)) {
+            throw new RuntimeException('Das zu bearbeitende Bundle konnte nicht geladen werden.');
         }
 
-        unset($bindData['product_ids'], $bindData['discount_rules']);
+        if ($bindData['bundle_number'] === '') {
+            $bindData['bundle_number'] = $bundleId > 0
+                ? (string) $table->bundle_number
+                : $this->generateNextBundleNumber();
+        }
+
+        unset(
+            $bindData['product_ids'],
+            $bindData['discount_rules'],
+            $bindData['created'],
+            $bindData['created_by'],
+            $bindData['modified'],
+            $bindData['modified_by']
+        );
 
         $this->db->transactionStart();
 
