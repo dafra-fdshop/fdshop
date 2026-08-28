@@ -5,9 +5,11 @@
  */
 
 defined('_JEXEC') or die;
+
+use Joomla\CMS\Router\Route;
 ?>
 
-<form action="index.php?option=com_fdshop&view=category&layout=edit" method="post" name="adminForm" id="adminForm">
+<form action="<?php echo Route::_('index.php?option=com_fdshop&view=category&layout=edit&id=' . (int) ($this->item->id ?? 0)); ?>" method="post" name="adminForm" id="adminForm">
     <div class="row">
         <div class="col-12 col-lg-8">
             <?php echo $this->form->renderField('category_name'); ?>
