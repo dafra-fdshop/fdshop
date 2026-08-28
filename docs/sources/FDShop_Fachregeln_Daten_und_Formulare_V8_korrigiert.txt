@@ -1,14 +1,14 @@
 =====================================================================
-FDShop_Fachregeln_Daten_und_Formulare_V7
+FDShop_Fachregeln_Daten_und_Formulare_V8
 =====================================================================
 
 Status: VERBINDLICHE PROJEKTQUELLE
 Priorität: SEHR HOCH
-Version: V7
+Version: V8
 
 Diese Quelle ersetzt vollständig:
 
-FDShop_Fachregeln_Daten_und_Formulare_V6
+FDShop_Fachregeln_Daten_und_Formulare_V7
 
 =====================================================================
 1. ZWECK
@@ -26,21 +26,40 @@ Sie beschreibt insbesondere
 • Formularregeln
 • fachliche Abgrenzung der technischen Ebenen
 • zentrale Regeln der vorhandenen Shop-Fachbereiche
+• verbindliche Lösch- und Lebenszyklusregeln für Produkte,
+  Kategorien und Hersteller
+• verbindliche Regeln für historische Bestell-Snapshots
 
 Sie beschreibt keine vollständige technische Komponentenstruktur,
 keinen Codebestand und keinen Implementierungsstatus.
 
 Dafür gelten die jeweils zuständigen Projektquellen.
 
-V7 wurde auf Grundlage des bisherigen V6-Standes sowie des
-nachweisbaren aktuellen Projektstandes aktualisiert.
+V8 übernimmt den vollständigen fachlichen Regelbestand aus V7 und
+ergänzt die am 28.08.2026 getroffenen Projektentscheidungen zu
 
-Technische Hauptreferenzen für die Aktualisierung:
+• Produkt-Papierkorb
+• physischer Löschung
+• Schutz fachlicher Referenzen
+• Bestellhistorie und Bestellpositions-Snapshots
+• Trennung von Joomla-Standardmechanismen und FDShop-Businesslogik
 
-• FDShop_Codebestand_V4
-• FDShop_Implementierungsstand_V4
-• der diesen V4-Quellen zugrunde liegende aktuelle Projektstand
-  fdshop_Projektstand_Aktuell.zip
+WICHTIG:
+
+Eine in dieser Quelle beschlossene Fachregel ist nicht automatisch
+bereits technisch implementiert.
+
+Der tatsächliche technische Umsetzungsstand wird ausschließlich in
+
+FDShop_Implementierungsstand
+
+dokumentiert.
+
+Der tatsächliche Codebestand wird ausschließlich in
+
+FDShop_Codebestand
+
+dokumentiert.
 
 =====================================================================
 2. GELTUNGSBEREICH
@@ -125,6 +144,9 @@ Gutschein-Kategorie-Zuordnung
 Gutschein-Nutzung
 → #__fdshop_coupon_usage
 
+Historische Bestellpositionsdaten
+→ zuständige Bestellpositionstabelle als Snapshot des Kaufzeitpunktes
+
 Verstöße gegen dieses Prinzip gelten als Architektur- bzw.
 Datenmodellfehler.
 
@@ -153,6 +175,7 @@ Unterschieden werden insbesondere
 • Bestelldaten
 • Gutscheindaten
 • Nutzungsdaten
+• Lebenszyklus-/Löschstatus
 
 Neue Felder sind grundsätzlich der Tabelle zuzuordnen,
 deren fachliche Verantwortung betroffen ist.
@@ -216,6 +239,15 @@ Templates stellen Daten dar.
 Services treffen fachliche Entscheidungen und koordinieren
 fachliche Abläufe über mehrere Datenbereiche.
 
+Dies gilt ausdrücklich auch für
+
+• Löschschutz
+• Abhängigkeitsprüfungen
+• Papierkorbregeln
+• Wiederherstellung
+• endgültige Löschung
+• kontrollierte Bereinigung abhängiger Daten
+
 =====================================================================
 3.5 TABLE-KLASSEN
 =====================================================================
@@ -257,6 +289,13 @@ Sie dienen insbesondere
 
 Snapshots dürfen bewusst von aktuellen Stammdaten abweichen.
 
+Für historische Bestellungen gilt zusätzlich:
+
+Der Bestell-Snapshot ist für die historische Darstellung führend.
+
+Aktuelle Produkt-, Hersteller- oder Preisdaten dürfen einen bereits
+gespeicherten historischen Kaufzustand nicht rückwirkend verändern.
+
 =====================================================================
 3.7 PRODUKTSTATUS
 =====================================================================
@@ -277,6 +316,37 @@ ist im Produktbereich keine gültige Projektregel mehr.
 
 Neue Entwicklungen dürfen state im Produktbereich nicht erneut
 als Veröffentlichungsstatus einführen.
+
+Der Veröffentlichungsstatus und der Löschstatus sind strikt getrennt.
+
+Für den Produkt-Papierkorb ist verbindlich das eigene Feld
+
+is_deleted
+
+vorgesehen.
+
+Bedeutung:
+
+is_deleted = 0
+→ Produkt befindet sich nicht im Papierkorb.
+
+is_deleted = 1
+→ Produkt befindet sich im Papierkorb.
+
+is_active darf niemals als Papierkorbstatus verwendet werden.
+
+Insbesondere ist
+
+is_active = -2
+
+kein zulässiger FDShop-Papierkorbstatus.
+
+WICHTIG:
+
+Diese Fachregel beschreibt die beschlossene Zielregel.
+
+Ob is_deleted bereits technisch implementiert ist, ergibt sich
+ausschließlich aus FDShop_Implementierungsstand und FDShop_Codebestand.
 
 =====================================================================
 3.8 KATALOGMODUS
@@ -300,6 +370,48 @@ Nicht zulässig sind insbesondere
 • produktbezogene Katalogmodus-Logik
 
 Ein Verstoß verletzt das Single-Source-of-Truth-Prinzip.
+
+=====================================================================
+3.9 JOOMLA-STANDARD UND FDSHOP-FACHLOGIK
+=====================================================================
+
+PRIORITÄT
+
+KRITISCH
+
+FDShop verwendet Joomla-Standardmechanismen überall dort,
+wo Joomla die technische Aufgabe vollständig und ohne Verlust
+bestehender FDShop-Funktionalität abbilden kann.
+
+Joomla übernimmt insbesondere nach Möglichkeit
+
+• Toolbar
+• Tasks
+• Routing
+• ACL
+• CSRF-Schutz
+• Standardnavigation
+• Standardcontroller-Abläufe
+• Standard-Redirects
+
+FDShop-spezifische fachliche Entscheidungen verbleiben im
+Service Layer.
+
+Hierzu gehören insbesondere
+
+• fachliche Löschbedingungen
+• Prüfung von Abhängigkeiten
+• Papierkorbregeln
+• Wiederherstellungsregeln
+• endgültige Löschfreigabe
+• kontrollierte Bereinigung fachlich abhängiger Daten
+
+Joomla-Bordmittel dürfen nicht durch parallele Eigenlösungen
+ersetzt werden, wenn der Joomla-Standard die Aufgabe vollständig
+und projekttreu erfüllt.
+
+Umgekehrt dürfen Joomla-Standardmechanismen keine notwendige
+FDShop-Businesslogik umgehen oder ersetzen.
 
 =====================================================================
 4. DATENMODELL
@@ -349,6 +461,7 @@ Hierzu gehören insbesondere
 • Veröffentlichungsinformationen
 • Darstellung
 • Produktmerkmale
+• Produkt-Lebenszyklusstatus
 
 ---------------------------------------------------------------------
 WICHTIGE FELDGRUPPEN
@@ -383,6 +496,16 @@ VERÖFFENTLICHUNG
 is_active
 publish_up
 publish_down
+
+LÖSCHSTATUS / PAPIERKORB
+
+is_deleted
+
+Hinweis:
+is_deleted ist als verbindliches Zielfeld beschlossen.
+Ob das Feld im aktuellen technischen Ist-Stand bereits vorhanden ist,
+ergibt sich ausschließlich aus FDShop_Codebestand und
+FDShop_Implementierungsstand.
 
 DARSTELLUNG
 
@@ -451,6 +574,28 @@ führend gespeichert werden.
 
 Kategorie- und Käufergruppenbeziehungen werden über die dafür
 vorgesehenen Mappingtabellen verwaltet.
+
+is_active und is_deleted besitzen unterschiedliche Verantwortungen.
+
+is_active
+→ Veröffentlichung / Aktivstatus
+
+is_deleted
+→ Papierkorbstatus
+
+Normales Löschen eines Produktes bedeutet zunächst ausschließlich:
+
+is_deleted = 1
+
+Der Produktdatensatz wird dabei nicht physisch entfernt.
+
+Ein Produkt im Papierkorb muss grundsätzlich wiederherstellbar sein.
+
+Die Wiederherstellung setzt den Papierkorbstatus zurück,
+ohne historische Daten zu verändern.
+
+Eine endgültige physische Löschung ist ausschließlich nach den
+Regeln aus Kapitel 7.11 zulässig.
 
 =====================================================================
 4.2 PRODUKTDETAILS
@@ -646,6 +791,28 @@ abgebildet.
 Mehrfachzuordnungen werden ausschließlich über die Mappingtabelle
 verwaltet.
 
+Kategorien besitzen nach aktueller Projektentscheidung keinen
+Papierkorbstatus.
+
+Das Löschen einer Kategorie bedeutet eine physische Löschung.
+
+Die physische Löschung ist jedoch zu blockieren, solange mindestens
+eine der folgenden schützenden Referenzen besteht:
+
+• Unterkategorie mit parent_id auf diese Kategorie
+• Produktzuordnung über #__fdshop_product_category_map
+• Gutscheinzuordnung über #__fdshop_coupon_category_map
+
+Es erfolgt keine automatische Kaskade.
+
+Es erfolgt kein automatisches Umhängen von Unterkategorien.
+
+Es erfolgt keine automatische Entfernung von Produkt- oder
+Gutscheinzuordnungen, um eine Löschung zu erzwingen.
+
+Bei bestehender Referenz wird die Löschung abgebrochen und dem
+Benutzer verständlich gemeldet.
+
 =====================================================================
 4.5 HERSTELLER
 =====================================================================
@@ -719,6 +886,21 @@ PROJEKTREGELN
 Hersteller speichern ausschließlich Herstellerinformationen.
 
 Produktdaten verbleiben in den zuständigen Produkttabellen.
+
+Hersteller besitzen nach aktueller Projektentscheidung keinen
+Papierkorbstatus.
+
+Das Löschen eines Herstellers bedeutet eine physische Löschung.
+
+Die physische Löschung ist zu blockieren, solange mindestens ein
+Produkt diesen Hersteller über manufacturer_id verwendet.
+
+Es erfolgt keine automatische Änderung von manufacturer_id auf 0.
+
+Es erfolgt keine automatische Umstellung auf einen anderen Hersteller.
+
+Bei bestehender Produktreferenz wird die Löschung abgebrochen und
+dem Benutzer verständlich gemeldet.
 
 =====================================================================
 4.6 KÄUFERGRUPPEN
@@ -1034,6 +1216,13 @@ sind fachliche Service-Aufgaben.
 Die Medientabelle speichert die zugehörigen Dateiinformationen
 und Produktbeziehungen.
 
+Bei einer späteren endgültigen physischen Produktlöschung dürfen
+produktbezogene Medien und lokale Bilddateien kontrolliert entfernt
+werden, sofern keine historische Fachregel deren Erhalt verlangt.
+
+Bestellhistorien dürfen nicht von der dauerhaften Existenz dieser
+Produktmedien abhängig sein.
+
 =====================================================================
 4.10 BUNDLE-SYSTEM
 =====================================================================
@@ -1184,6 +1373,11 @@ Bestelltabellen übernommen.
 Die vorhandene Tabelle allein definiert noch keinen vollständigen
 Warenkorb-/Checkout-Workflow.
 
+Warenkorbdaten sind keine schützende Historie.
+
+Bei einer endgültigen Produktlöschung dürfen rein operative
+Warenkorbpositionen kontrolliert bereinigt werden.
+
 =====================================================================
 4.12 BESTELLUNGEN
 =====================================================================
@@ -1232,6 +1426,87 @@ Bestelltabellen und ersetzen nicht die aktuellen Bundle-Stammdaten.
 Die vollständige Checkout-Erzeugung und der vollständige
 Bestellworkflow sind noch nicht als fertige Fachfunktion
 zu behandeln.
+
+---------------------------------------------------------------------
+HISTORISCHER BESTELLPOSITIONS-SNAPSHOT
+---------------------------------------------------------------------
+
+PRIORITÄT
+
+KRITISCH
+
+Eine verbindlich erzeugte Bestellposition muss ihren historischen
+Kaufzustand selbstständig abbilden können.
+
+Die historische Darstellung einer Bestellung darf nicht davon
+abhängen, dass der aktuelle Produktdatensatz, Herstellerdatensatz,
+Preisdatensatz oder Produktmedienbestand weiterhin existiert.
+
+Für Produktpositionen sind mindestens folgende Informationen als
+historischer Snapshot vorzusehen:
+
+• Produktname
+• Artikelnummer / SKU
+• GTIN / EAN
+• Herstellername
+• bestellte Menge
+• regulärer Einzelpreis zum Bestellzeitpunkt
+• tatsächlich berechneter Einzelpreis
+• Aktions-/Rabattpreis, sofern für die Position relevant
+• Positionssumme
+• erforderliche Netto- und Bruttowerte
+• MwSt.-Satz zum Bestellzeitpunkt
+
+Der Herstellername wird als historischer Textwert gespeichert.
+
+Eine reine manufacturer_id genügt für die historische Darstellung
+nicht.
+
+Die product_id darf zusätzlich als technische Referenz gespeichert
+bleiben.
+
+Die product_id ist jedoch nicht die führende Datenquelle für die
+historische Darstellung einer abgeschlossenen Bestellposition.
+
+Spätere Änderungen an
+
+• Produktname
+• SKU
+• GTIN / EAN
+• Hersteller
+• Preisen
+• Aktionspreisen
+• Steuersätzen
+• Produktmedien
+
+dürfen einen bereits gespeicherten Bestellpositions-Snapshot nicht
+rückwirkend verändern.
+
+Auch eine spätere endgültige physische Löschung des Produktes darf
+diese historischen Snapshotdaten nicht entfernen oder verändern.
+
+Für die spätere Kundenansicht "Meine Bestellungen" gilt:
+
+Historische Bestellpositionen müssen auch dann fachlich
+nachvollziehbar bleiben, wenn das zugehörige Produkt heute nicht
+mehr verkauft wird oder physisch nicht mehr existiert.
+
+Ein dauerhaftes historisches Produktbild ist hierfür nicht
+verpflichtend.
+
+---------------------------------------------------------------------
+PREIS-SNAPSHOT
+---------------------------------------------------------------------
+
+Wenn zum Kaufzeitpunkt ein Aktions-/Rabattpreis wirksam war, muss
+später nachvollziehbar bleiben
+
+• welcher reguläre Preis galt,
+• welcher Aktions-/Rabattpreis galt,
+• welcher Preis tatsächlich berechnet wurde.
+
+Die historische Bestellung darf dafür nicht auf aktuelle
+Produktpreistabellen zurückgreifen.
 
 =====================================================================
 4.13 VERSANDARTEN
@@ -1702,6 +1977,43 @@ Jede Liste besitzt einen eigenständigen Kontext und darf andere
 Listen oder Edit-Formulare nicht fachlich beeinflussen.
 
 =====================================================================
+5.9 JOOMLA-STANDARD BEI EDIT-FORMULAREN
+=====================================================================
+
+PRIORITÄT
+
+HOCH
+
+Werden Joomla-Standardcontroller und Joomla-Standardmechanismen
+für Edit-Formulare verwendet, muss der vollständige zugehörige
+Joomla-Ablauf berücksichtigt werden.
+
+Eine Umstellung darf nicht isoliert nur auf Controller-Ebene
+erfolgen.
+
+Zu prüfen sind mindestens
+
+• Toolbar-Task
+• Formular-Action
+• aktuelle Datensatz-ID
+• Request
+• Controller
+• Model
+• Table bzw. Service
+• Redirect
+• erneutes Laden des Datensatzes nach Apply
+
+Bei einem bestehenden Datensatz muss die aktuelle Record-ID
+über den vollständigen Joomla-Speicherablauf erhalten bleiben.
+
+Nach dem erstmaligen Speichern eines neuen Datensatzes muss die
+neu erzeugte ID für alle weiteren Bearbeitungs- und
+Speichervorgänge verwendet werden.
+
+Joomla-Standardmechanismen dürfen bestehende FDShop-Serviceketten
+nicht umgehen.
+
+=====================================================================
 6. ARCHITEKTURBEZOGENE FACHREGELN
 =====================================================================
 
@@ -1763,6 +2075,10 @@ Hier liegen insbesondere
 • Bestelllogik
 • Gutscheinlogik
 • fachliche Mappingkoordination
+• Löschschutz
+• Abhängigkeitsprüfungen
+• Papierkorb-/Wiederherstellungslogik
+• kontrollierte endgültige Löschung
 
 =====================================================================
 6.6 VIEW
@@ -1798,6 +2114,10 @@ Jede fachliche Information besitzt genau eine führende Datenquelle.
 Snapshots und Historien dokumentieren Zustände.
 
 Sie ersetzen niemals die führenden Stammdaten.
+
+Für die historische Darstellung eines abgeschlossenen Vorgangs
+kann der gespeicherte Snapshot selbst die führende historische
+Datenquelle sein.
 
 =====================================================================
 7.3 GLOBALE KONFIGURATION
@@ -1848,14 +2168,43 @@ Dies gilt insbesondere auch für
 • Gutscheinprüfung
 • spätere Gutschein-Rabattberechnung
 • spätere Checkout-Entscheidungen
+• Löschschutz
+• Abhängigkeitsprüfungen
+• Papierkorb und Wiederherstellung
+• endgültige physische Löschung
 
 =====================================================================
 7.7 BESTELLHISTORIE
 =====================================================================
 
+PRIORITÄT
+
+KRITISCH
+
 Historische Bestellinformationen dürfen nicht durch spätere
 Änderungen an aktuellen Produkt-, Bundle-, Versand-, Zahlungs-
 oder Gutscheinstammdaten rückwirkend verfälscht werden.
+
+Abgeschlossene Bestellungen und ihre Positionen sind historische
+Snapshots.
+
+Die historische Darstellung darf nicht von aktuellen Stammdaten
+abhängig sein.
+
+Insbesondere dürfen spätere Änderungen oder Löschungen von
+
+• Produkten
+• Herstellern
+• Preisen
+• Aktionspreisen
+• Steuersätzen
+• Produktmedien
+
+eine bestehende Bestellhistorie nicht verändern oder unbrauchbar
+machen.
+
+Historische Bestellpositionen werden bei einer Produktlöschung
+niemals automatisch gelöscht oder inhaltlich bereinigt.
 
 =====================================================================
 7.8 GUTSCHEINREGEL
@@ -1916,6 +2265,197 @@ Insbesondere sind derzeit nicht als vollständig umgesetzt zu behandeln:
 Fachregeln für diese Prozesse dürfen erst nach Projektentscheidung
 und tatsächlicher Umsetzung verbindlich ergänzt werden.
 
+Die in dieser Quelle definierte Bestell-Snapshot-Regel ist dennoch
+bereits verbindlich und bei der späteren Checkout-/Bestellerzeugung
+zwingend zu berücksichtigen.
+
+=====================================================================
+7.11 LÖSCH- UND LEBENSZYKLUSREGELN
+=====================================================================
+
+PRIORITÄT
+
+KRITISCH
+
+=====================================================================
+7.11.1 GRUNDREGEL
+=====================================================================
+
+Löschen ist eine fachliche Aktion und nicht ausschließlich eine
+technische Datenbankoperation.
+
+Vor einer Löschung sind sämtliche fachlich relevanten Abhängigkeiten
+zu prüfen.
+
+Die Entscheidung
+
+• löschen
+• blockieren
+• in Papierkorb verschieben
+• wiederherstellen
+• endgültig löschen
+• abhängige operative Daten bereinigen
+
+gehört in den Service Layer.
+
+Joomla darf die technische Aktion auslösen und koordinieren.
+
+Die fachliche Entscheidung verbleibt bei FDShop.
+
+=====================================================================
+7.11.2 PRODUKTE
+=====================================================================
+
+Produkte besitzen einen echten Papierkorb.
+
+Normales Löschen aus der Produktverwaltung bedeutet:
+
+is_deleted = 1
+
+Der Produktstammsatz und seine zugehörigen Daten werden dabei
+nicht physisch entfernt.
+
+Produkte im Papierkorb sind aus der normalen Produktverwaltung
+auszublenden bzw. über einen dafür vorgesehenen Papierkorbkontext
+zu verwalten.
+
+Ein Produkt im Papierkorb muss wiederherstellbar sein.
+
+Wiederherstellen bedeutet:
+
+is_deleted = 0
+
+Die Wiederherstellung darf keine historische Information verändern.
+
+Eine endgültige physische Löschung darf ausschließlich aus dem
+Papierkorb heraus erfolgen.
+
+Vor der endgültigen Löschung müssen alle fachlichen Abhängigkeiten
+geprüft werden.
+
+Schützende Referenzen dürfen nicht automatisch entfernt werden,
+wenn dadurch fachliche oder historische Zusammenhänge verloren
+gehen würden.
+
+Insbesondere gilt:
+
+Historische Bestellpositionen und Bestellhistorien werden niemals
+durch eine Produktlöschung entfernt oder verändert.
+
+Bestehen aktive oder schützende Referenzen, deren automatische
+Bereinigung fachlich nicht ausdrücklich freigegeben ist, wird die
+endgültige Löschung blockiert.
+
+Hierzu zählen insbesondere Referenzen aus
+
+• aktiven Bundle-Zuordnungen
+• Gutschein-Produkt-Zuordnungen
+
+sowie weitere fachlich schützende Referenzen, die aus dem jeweils
+aktuellen Datenmodell hervorgehen.
+
+Historische Bestellpositionen und Bestellhistorien besitzen eine
+Sonderstellung:
+
+Sie werden niemals gelöscht oder inhaltlich verändert.
+
+Sie blockieren die endgültige physische Löschung des aktuellen
+Produktstammsatzes jedoch nicht automatisch, sofern nachweislich
+sichergestellt ist, dass die historische Bestellung vollständig aus
+ihrem eigenen Snapshot dargestellt werden kann und keine fachlich
+erforderliche Information mehr aus dem aktuellen Produktstammsatz,
+Herstellerdatensatz, Preisdatensatz oder Medienbestand benötigt.
+
+Ist diese Snapshot-Unabhängigkeit nicht nachweislich gewährleistet,
+ist die endgültige Produktlöschung zu blockieren.
+
+Rein operative, nicht historische Produktdaten dürfen bei einer
+zulässigen endgültigen Löschung kontrolliert entfernt werden.
+
+Hierzu können insbesondere gehören
+
+• Produktdetails
+• aktuelle Produktpreise
+• Preisrecherche
+• Produkt-Kategorie-Mappings
+• Produkt-Käufergruppen-Mappings
+• Medienzuordnungen
+• lokale Produktbilddateien
+• rein operative Warenkorbpositionen
+
+Die konkrete technische Bereinigung muss transaktional bzw.
+konsistent über die zuständige Businesslogik erfolgen.
+
+Keine Fach-KI darf ohne Projektgrundlage weitere Referenzen als
+automatisch löschbar einstufen.
+
+=====================================================================
+7.11.3 KATEGORIEN
+=====================================================================
+
+Kategorien besitzen keinen Papierkorb.
+
+Das Löschen ist physisch.
+
+Die Löschung wird blockiert, solange
+
+• Unterkategorien vorhanden sind,
+• Produktzuordnungen vorhanden sind,
+• Gutschein-Kategorie-Zuordnungen vorhanden sind.
+
+Es erfolgt keine automatische Kaskade.
+
+Es erfolgt kein automatisches Umhängen.
+
+Es erfolgt keine automatische Entfernung von Zuordnungen,
+nur um die Löschung zu ermöglichen.
+
+Der Benutzer erhält eine verständliche Meldung über den Grund
+der blockierten Löschung.
+
+=====================================================================
+7.11.4 HERSTELLER
+=====================================================================
+
+Hersteller besitzen keinen Papierkorb.
+
+Das Löschen ist physisch.
+
+Die Löschung wird blockiert, solange mindestens ein Produkt
+den Hersteller verwendet.
+
+manufacturer_id wird nicht automatisch auf 0 gesetzt.
+
+Produkte werden nicht automatisch einem anderen Hersteller
+zugeordnet.
+
+Der Benutzer erhält eine verständliche Meldung über den Grund
+der blockierten Löschung.
+
+=====================================================================
+7.11.5 HISTORISCHE DATEN HABEN VORRANG
+=====================================================================
+
+Bei jeder Löschentscheidung gilt:
+
+Historische Nachvollziehbarkeit besitzt Vorrang vor technischer
+Bequemlichkeit.
+
+Daten dürfen nicht physisch entfernt werden, wenn dadurch
+
+• abgeschlossene Bestellungen
+• Bestellpositionen
+• steuerlich relevante Informationen
+• spätere Reklamationsprüfung
+• Kunden-Bestellhistorie
+• sonstige verbindliche historische Nachweise
+
+inhaltlich beschädigt oder unvollständig würden.
+
+Eine aktuelle Produktstammdatenzeile darf deshalb erst dann endgültig
+physisch gelöscht werden, wenn die historische Nachvollziehbarkeit
+vollständig durch eigenständige Snapshotdaten gewährleistet ist.
+
 =====================================================================
 8. ÄNDERUNGSREGELN
 =====================================================================
@@ -1923,8 +2463,16 @@ und tatsächlicher Umsetzung verbindlich ergänzt werden.
 Neue Projektentscheidungen werden ausschließlich nach offizieller
 Freigabe übernommen.
 
-Dokumentationsquellen bilden ausschließlich den tatsächlichen
-Projektstand ab.
+Dokumentationsquellen unterscheiden strikt zwischen
+
+• beschlossener Fachregel
+und
+• tatsächlicher Implementierung.
+
+Diese Fachquelle darf beschlossene Zielregeln dokumentieren.
+
+Ob eine Regel technisch bereits umgesetzt wurde, wird ausschließlich
+in FDShop_Implementierungsstand und FDShop_Codebestand dokumentiert.
 
 Die Dokumentationspflege trifft keine eigenen Projektentscheidungen.
 
@@ -1975,6 +2523,30 @@ Vor jeder Änderung prüfen:
 
 □ Wird eine noch nicht implementierte Frontend-Funktion
    versehentlich als verbindlicher Ist-Workflow behandelt?
+
+□ Wird Joomla-Standard verwendet, soweit er die Aufgabe vollständig
+   und ohne Verlust von FDShop-Funktionalität erfüllt?
+
+□ Wird bei Joomla-Edit-Formularen der vollständige Ablauf aus
+   Form-Action, Record-ID, Request, Controller, Model/Service und
+   Redirect geprüft?
+
+□ Ist is_active ausschließlich Veröffentlichungsstatus?
+
+□ Wird ein Produkt-Papierkorb ausschließlich über is_deleted
+   abgebildet?
+
+□ Wurde vor einer Löschung die vollständige Abhängigkeitskette
+   geprüft?
+
+□ Werden historische Bestellpositionen vor Änderungen und
+   Löschungen aktueller Stammdaten geschützt?
+
+□ Kann eine alte Bestellung ohne aktuelle Produkt-, Hersteller-
+   oder Preisdaten fachlich korrekt dargestellt werden?
+
+□ Wird zwischen beschlossener Fachregel und bereits implementiertem
+   Ist-Stand unterschieden?
 
 =====================================================================
 10. ÄNDERUNGSPROTOKOLL
@@ -2038,6 +2610,50 @@ Wesentliche Änderungen:
   Architekturquelle verwiesen
 • Struktur gemäß Dokumentationsstandard konsolidiert
 
+---------------------------------------------------------------------
+
+V8
+
+Vollständige Übernahme des fachlichen V7-Regelbestandes und
+Ergänzung der am 28.08.2026 ausdrücklich getroffenen
+Projektentscheidungen.
+
+Wesentliche Änderungen:
+
+• Produkt-Löschstatus is_deleted als eigener Papierkorbstatus
+  beschlossen
+• is_active ausdrücklich ausschließlich als Veröffentlichungsstatus
+  bestätigt
+• Missbrauch von is_active = -2 als Produkt-Papierkorb ausgeschlossen
+• Produkt-Papierkorb und Wiederherstellung fachlich definiert
+• endgültige physische Produktlöschung unter Schutzregeln gestellt
+• Kategorie-Löschung als physische, referenzgeschützte Löschung
+  definiert
+• Hersteller-Löschung als physische, referenzgeschützte Löschung
+  definiert
+• automatische Löschkaskaden und stilles Umhängen bei Kategorien
+  und Herstellern ausgeschlossen
+• historische Bestellpositionen als eigenständige Snapshots
+  präzisiert
+• verbindlicher Mindestumfang historischer Produktpositionsdaten
+  definiert
+• Herstellername als historischer Text-Snapshot festgelegt
+• regulärer Preis, Aktions-/Rabattpreis und tatsächlich berechneter
+  Preis historisch getrennt nachvollziehbar gemacht
+• Netto-/Bruttowerte und MwSt.-Satz als historische Kaufdaten
+  festgelegt
+• product_id als optionale technische Referenz von der historischen
+  Datenquelle abgegrenzt
+• historische Bestellungen gegen spätere Produktlöschung geschützt
+• Produktmedien ausdrücklich nicht als zwingender dauerhafter
+  Bestandteil der historischen Bestellansicht festgelegt
+• Joomla-Standardmechanismen und FDShop-Businesslogik klar
+  voneinander abgegrenzt
+• vollständige Joomla-Edit-Speicherkette einschließlich Record-ID
+  als Prüfvorgabe ergänzt
+• Trennung zwischen beschlossener Fachregel und tatsächlichem
+  Implementierungsstand ausdrücklich festgeschrieben
+
 =====================================================================
 11. EINWÄNDE / OFFENE PRÜFPUNKTE
 =====================================================================
@@ -2046,25 +2662,84 @@ EINWAND 1
 
 Thema:
 
-Einzelne Feldbezeichnungen im älteren V6-Datenmodell.
+Technische Umsetzung des neuen Produktfeldes is_deleted.
 
 Begründung:
 
-V6 enthält teilweise detaillierte Feldlisten, während die aktuellen
-V4-Übersichtsquellen bewusst nicht sämtliche SQL-Felder duplizieren.
+is_deleted ist mit V8 fachlich verbindlich beschlossen.
 
-V7 übernimmt deshalb nur solche Detailfelder unverändert,
-die aus V6 als bestehende Fachregel vorliegen, oder die aus dem
-aktuellen dokumentierten Projektstand eindeutig ableitbar sind.
+Zum Zeitpunkt der Erstellung dieser Quelle ist die technische
+Umsetzung jedoch noch nicht als abgeschlossen bestätigt.
 
-Bei späteren Änderungen an der SQL-Struktur ist ein erneuter
-Feldabgleich gegen die dann aktuelle Install-/Update-SQL erforderlich.
+Erforderlich sind bei der späteren Umsetzung insbesondere
 
-Dieser Hinweis trifft keine neue Projektentscheidung.
+• Datenbankfeld
+• Install-SQL
+• reguläre Update-SQL
+• Model-/Table-/Service-Berücksichtigung
+• Listenfilter bzw. Papierkorbkontext
+• Toolbar-Aktionen
+• Wiederherstellung
+• endgültige Löschung
+• Tests
+
+Diese Punkte sind Implementierungsaufgaben und werden durch diese
+Fachquelle nicht als bereits umgesetzt erklärt.
 
 ---------------------------------------------------------------------
 
 EINWAND 2
+
+Thema:
+
+Historischer Bestellpositions-Snapshot im aktuellen Datenmodell.
+
+Begründung:
+
+V8 definiert verbindlich, welche historischen Produktinformationen
+eine abgeschlossene Bestellposition mindestens dauerhaft
+nachvollziehbar halten muss.
+
+Vor der späteren vollständigen Checkout-/Bestellimplementierung
+ist das tatsächliche Bestellpositionsschema gegen diese Regel
+zu prüfen.
+
+Fehlende Snapshotfelder sind dann durch eine eigene freigegebene
+DB-/Implementierungsänderung zu ergänzen.
+
+Diese Quelle behauptet nicht, dass sämtliche in V8 geforderten
+Snapshotfelder bereits technisch vorhanden sind.
+
+---------------------------------------------------------------------
+
+EINWAND 3
+
+Thema:
+
+Endgültige Produktlöschung bei Bundle-, Gutschein- und
+historischen Bestellbezügen.
+
+Begründung:
+
+V8 stuft aktive bzw. fachlich schützende Bundle- und
+Gutscheinreferenzen grundsätzlich als Löschschutz ein.
+
+Historische Bestellpositionen werden dagegen niemals entfernt oder
+verändert. Sie blockieren die endgültige Produktlöschung nur so lange,
+wie die historische Darstellung noch von aktuellen Produkt-,
+Hersteller-, Preis- oder Mediendaten abhängt.
+
+Die genaue spätere Bedienlogik zur bewussten Auflösung aktiver
+Bundle- und Gutscheinreferenzen ist noch nicht als eigener Workflow
+definiert.
+
+Bis zu einer solchen Projektentscheidung darf die endgültige
+Produktlöschung bei entsprechenden schützenden Referenzen
+nicht eigenständig durch automatische Kaskaden erzwungen werden.
+
+---------------------------------------------------------------------
+
+EINWAND 4
 
 Thema:
 
@@ -2076,32 +2751,25 @@ Warenkorb, Checkout, Gutschein-Einlösung, Käufergruppenprüfung,
 Versandentscheidung und Zahlungsabwicklung sind noch nicht als
 vollständige Frontend-Funktionen implementiert.
 
-V7 definiert deshalb bewusst keinen hypothetischen vollständigen
+V8 definiert deshalb weiterhin keinen hypothetischen vollständigen
 Frontend-Workflow.
 
-Die entsprechenden Fachregeln müssen bei Beginn der
-Frontend-Entwicklung durch offizielle Projektentscheidungen
-konkretisiert und anschließend in einer neuen Version dokumentiert
-werden.
-
-Dieser Hinweis trifft keine neue Projektentscheidung.
+Die Bestell-Snapshot-Regeln aus V8 sind jedoch bereits verbindliche
+Vorgaben für die spätere Umsetzung.
 
 =====================================================================
 12. SCHLUSSBESTIMMUNGEN
 =====================================================================
 
-FDShop_Fachregeln_Daten_und_Formulare_V7 definiert die aktuell
-verbindlichen fachlichen Daten-, Formular- und Verantwortungsregeln
-des FDShop-Projektes.
+FDShop_Fachregeln_Daten_und_Formulare_V8 definiert die aktuell
+verbindlichen fachlichen Daten-, Formular-, Lebenszyklus-,
+Lösch- und Verantwortungsregeln des FDShop-Projektes.
 
 Sie ersetzt
 
-FDShop_Fachregeln_Daten_und_Formulare_V6
+FDShop_Fachregeln_Daten_und_Formulare_V7
 
 vollständig.
-
-Sie dokumentiert ausschließlich nachweisbare Fachregeln und
-trifft keine eigenständigen Architektur- oder Projektentscheidungen.
 
 Für den technischen Ist-Code gilt FDShop_Codebestand.
 
@@ -2116,11 +2784,14 @@ FDShop_Admin_List_Standard.
 Für Governance und Dokumentationsverfahren gelten die jeweils
 zuständigen Governance- und Dokumentationsquellen.
 
+Eine beschlossene Fachregel darf niemals allein aufgrund ihrer
+Dokumentation als bereits implementierte Funktion behandelt werden.
+
 =====================================================================
 ENDE DER QUELLE
 
-FDShop_Fachregeln_Daten_und_Formulare_V7
+FDShop_Fachregeln_Daten_und_Formulare_V8
 
 Status: VERBINDLICHE PROJEKTQUELLE
-Version: V7
+Version: V8
 =====================================================================
