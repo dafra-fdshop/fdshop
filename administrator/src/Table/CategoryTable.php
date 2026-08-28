@@ -9,6 +9,7 @@ namespace FDShop\Component\FDShop\Administrator\Table;
 defined('_JEXEC') or die;
 
 use Joomla\CMS\Factory;
+use Joomla\CMS\Filter\OutputFilter;
 use Joomla\CMS\Table\Table;
 use Joomla\Database\DatabaseDriver;
 
@@ -32,11 +33,22 @@ class CategoryTable extends Table
     public function check()
     {
         $this->category_name = trim((string) $this->category_name);
+        $this->alias = trim((string) ($this->alias ?? ''));
 
         if ($this->category_name === '') {
             $this->setError('category_name darf nicht leer sein.');
 
             return false;
+        }
+
+        if ($this->alias === '') {
+            $this->alias = OutputFilter::stringURLSafe($this->category_name);
+        } else {
+            $this->alias = OutputFilter::stringURLSafe($this->alias);
+        }
+
+        if ($this->alias === '') {
+            $this->alias = Factory::getDate()->format('Y-m-d-H-i-s');
         }
 
         if (!isset($this->parent_id) || $this->parent_id === '') {
