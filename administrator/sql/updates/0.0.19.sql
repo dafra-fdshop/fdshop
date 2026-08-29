@@ -3,7 +3,6 @@
 -- Empty/zero values on legacy rows mean "historically unknown"; current product data is never backfilled.
 
 ALTER TABLE `#__fdshop_order_items`
-  ADD COLUMN `sku` VARCHAR(64) NOT NULL DEFAULT '' AFTER `product_name`,
   ADD COLUMN `gtin` VARCHAR(64) NOT NULL DEFAULT '' AFTER `sku`,
   ADD COLUMN `manufacturer_name` VARCHAR(255) NOT NULL DEFAULT '' AFTER `gtin`,
   ADD COLUMN `regular_price_gross` DECIMAL(12,4) NOT NULL DEFAULT 0.0000 AFTER `quantity`,
