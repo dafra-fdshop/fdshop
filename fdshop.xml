@@ -3,7 +3,7 @@
 	<name>com_fdshop</name>
 	<author>FDShop</author>
 	<creationDate>2026-03-19</creationDate>
-	<version>0.1.12</version>
+	<version>0.0.19</version>
 	<description>Neuer schneller Shop</description>
 
 	<namespace path="src">FDShop\Component\FDShop</namespace>

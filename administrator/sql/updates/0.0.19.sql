@@ -1,4 +1,4 @@
--- FDShop update 0.1.12
+-- FDShop update 0.0.19
 -- Modernize immutable order snapshots and consolidate order history.
 -- Empty/zero values on legacy rows mean "historically unknown"; current product data is never backfilled.
 
