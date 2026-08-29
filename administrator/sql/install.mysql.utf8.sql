@@ -376,15 +376,25 @@ CREATE TABLE IF NOT EXISTS `#__fdshop_order_items` (
 
   `product_name` VARCHAR(255) NOT NULL,
   `sku` VARCHAR(64) NOT NULL,
+  `gtin` VARCHAR(64) NOT NULL DEFAULT '',
+  `manufacturer_name` VARCHAR(255) NOT NULL DEFAULT '',
 
   `quantity` DECIMAL(12,3) NOT NULL DEFAULT 1.000,
+  `regular_price_gross` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
+  `discount_price_gross` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
   `unit_price_net` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
   `unit_price_gross` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
+  `tax_rate` DECIMAL(7,4) NOT NULL DEFAULT 0.0000,
+  `line_total_net` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
+  `line_total_gross` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
+  `currency` CHAR(3) NOT NULL DEFAULT 'EUR',
+  `is_removed` TINYINT(1) NOT NULL DEFAULT 0,
 
   PRIMARY KEY (`id`),
   KEY `idx_fdshop_order_items_order_id` (`order_id`),
   KEY `idx_fdshop_order_items_product_id` (`product_id`),
-  KEY `idx_fdshop_order_items_sku` (`sku`)
+  KEY `idx_fdshop_order_items_sku` (`sku`),
+  KEY `idx_fdshop_order_items_is_removed` (`is_removed`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 
@@ -405,6 +415,7 @@ CREATE TABLE IF NOT EXISTS `#__fdshop_order_bundles` (
   `discount_amount_gross` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
   `total_net` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
   `total_gross` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
+  `is_removed` TINYINT(1) NOT NULL DEFAULT 0,
   `created` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `modified` DATETIME NULL DEFAULT NULL,
 
@@ -412,6 +423,7 @@ CREATE TABLE IF NOT EXISTS `#__fdshop_order_bundles` (
   KEY `idx_fdshop_order_bundles_order_id` (`order_id`),
   KEY `idx_fdshop_order_bundles_bundle_id` (`bundle_id`),
   KEY `idx_fdshop_order_bundles_bundle_number` (`bundle_number`),
+  KEY `idx_fdshop_order_bundles_is_removed` (`is_removed`),
   KEY `idx_fdshop_order_bundles_created` (`created`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -424,17 +436,25 @@ CREATE TABLE IF NOT EXISTS `#__fdshop_order_bundle_items` (
   `product_id` BIGINT UNSIGNED NOT NULL,
   `product_name` VARCHAR(255) NOT NULL,
   `sku` VARCHAR(64) NOT NULL,
+  `gtin` VARCHAR(64) NOT NULL DEFAULT '',
+  `manufacturer_name` VARCHAR(255) NOT NULL DEFAULT '',
   `quantity` DECIMAL(12,3) NOT NULL DEFAULT 1.000,
+  `regular_price_gross` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
+  `discount_price_gross` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
   `unit_price_net` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
   `unit_price_gross` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
+  `tax_rate` DECIMAL(7,4) NOT NULL DEFAULT 0.0000,
   `total_net` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
   `total_gross` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
+  `currency` CHAR(3) NOT NULL DEFAULT 'EUR',
+  `is_removed` TINYINT(1) NOT NULL DEFAULT 0,
   `created` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
   PRIMARY KEY (`id`),
   KEY `idx_fdshop_order_bundle_items_order_bundle_id` (`order_bundle_id`),
   KEY `idx_fdshop_order_bundle_items_product_id` (`product_id`),
-  KEY `idx_fdshop_order_bundle_items_sku` (`sku`)
+  KEY `idx_fdshop_order_bundle_items_sku` (`sku`),
+  KEY `idx_fdshop_order_bundle_items_is_removed` (`is_removed`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -727,15 +747,15 @@ WHERE NOT EXISTS (
 -- #__fdshop_order_history
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `#__fdshop_order_history` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `order_id` INT UNSIGNED NOT NULL,
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `order_id` BIGINT UNSIGNED NOT NULL,
 
   `event_type` VARCHAR(50) NOT NULL,
   `event_title` VARCHAR(255) NOT NULL,
   `event_text` TEXT NULL,
 
   `reference_type` VARCHAR(50) NULL,
-  `reference_id` INT UNSIGNED NULL,
+  `reference_id` BIGINT UNSIGNED NULL,
 
   `is_system_event` TINYINT(1) NOT NULL DEFAULT 0,
 
@@ -752,8 +772,8 @@ CREATE TABLE IF NOT EXISTS `#__fdshop_order_history` (
 -- #__fdshop_order_status_history
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `#__fdshop_order_status_history` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `order_id` INT UNSIGNED NOT NULL,
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `order_id` BIGINT UNSIGNED NOT NULL,
   `old_status_id` INT UNSIGNED NULL,
   `new_status_id` INT UNSIGNED NOT NULL,
 
@@ -847,25 +867,6 @@ CREATE TABLE IF NOT EXISTS `#__fdshop_media` (
   KEY `idx_fdshop_media_product_id` (`product_id`),
   KEY `idx_fdshop_media_is_primary` (`is_primary`),
   KEY `idx_fdshop_media_ordering` (`ordering`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- --------------------------------------------------------
--- #__fdshop_orders_history
--- --------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `#__fdshop_orders_history` (
-  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `order_id` BIGINT UNSIGNED NOT NULL,
-  `history_type` VARCHAR(255) NOT NULL,
-  `old_value` TEXT NULL,
-  `new_value` TEXT NULL,
-  `note` TEXT NULL,
-  `created` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `created_by` INT UNSIGNED NOT NULL DEFAULT 0,
-
-  PRIMARY KEY (`id`),
-  KEY `idx_fdshop_orders_history_order_id` (`order_id`),
-  KEY `idx_fdshop_orders_history_history_type` (`history_type`),
-  KEY `idx_fdshop_orders_history_created` (`created`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------

@@ -95,10 +95,18 @@ if (!empty($order->user_id)) {
                 <tbody>
                     <?php if (!empty($this->orderItems)) : ?>
                         <?php foreach ($this->orderItems as $item) : ?>
-                            <tr>
-                                <td><?php echo $this->escape((string) ($item->product_name ?? '')); ?></td>
-                                <td><?php echo $this->escape((string) ($item->sku ?? '')); ?></td>
+                            <tr class="<?php echo !empty($item->is_removed) ? 'table-secondary text-muted' : ''; ?>">
                                 <td>
+                                    <?php echo $this->escape((string) ($item->product_name ?? '')); ?>
+                                    <?php if (!empty($item->is_removed)) : ?><span class="badge bg-secondary">Entfernt</span><?php endif; ?>
+                                    <div class="small text-muted"><?php echo $this->escape((string) ($item->manufacturer_name ?? 'Historischer Hersteller unbekannt')); ?></div>
+                                </td>
+                                <td>
+                                    <?php echo $this->escape((string) ($item->sku ?? '')); ?>
+                                    <div class="small text-muted">GTIN: <?php echo $this->escape((string) ($item->gtin ?? 'historisch unbekannt')); ?></div>
+                                </td>
+                                <td>
+                                    <?php if (empty($item->is_removed)) : ?>
                                     <form action="<?php echo Route::_('index.php?option=com_fdshop&task=order.updateItemQuantity'); ?>" method="post" class="d-flex gap-2 align-items-center">
                                         <input type="number" name="quantity" class="form-control" min="1" step="1" value="<?php echo (int) ($item->quantity ?? 1); ?>">
                                         <input type="hidden" name="id" value="<?php echo (int) ($order->id ?? 0); ?>">
@@ -106,16 +114,22 @@ if (!empty($order->user_id)) {
                                         <button type="submit" class="btn btn-outline-primary btn-sm">Speichern</button>
                                         <?php echo HTMLHelper::_('form.token'); ?>
                                     </form>
+                                    <?php else : ?><?php echo $this->escape((string) $item->quantity); ?><?php endif; ?>
                                 </td>
-                                <td><?php echo number_format((float) ($item->unit_price_gross ?? 0), 2, ',', '.'); ?></td>
-                                <td><?php echo number_format((float) ($item->line_total_gross ?? 0), 2, ',', '.'); ?></td>
                                 <td>
+                                    <?php echo number_format((float) ($item->unit_price_gross ?? 0), 2, ',', '.'); ?> <?php echo $this->escape((string) ($item->currency ?? '')); ?>
+                                    <div class="small text-muted">Regulär: <?php echo number_format((float) ($item->regular_price_gross ?? 0), 2, ',', '.'); ?> · Aktion: <?php echo number_format((float) ($item->discount_price_gross ?? 0), 2, ',', '.'); ?> · MwSt.: <?php echo number_format((float) ($item->tax_rate ?? 0), 2, ',', '.'); ?> %</div>
+                                </td>
+                                <td><?php echo number_format((float) ($item->line_total_gross ?? 0), 2, ',', '.'); ?> <?php echo $this->escape((string) ($item->currency ?? '')); ?></td>
+                                <td>
+                                    <?php if (empty($item->is_removed)) : ?>
                                     <form action="<?php echo Route::_('index.php?option=com_fdshop&task=order.removeItem'); ?>" method="post">
                                         <input type="hidden" name="id" value="<?php echo (int) ($order->id ?? 0); ?>">
                                         <input type="hidden" name="order_item_id" value="<?php echo (int) ($item->id ?? 0); ?>">
                                         <button type="submit" class="btn btn-outline-danger btn-sm">Entfernen</button>
                                         <?php echo HTMLHelper::_('form.token'); ?>
                                     </form>
+                                    <?php else : ?><span class="small">Historisch erhalten</span><?php endif; ?>
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -146,6 +160,10 @@ if (!empty($order->user_id)) {
 
                                 if (!empty($product->sku)) {
                                     $optionText .= ' (' . (string) $product->sku . ')';
+                                }
+
+                                if (empty($product->is_active)) {
+                                    $optionText .= ' [inaktiv]';
                                 }
 
                                 echo $this->escape($optionText);
@@ -194,6 +212,7 @@ if (!empty($order->user_id)) {
                             <th>Datum</th>
                             <th>Alter Status</th>
                             <th>Neuer Status</th>
+                            <th>Benutzer / Kommentar</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -202,6 +221,7 @@ if (!empty($order->user_id)) {
                                 <td><?php echo !empty($entry->changed_at) ? HTMLHelper::_('date', $entry->changed_at, 'Y-m-d H:i') : ''; ?></td>
                                 <td><?php echo $this->escape((string) ($entry->old_status_name ?? '')); ?></td>
                                 <td><?php echo $this->escape((string) ($entry->new_status_name ?? '')); ?></td>
+                                <td><?php echo $this->escape((string) ($entry->changed_by_name ?? ('ID ' . (int) ($entry->changed_by ?? 0)))); ?><br><span class="small text-muted"><?php echo $this->escape((string) ($entry->comment ?? '')); ?></span></td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
@@ -222,6 +242,7 @@ if (!empty($order->user_id)) {
                             <th>Titel</th>
                             <th>Text</th>
                             <th>Datum</th>
+                            <th>Benutzer</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -230,6 +251,7 @@ if (!empty($order->user_id)) {
                                 <td><?php echo $this->escape((string) ($entry->event_title ?? '')); ?></td>
                                 <td><?php echo $this->escape((string) ($entry->event_text ?? '')); ?></td>
                                 <td><?php echo !empty($entry->created) ? HTMLHelper::_('date', $entry->created, 'Y-m-d H:i') : ''; ?></td>
+                                <td><?php echo $this->escape((string) ($entry->created_by_name ?? ('ID ' . (int) ($entry->created_by ?? 0)))); ?></td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
