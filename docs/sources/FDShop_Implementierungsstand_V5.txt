@@ -15,7 +15,13 @@ Welche wesentlichen Teile sind noch nicht implementiert?
 
 Maßgebliche technische Grundlage dieser Version ist:
 
-Git-Repository dafra-fdshop/fdshop, Branch feature, geprüft am 31.08.2026
+Git-Repository dafra-fdshop/fdshop
+Branch: feature
+Technischer Referenzcommit: 9818e76094988f525e6354818f8319a2616cb09a
+Prüfdatum: 31.08.2026
+
+Spätere reine Dokumentationscommits verändern diesen technischen
+Referenzstand nicht.
 
 Die Quelle beschreibt ausschließlich den nachweisbaren Ist-Zustand.
 
@@ -323,8 +329,9 @@ in den Konfigurationsbereich
 
 Noch offen
 
-• vollständige Verzahnung aller Statuswechsel mit dem Bestellworkflow •
-automatische Folgeaktionen
+• automatische statusabhängige Folgeaktionen
+• vollständige spätere Workflow-Automation über den reinen
+  administrativen Statuswechsel hinaus
 
 =====================================================================
 10.2 BUNDLE-BESTELLUNGEN
@@ -520,6 +527,71 @@ Die vorhandene Site-Struktur ist technische Vorbereitung. Sie ist keine
 fertige Frontend-Shopimplementierung.
 
 =====================================================================
+18A. V5-ERGÄNZUNG ZUM REAL GEPRÜFTEN ADMIN-IST-STAND
+=====================================================================
+
+Produkte
+
+Zusätzlich umgesetzt und real geprüft:
+• Produkt-Papierkorb über is_deleted
+• Wiederherstellung
+• endgültige Löschung
+• Schutzprüfung bei schützenden Referenzen
+• verständliche Fehlermeldungen bei blockierter Löschung
+• Aliasbildung / mehrfaches Speichern im geprüften Admin-Workflow
+
+Kategorien
+
+Zusätzlich umgesetzt und real geprüft:
+• physische Löschung
+• Löschschutz bei Unterkategorien
+• Löschschutz bei Produktzuordnungen
+• Löschschutz bei Gutschein-Kategorie-Zuordnungen
+
+Hersteller
+
+Zusätzlich umgesetzt und real geprüft:
+• physische Löschung
+• Löschschutz bei Produktreferenzen
+
+Bundles
+
+Zusätzlich umgesetzt und real geprüft:
+• bestehende Auditdaten bleiben beim Bearbeiten erhalten
+• mehrfaches Speichern / Apply
+• aktuelle Verkaufspreisregel
+• Aktionspreisregel
+• SKU-Präfixsuche / Autocomplete
+• Papierkorbprodukte werden ausgeschlossen
+• inaktive Produkte bleiben administrativ auswählbar und werden
+  entsprechend gekennzeichnet
+
+Preisverwendung
+
+Nachweisbar implementiert:
+• sale_price als reguläre kundenorientierte Verkaufspreisbasis
+• discount_price bei aktivem positiven Aktionspreis
+• Verwendung derselben Verkaufspreisgrundlage in Bundleverwaltung und
+  beim administrativen Hinzufügen neuer Bestellpositionen
+
+Bestellungen
+
+Der modernisierte Administrator-Kernbereich ist real geprüft:
+• Position hinzufügen
+• Menge erhöhen und verringern
+• Position logisch entfernen
+• Summen neu berechnen
+• Status ändern
+• allgemeine Historie
+• Statushistorie
+• Papierkorb
+• Wiederherstellung
+• Snapshot neuer administrativ hinzugefügter Produktpositionen
+
+Checkout, Frontend-Kundenworkflow sowie vollständige Versand- und
+Zahlungsintegration bleiben hiervon ausdrücklich unberührt und offen.
+
+=====================================================================
 19. GESAMTBEWERTUNG
 =====================================================================
 
@@ -554,14 +626,14 @@ implementiert.
 🟢 Weitgehend / Admin-Grundfunktion umgesetzt
 
 • Komponentenbasis • Dashboard-Grundansicht • Produkte • Kategorien •
-Hersteller • Bundles • Konfiguration • Bestellstatus-Administration •
-Versandarten-Administration • Zahlungsarten-Administration •
-Gutschein-Administration
+Hersteller • Bundles • Bestellungen • Konfiguration •
+Bestellstatus-Administration • Versandarten-Administration •
+Zahlungsarten-Administration • Gutschein-Administration
 
 🟡 Teilweise / im Ausbau
 
-• Bestellungen • Preisarchitektur • Lager / Bestand • Käufergruppen •
-Medien • Benutzer-/Kundenfunktionen
+• Preisarchitektur • Lager / Bestand • Käufergruppen • Medien •
+Benutzer-/Kundenfunktionen
 
 ⏳ Datenbasis / Vorbereitung
 
@@ -592,29 +664,37 @@ Projektquellen gepflegt.
 22. QUELLENGRUNDLAGE
 =====================================================================
 
-Für V4 wurde der dokumentierte Stand gegen den tatsächlichen
-Projektbestand abgeglichen.
-
 Technische Hauptgrundlage
 
-Git-Repository dafra-fdshop/fdshop, Branch feature, geprüft am 31.08.2026
+Git-Repository dafra-fdshop/fdshop
+Branch: feature
+Technischer Referenzcommit: 9818e76094988f525e6354818f8319a2616cb09a
+Prüfdatum: 31.08.2026
 
-Zusätzliche Einordnung anhand der bestehenden Projektdokumentation
+Zusätzliche verbindliche Einordnung anhand der zum Prüfzeitpunkt
+aktuellen Projektquellen:
 
-FDShop_Governance_und_Dokumentation_V3 FDShop_Dokumentationsstandard_V1
-FDShop_Architektur_Struktur_Installation_V2
-FDShop_Fachregeln_Daten_und_Formulare_V6 FDShop_Admin_List_Standard_V3
-FDShop_Codebestand_V3 FDShop_Implementierungsstand_V4
-FDShop_Projektworkflow_V1
+• FDShop_Governance_und_Dokumentation_V4
+• FDShop_Dokumentationsstandard_V2
+• FDShop_Architektur_Struktur_Installation_V3
+• FDShop_Fachregeln_Daten_und_Formulare_V10
+• FDShop_Admin_List_Standard_V3
+• FDShop_Codebestand_V5
+• FDShop_Projektworkflow_V2
+• FDShop_Temporaere_Umsetzungsrollen_V1, soweit relevant
 
-Bei Abweichungen wurde kein geplanter Zustand als implementiert
-ausgegeben.
+WICHTIG
+
+Diese Quelle dokumentiert den nachweisbaren funktionalen Ist-Stand.
+
+Bei konkreten späteren Codeänderungen ersetzt sie nicht die Prüfung des
+jeweils maßgeblichen aktuellen Repository-Standes.
 
 =====================================================================
 23. BEKANNTE BEREINIGUNGSPUNKTE
 =====================================================================
 
-Im aktuellen Projekt-ZIP befinden sich mehrere eindeutig als alt
+Im geprüften Repository-Stand befinden sich mehrere eindeutig als alt
 benannte Sicherungs-/Entwicklungsdateien:
 
 • alt_ProductsModel.php • alt2_ProductsModel.php • alt_ProductTable.php
