@@ -805,15 +805,8 @@ ProductDetailsTable • ConfigurationTable • aktuelle Formulare und Filter
 • aktuelle SQL-Tabellen • Manifest-Version 0.1.10 • SQL-Updates bis
 0.0.16 • Alt-/Sicherungsdateien als nicht aktive Referenzstände
 
-=====================================================================
-25. SCHLUSSBESTIMMUNG
-=====================================================================
 
-FDShop_Codebestand_V5 dokumentiert den nachweisbaren Codebestand des
-geprüften aktuellen Repository-Standes.
-
-Neue Versionen ersetzen ältere Versionen vollständig.
-
+------------------------------------------------------------------------
 
 V5
 
@@ -827,6 +820,15 @@ Aktualisiert insbesondere:
 • Statushistorie
 • Papierkorb/Wiederherstellung
 • Entfernung von #__fdshop_orders_history
+
+=====================================================================
+25. SCHLUSSBESTIMMUNG
+=====================================================================
+
+FDShop_Codebestand_V5 dokumentiert den nachweisbaren Codebestand des
+geprüften aktuellen Repository-Standes.
+
+Neue Versionen ersetzen ältere Versionen vollständig.
 
 =====================================================================
 ENDE DER QUELLE

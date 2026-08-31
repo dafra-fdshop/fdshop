@@ -735,24 +735,39 @@ Bundlebereich auf aktuellen Stand gebracht • Konfigurationsbereich
 aktualisiert • Warenkorb-Datenbasis aufgenommen • Frontend-Status
 präzisiert • Alt-/Sicherungsdateien als Bereinigungspunkt dokumentiert
 
+
+------------------------------------------------------------------------
+
+V5
+
+• Schema-/Manifeststand 0.0.19 berücksichtigt
+• Bestell-Adminbereich auf real getesteten Stand angehoben
+• Snapshotfelder dokumentiert
+• is_removed dokumentiert
+• konsolidierte Historie dokumentiert
+• alte orders_history als migriert und entfernt dokumentiert
+• Papierkorb/Wiederherstellung dokumentiert
+• Realtest vom 31.08.2026 aufgenommen
+
 =====================================================================
 25. EINWÄNDE / HINWEISE
 =====================================================================
 
 Hinweis 1
 
-Der aktuelle Codebestand ist der bisherigen V3-Dokumentation deutlich
-voraus.
+Der modernisierte Bestellbereich ist im Administrator-Kernbereich
+weitgehend umgesetzt und am 31.08.2026 real getestet.
 
-Die Aktualisierung auf V4 war daher erforderlich, bevor weitere größere
-Entwicklungsaufträge vergeben werden.
+Die Einstufung bezieht sich ausschließlich auf den dokumentierten
+Admin-Kernbereich. Checkout, Frontend-Kundenworkflow sowie vollständige
+Versand- und Zahlungsintegration bleiben davon unberührt und offen.
 
 ------------------------------------------------------------------------
 
 Hinweis 2
 
-Die Statusangaben dieser Quelle bewerten nur den nachweisbaren aktuellen
-Stand.
+Die Statusangaben dieser Quelle bewerten ausschließlich den
+nachweisbaren aktuellen Stand.
 
 Ein vorhandener Controller, eine Tabelle oder ein Formular allein wird
 nicht automatisch als vollständige Fachfunktion bewertet.
@@ -761,12 +776,11 @@ nicht automatisch als vollständige Fachfunktion bewertet.
 
 Hinweis 3
 
-Der geplante neue Workflow zur Verringerung manueller Übergaben zwischen
-Projektleiter und Fach-KIs wurde bewusst nicht in diese Quelle
-aufgenommen.
+Die eindeutig als alt bzw. Sicherungsstand benannten Dateien werden
+weiterhin nicht als aktive Implementierung gewertet.
 
-Er ist eine separate Projektworkflow-Entscheidung und soll nach der
-Dokumentationssynchronisierung besprochen und getestet werden.
+Eine spätere physische Bereinigung dieser Dateien ist ein separater
+Projektauftrag.
 
 =====================================================================
 26. SCHLUSSBESTIMMUNGEN
@@ -779,18 +793,6 @@ Repository-Branches feature.
 Sie dokumentiert ausschließlich nachweisbare Implementierungen.
 
 Neue Versionen ersetzen ältere Versionen vollständig.
-
-
-V5
-
-• Schema-/Manifeststand 0.0.19 berücksichtigt
-• Bestell-Adminbereich auf real getesteten Stand angehoben
-• Snapshotfelder dokumentiert
-• is_removed dokumentiert
-• konsolidierte Historie dokumentiert
-• alte orders_history als migriert und entfernt dokumentiert
-• Papierkorb/Wiederherstellung dokumentiert
-• Realtest vom 31.08.2026 aufgenommen
 
 =====================================================================
 ENDE DER QUELLE
