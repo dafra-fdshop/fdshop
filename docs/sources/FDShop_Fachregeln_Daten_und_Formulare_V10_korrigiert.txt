@@ -2,11 +2,11 @@
 FDShop_Fachregeln_Daten_und_Formulare_V10
 =====================================================================
 
-Status: VERBINDLICHE PROJEKTQUELLE Priorität: SEHR HOCH Version: V9
+Status: VERBINDLICHE PROJEKTQUELLE Priorität: SEHR HOCH Version: V10
 
 Diese Quelle ersetzt vollständig:
 
-FDShop_Fachregeln_Daten_und_Formulare_V8
+FDShop_Fachregeln_Daten_und_Formulare_V9
 
 ===================================================================== 1.
 ZWECK
@@ -1335,8 +1335,7 @@ Zugehörige Tabellen:
 #__fdshop_order_bundle_items #__fdshop_order_statuses
 #__fdshop_order_history #__fdshop_order_status_history
 
-Nicht mehr aktive Alt-Tabelle:
-#__fdshop_orders_history
+Nicht mehr aktive Alt-Tabelle: #__fdshop_orders_history
 
 Die Alttabelle #__fdshop_orders_history wurde mit Schema 0.0.19 in
 #__fdshop_order_history migriert und anschließend entfernt. Neue
@@ -1377,11 +1376,11 @@ Historische Bestellpositionen werden bei administrativem Entfernen nicht
 physisch gelöscht. Sie bleiben als Snapshot erhalten und werden über
 is_removed = 1 als entfernt gekennzeichnet.
 
-Neu hinzugefügte Bestellpositionen speichern den historischen Kaufzustand
-als Snapshot, insbesondere Produktname, SKU, GTIN, Herstellername, Menge,
-regulären Brutto-Preis, wirksamen Aktionspreis, berechneten Netto- und
-Brutto-Einzelpreis, MwSt.-Satz, Netto-/Brutto-Positionssumme, Währung und
-is_removed.
+Neu hinzugefügte Bestellpositionen speichern den historischen
+Kaufzustand als Snapshot, insbesondere Produktname, SKU, GTIN,
+Herstellername, Menge, regulären Brutto-Preis, wirksamen Aktionspreis,
+berechneten Netto- und Brutto-Einzelpreis, MwSt.-Satz,
+Netto-/Brutto-Positionssumme, Währung und is_removed.
 
 Fachlich relevante administrative Bestelländerungen sind in
 #__fdshop_order_history nachvollziehbar zu protokollieren. Dies umfasst
@@ -1395,8 +1394,8 @@ Bei Legacy-Bestellungen dürfen historisch unbekannte Snapshotwerte leer
 oder 0 bleiben. Aktuelle Stammdaten dürfen nicht nachträglich als
 angeblich historische Wahrheit zurückgeschrieben werden.
 
-Fachlich zusammengehörende Bestellmutationen sind transaktional konsistent
-durchzuführen.
+Fachlich zusammengehörende Bestellmutationen sind transaktional
+konsistent durchzuführen.
 
 Bundleinformationen innerhalb einer Bestellung besitzen eigene
 Bestelltabellen und ersetzen nicht die aktuellen Bundle-Stammdaten.
@@ -2543,20 +2542,21 @@ ausgeschlossen • Preisregel für Bundle-Produkte auf die zentrale
 Verkaufsregel zurückgeführt • Qualitätscheckliste um Preisquellen- und
 Produktauswahlprüfungen erweitert
 
-
 ------------------------------------------------------------------------
 
 V10
 
-• Bestellbereich mit Schema 0.0.19 und real getestetem Admin-Workflow synchronisiert
-• #__fdshop_order_history als einzige allgemeine Bestellhistorie festgeschrieben
-• #__fdshop_order_status_history als spezialisierte Statushistorie bestätigt
-• #__fdshop_orders_history als migrierte und entfernte Alttabelle dokumentiert
-• is_removed statt physischer Löschung historischer Bestellpositionen präzisiert
-• Snapshotfelder neu hinzugefügter Bestellpositionen als umgesetzt bestätigt
-• Historisierung relevanter Adminänderungen verbindlich präzisiert
-• Legacy-Regel „historisch unbekannt statt rückwirkend falsch“ ergänzt
-• Summen- und Transaktionsregeln für Bestellmutationen präzisiert
+• Bestellbereich mit Schema 0.0.19 und real getestetem Admin-Workflow
+synchronisiert • #__fdshop_order_history als einzige allgemeine
+Bestellhistorie festgeschrieben • #__fdshop_order_status_history als
+spezialisierte Statushistorie bestätigt • #__fdshop_orders_history als
+migrierte und entfernte Alttabelle dokumentiert • is_removed statt
+physischer Löschung historischer Bestellpositionen präzisiert •
+Snapshotfelder neu hinzugefügter Bestellpositionen als umgesetzt
+bestätigt • Historisierung relevanter Adminänderungen verbindlich
+präzisiert • Legacy-Regel „historisch unbekannt statt rückwirkend
+falsch“ ergänzt • Summen- und Transaktionsregeln für Bestellmutationen
+präzisiert
 
 =====================================================================
 11. EINWÄNDE / OFFENE PRÜFPUNKTE
@@ -2600,11 +2600,12 @@ beschlossene Snapshot-Grundregel mit Schema 0.0.19 und dem zugehörigen
 OrderService technisch umgesetzt und real getestet.
 
 Legacy-Bestellungen können weiterhin historisch unbekannte Leer-/0-Werte
-enthalten. Diese dürfen nicht mit aktuellen Stammdaten verfälscht werden.
+enthalten. Diese dürfen nicht mit aktuellen Stammdaten verfälscht
+werden.
 
-Die vollständige Checkout-Erzeugung neuer Bestellungen bleibt ein späterer
-Frontend-/Checkout-Arbeitspunkt und wird durch diese Feststellung nicht als
-implementiert erklärt.
+Die vollständige Checkout-Erzeugung neuer Bestellungen bleibt ein
+späterer Frontend-/Checkout-Arbeitspunkt und wird durch diese
+Feststellung nicht als implementiert erklärt.
 
 ------------------------------------------------------------------------
 
@@ -2649,7 +2650,9 @@ vollständige Frontend-Funktionen implementiert.
 V10 definiert deshalb weiterhin keinen hypothetischen vollständigen
 Frontend-Workflow.
 
-Die Bestell-Snapshot-Regeln aus V10 sind verbindlich. Für administrativ neu hinzugefügte Positionen sind sie bereits umgesetzt; die vollständige Checkout-Erzeugung bleibt offen.
+Die Bestell-Snapshot-Regeln aus V10 sind verbindlich. Für administrativ
+neu hinzugefügte Positionen sind sie bereits umgesetzt; die vollständige
+Checkout-Erzeugung bleibt offen.
 
 =====================================================================
 12. SCHLUSSBESTIMMUNGEN
@@ -2686,4 +2689,3 @@ ENDE DER QUELLE
 FDShop_Fachregeln_Daten_und_Formulare_V10
 
 Status: VERBINDLICHE PROJEKTQUELLE Version: V10
-=====================================================================
