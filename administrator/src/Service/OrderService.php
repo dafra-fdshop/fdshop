@@ -85,7 +85,8 @@ final class OrderService implements OrderServiceInterface
         try {
             $q=$this->db->getQuery(true)->update($this->db->quoteName('#__fdshop_orders'))->set('order_status_id = '.$newStatusId)->set('order_status = '.$this->db->quote($status->status_code))->set('modified = '.$this->db->quote($date))->where('id = '.$orderId);
             $this->db->setQuery($q)->execute();
-            $this->db->insertObject('#__fdshop_order_status_history',(object)['order_id'=>$orderId,'old_status_id'=>$old ?: null,'new_status_id'=>$newStatusId,'comment'=>$comment ?: null,'is_system_change'=>0,'changed_at'=>$date,'changed_by'=>$user]);
+            $statusHistory = (object) ['order_id'=>$orderId,'old_status_id'=>$old ?: null,'new_status_id'=>$newStatusId,'comment'=>$comment ?: null,'is_system_change'=>0,'changed_at'=>$date,'changed_by'=>$user];
+            $this->db->insertObject('#__fdshop_order_status_history', $statusHistory);
             $text=sprintf('%s → %s',(string)($order->status_name ?: $order->order_status),$status->status_name).($comment !== '' ? ': '.$comment : '');
             $this->writeOrderHistory($orderId,'status_changed','Status geändert',$text,'order_status',$newStatusId,false);
             $this->db->transactionCommit(); return true;
@@ -110,7 +111,8 @@ final class OrderService implements OrderServiceInterface
 
     public function writeOrderHistory(int $orderId,string $eventType,string $eventTitle,?string $eventText=null,?string $referenceType=null,?int $referenceId=null,bool $isSystemEvent=true): int
     {
-        $this->db->insertObject('#__fdshop_order_history',(object)['order_id'=>$orderId,'event_type'=>$eventType,'event_title'=>$eventTitle,'event_text'=>$eventText,'reference_type'=>$referenceType,'reference_id'=>$referenceId,'is_system_event'=>$isSystemEvent?1:0,'created'=>Factory::getDate()->toSql(),'created_by'=>(int)Factory::getApplication()->getIdentity()->id]);
+        $history = (object) ['order_id'=>$orderId,'event_type'=>$eventType,'event_title'=>$eventTitle,'event_text'=>$eventText,'reference_type'=>$referenceType,'reference_id'=>$referenceId,'is_system_event'=>$isSystemEvent?1:0,'created'=>Factory::getDate()->toSql(),'created_by'=>(int)Factory::getApplication()->getIdentity()->id];
+        $this->db->insertObject('#__fdshop_order_history', $history);
         return (int)$this->db->insertid();
     }
 

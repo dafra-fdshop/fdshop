@@ -18,7 +18,7 @@ class OrdersController extends AdminController
         if($ids===[] || $status<=0) return $this->fail($ids===[]?'Keine Bestellungen markiert.':'Kein Bestellstatus ausgewählt.');
         try { $changed=0; foreach($ids as $id) if($this->service()->changeStatus($id,$status,'Bulk-Statusänderung aus der Bestellliste')) $changed++; $this->setMessage($changed.' Bestellung(en) aktualisiert.'); }
         catch(\Throwable $e){$this->setMessage($e->getMessage(),'error');}
-        $this->setRedirect($this->redirect()); return true;
+        $this->setRedirect($this->getListRedirect()); return true;
     }
     public function trashconfirm(): bool
     {
@@ -35,7 +35,7 @@ class OrdersController extends AdminController
     private function changeState(array $ids,int $state,string $message): bool
     {
         try{$this->service()->setOrderState($ids,$state);$this->setMessage($message);}catch(\Throwable $e){$this->setMessage($e->getMessage(),'error');}
-        $this->setRedirect($this->redirect()); return true;
+        $this->setRedirect($this->getListRedirect()); return true;
     }
     private function authoriseMutation(): bool
     {
@@ -43,6 +43,6 @@ class OrdersController extends AdminController
     }
     private function ids(): array { return array_values(array_unique(array_filter(array_map('intval',$this->input->post->get('cid',[],'array'))))); }
     private function service(): OrderServiceInterface { return Factory::getApplication()->bootComponent('com_fdshop')->getContainer()->get(OrderServiceInterface::class); }
-    private function fail(string $message): bool {$this->setMessage($message,'warning');$this->setRedirect($this->redirect());return false;}
-    private function redirect(): string {return 'index.php?option=com_fdshop&view=orders';}
+    private function fail(string $message): bool {$this->setMessage($message,'warning');$this->setRedirect($this->getListRedirect());return false;}
+    private function getListRedirect(): string {return 'index.php?option=com_fdshop&view=orders';}
 }
