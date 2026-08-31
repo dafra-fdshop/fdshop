@@ -17,7 +17,13 @@ zentral zu erfassen.
 
 Maßgebliche technische Grundlage dieser Version ist:
 
-Git-Repository dafra-fdshop/fdshop, Branch feature, geprüft am 31.08.2026
+Git-Repository dafra-fdshop/fdshop
+Branch: feature
+Technischer Referenzcommit: 9818e76094988f525e6354818f8319a2616cb09a
+Prüfdatum: 31.08.2026
+
+Spätere reine Dokumentationscommits verändern diesen technischen
+Referenzstand nicht.
 
 Die Quelle beschreibt ausschließlich tatsächlich im geprüften Repository-Stand vorhandenen Code.
 
@@ -168,7 +174,7 @@ alt_ProductsModel.php alt2_ProductsModel.php
 Wichtige Regel
 
 Dateien mit Präfix alt_ oder alt2_ sind nicht als aktiver Referenzcode
-zu behandeln. Sie sind nachweisbar im Projekt-ZIP vorhanden, stellen
+zu behandeln. Sie sind nachweisbar im geprüften Repository-Stand vorhanden, stellen
 aber Entwicklungs-/Sicherungsaltstände dar.
 
 ===================================================================== 6.
@@ -238,9 +244,19 @@ Rabattregel ermitteln • Produkt über SKU suchen
 
 Nachweisbare Schnittstellen/Aufgaben
 
-• Bestellposition hinzufügen • Bestellposition entfernen •
-Positionsmenge ändern • Bestell-Gesamtsumme neu berechnen •
-Order-History schreiben • Orders-History schreiben
+• Bestellposition hinzufügen
+• vollständigen Snapshot für neue Produktposition erzeugen
+• Bestellposition über is_removed logisch entfernen
+• Positionsmenge ändern
+• Bestell-Gesamtsumme neu berechnen
+• Bestellstatus ändern
+• Statushistorie in #__fdshop_order_status_history schreiben
+• allgemeine Bestellhistorie in #__fdshop_order_history schreiben
+• Bestellung in Papierkorb verschieben
+• Bestellung wiederherstellen
+• fachlich zusammengehörende Bestellmutationen transaktional koordinieren
+
+#__fdshop_orders_history wird vom aktiven OrderService nicht verwendet.
 
   -------------------
   6.6 CouponService
@@ -741,8 +757,8 @@ Regel für Fach-KIs
 
 Diese Dateien dürfen nicht als aktueller Referenzcode verwendet werden.
 
-Sie bleiben in dieser Quelle dokumentiert, solange sie im aktuellen
-Projekt-ZIP vorhanden sind.
+Sie bleiben in dieser Quelle dokumentiert, solange sie im geprüften
+Repository-Stand vorhanden sind.
 
 Eine Löschung oder Bereinigung ist eine separate Projektentscheidung.
 
@@ -786,7 +802,7 @@ Ergänzt bzw. aktualisiert wurden insbesondere
 Versandarten • Zahlungsarten • Bestellstatus • zusätzliche Services und
 Interfaces • zusätzliche Tables • Bundle-Erweiterungen •
 ProductDetailsTable • ConfigurationTable • aktuelle Formulare und Filter
-• aktuelle SQL-Tabellen • Manifest-Version 0.0.19 • SQL-Updates bis
+• aktuelle SQL-Tabellen • Manifest-Version 0.1.10 • SQL-Updates bis
 0.0.16 • Alt-/Sicherungsdateien als nicht aktive Referenzstände
 
 =====================================================================

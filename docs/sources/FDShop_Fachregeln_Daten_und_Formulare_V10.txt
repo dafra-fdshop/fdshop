@@ -29,17 +29,22 @@ Codebestand und keinen Implementierungsstatus.
 
 Dafür gelten die jeweils zuständigen Projektquellen.
 
-V9 übernimmt den vollständigen fachlichen Regelbestand aus V8 und
-ergänzt die am 28.08.2026 nach erfolgreicher Implementierung und
-Realprüfung bestätigten Projektentscheidungen zu
+V10 übernimmt den vollständigen fachlichen Regelbestand aus V9.
 
-• führendem regulären Brutto-Verkaufspreis • führendem
-Brutto-Aktions-/Rabattverkaufspreis • verbindlicher Ermittlung des
-aktuell anzuzeigenden Verkaufspreises • Abgrenzung zwischen
-Verkaufsinformationen und Kalkulationsdaten • Verwendung dieser
-Preisregel in administrativen Produktbeziehungen • Auswahl inaktiver
-Produkte in administrativen Bundle-Zuordnungen • Ausschluss von
-Papierkorbprodukten aus operativen Produktauswahlen
+Zusätzlich präzisiert V10 die verbindlichen Regeln des Bestellbereiches
+insbesondere zu
+
+• allgemeiner Bestellhistorie
+• spezialisierter Statushistorie
+• historischen Bestellpositions-Snapshots
+• logischem Entfernen über is_removed
+• Historisierung fachlich relevanter Adminänderungen
+• transaktionaler Konsistenz von Bestellmutationen
+• Legacy-Bestellungen
+• Papierkorb und Wiederherstellung von Bestellungen
+
+Die in V9 festgelegten Preis- und Bundle-Regeln bleiben vollständig
+gültig.
 
 WICHTIG:
 
@@ -294,10 +299,11 @@ kein zulässiger FDShop-Papierkorbstatus.
 
 WICHTIG:
 
-Diese Fachregel beschreibt die beschlossene Zielregel.
+Diese Fachregel ist verbindlich.
 
-Ob is_deleted bereits technisch implementiert ist, ergibt sich
-ausschließlich aus FDShop_Implementierungsstand und FDShop_Codebestand.
+Der tatsächliche technische Ist-Stand von is_deleted, Produkt-Papierkorb,
+Wiederherstellung und endgültiger Löschung wird ausschließlich in
+FDShop_Implementierungsstand und FDShop_Codebestand dokumentiert.
 
 =====================================================================
 3.8 KATALOGMODUS
@@ -427,10 +433,12 @@ LÖSCHSTATUS / PAPIERKORB
 
 is_deleted
 
-Hinweis: is_deleted ist als verbindliches Zielfeld beschlossen. Ob das
-Feld im aktuellen technischen Ist-Stand bereits vorhanden ist, ergibt
-sich ausschließlich aus FDShop_Codebestand und
-FDShop_Implementierungsstand.
+Hinweis:
+
+is_deleted ist das verbindliche FDShop-Feld für den Produkt-Papierkorb.
+
+Der tatsächliche technische Ist-Stand wird ausschließlich in
+FDShop_Codebestand und FDShop_Implementierungsstand dokumentiert.
 
 DARSTELLUNG
 
@@ -2562,97 +2570,102 @@ präzisiert
 11. EINWÄNDE / OFFENE PRÜFPUNKTE
 =====================================================================
 
-EINWAND 1
+OFFENER PRÜFPUNKT 1
 
 Thema:
 
-Technische Umsetzung des neuen Produktfeldes is_deleted.
+Endgültige Produktlöschung bei historischen Bestellreferenzen.
 
-Begründung:
+Regel:
 
-is_deleted ist seit V8 fachlich verbindlich beschlossen.
+Historische Bestellpositionen und Historien werden niemals gelöscht oder
+inhaltlich verändert.
 
-Zum Zeitpunkt der Erstellung dieser Quelle ist die technische Umsetzung
-jedoch noch nicht als abgeschlossen bestätigt.
+Eine endgültige physische Löschung des aktuellen Produktstammsatzes ist
+fachlich erst dann zulässig, wenn für sämtliche betroffenen
+Bestellarten und historischen Datenbestände nachweislich sichergestellt
+ist, dass die historische Darstellung vollständig aus eigenständigen
+Snapshots möglich ist.
 
-Erforderlich sind bei der späteren Umsetzung insbesondere
+Dies umfasst insbesondere auch:
 
-• Datenbankfeld • Install-SQL • reguläre Update-SQL •
-Model-/Table-/Service-Berücksichtigung • Listenfilter bzw.
-Papierkorbkontext • Toolbar-Aktionen • Wiederherstellung • endgültige
-Löschung • Tests
+• Legacy-Bestellungen
+• Bestell-Bundles
+• Bundle-Positionen innerhalb von Bestellungen
 
-Diese Punkte sind Implementierungsaufgaben und werden durch diese
-Fachquelle nicht als bereits umgesetzt erklärt.
+Solange diese vollständige Snapshot-Unabhängigkeit nicht nachweislich
+für alle betroffenen historischen Pfade gewährleistet ist, bleibt eine
+konservative technische Blockierung zulässig und fachlich sicher.
+
+Der tatsächliche Implementierungsstand wird ausschließlich in
+FDShop_Codebestand und FDShop_Implementierungsstand dokumentiert.
 
 ------------------------------------------------------------------------
 
-EINWAND 2
+OFFENER PRÜFPUNKT 2
 
 Thema:
 
-Historischer Bestellpositions-Snapshot.
+Bewusste Auflösung aktiver Bundle- und Gutscheinreferenzen vor einer
+endgültigen Produktlöschung.
 
-Status ab V10:
+Stand:
 
-Für neu administrativ hinzugefügte Bestellpositionen ist die in V9
-beschlossene Snapshot-Grundregel mit Schema 0.0.19 und dem zugehörigen
-OrderService technisch umgesetzt und real getestet.
+Aktive bzw. vorhandene fachlich schützende Bundle- und
+Gutscheinreferenzen dürfen nicht automatisch entfernt werden, nur um
+eine endgültige Produktlöschung zu ermöglichen.
 
-Legacy-Bestellungen können weiterhin historisch unbekannte Leer-/0-Werte
-enthalten. Diese dürfen nicht mit aktuellen Stammdaten verfälscht
-werden.
+Ein späterer bewusster Bedienworkflow zum Auflösen solcher Beziehungen
+ist noch nicht als eigene Projektregel definiert.
 
-Die vollständige Checkout-Erzeugung neuer Bestellungen bleibt ein
-späterer Frontend-/Checkout-Arbeitspunkt und wird durch diese
-Feststellung nicht als implementiert erklärt.
+Bis zu einer entsprechenden Projektentscheidung gilt:
+
+• keine automatische Kaskade
+• keine stille Entfernung von Bundle-Zuordnungen
+• keine stille Entfernung von Gutschein-Produkt-Zuordnungen
 
 ------------------------------------------------------------------------
 
-EINWAND 3
+OFFENER PRÜFPUNKT 3
 
 Thema:
 
-Endgültige Produktlöschung bei Bundle-, Gutschein- und historischen
-Bestellbezügen.
+Vollständige Checkout-Erzeugung historischer Bestell-Snapshots.
 
-Begründung:
+Regel:
 
-V9 stuft aktive bzw. fachlich schützende Bundle- und Gutscheinreferenzen
-grundsätzlich als Löschschutz ein.
+Der spätere Checkout muss beim verbindlichen Bestellabschluss dieselben
+historischen Snapshotgrundsätze einhalten, die diese Quelle für
+Bestellpositionen festlegt.
 
-Historische Bestellpositionen werden dagegen niemals entfernt oder
-verändert. Sie blockieren die endgültige Produktlöschung nur so lange,
-wie die historische Darstellung noch von aktuellen Produkt-,
-Hersteller-, Preis- oder Mediendaten abhängt.
+Insbesondere dürfen Bestellungen nicht dauerhaft von später
+veränderlichen Produkt-, Hersteller-, Preis- oder Mediendaten abhängen.
 
-Die genaue spätere Bedienlogik zur bewussten Auflösung aktiver Bundle-
-und Gutscheinreferenzen ist noch nicht als eigener Workflow definiert.
+Die vollständige Checkout-Erzeugung ist noch kein in dieser Fachquelle
+als implementiert zu behandelnder Workflow.
 
-Bis zu einer solchen Projektentscheidung darf die endgültige
-Produktlöschung bei entsprechenden schützenden Referenzen nicht
-eigenständig durch automatische Kaskaden erzwungen werden.
+Der tatsächliche Umsetzungsstand wird ausschließlich in
+FDShop_Implementierungsstand dokumentiert.
 
 ------------------------------------------------------------------------
 
-EINWAND 4
+OFFENER PRÜFPUNKT 4
 
 Thema:
 
-Noch nicht vollständig implementierte Frontend-Fachregeln.
+Noch nicht vollständig implementierte Frontend-Fachprozesse.
 
-Begründung:
+Stand:
 
 Warenkorb, Checkout, Gutschein-Einlösung, Käufergruppenprüfung,
-Versandentscheidung und Zahlungsabwicklung sind noch nicht als
-vollständige Frontend-Funktionen implementiert.
+Versandentscheidung, Zahlungsabwicklung und Kundenbereich sind noch
+nicht als vollständige Frontend-Fachprozesse definiert und umgesetzt.
 
-V10 definiert deshalb weiterhin keinen hypothetischen vollständigen
-Frontend-Workflow.
+V10 erfindet hierfür keinen hypothetischen vollständigen Workflow.
 
-Die Bestell-Snapshot-Regeln aus V10 sind verbindlich. Für administrativ
-neu hinzugefügte Positionen sind sie bereits umgesetzt; die vollständige
-Checkout-Erzeugung bleibt offen.
+Bereits beschlossene Regeln, insbesondere zu Preisquellen, historischen
+Bestell-Snapshots, Single Source of Truth und Service-Verantwortung,
+bleiben für die spätere Umsetzung verbindlich.
 
 =====================================================================
 12. SCHLUSSBESTIMMUNGEN
