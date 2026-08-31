@@ -1,4 +1,4 @@
-[QUELLE] FDShop_Codebestand_V4
+[QUELLE] FDShop_Codebestand_V5
 
 ===================================================================== 1.
 ZWECK DER QUELLE
@@ -17,10 +17,9 @@ zentral zu erfassen.
 
 Maßgebliche technische Grundlage dieser Version ist:
 
-fdshop_Projektstand_Aktuell.zip
+Git-Repository dafra-fdshop/fdshop, Branch feature, geprüft am 31.08.2026
 
-Die Quelle beschreibt ausschließlich tatsächlich im aktuellen
-Projekt-ZIP vorhandenen Code.
+Die Quelle beschreibt ausschließlich tatsächlich im geprüften Repository-Stand vorhandenen Code.
 
 Sie definiert keine neue Architektur und keine neuen Fachregeln.
 
@@ -34,16 +33,15 @@ VERBINDLICHE PROJEKTQUELLE
 
 Version
 
-V4
+V5
 
 Regel
 
 Neue Versionen ersetzen ältere Versionen vollständig.
 
-FDShop_Codebestand_V4 ersetzt damit FDShop_Codebestand_V3.
+FDShop_Codebestand_V5 ersetzt damit FDShop_Codebestand_V4.
 
-Bei Widersprüchen zwischen dieser Quelle und dem nachweisbaren aktuellen
-Projekt-ZIP gilt gemäß Governance der tatsächliche Projektstand.
+Bei Widersprüchen zwischen dieser Quelle und dem ausdrücklich maßgeblichen aktuellen Repository-Stand gilt gemäß Governance der tatsächliche Projektstand.
 
 ===================================================================== 3.
 AKTUELLER TECHNISCHER BASISSTAND
@@ -55,7 +53,7 @@ fdshop.xml
 
 Nachweisbarer Manifest-Stand
 
-Version 0.1.10
+Version 0.0.19
 
 Installationsstruktur
 
@@ -72,7 +70,7 @@ Update-SQLs vorhanden von
 
 bis
 
-0.0.16.sql
+0.0.19.sql
 
 ===================================================================== 4.
 ADMINISTRATOR — CONTROLLER
@@ -590,6 +588,40 @@ entfernen • Positionsmenge ändern • Gesamtsumme neu berechnen •
 History-Einträge • Papierkorb-/Wiederherstellungsabläufe
 
 =====================================================================
+17.1 BESTELLBEREICH — AKTUALISIERUNG SCHEMA 0.0.19
+=====================================================================
+
+Nachweisbar vorhanden und real getestet:
+
+• Produktposition hinzufügen
+• vollständigen Snapshot für neue Produktposition erzeugen
+• Positionsmenge ändern
+• Position über is_removed logisch entfernen
+• Bestellsumme aus aktiven Positionen neu berechnen
+• Status ändern
+• Statushistorie schreiben
+• allgemeine Bestellhistorie schreiben
+• Bestellung in Papierkorb verschieben
+• Bestellung wiederherstellen
+• Admin-Benutzer in Historienereignissen speichern
+
+Snapshotfelder neuer Produktpositionen:
+product_id, product_name, sku, gtin, manufacturer_name, quantity,
+regular_price_gross, discount_price_gross, unit_price_net,
+unit_price_gross, tax_rate, line_total_net, line_total_gross, currency,
+is_removed.
+
+Führende allgemeine Historie:
+#__fdshop_order_history
+
+Spezialisierte Statushistorie:
+#__fdshop_order_status_history
+
+#__fdshop_orders_history ist ab Schema 0.0.19 keine aktive Tabelle mehr.
+Update 0.0.19 migriert vorhandene Altdaten als legacy_history in die
+allgemeine Historie und entfernt anschließend die Alttabelle.
+
+=====================================================================
 18. GUTSCHEINBEREICH
 =====================================================================
 
@@ -641,7 +673,6 @@ Die Install-SQL enthält nachweisbar folgende Tabellen:
 #__fdshop_orders #__fdshop_order_items #__fdshop_order_bundles
 #__fdshop_order_bundle_items #__fdshop_order_statuses
 #__fdshop_order_history #__fdshop_order_status_history
-#__fdshop_orders_history
 
 #__fdshop_config #__fdshop_media
 
@@ -755,22 +786,36 @@ Ergänzt bzw. aktualisiert wurden insbesondere
 Versandarten • Zahlungsarten • Bestellstatus • zusätzliche Services und
 Interfaces • zusätzliche Tables • Bundle-Erweiterungen •
 ProductDetailsTable • ConfigurationTable • aktuelle Formulare und Filter
-• aktuelle SQL-Tabellen • Manifest-Version 0.1.10 • SQL-Updates bis
+• aktuelle SQL-Tabellen • Manifest-Version 0.0.19 • SQL-Updates bis
 0.0.16 • Alt-/Sicherungsdateien als nicht aktive Referenzstände
 
 =====================================================================
 25. SCHLUSSBESTIMMUNG
 =====================================================================
 
-FDShop_Codebestand_V4 dokumentiert den nachweisbaren Codebestand des
-aktuellen Projekt-ZIP.
+FDShop_Codebestand_V5 dokumentiert den nachweisbaren Codebestand des
+geprüften aktuellen Repository-Standes.
 
 Neue Versionen ersetzen ältere Versionen vollständig.
+
+
+V5
+
+Abgleich gegen den modernisierten und real getesteten Bestellbereich.
+Aktualisiert insbesondere:
+• Manifest-/Schema-Stand 0.0.19
+• SQL-Updates bis 0.0.19
+• Bestellpositions-Snapshots
+• is_removed
+• konsolidierte allgemeine Bestellhistorie
+• Statushistorie
+• Papierkorb/Wiederherstellung
+• Entfernung von #__fdshop_orders_history
 
 =====================================================================
 ENDE DER QUELLE
 
-FDShop_Codebestand_V4
+FDShop_Codebestand_V5
 
 Status
 
@@ -778,4 +823,4 @@ VERBINDLICHE PROJEKTQUELLE
 
 Version
 
-V4
+V5

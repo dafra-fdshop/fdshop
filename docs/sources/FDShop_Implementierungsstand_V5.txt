@@ -1,4 +1,4 @@
-[QUELLE] FDShop_Implementierungsstand_V4
+[QUELLE] FDShop_Implementierungsstand_V5
 
 ===================================================================== 1.
 ZWECK DER QUELLE
@@ -15,7 +15,7 @@ Welche wesentlichen Teile sind noch nicht implementiert?
 
 Maßgebliche technische Grundlage dieser Version ist:
 
-fdshop_Projektstand_Aktuell.zip
+Git-Repository dafra-fdshop/fdshop, Branch feature, geprüft am 31.08.2026
 
 Die Quelle beschreibt ausschließlich den nachweisbaren Ist-Zustand.
 
@@ -32,9 +32,9 @@ VERBINDLICHE PROJEKTQUELLE
 
 Version
 
-V4
+V5
 
-FDShop_Implementierungsstand_V4 ersetzt FDShop_Implementierungsstand_V3
+FDShop_Implementierungsstand_V5 ersetzt FDShop_Implementierungsstand_V4
 vollständig.
 
 ===================================================================== 3.
@@ -80,11 +80,11 @@ zentrale Adminbereiche
 
 Nachweisbarer Manifest-Stand
 
-0.1.10
+0.0.19
 
 SQL-Updates
 
-bis 0.0.16 vorhanden
+bis 0.0.19 vorhanden
 
 Noch offen
 
@@ -274,25 +274,38 @@ Komfort-/Validierungsfunktionen • abschließende fachliche Rabattlogik
 
 Status
 
-🟡 Deutlich fortgeschritten, aber nicht vollständig
+🟢 Admin-Kernbereich modernisiert und real getestet
 
-Bereits umgesetzt
+Bereits umgesetzt und am 31.08.2026 real getestet
 
 • Bestellliste • Filterung und Sortierung • Bestelldetail •
 Bestellpositionen • verfügbare Produkte für Bestellbearbeitung •
-Statushistorie laden • Bestellhistorie laden • Bestellposition
-hinzufügen • Bestellposition entfernen • Menge einer Bestellposition
-ändern • Gesamtsumme neu berechnen • OrderService •
-OrderServiceInterface • History-Einträge •
-Papierkorb-/Wiederherstellungsabläufe • umfangreiche DB-Basis für
-Bestellungen und Historien
+Produktposition hinzufügen • Positionsmenge ändern • Position logisch
+über is_removed entfernen • Gesamtsumme neu berechnen • Statusänderung •
+Statushistorie • allgemeine Bestellhistorie • Papierkorb •
+Wiederherstellung • Admin-Benutzerzuordnung in der Historie •
+vollständiger Snapshot für neu hinzugefügte Produktpositionen
+
+Snapshot neuer Positionen umfasst insbesondere Produktname, SKU, GTIN,
+Herstellername, Menge, regulären Brutto-Preis, Aktionspreis, tatsächlichen
+Netto-/Brutto-Einzelpreis, MwSt.-Satz, Netto-/Brutto-Positionssumme,
+Währung und is_removed.
+
+Historienstruktur:
+• #__fdshop_order_history = allgemeine Historie
+• #__fdshop_order_status_history = Statushistorie
+• #__fdshop_orders_history = mit 0.0.19 migriert und entfernt
+
+Legacy-Bestellungen können bei neu eingeführten Snapshotfeldern
+historisch unbekannte Leer-/0-Werte enthalten; aktuelle Stammdaten werden
+nicht als angeblich historische Werte zurückgeschrieben.
 
 Noch offen
 
-• vollständiger Bestellworkflow • vollständige
-Statuswechsel-/Prozesslogik • Rechnungswesen • vollständige
-Zahlungsintegration • vollständige Versandintegration •
-Checkout-Erzeugung neuer Bestellungen • Frontend-Kundenworkflow
+• vollständige Checkout-Erzeugung neuer Bestellungen • Rechnungswesen •
+vollständige Zahlungsintegration • vollständige Versandintegration •
+Frontend-Kundenworkflow • automatische Folgeaktionen bei Statuswechseln •
+vollständige operative Bundle-Bestelllogik
 
 =====================================================================
 10.1 BESTELLSTATUS
@@ -584,14 +597,14 @@ Projektbestand abgeglichen.
 
 Technische Hauptgrundlage
 
-fdshop_Projektstand_Aktuell.zip
+Git-Repository dafra-fdshop/fdshop, Branch feature, geprüft am 31.08.2026
 
 Zusätzliche Einordnung anhand der bestehenden Projektdokumentation
 
 FDShop_Governance_und_Dokumentation_V3 FDShop_Dokumentationsstandard_V1
 FDShop_Architektur_Struktur_Installation_V2
 FDShop_Fachregeln_Daten_und_Formulare_V6 FDShop_Admin_List_Standard_V3
-FDShop_Codebestand_V3 FDShop_Implementierungsstand_V3
+FDShop_Codebestand_V3 FDShop_Implementierungsstand_V4
 FDShop_Projektworkflow_V1
 
 Bei Abweichungen wurde kein geplanter Zustand als implementiert
@@ -680,17 +693,29 @@ Dokumentationssynchronisierung besprochen und getestet werden.
 =====================================================================
 
 Diese Quelle definiert den verbindlich dokumentierten
-Implementierungsstand des FDShop-Projektes zum Stand des aktuellen
-Projekt-ZIP.
+Implementierungsstand des FDShop-Projektes zum geprüften Stand des aktuellen
+Repository-Branches feature.
 
 Sie dokumentiert ausschließlich nachweisbare Implementierungen.
 
 Neue Versionen ersetzen ältere Versionen vollständig.
 
+
+V5
+
+• Schema-/Manifeststand 0.0.19 berücksichtigt
+• Bestell-Adminbereich auf real getesteten Stand angehoben
+• Snapshotfelder dokumentiert
+• is_removed dokumentiert
+• konsolidierte Historie dokumentiert
+• alte orders_history als migriert und entfernt dokumentiert
+• Papierkorb/Wiederherstellung dokumentiert
+• Realtest vom 31.08.2026 aufgenommen
+
 =====================================================================
 ENDE DER QUELLE
 
-FDShop_Implementierungsstand_V4
+FDShop_Implementierungsstand_V5
 
 Status
 
@@ -698,4 +723,4 @@ VERBINDLICHE PROJEKTQUELLE
 
 Version
 
-V4
+V5
