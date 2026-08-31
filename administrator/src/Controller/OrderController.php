@@ -18,6 +18,7 @@ class OrderController extends BaseController
 
     public function addItem(): bool
     {
+        if (!$this->authoriseMutation()) { return false; }
         $orderId   = $this->input->getInt('id');
         $productId = $this->input->getInt('product_id');
         $quantity  = (float) $this->input->get('quantity', 1, 'float');
@@ -36,6 +37,7 @@ class OrderController extends BaseController
 
     public function removeItem(): bool
     {
+        if (!$this->authoriseMutation()) { return false; }
         $orderId     = $this->input->getInt('id');
         $orderItemId = $this->input->getInt('order_item_id');
 
@@ -53,6 +55,7 @@ class OrderController extends BaseController
 
     public function updateItemQuantity(): bool
     {
+        if (!$this->authoriseMutation()) { return false; }
         $orderId     = $this->input->getInt('id');
         $orderItemId = $this->input->getInt('order_item_id');
         $quantity    = (float) $this->input->get('quantity', 0, 'float');
@@ -80,5 +83,16 @@ class OrderController extends BaseController
     private function getOrderRedirect(int $orderId): string
     {
         return 'index.php?option=com_fdshop&view=order&id=' . $orderId;
+    }
+
+    private function authoriseMutation(): bool
+    {
+        $this->checkToken();
+        if (!Factory::getApplication()->getIdentity()->authorise('core.manage', 'com_fdshop')) {
+            $this->setMessage('Sie sind nicht berechtigt, Bestellungen zu bearbeiten.', 'error');
+            $this->setRedirect('index.php?option=com_fdshop&view=orders');
+            return false;
+        }
+        return true;
     }
 }
