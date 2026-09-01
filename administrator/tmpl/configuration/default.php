@@ -132,7 +132,7 @@ $paymentSearchView = (object) [
 										</th>
 
 										<td>
-											<?php echo $item->shipment_description ?? ''; ?>
+											<?php echo $this->escape((string) ($item->shipment_description ?? '')); ?>
 										</td>
 
 										<td class="text-center">
@@ -241,7 +241,7 @@ $paymentSearchView = (object) [
 										</th>
 
 										<td>
-											<?php echo $item->payment_description ?? ''; ?>
+											<?php echo $this->escape((string) ($item->payment_description ?? '')); ?>
 										</td>
 
 										<td>

@@ -10,7 +10,7 @@ defined('_JEXEC') or die;
 
 use InvalidArgumentException;
 use Joomla\CMS\Factory;
-use Joomla\CMS\Filesystem\Folder;
+use Joomla\Filesystem\Folder;
 use Joomla\CMS\MVC\Factory\MVCFactoryInterface;
 use Joomla\Database\DatabaseInterface;
 use RuntimeException;

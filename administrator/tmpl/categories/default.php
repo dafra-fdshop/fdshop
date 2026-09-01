@@ -72,7 +72,7 @@ $listDirn  = $this->state->get('list.direction');
 							</th>
 
 							<td>
-								<?php echo $item->description ?? ''; ?>
+								<?php echo $this->escape((string) ($item->description ?? '')); ?>
 							</td>
 
 							<td class="text-center">
