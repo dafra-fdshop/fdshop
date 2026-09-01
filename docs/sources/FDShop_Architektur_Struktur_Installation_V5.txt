@@ -1,0 +1,1276 @@
+=====================================================================
+FDShop_Architektur_Struktur_Installation_V5
+=====================================================================
+
+Status: VERBINDLICHE PROJEKTQUELLE
+Version: V5
+
+Diese Quelle ersetzt vollständig:
+FDShop_Architektur_Struktur_Installation_V4
+
+Stand: 01.09.2026
+
+=====================================================================
+1. ZWECK
+=====================================================================
+
+Diese Quelle definiert die verbindliche technische Architektur,
+Installationsstruktur und Zielstruktur der FDShop-Komponente.
+
+Sie beschreibt insbesondere:
+
+• native Joomla-6-Komponentenarchitektur
+• Administrator- und Site-Struktur
+• Dependency Injection
+• MVCFactory
+• Service Layer
+• Joomla-Standardmechanismen
+• vollständige Edit-/Save-Abläufe
+• Manifest-Regeln
+• Installations- und Updatearchitektur
+• Server-Zielstruktur
+• WebAssetManager
+• technische Qualitäts- und Abnahmeregeln
+
+Nicht Bestandteil sind vollständige fachliche Geschäftsregeln,
+fachliche Datenmodelle, Projektworkflow oder tatsächlicher
+Implementierungsstand.
+
+Dafür gelten die jeweils zuständigen Quellen.
+
+=====================================================================
+2. GELTUNGSBEREICH
+=====================================================================
+
+Verbindlich für alle Fach-KIs und Umsetzungsrollen, die technische
+Struktur, Installation, MVC, DI, Services, Controller, Models, Views,
+Tables, Assets oder Integration bearbeiten.
+
+=====================================================================
+3. VERBINDLICHE ZIELPLATTFORM
+=====================================================================
+
+PRIORITÄT: KRITISCH
+
+FDShop wird ausschließlich für Joomla 6 weiterentwickelt.
+
+Verbindliche Zielserie:
+
+Joomla 6.1.x
+
+Aktuelle Referenz- und Abnahmeversion:
+
+Joomla 6.1.3
+
+Joomla 5.4.x ist kein Entwicklungs-, Kompatibilitäts- oder
+Abnahmeziel mehr.
+
+Eine bestehende Joomla-5-/VirtueMart-Installation darf als Altsystem und
+Daten-/Migrationsquelle dienen.
+
+Daraus entsteht keine technische Kompatibilitätsanforderung für FDShop.
+
+FDShop muss nativ unter Joomla 6 funktionieren.
+
+Das Joomla-Plugin
+
+Behaviour – Backward Compatibility 6
+
+darf keine Voraussetzung für Installation, Update,
+Administratorbetrieb, Site-Betrieb, Klassenauflösung oder
+API-Verfügbarkeit von FDShop sein.
+
+Joomla-5-/6.0-Migrationsinformationen dienen dazu, verbliebene Altlasten
+zu erkennen und durch native Joomla-6-Lösungen zu ersetzen.
+
+Sie dienen nicht dazu, Joomla-5-Kompatibilität zu konservieren.
+
+Neue Entwicklung verwendet aktuelle, unter Joomla 6.1 native und
+unterstützte APIs.
+
+Unter Joomla 6 entfernte oder nur durch BC6 bereitgestellte APIs sind
+kein zulässiges Zielmuster.
+
+Deprecation und Removal sind strikt zu unterscheiden.
+
+Deprecated APIs werden bei neuer Entwicklung nicht neu eingeführt, wenn
+ein dokumentierter nativer Ersatz vorhanden ist.
+
+Bestehender Code wird jedoch nicht allein aus kosmetischen Gründen
+modernisiert.
+
+=====================================================================
+4. GRUNDPRINZIPIEN
+=====================================================================
+
+---------------------------------------------------------------------
+4.1 INSTALLATIONSSTRUKTUR ≠ SERVERSTRUKTUR
+---------------------------------------------------------------------
+
+Die Installations-ZIP-Struktur ist nicht identisch mit der späteren
+Serverstruktur.
+
+Typische ZIP-Wurzel:
+
+administrator/
+site/
+media/
+fdshop.xml
+script.php
+language/ (sofern vorhanden)
+
+Bereits installierte Zielpfade werden nicht in der ZIP vorweggenommen.
+
+Joomla erzeugt bzw. befüllt sie gemäß Manifest.
+
+---------------------------------------------------------------------
+4.2 JOOMLA-STANDARD VOR EIGENLÖSUNG
+---------------------------------------------------------------------
+
+FDShop verwendet native Joomla-6-Standardmechanismen überall dort, wo
+sie den technischen Zweck vollständig und ohne Verlust notwendiger
+FDShop-Funktionalität erfüllen.
+
+Zu bevorzugen sind insbesondere:
+
+• FormController
+• AdminController
+• AdminModel
+• ListModel
+• Joomla Table
+• Joomla Form API
+• MVCFactory
+• Dependency Injection
+• ToolbarHelper
+• SearchTools
+• Routing
+• ACL
+• CSRF-Schutz
+• Joomla-Standardredirects
+• WebAssetManager
+
+Joomla-Standardmechanismen dürfen notwendige FDShop-Businesslogik nicht
+umgehen.
+
+Joomla/MVC orchestriert technisch.
+
+Fachliche Entscheidungen liegen im Service Layer.
+
+---------------------------------------------------------------------
+4.3 SERVICE LAYER
+---------------------------------------------------------------------
+
+Businesslogik liegt ausschließlich in Services.
+
+Nicht zulässig ist Businesslogik in:
+
+• Views
+• Templates
+• XML-Formularen
+• Table-Klassen
+• JavaScript
+• Controllern
+
+Controller koordinieren.
+
+Models liefern und bereiten Daten vor.
+
+Views bereiten Anzeige vor.
+
+Templates stellen dar.
+
+Tables verwalten genau eine Datenbanktabelle und technische Integrität.
+
+Services enthalten:
+
+• Geschäftsregeln
+• fachliche Validierungen
+• Mehrtabellenabläufe
+• Preislogik
+• Bestandslogik
+• Bundlelogik
+• Bestelllogik
+• Gutscheinlogik
+• Löschschutz
+• Transaktionslogik
+
+---------------------------------------------------------------------
+4.4 SINGLE SOURCE OF TRUTH
+---------------------------------------------------------------------
+
+Komponenten-Boot
+-> services/provider.php + Extension-Klasse
+
+Service-Registrierung
+-> services/provider.php
+
+Manifest
+-> fdshop.xml
+
+Assets
+-> media/joomla.asset.json
+
+Businesslogik
+-> Service Layer
+
+Projektworkflow
+-> FDShop_Projektworkflow
+
+Parallele technische Verantwortungen sind zu vermeiden.
+
+---------------------------------------------------------------------
+4.5 KEINE STILLEN STRUKTURÄNDERUNGEN
+---------------------------------------------------------------------
+
+Ordnerstruktur, Manifestgrundstruktur, Namespace, Installationspfade und
+Architekturgrundlagen werden nicht eigenmächtig geändert.
+
+Nicht beschlossene Grundsatzänderungen führen zu einem Einwand.
+
+=====================================================================
+5. MVC, MVCFACTORY UND DEPENDENCY INJECTION
+=====================================================================
+
+---------------------------------------------------------------------
+5.1 MVC-VERANTWORTUNG
+---------------------------------------------------------------------
+
+MODEL
+
+-> Daten-/Form-/Listenbereitstellung
+-> keine neuen Fachentscheidungen
+
+CONTROLLER
+
+-> Request
+-> Orchestrierung
+-> ACL
+-> CSRF
+-> Redirect
+-> Meldung
+-> keine Businesslogik
+
+VIEW
+
+-> Anzeigevorbereitung
+-> keine fachliche Datenmutation
+-> keine direkten SQL-/DatabaseInterface-Abfragen
+
+TEMPLATE
+
+-> HTML-/Form-Ausgabe
+-> keine DB-Zugriffe
+-> keine Fachberechnungen
+
+SERVICE
+
+-> Geschäftsregeln
+-> fachliche Validierung
+-> Mehrtabellenabläufe
+-> Transaktionen
+
+TABLE
+
+-> genau eine Tabelle
+-> Laden/Speichern
+-> technische Integrität
+
+---------------------------------------------------------------------
+5.2 STANDARD-MVCFACTORY
+---------------------------------------------------------------------
+
+Die Joomla-Standard-MVCFactory ist verbindlich und erzeugt Models,
+Views, Controller und Tables.
+
+Direkte manuelle Instanziierung ist zu vermeiden, wenn Joomla bzw. die
+bestehende Komponenteninfrastruktur zuständig ist.
+
+Die Registrierung eigener FDShop-Domainservices im Extension-DI-
+Container bewirkt kein beliebiges automatisches Constructor-Autowiring
+dieser Services in Joomla-erzeugte Controller, Models, Views oder
+Tables.
+
+Diese Grenze wurde im Joomla-6.1-Audit praktisch analysiert und
+bestätigt.
+
+Eine eigene MVCFactory wird nicht allein für Domainservice-Injection
+eingeführt.
+
+Eine Custom-MVCFactory ist nur bei konkret nachgewiesenem Bedarf und
+eigener Architekturentscheidung zulässig.
+
+---------------------------------------------------------------------
+5.3 EXTENSION-DI-CONTAINER
+---------------------------------------------------------------------
+
+services/provider.php ist die zentrale Registrierungsstelle für
+Joomla-Infrastruktur und FDShop-Domainservices im Extension-Child-DI-
+Container.
+
+Services werden bevorzugt über Interfaces gebunden, soweit dies dem
+bestehenden FDShop-Muster entspricht.
+
+Singleton-Eigenlösungen und globale FDShop-Serviceinstanzen sind
+unzulässig.
+
+Factory::getContainer() darf nicht als allgemeiner Service-Locator für
+FDShop-Domainservices in Models, Controllern, Services oder anderen
+Fachklassen verwendet werden.
+
+Technisch notwendige Zugriffe auf Joomla-Infrastruktur sind davon nicht
+pauschal betroffen.
+
+---------------------------------------------------------------------
+5.4 FDSHOP-COMPONENT-FASSADE
+---------------------------------------------------------------------
+
+Die FDShop-Extension-Klasse darf als kontrollierte,
+komponentenspezifische Fassade für FDShop-Domainservices dienen.
+
+Ein Joomla-nativer Komponentenbezug über
+
+bootComponent('com_fdshop')
+
+kann verwendet werden.
+
+Bevorzugt werden klar benannte, typisierte Servicezugriffe.
+
+Die Component-Fassade darf nicht zu einem unkontrollierten allgemeinen
+Service-Locator werden.
+
+Das Offenlegen des vollständigen Containers an beliebige Fachklassen ist
+kein Zielmuster für neue Implementierungen.
+
+---------------------------------------------------------------------
+5.5 BESTÄTIGTE MVCFACTORY-GRENZE FÜR DOMAIN-SERVICES
+---------------------------------------------------------------------
+
+Der Joomla-6.1-Audit hat praktisch bestätigt:
+
+Die Standard-MVCFactory erzeugt Joomla-MVC-Objekte, löst aber nicht
+beliebige FDShop-Domainservice-Konstruktorparameter aus dem
+Komponentencontainer auf.
+
+Benötigt ein Joomla-erzeugtes Model einen zentral registrierten
+FDShop-Domainservice und würde eine vollständige Constructor Injection
+nur durch Einführung einer eigenen Custom-MVCFactory möglich, ist ein
+kontrollierter Servicebezug über die gebootete FDShop-Komponente
+zulässig.
+
+Bevorzugter Komponentenbezug im Model:
+
+$this->bootComponent('com_fdshop')
+
+Dabei gilt:
+
+• keine Custom-MVCFactory allein zur Erzwingung von Service-DI
+• Service bleibt zentral in services/provider.php registriert
+• keine direkte Service-Erzeugung via new ...Service() im Model
+• kein globaler Factory::getContainer()-Service-Locator
+• Businesslogik bleibt im Service Layer
+• Servicezugriff bleibt komponentenbezogen und nachvollziehbar
+
+Aktuell bewusst so arbeitende Models:
+
+• BundleModel
+• CategoryModel
+• CouponModel
+• ManufacturerModel
+• ProductModel
+
+Diese Reststruktur ist kein offener Auditbefund.
+
+---------------------------------------------------------------------
+5.6 MODEL-BESCHAFFUNG
+---------------------------------------------------------------------
+
+Untergeordnete oder zusätzliche Joomla-Models werden nicht direkt mit
+
+new ...Model()
+
+in Views erzeugt, wenn die Standard-MVCFactory verwendet werden kann.
+
+Die Configuration-Unterlisten werden über die im ConfigurationModel
+vorhandene Standard-MVCFactory erzeugt.
+
+Die Configuration-View erhält vorbereitete Daten und erzeugt die
+ListModels nicht selbst.
+
+=====================================================================
+6. REQUEST-, USER- UND DATENKONTEXT
+=====================================================================
+
+Domainservices sollen HTTP-/Request-/User-Kontext nicht selbst global
+beschaffen, wenn der aufrufende MVC-Layer die benötigten Werte bestimmen
+kann.
+
+Bevorzugter Datenfluss:
+
+Request/User-Kontext
+-> Controller/Model
+-> konkret benötigte, gefilterte fachliche Werte
+-> Service
+-> Businesslogik
+
+Nicht als Ersatz zulässig ist die bloße Übergabe des vollständigen
+Application-/Request-Objekts, wenn konkrete Werte genügen.
+
+Wenn eine konkrete User-ID genügt, wird bevorzugt die ID übergeben.
+
+Für ProductService ist diese Entkopplung verbindlich umgesetzt.
+
+ProductModel ermittelt Uploaddaten und User-ID und übergibt die konkret
+benötigten Werte explizit an ProductService.
+
+Magic-Property-Zugriffe wie
+
+Factory::getApplication()->input
+
+sind kein Zielmuster.
+
+Wo der jeweilige Joomla-MVC-Kontext einen nativen Inputzugriff anbietet,
+ist dieser zu verwenden.
+
+Wo ein Model keinen entsprechenden direkten MVC-Helfer bereitstellt,
+kann der unterstützte Joomla-Weg über Application/getInput() verwendet
+werden.
+
+Keine mechanische Factory-Jagd.
+
+Entscheidend sind die unterstützte Joomla-6.1-API und die korrekte
+Schicht.
+
+Globale Benutzerauflösung in CouponService und OrderService ist im
+geprüften Auditstand bewusst noch vorhanden und war nicht Bestandteil
+des auf ProductService begrenzten Auditbefunds.
+
+Daraus entsteht keine allgemeine Freigabe für neue globale
+Kontextzugriffe.
+
+=====================================================================
+7. JOOMLA-EDIT- UND LISTENKETTEN
+=====================================================================
+
+---------------------------------------------------------------------
+7.1 EDIT-KETTE
+---------------------------------------------------------------------
+
+Bei Edit-Bereichen ist die vollständige Kette zu prüfen:
+
+Toolbar-Task
+-> Form-Action
+-> Record-ID
+-> Request
+-> Controller
+-> Model
+-> Table/Service
+-> Redirect
+-> erneutes Laden
+
+Bestehende IDs müssen erhalten bleiben.
+
+Neuanlagen erzeugen genau einen Datensatz.
+
+Nach dem ersten Save muss die neue ID für Apply/weitere Saves verwendet
+werden.
+
+Joomla-Standardcontroller dürfen bestehende FDShop-Service-/Mapping-/
+Detailketten nicht umgehen.
+
+---------------------------------------------------------------------
+7.2 EIGENE SAVE-ENDPUNKTE
+---------------------------------------------------------------------
+
+Eigene Save-Endpunkte müssen:
+
+• CSRF prüfen
+• core.create/core.edit passend prüfen
+• serverseitige Joomla-Formvalidierung durchlaufen
+• sichere Redirects verwenden
+• bestehende IDs bei Apply korrekt erhalten
+
+Clientseitige Formvalidierung ersetzt niemals serverseitige Validierung.
+
+---------------------------------------------------------------------
+7.3 LISTEN
+---------------------------------------------------------------------
+
+Listen verwenden Joomla-Standardmechanismen für Checkbox, Toolbar, Task,
+ACL, CSRF, Controller/Model und Redirect.
+
+Die fachliche Bedeutung von Löschen, Papierkorb, Restore oder
+endgültigem Löschen bleibt im Service Layer und richtet sich nach den
+Fachregeln.
+
+Der vollständige Listenstandard steht in
+
+FDShop_Admin_List_Standard.
+
+---------------------------------------------------------------------
+7.4 MEHRERE LISTEN IN EINER ADMIN-ANSICHT
+---------------------------------------------------------------------
+
+Mehrere Listen auf einer Admin-Seite müssen vollständig isoliert sein.
+
+Bestätigtes Configuration-Referenzmuster:
+
+• adminForm
+• shipmentForm
+• paymentmethodForm
+• orderstatusForm
+
+Getrennte Requestwurzeln:
+
+• shipments[...]
+• paymentmethods[...]
+• orderstatuses[...]
+
+Jede Liste besitzt eigenen:
+
+• State
+• SearchTools
+• Sortierung
+• Pagination
+• ControlFields
+• Formular-/Task-Kontext
+
+=====================================================================
+8. VIEWS UND DATENBEREITSTELLUNG
+=====================================================================
+
+Views führen keine direkten SQL-/DatabaseInterface-Abfragen aus.
+
+Benötigte Daten werden von Models bzw. fachlich zuständigen Services
+bereitgestellt.
+
+Models dürfen Daten für die Darstellung effizient anreichern, solange
+keine Businessentscheidung in das Model verschoben wird.
+
+Bei Listen ist N+1-Datenbankverhalten zu vermeiden, wenn eine gebündelte
+Abfrage möglich ist.
+
+Templates erhalten darstellungsfertige Daten.
+
+Direkte Model-Neuinstanziierung in aktiven Views ist zu vermeiden und im
+abgeschlossenen Joomla-6.1-Audit A–D nicht mehr nachweisbar.
+
+=====================================================================
+9. ACL UND SICHERHEIT
+=====================================================================
+
+administrator/access.xml ist die Komponenten-ACL-Quelle.
+
+Aktuell verwendete Joomla-Core-Aktionen:
+
+• core.manage
+• core.create
+• core.delete
+• core.edit
+• core.edit.state
+
+Neue eigene ACL-Aktionen werden nur bei fachlich nachgewiesenem Bedarf
+eingeführt.
+
+Schreibende Controller-Endpunkte verwenden Joomla-CSRF-Schutz.
+
+Eigene Save-Abläufe dürfen checkToken() nicht umgehen.
+
+Eigene Save-Abläufe müssen die Joomla-Formvalidierung serverseitig
+durchlaufen.
+
+Raw gespeicherte bzw. unvertrauenswürdige Inhalte werden bei
+Plaintext-Ausgabe kontextgerecht escaped.
+
+=====================================================================
+10. ASSETS, NAMESPACES UND AUTOLOADING
+=====================================================================
+
+---------------------------------------------------------------------
+10.1 WEBASSETMANAGER
+---------------------------------------------------------------------
+
+WebAssetManager ist der verbindliche Standard für CSS, JavaScript und
+Abhängigkeiten.
+
+Zentrale Assetdefinition:
+
+media/joomla.asset.json
+
+soweit für das jeweilige Asset vorgesehen.
+
+Komponentenassets werden nur dort aktiviert, wo sie benötigt werden.
+
+Direkte historische Script-Helper-Aufrufe werden nicht als neues
+Zielmuster verwendet, wenn das Asset sauber über den WebAssetManager
+registriert werden kann.
+
+Bestätigtes Bundle-Asset:
+
+Assetname:
+
+com_fdshop.admin-bundle
+
+URI:
+
+com_fdshop/admin-bundle.js
+
+Aktivierung:
+
+ausschließlich im Bundle-Edittemplate über WebAssetManager
+
+---------------------------------------------------------------------
+10.2 NAMESPACES / AUTOLOADING
+---------------------------------------------------------------------
+
+Neue Klassen verwenden Joomla-6-/PSR-konforme Namespaces innerhalb der
+bestehenden Projektstruktur.
+
+Eigene parallele Autoloader sind unzulässig.
+
+Klassen/Namespaces, die unter Joomla 6 nur durch BC6 verfügbar sind,
+sind kein zulässiges Zielmuster.
+
+=====================================================================
+11. INSTALLATIONSARCHITEKTUR
+=====================================================================
+
+---------------------------------------------------------------------
+11.1 MANIFEST
+---------------------------------------------------------------------
+
+fdshop.xml bleibt die zentrale Installationsbeschreibung.
+
+Eine Umbenennung auf
+
+com_fdshop.xml
+
+ist nicht erforderlich und wird ohne technischen Grund nicht
+vorgenommen.
+
+Das Manifest definiert insbesondere:
+
+• Komponentenidentität
+• Version
+• Namespace
+• Installationsdateien
+• Administratorbereich
+• SQL
+• Medien
+• Sprachen
+• Scriptfile
+• Update-Schemapfad, soweit jeweils verwendet
+
+Manifeständerungen erfolgen nicht aus Kosmetik, sondern nur aus
+technischem oder beschlossenem Grund.
+
+---------------------------------------------------------------------
+11.2 SQL UND SCHEMASTAND
+---------------------------------------------------------------------
+
+Standardstruktur:
+
+administrator/sql/install.mysql.utf8.sql
+administrator/sql/updates/
+administrator/sql/uninstall.mysql.utf8.sql
+
+Neue Datenbankänderungen erhalten eine reguläre neue Update-SQL.
+
+Die Install-SQL bildet gleichzeitig den vollständigen aktuellen
+Fresh-Install-Zielstand ab.
+
+KRITISCHE REGEL:
+
+Eine Neuinstallation darf nicht davon abhängen, historische
+Update-SQL-Dateien nacheinander auszuführen.
+
+install.mysql.utf8.sql muss allein das vollständige aktuelle Schema
+erzeugen.
+
+Update-SQLs migrieren ausschließlich bestehende Installationen.
+
+Bereits freigegebene/veröffentlichte Update-SQLs werden nicht
+stillschweigend nachträglich verändert.
+
+Die Versionsfolge richtet sich nach dem realen Projektstand und darf
+nicht eigenmächtig durch ein anderes Schema ersetzt werden.
+
+Joomla führt den tatsächlich erreichten Datenbankschemastand über den
+Joomla-eigenen Schematracking-Mechanismus / #__schemas.
+
+Manifestversion und Datenbankschemastand sind daher nicht als
+austauschbare Information zu behandeln.
+
+Vor Freigabe einer Schemaänderung ist zu prüfen:
+
+• Install-SQL enthält vollständigen Zielstand
+• neue Update-SQL enthält nur notwendige Migration
+• Updatefolge ist lückenlos und real
+• alte Update-SQLs bleiben unverändert
+• Manifest/Schemapfad sind korrekt
+• Uninstall-SQL deckt den vollständigen aktuellen Tabellenbestand ab
+
+---------------------------------------------------------------------
+11.3 SCRIPTFILE
+---------------------------------------------------------------------
+
+Das Scriptfile enthält ausschließlich technische Installationsabläufe,
+z. B. Vorprüfungen, Nacharbeiten und Installationskontrollen.
+
+Keine Businesslogik.
+
+Es existiert genau ein aktives Installer-Scriptfile:
+
+script.php
+
+in der Paketwurzel.
+
+administrator/script.php ist entfernt und darf nicht als parallele
+Installerkopie wieder eingeführt werden.
+
+administrator/config.xml ist entfernt.
+
+Diese Datei war ein historischer Dummy und keine fachliche
+Konfigurationsquelle.
+
+Das Scriptfile verwendet ausschließlich unter Joomla 6.1 nativ
+verfügbare APIs.
+
+Für Filesystem-Ordneroperationen ist die native Joomla-6-Klasse:
+
+Joomla\Filesystem\Folder
+
+Nicht zulässig als FDShop-Zielmuster ist die frühere, unter Joomla 6
+über BC6 relevante Altverwendung:
+
+Joomla\CMS\Filesystem\Folder
+
+Installer-Lifecycle und Methodensignaturen müssen zu den von Joomla 6
+unterstützten Installer-Schnittstellen passen.
+
+---------------------------------------------------------------------
+11.4 FRESH INSTALL UND UPDATE
+---------------------------------------------------------------------
+
+Fresh Install und Update sind getrennte technische Pfade.
+
+FRESH INSTALL:
+
+Manifest
++ Dateien
++ vollständige Install-SQL
++ Joomla-Script-Lifecycle
+
+UPDATE:
+
+vorhandene Installation/Schemastand
++ notwendige Update-SQLs
++ Datei-/Manifestupdate
++ Joomla-Script-Lifecycle
+
+Erfolgreiches Update ersetzt keinen Fresh-Install-Test und umgekehrt.
+
+---------------------------------------------------------------------
+11.5 UNINSTALL / REINSTALL
+---------------------------------------------------------------------
+
+Die Uninstall-SQL muss den vollständigen aktuellen Tabellenbestand
+entfernen.
+
+Für den am 01.09.2026 geprüften Stand wurde auf Joomla 6.1.3 real
+bestätigt:
+
+Fresh Install
+-> Uninstall
+-> vollständige Entfernung aller aktuellen FDShop-Tabellen
+-> erneuter Fresh Install
+
+Der Ablauf wurde erfolgreich bestanden.
+
+---------------------------------------------------------------------
+11.6 INSTALLER-FEHLERANALYSE
+---------------------------------------------------------------------
+
+Installationsfehler werden systematisch entlang der Installer-Kette
+analysiert.
+
+Mindestens prüfen:
+
+• Manifestidentität/XML
+• Dateien und Dateipfade
+• ZIP-Struktur
+• Namespace/Autoloading
+• scriptfile/Lifecycle
+• native Verfügbarkeit verwendeter Joomla-APIs
+• Install-SQL
+• Uninstall-SQL, soweit relevant
+• Installationsreste
+• Joomla-Log/Throwable, soweit verfügbar
+
+Vermutete Ursachen werden vor Korrektur nach Möglichkeit gegen realen
+Code und native Joomla-6.1-API bestätigt.
+
+=====================================================================
+12. ENTWICKLUNGS- UND KOMPATIBILITÄTSREGELN
+=====================================================================
+
+Der technische Ist-Stand wird aus der im Projektworkflow festgelegten
+Arbeitsgrundlage nachgewiesen.
+
+Diese Quelle legt keinen Git-/ZIP-/Branch-Workflow fest.
+
+Neue Dateien bleiben in der vorhandenen Projektstruktur.
+
+Neue Hauptverzeichnisse benötigen eine Architekturentscheidung.
+
+Dateien, Klassen, Methoden und Namespaces folgen Joomla-6-Konventionen
+und FDShop-Regeln.
+
+Joomla-Core-Konventionen werden nicht automatisch zu fachlichen
+FDShop-Namensregeln erklärt, wenn Joomla andere Feldnamen zulässt und
+FDShop eine bewusst beschlossene Semantik besitzt.
+
+FDShop soll innerhalb der Joomla-6-Zielserie robust gegen reguläre
+Wartungs-/Minor-Updates entwickelt werden.
+
+Eine konkrete Referenzversion dient der Abnahme, ohne die Architektur
+unnötig auf einen Patchstand festzuschreiben.
+
+Neue Joomla-6.1.x-Versionen erhalten gezielte Kompatibilitäts-/
+Smoke-Tests.
+
+Daraus folgt nicht automatisch eine neue Grundsatzarchitektur.
+
+=====================================================================
+13. REAL BESTÄTIGTER JOOMLA-6.1-STAND
+=====================================================================
+
+Prüfdatum:
+
+01.09.2026
+
+Referenz:
+
+Joomla 6.1.3
+
+Technischer Referenzcommit vor Dokumentationsupdate:
+
+78e9da807a619555e57e6207f3db16e712b09264
+
+Real erfolgreich durchgeführt:
+
+• Fresh Install ohne Fehler
+• Uninstall der korrigierten Version
+• vollständige Entfernung aller aktuellen FDShop-Tabellen
+• erneuter Fresh Install ohne Fehler
+• reale Administrator-Laufzeittests für Auditpakete A bis D
+
+=====================================================================
+14. JOOMLA-6.1-AUDIT A–D — ABSCHLUSS
+=====================================================================
+
+---------------------------------------------------------------------
+14.1 PAKET A
+---------------------------------------------------------------------
+
+Umgesetzt:
+
+• BC6-Filesystem-Abhängigkeit entfernt
+• kritische Save-Pfade um CSRF ergänzt
+• kritische Save-Pfade um ACL ergänzt
+• serverseitige Joomla-Formvalidierung ergänzt
+• bestätigte ungeescapte Raw-Ausgaben geschlossen
+
+Die frühere Verwendung
+
+Joomla\CMS\Filesystem\Folder
+
+wurde aus dem aktiven geprüften Code entfernt.
+
+Der native Joomla-6-Weg verwendet:
+
+Joomla\Filesystem\Folder
+
+---------------------------------------------------------------------
+14.2 PAKET B
+---------------------------------------------------------------------
+
+Umgesetzt:
+
+• Configuration-Mehrlistenarchitektur isoliert
+• Versand mit eigenem Formular und Requestzustand
+• Zahlung mit eigenem Formular und Requestzustand
+• Bestellstatus mit eigenem Formular und Requestzustand
+• SearchTools
+• Sortierung
+• Pagination
+• ControlFields
+• filter_orderstatuses.xml
+• ConfigurationListModel
+• administrator/config.xml entfernt
+• administrator/access.xml eingeführt
+• Configuration-Submit-Regression über form.validate behoben
+
+---------------------------------------------------------------------
+14.3 PAKET C
+---------------------------------------------------------------------
+
+Umgesetzt:
+
+• Magic-Input-Zugriffe nachgezogen
+• Standard-MVCFactory-Grenzen praktisch bestätigt
+• direkte Model-Neuinstanziierung aus aktiven Views entfernt
+• direkte SQL-/DatabaseInterface-Zugriffe aus aktiven Views entfernt
+• ProductService von direktem HTTP-/User-Kontext entkoppelt
+• kontrollierter Servicebezug über bootComponent() bestätigt
+• Configuration-Unterlisten über Standard-MVCFactory erzeugt
+
+---------------------------------------------------------------------
+14.4 PAKET D
+---------------------------------------------------------------------
+
+Umgesetzt:
+
+• Bundle-JavaScript auf WebAssetManager umgestellt
+• Asset in media/joomla.asset.json registriert
+• Bundle-Asset ausschließlich im Bundle-Edittemplate aktiviert
+• sechs bekannte alt_/alt2_-Sicherungsdateien entfernt
+• A–D-Closure-Suche durchgeführt
+
+Entfernte Altdateien:
+
+administrator/src/Model/alt_ProductsModel.php
+administrator/src/Model/alt2_ProductsModel.php
+administrator/src/Table/alt_ProductTable.php
+administrator/src/View/Products/alt_HtmlView.php
+administrator/tmpl/products/alt_default.php
+administrator/tmpl/products/alt2_default.php
+
+---------------------------------------------------------------------
+14.5 A–D-CLOSURE
+---------------------------------------------------------------------
+
+Statisch bestätigt:
+
+Joomla\CMS\Filesystem\Folder
+-> 0 aktive Treffer
+
+Factory::getApplication()->input
+-> 0 aktive Treffer
+
+$app->input
+-> 0 aktive Treffer
+
+direkte SQL-/DatabaseInterface-Zugriffe in aktiven Views
+-> 0 Treffer
+
+direkte Model-Neuinstanziierung in aktiven Views
+-> 0 Treffer
+
+HTTP-/Userzugriff im ProductService
+-> 0 Treffer
+
+alter direkter Bundle-Scriptladeweg
+-> 0 Treffer
+
+alt_/alt2_-Dateien
+-> 0 Treffer
+
+Zusätzlich bestätigt:
+
+• administrator/access.xml vorhanden
+• Configuration-Isolation vorhanden
+• form.validate vorhanden
+• keine bestätigte neue BC6-/Joomla-5-Abhängigkeit
+
+Bewusst verbleibend:
+
+• komponentenbezogener Servicezugriff in BundleModel
+• komponentenbezogener Servicezugriff in CategoryModel
+• komponentenbezogener Servicezugriff in CouponModel
+• komponentenbezogener Servicezugriff in ManufacturerModel
+• komponentenbezogener Servicezugriff in ProductModel
+• Containerzugriffe in BundleController
+• Containerzugriffe in OrderController
+• Containerzugriffe in OrdersController
+• Containerzugriffe in FdshopComponent
+• unterstützte Factory::*-Verwendungen für Joomla-Kontextfunktionen
+• globale Benutzerauflösung in CouponService und OrderService;
+  nicht Teil des auf ProductService begrenzten Auditbefunds
+
+Diese Reststellen sind keine offenen Befunde aus Audit A–D.
+
+=====================================================================
+15. QUALITÄTSSICHERUNG
+=====================================================================
+
+Vor Freigabe ist mindestens zu prüfen:
+
+□ Joomla-6-Struktur eingehalten?
+
+□ Joomla 6.1.x als Zielplattform berücksichtigt?
+
+□ keine neue Joomla-5-Kompatibilitätsanforderung?
+
+□ keine Abhängigkeit von Behaviour – Backward Compatibility 6?
+
+□ MVC-Verantwortung sauber getrennt?
+
+□ DI korrekt und Domainservices zentral registriert?
+
+□ kein Factory::getContainer() als allgemeiner
+  FDShop-Service-Locator?
+
+□ Standard-MVCFactory verwendet?
+
+□ keine Custom-MVCFactory ohne nachgewiesenen Bedarf?
+
+□ Businesslogik ausschließlich im Service Layer?
+
+□ Tables auf eine Tabelle beschränkt?
+
+□ Views ohne direkte SQL-/DatabaseInterface-Abfragen?
+
+□ keine direkte Model-Neuinstanziierung in aktiven Views?
+
+□ Request-/User-Kontext soweit möglich im MVC-Layer ermittelt?
+
+□ WebAssetManager/Namespaces nativ Joomla 6?
+
+□ Manifest vollständig und konsistent?
+
+□ genau ein aktives Installer-Scriptfile?
+
+□ Scriptfile nur mit nativen Joomla-6-APIs?
+
+□ Joomla\Filesystem\Folder statt Joomla\CMS\Filesystem\Folder?
+
+□ Edit-Kette inkl. Form-Action/ID/Save/Apply/Cancel/Redirect geprüft?
+
+□ eigene Save-Pfade mit ACL, CSRF und serverseitiger Formvalidierung?
+
+□ Listenaktion technisch und fachliche Serviceentscheidung getrennt?
+
+□ mehrere Listen vollständig isoliert?
+
+□ Install-SQL vollständiger Fresh-Install-Stand?
+
+□ Update-SQL und Install-SQL konsistent?
+
+□ reale Updatefolge/Schemastand korrekt?
+
+□ veröffentlichte Update-SQLs unverändert?
+
+□ Uninstall-SQL vollständig?
+
+□ Fresh Install auf freigegebener Joomla-6.1-Referenz getestet?
+
+□ Uninstall/Reinstall bei relevanten Installeränderungen getestet?
+
+□ Admin-Smoke-Test der implementierten Bereiche durchgeführt?
+
+□ kein stiller Architekturwechsel?
+
+□ keine rein kosmetische Modernisierung als Pflicht ausgegeben?
+
+Beschlossene Zielregel und tatsächlicher Ist-Code dürfen gemäß
+Governance voneinander abweichen, solange dies ausdrücklich dokumentiert
+ist.
+
+=====================================================================
+16. PROJEKTQUELLEN
+=====================================================================
+
+Diese Quelle ergänzt insbesondere:
+
+FDShop_Governance_und_Dokumentation
+FDShop_Dokumentationsstandard
+FDShop_Fachregeln_Daten_und_Formulare
+FDShop_Implementierungsstand
+FDShop_Codebestand
+FDShop_Projektworkflow
+FDShop_Admin_List_Standard
+FDShop_Temporaere_Umsetzungsrollen
+
+Sie ersetzt keine dieser Quellen.
+
+=====================================================================
+17. EINWÄNDE / OFFENE PRÜFPUNKTE
+=====================================================================
+
+---------------------------------------------------------------------
+OFFENER PRÜFPUNKT 1
+---------------------------------------------------------------------
+
+Thema:
+
+Joomla-6.1-Audit des bestehenden FDShop-Codebestandes.
+
+Stand V5:
+
+ABGESCHLOSSEN.
+
+Der Audit A–D wurde zum technischen Referenzcommit
+
+78e9da807a619555e57e6207f3db16e712b09264
+
+abgeschlossen und real auf Joomla 6.1.3 getestet.
+
+Es bestehen aus Audit A–D keine offenen bestätigten Blocker.
+
+---------------------------------------------------------------------
+OFFENER PRÜFPUNKT 2
+---------------------------------------------------------------------
+
+Thema:
+
+Reale Joomla-6.1.3-Installation und Laufzeitabnahme.
+
+Stand V5:
+
+ABGESCHLOSSEN für den geprüften Referenzstand.
+
+Fresh Install
+-> Uninstall
+-> vollständige Entfernung aller aktuellen FDShop-Tabellen
+-> Fresh Install
+
+wurde real erfolgreich durchgeführt.
+
+Die Auditpakete A bis D wurden zusätzlich durch reale
+Administrator-Laufzeittests abgenommen.
+
+---------------------------------------------------------------------
+EINWAND 1
+---------------------------------------------------------------------
+
+Thema:
+
+Keine automatische Umbenennung
+
+fdshop.xml -> com_fdshop.xml
+
+Begründung:
+
+Es besteht kein nachgewiesener Joomla-6.1-Zwang.
+
+Eine kosmetische Umbenennung ohne Architekturnutzen wird nicht
+übernommen.
+
+=====================================================================
+18. ÄNDERUNGSPROTOKOLL
+=====================================================================
+
+V1
+
+Erste Architekturbeschreibung.
+
+---------------------------------------------------------------------
+
+V2
+
+Service Layer, DI, MVCFactory, WebAssetManager,
+Installationsarchitektur, Joomla-6-Vorbereitung und Qualitätsregeln.
+
+---------------------------------------------------------------------
+
+V3
+
+Dokumentationsstandard V2, Workflow-Abgrenzung, Joomla-Standard vor
+Eigenlösung, vollständige Edit-Kette, Service-/Löscharchitektur,
+SQL-Update-Regeln und erweiterte Qualitätssicherung.
+
+---------------------------------------------------------------------
+
+V4
+
+Native Joomla-6-Zielarchitektur.
+
+Wesentliche Änderungen:
+
+• Joomla 6.1.x einzige Zielserie
+• Referenz Joomla 6.1.3
+• Joomla 5.4 als Kompatibilitätsziel beendet
+• BC6-Abhängigkeit ausgeschlossen
+• native Joomla-6-APIs verbindlich
+• Removal/Deprecation/BC-Abhängigkeit getrennt
+• Standard-MVCFactory und DI-Grenzen präzisiert
+• Factory::getContainer() als Domainservice-Locator ausgeschlossen
+• kontrollierte Component-Fassade präzisiert
+• fdshop.xml bewusst beibehalten
+• Fresh Install und Update getrennt
+• Install-SQL als vollständiger Fresh-Install-Stand festgelegt
+• #__schemas/Schematracking berücksichtigt
+• Scriptfile auf native Joomla-6-APIs begrenzt
+• systematische Installeranalyse und Joomla-6-Abnahme ergänzt
+• kosmetisches Refactoring ausdrücklich nicht zum Selbstzweck erklärt
+
+---------------------------------------------------------------------
+
+V5
+
+Vollfortschreibung von V4 mit den real bestätigten Ergebnissen des
+Joomla-6.1-Audits A–D.
+
+Wesentliche Ergänzungen und Aktualisierungen:
+
+• Joomla 6.1.3 real getestet
+• Fresh Install -> Uninstall -> Reinstall bestanden
+• MVCFactory-Grenze für Domainservice-Injection praktisch bestätigt
+• kontrollierter Model-Servicebezug über bootComponent() präzisiert
+• direkte SQL-/DatabaseInterface-Zugriffe in Views entfernt
+• direkte Model-Erzeugung in Views entfernt
+• ProductService-Kontextentkopplung
+• ACL/CSRF/Formvalidierung in kritischen Save-Pfaden
+• Configuration-Mehrlistenarchitektur
+• Bestellstatus mit SearchTools, Sortierung und Pagination
+• administrator/access.xml eingeführt
+• administrator/config.xml entfernt
+• WebAssetManager für Bundle-Asset
+• genau ein aktives Root-Installer-Scriptfile
+• administrator/script.php entfernt
+• native Filesystem-Klasse Joomla\Filesystem\Folder dokumentiert
+• frühere BC6-Verwendung Joomla\CMS\Filesystem\Folder entfernt
+• vollständige Uninstall-Abdeckung
+• sechs alt_/alt2_-Dateien entfernt
+• Audit A–D abgeschlossen und real getestet
+• weiterhin gültige V4-Regeln vollständig fortgeführt
+
+=====================================================================
+19. SCHLUSSBESTIMMUNGEN
+=====================================================================
+
+FDShop_Architektur_Struktur_Installation_V5 definiert die verbindliche
+technische Architektur und Installationsstruktur des FDShop-Projektes.
+
+Sie ersetzt
+
+FDShop_Architektur_Struktur_Installation_V4
+
+vollständig.
+
+Projektworkflow
+-> FDShop_Projektworkflow
+
+Fachregeln
+-> FDShop_Fachregeln_Daten_und_Formulare
+
+Administrationslisten
+-> FDShop_Admin_List_Standard
+
+Dokumentation
+-> FDShop_Dokumentationsstandard_V2
+
+Ist-Code
+-> FDShop_Codebestand
+
+Umsetzungsgrad
+-> FDShop_Implementierungsstand
+
+Neue Versionen ersetzen ältere Versionen vollständig.
+
+=====================================================================
+ENDE DER QUELLE
+FDShop_Architektur_Struktur_Installation_V5
+Status: VERBINDLICHE PROJEKTQUELLE
+Version: V5
+=====================================================================
