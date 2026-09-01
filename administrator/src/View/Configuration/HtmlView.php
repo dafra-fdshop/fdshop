@@ -42,6 +42,14 @@ class HtmlView extends BaseHtmlView
 
     public $orderStatuses = [];
 
+    public $orderStatusState;
+
+    public $orderStatusPagination;
+
+    public $orderStatusFilterForm;
+
+    public $orderStatusActiveFilters = [];
+
     public function display($tpl = null)
     {
         $model = $this->getModel();
@@ -61,6 +69,7 @@ class HtmlView extends BaseHtmlView
         $this->shipmentActiveFilters  = $shipmentsModel->getActiveFilters();
 
         $this->shipmentFilterForm
+            ->addControlField('option', 'com_fdshop')
             ->addControlField('task', '')
             ->addControlField('boxchecked', '0');
 
@@ -71,10 +80,20 @@ class HtmlView extends BaseHtmlView
         $this->paymentActiveFilters   = $paymentmethodsModel->getActiveFilters();
 
         $this->paymentFilterForm
+            ->addControlField('option', 'com_fdshop')
             ->addControlField('task', '')
             ->addControlField('boxchecked', '0');
 
-        $this->orderStatuses = $orderstatusesModel->getItems();
+        $this->orderStatuses              = $orderstatusesModel->getItems();
+        $this->orderStatusState           = $orderstatusesModel->getState();
+        $this->orderStatusPagination      = $orderstatusesModel->getPagination();
+        $this->orderStatusFilterForm      = $orderstatusesModel->getFilterForm();
+        $this->orderStatusActiveFilters   = $orderstatusesModel->getActiveFilters();
+
+        $this->orderStatusFilterForm
+            ->addControlField('option', 'com_fdshop')
+            ->addControlField('task', '')
+            ->addControlField('boxchecked', '0');
 
         foreach ($this->orderStatuses as $item) {
             $item->seller_email_mode_label = $this->mapSellerEmailMode($item->seller_email_mode ?? null);

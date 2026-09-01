@@ -38,9 +38,10 @@
 			<folder>services</folder>
 			<folder>src</folder>
 			<folder>forms</folder>
+			<folder>layouts</folder>
 			<folder>tmpl</folder>
 			<folder>sql</folder>
-			<filename>config.xml</filename>
+			<filename>access.xml</filename>
 		</files>
 	</administration>
 

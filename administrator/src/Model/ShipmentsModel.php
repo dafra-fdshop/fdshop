@@ -8,10 +8,12 @@ namespace FDShop\Component\FDShop\Administrator\Model;
 
 defined('_JEXEC') or die;
 
-use Joomla\CMS\MVC\Model\ListModel;
-
-class ShipmentsModel extends ListModel
+class ShipmentsModel extends ConfigurationListModel
 {
+    protected string $requestScope = 'shipments';
+
+    protected $filterFormName = 'filter_shipments';
+
     public function __construct($config = [])
     {
         if (empty($config['filter_fields'])) {
@@ -44,13 +46,7 @@ class ShipmentsModel extends ListModel
 
     protected function populateState($ordering = 'a.ordering', $direction = 'ASC'): void
     {
-        $search = $this->getUserStateFromRequest($this->context . '.filter.search', 'filter_search');
-        $this->setState('filter.search', $search);
-
-        $published = $this->getUserStateFromRequest($this->context . '.filter.published', 'filter_published', '');
-        $this->setState('filter.published', $published);
-
-        parent::populateState($ordering, $direction);
+        $this->populateScopedState($ordering, $direction);
     }
 
     protected function getListQuery()
