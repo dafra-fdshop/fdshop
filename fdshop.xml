@@ -41,7 +41,6 @@
 			<folder>tmpl</folder>
 			<folder>sql</folder>
 			<filename>config.xml</filename>
-			<filename>script.php</filename>
 		</files>
 	</administration>
 
