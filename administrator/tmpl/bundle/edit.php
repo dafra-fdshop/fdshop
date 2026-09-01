@@ -10,7 +10,7 @@ use Joomla\CMS\HTML\HTMLHelper;
 use Joomla\CMS\Router\Route;
 use Joomla\CMS\Session\Session;
 
-HTMLHelper::_('script', 'com_fdshop/admin-bundle.js', ['version' => 'auto', 'relative' => true]);
+$this->getDocument()->getWebAssetManager()->useScript('com_fdshop.admin-bundle');
 
 $token = Session::getFormToken();
 $lookupUrl = Route::_('index.php?option=com_fdshop&task=bundle.lookupProduct&format=json', false);
