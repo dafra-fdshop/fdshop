@@ -209,6 +209,6 @@ class OrderModel extends BaseDatabaseModel
             return (int) $pk;
         }
 
-        return (int) Factory::getApplication()->input->getInt('id');
+        return (int) Factory::getApplication()->getInput()->getInt('id');
     }
 }

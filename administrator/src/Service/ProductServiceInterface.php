@@ -12,9 +12,11 @@ interface ProductServiceInterface
 {
     public function saveProduct(
         array $data,
-        array $categoryIds = [],
-        ?int $primaryCategoryId = null,
-        array $buyerGroupIds = []
+        array $categoryIds,
+        ?int $primaryCategoryId,
+        array $buyerGroupIds,
+        ?array $productImage,
+        int $userId
     ): int;
 
     public function saveProductCategoryAssignments(

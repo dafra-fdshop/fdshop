@@ -191,4 +191,60 @@ class ProductsModel extends ListModel
 
         return $query;
     }
+
+    public function getItems()
+    {
+        $items = parent::getItems();
+
+        if (!is_array($items) || $items === []) {
+            return $items;
+        }
+
+        $productIds = [];
+
+        foreach ($items as $item) {
+            $productIds[] = (int) $item->id;
+            $item->image_path_mobile = null;
+        }
+
+        $productIds = array_values(array_unique(array_filter($productIds)));
+
+        if ($productIds === []) {
+            return $items;
+        }
+
+        $db = $this->getDatabase();
+        $query = $db->getQuery(true)
+            ->select([
+                $db->quoteName('product_id'),
+                $db->quoteName('path_mobile'),
+            ])
+            ->from($db->quoteName('#__fdshop_media'))
+            ->where($db->quoteName('media_type') . ' = ' . $db->quote('image'))
+            ->where($db->quoteName('product_id') . ' IN (' . implode(',', $productIds) . ')')
+            ->where($db->quoteName('path_mobile') . ' <> ' . $db->quote(''))
+            ->order(
+                $db->quoteName('product_id') . ' ASC, '
+                . $db->quoteName('is_primary') . ' DESC, '
+                . $db->quoteName('ordering') . ' ASC, '
+                . $db->quoteName('id') . ' ASC'
+            );
+
+        $db->setQuery($query);
+        $imageMap = [];
+
+        foreach ((array) $db->loadObjectList() as $row) {
+            $productId = (int) $row->product_id;
+
+            if (!isset($imageMap[$productId])) {
+                $imageMap[$productId] = (string) $row->path_mobile;
+            }
+        }
+
+        foreach ($items as $item) {
+            $item->image_path_mobile = $imageMap[(int) $item->id] ?? null;
+        }
+
+        return $items;
+    }
 }

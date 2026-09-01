@@ -35,9 +35,11 @@ class ProductService implements ProductServiceInterface
 
     public function saveProduct(
         array $data,
-        array $categoryIds = [],
-        ?int $primaryCategoryId = null,
-        array $buyerGroupIds = []
+        array $categoryIds,
+        ?int $primaryCategoryId,
+        array $buyerGroupIds,
+        ?array $productImage,
+        int $userId
     ): int {
         $productName = trim((string) ($data['product_name'] ?? ''));
 
@@ -112,8 +114,8 @@ class ProductService implements ProductServiceInterface
 
             $this->saveProductCategoryAssignments($productId, $categoryIds, $primaryCategoryId);
             $this->saveProductBuyerGroupAssignments($productId, $buyerGroupIds);
-            $this->processUploadedProductImage($productId);
-            $this->synchronizeYoutubeMedia($productId, $youtubeUrls);
+            $this->processUploadedProductImage($productId, $productImage, $userId);
+            $this->synchronizeYoutubeMedia($productId, $youtubeUrls, $userId);
 
             $this->db->transactionCommit();
 
@@ -734,9 +736,9 @@ class ProductService implements ProductServiceInterface
         return 'Ausverkauft';
     }
 
-    private function processUploadedProductImage(int $productId): void
+    private function processUploadedProductImage(int $productId, ?array $file, int $userId): void
     {
-        $file = $this->getUploadedProductImageFile();
+        $file = $this->validateUploadedProductImageFile($file);
 
         if ($file === null) {
             return;
@@ -832,7 +834,8 @@ class ProductService implements ProductServiceInterface
                 $standardRelativePath,
                 $smallRelativePath,
                 $mobileRelativePath,
-                $invoiceRelativePath
+                $invoiceRelativePath,
+                $userId
             );
         } catch (\Throwable $e) {
             foreach ($createdFiles as $createdFile) {
@@ -845,12 +848,9 @@ class ProductService implements ProductServiceInterface
         }
     }
 
-    private function getUploadedProductImageFile(): ?array
+    private function validateUploadedProductImageFile(?array $file): ?array
     {
-        $files = Factory::getApplication()->input->files->get('jform', [], 'array');
-        $file = $files['product_image'] ?? null;
-
-        if (!is_array($file)) {
+        if ($file === null) {
             return null;
         }
 
@@ -1011,9 +1011,9 @@ class ProductService implements ProductServiceInterface
         string $pathStandard,
         string $pathSmall,
         string $pathMobile,
-        string $pathInvoice
+        string $pathInvoice,
+        int $userId
     ): void {
-        $userId = (int) Factory::getApplication()->getIdentity()->id;
         $created = Factory::getDate()->toSql();
 
         $query = $this->db->getQuery(true)
@@ -1111,7 +1111,7 @@ class ProductService implements ProductServiceInterface
         return $urls;
     }
 
-    private function synchronizeYoutubeMedia(int $productId, array $urls): void
+    private function synchronizeYoutubeMedia(int $productId, array $urls, int $userId): void
     {
 
         $deleteQuery = $this->db->getQuery(true)
@@ -1125,7 +1125,6 @@ class ProductService implements ProductServiceInterface
             return;
         }
 
-        $userId = (int) Factory::getApplication()->getIdentity()->id;
         $created = Factory::getDate()->toSql();
 
         foreach ($urls as $position => $url) {

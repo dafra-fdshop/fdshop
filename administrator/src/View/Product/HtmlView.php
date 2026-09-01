@@ -8,10 +8,8 @@ namespace FDShop\Component\FDShop\Administrator\View\Product;
 
 defined('_JEXEC') or die;
 
-use Joomla\CMS\Factory;
 use Joomla\CMS\MVC\View\HtmlView as BaseHtmlView;
 use Joomla\CMS\Toolbar\ToolbarHelper;
-use Joomla\Database\DatabaseInterface;
 use stdClass;
 
 class HtmlView extends BaseHtmlView
@@ -33,7 +31,7 @@ class HtmlView extends BaseHtmlView
             $this->item = new stdClass();
         }
 
-        $this->productImage = $this->getProductImage((int) ($this->item->id ?? 0));
+        $this->productImage = $model->getProductImagePath((int) ($this->item->id ?? 0));
 
         ToolbarHelper::title('FDShop - Produkt');
         ToolbarHelper::apply('product.apply');
@@ -41,36 +39,5 @@ class HtmlView extends BaseHtmlView
         ToolbarHelper::cancel('product.cancel');
 
         parent::display($tpl);
-    }
-
-    private function getProductImage(int $productId): ?string
-    {
-        if ($productId <= 0) {
-            return null;
-        }
-
-        $db = Factory::getContainer()->get(DatabaseInterface::class);
-
-        $query = $db->getQuery(true)
-            ->select($db->quoteName('path_small'))
-            ->from($db->quoteName('#__fdshop_media'))
-            ->where($db->quoteName('product_id') . ' = ' . (int) $productId)
-            ->where($db->quoteName('media_type') . ' = ' . $db->quote('image'))
-            ->where($db->quoteName('path_small') . " <> " . $db->quote(''))
-            ->order(
-                $db->quoteName('is_primary') . ' DESC, '
-                . $db->quoteName('ordering') . ' ASC, '
-                . $db->quoteName('id') . ' ASC'
-            );
-
-        $db->setQuery($query, 0, 1);
-
-        $path = $db->loadResult();
-
-        if (!$path) {
-            return null;
-        }
-
-        return (string) $path;
     }
 }

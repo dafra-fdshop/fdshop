@@ -58,7 +58,7 @@ class BundleModel extends AdminModel
     {
         $bundleId = $pk !== null
             ? (int) $pk
-            : (int) Factory::getApplication()->input->getInt('id');
+            : (int) Factory::getApplication()->getInput()->getInt('id');
 
         if ($bundleId <= 0) {
             return parent::getItem($pk);
@@ -145,7 +145,7 @@ class BundleModel extends AdminModel
             return (int) $pk;
         }
 
-        return (int) Factory::getApplication()->input->getInt('id');
+        return (int) Factory::getApplication()->getInput()->getInt('id');
     }
 
     private function normalizeIds($ids): array
@@ -165,7 +165,7 @@ class BundleModel extends AdminModel
 
     private function getBundleService(): BundleServiceInterface
     {
-        $component = Factory::getApplication()->bootComponent('com_fdshop');
+        $component = $this->bootComponent('com_fdshop');
         $container = $component->getContainer();
 
         return $container->get(BundleServiceInterface::class);

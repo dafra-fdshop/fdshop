@@ -113,12 +113,12 @@ class CouponModel extends AdminModel
             return (int) $pk;
         }
 
-        return (int) Factory::getApplication()->input->getInt('id');
+        return (int) Factory::getApplication()->getInput()->getInt('id');
     }
 
     private function getCouponService(): CouponServiceInterface
     {
-        $component = Factory::getApplication()->bootComponent('com_fdshop');
+        $component = $this->bootComponent('com_fdshop');
         $container = $component->getContainer();
 
         return $container->get(CouponServiceInterface::class);

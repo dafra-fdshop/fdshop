@@ -8,9 +8,6 @@ namespace FDShop\Component\FDShop\Administrator\View\Configuration;
 
 defined('_JEXEC') or die;
 
-use FDShop\Component\FDShop\Administrator\Model\OrderstatusesModel;
-use FDShop\Component\FDShop\Administrator\Model\PaymentmethodsModel;
-use FDShop\Component\FDShop\Administrator\Model\ShipmentsModel;
 use Joomla\CMS\MVC\View\HtmlView as BaseHtmlView;
 use Joomla\CMS\Toolbar\ToolbarHelper;
 
@@ -57,43 +54,25 @@ class HtmlView extends BaseHtmlView
         $this->form = $model->getForm();
         $this->item = $model->getItem();
 
-        $shipmentsModel = new ShipmentsModel();
-        $paymentmethodsModel = new PaymentmethodsModel();
-        $orderstatusesModel = new OrderstatusesModel();
-		
+        $lists = $model->getConfigurationLists();
 
-        $this->shipments              = $shipmentsModel->getItems();
-        $this->shipmentState          = $shipmentsModel->getState();
-        $this->shipmentPagination     = $shipmentsModel->getPagination();
-        $this->shipmentFilterForm     = $shipmentsModel->getFilterForm();
-        $this->shipmentActiveFilters  = $shipmentsModel->getActiveFilters();
+        $this->shipments             = $lists['shipments']['items'];
+        $this->shipmentState         = $lists['shipments']['state'];
+        $this->shipmentPagination    = $lists['shipments']['pagination'];
+        $this->shipmentFilterForm    = $lists['shipments']['filterForm'];
+        $this->shipmentActiveFilters = $lists['shipments']['activeFilters'];
 
-        $this->shipmentFilterForm
-            ->addControlField('option', 'com_fdshop')
-            ->addControlField('task', '')
-            ->addControlField('boxchecked', '0');
+        $this->paymentmethods       = $lists['paymentmethods']['items'];
+        $this->paymentState         = $lists['paymentmethods']['state'];
+        $this->paymentPagination    = $lists['paymentmethods']['pagination'];
+        $this->paymentFilterForm    = $lists['paymentmethods']['filterForm'];
+        $this->paymentActiveFilters = $lists['paymentmethods']['activeFilters'];
 
-        $this->paymentmethods         = $paymentmethodsModel->getItems();
-        $this->paymentState           = $paymentmethodsModel->getState();
-        $this->paymentPagination      = $paymentmethodsModel->getPagination();
-        $this->paymentFilterForm      = $paymentmethodsModel->getFilterForm();
-        $this->paymentActiveFilters   = $paymentmethodsModel->getActiveFilters();
-
-        $this->paymentFilterForm
-            ->addControlField('option', 'com_fdshop')
-            ->addControlField('task', '')
-            ->addControlField('boxchecked', '0');
-
-        $this->orderStatuses              = $orderstatusesModel->getItems();
-        $this->orderStatusState           = $orderstatusesModel->getState();
-        $this->orderStatusPagination      = $orderstatusesModel->getPagination();
-        $this->orderStatusFilterForm      = $orderstatusesModel->getFilterForm();
-        $this->orderStatusActiveFilters   = $orderstatusesModel->getActiveFilters();
-
-        $this->orderStatusFilterForm
-            ->addControlField('option', 'com_fdshop')
-            ->addControlField('task', '')
-            ->addControlField('boxchecked', '0');
+        $this->orderStatuses            = $lists['orderstatuses']['items'];
+        $this->orderStatusState         = $lists['orderstatuses']['state'];
+        $this->orderStatusPagination    = $lists['orderstatuses']['pagination'];
+        $this->orderStatusFilterForm    = $lists['orderstatuses']['filterForm'];
+        $this->orderStatusActiveFilters = $lists['orderstatuses']['activeFilters'];
 
         foreach ($this->orderStatuses as $item) {
             $item->seller_email_mode_label = $this->mapSellerEmailMode($item->seller_email_mode ?? null);

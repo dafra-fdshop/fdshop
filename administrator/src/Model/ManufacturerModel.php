@@ -90,7 +90,7 @@ class ManufacturerModel extends AdminModel
 
     public function delete(&$pks): bool
     {
-        if (!Factory::getApplication()->getIdentity()->authorise('core.delete', 'com_fdshop')) {
+        if (!$this->getCurrentUser()->authorise('core.delete', 'com_fdshop')) {
             $this->setError('Sie sind nicht berechtigt, Hersteller zu löschen.');
 
             return false;
@@ -107,7 +107,7 @@ class ManufacturerModel extends AdminModel
 
     private function getManufacturerService(): ManufacturerServiceInterface
     {
-        $component = Factory::getApplication()->bootComponent('com_fdshop');
+        $component = $this->bootComponent('com_fdshop');
 
         return $component->getContainer()->get(ManufacturerServiceInterface::class);
     }

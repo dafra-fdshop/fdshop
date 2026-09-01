@@ -54,7 +54,7 @@ class CategoryModel extends AdminModel
 
     public function delete(&$pks): bool
     {
-        if (!Factory::getApplication()->getIdentity()->authorise('core.delete', 'com_fdshop')) {
+        if (!$this->getCurrentUser()->authorise('core.delete', 'com_fdshop')) {
             $this->setError('Sie sind nicht berechtigt, Kategorien zu löschen.');
 
             return false;
@@ -71,7 +71,7 @@ class CategoryModel extends AdminModel
 
     private function getCategoryService(): CategoryServiceInterface
     {
-        $component = Factory::getApplication()->bootComponent('com_fdshop');
+        $component = $this->bootComponent('com_fdshop');
 
         return $component->getContainer()->get(CategoryServiceInterface::class);
     }

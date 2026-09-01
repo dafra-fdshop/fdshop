@@ -80,12 +80,18 @@ class ProductModel extends AdminModel
             $primaryCategoryId = !empty($data['primary_category_id'])
                 ? (int) $data['primary_category_id']
                 : null;
+            $files = Factory::getApplication()->getInput()->files->get('jform', [], 'array');
+            $productImage = isset($files['product_image']) && is_array($files['product_image'])
+                ? $files['product_image']
+                : null;
 
             $productId = $this->getProductService()->saveProduct(
                 $data,
                 $categoryIds,
                 $primaryCategoryId,
-                $buyerGroupIds
+                $buyerGroupIds,
+                $productImage,
+                (int) $this->getCurrentUser()->id
             );
 
             $this->setState($this->getName() . '.id', $productId);
@@ -122,9 +128,34 @@ class ProductModel extends AdminModel
         );
     }
 
+    public function getProductImagePath(int $productId): ?string
+    {
+        if ($productId <= 0) {
+            return null;
+        }
+
+        $db = $this->getDatabase();
+        $query = $db->getQuery(true)
+            ->select($db->quoteName('path_small'))
+            ->from($db->quoteName('#__fdshop_media'))
+            ->where($db->quoteName('product_id') . ' = ' . (int) $productId)
+            ->where($db->quoteName('media_type') . ' = ' . $db->quote('image'))
+            ->where($db->quoteName('path_small') . ' <> ' . $db->quote(''))
+            ->order(
+                $db->quoteName('is_primary') . ' DESC, '
+                . $db->quoteName('ordering') . ' ASC, '
+                . $db->quoteName('id') . ' ASC'
+            );
+
+        $db->setQuery($query, 0, 1);
+        $path = $db->loadResult();
+
+        return $path ? (string) $path : null;
+    }
+
     private function runDeleteAction(callable $action, array $pks): bool
     {
-        if (!Factory::getApplication()->getIdentity()->authorise('core.delete', 'com_fdshop')) {
+        if (!$this->getCurrentUser()->authorise('core.delete', 'com_fdshop')) {
             $this->setError('Sie sind nicht berechtigt, Produkte zu löschen oder wiederherzustellen.');
 
             return false;
@@ -156,7 +187,7 @@ class ProductModel extends AdminModel
 
     private function getProductService(): ProductServiceInterface
     {
-        $component = Factory::getApplication()->bootComponent('com_fdshop');
+        $component = $this->bootComponent('com_fdshop');
         $container = $component->getContainer();
 
         return $container->get(ProductServiceInterface::class);

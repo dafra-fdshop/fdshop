@@ -11,6 +11,7 @@ defined('_JEXEC') or die;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Form\Form;
 use Joomla\CMS\MVC\Model\AdminModel;
+use RuntimeException;
 
 class ConfigurationModel extends AdminModel
 {
@@ -80,5 +81,40 @@ class ConfigurationModel extends AdminModel
         //$data['katalog_active'] = !empty($data['katalog_active']) ? 1 : 0;
 
         return parent::save($data);
+    }
+
+    public function getConfigurationLists(): array
+    {
+        return [
+            'shipments'      => $this->getConfigurationListData('Shipments'),
+            'paymentmethods' => $this->getConfigurationListData('Paymentmethods'),
+            'orderstatuses'  => $this->getConfigurationListData('Orderstatuses'),
+        ];
+    }
+
+    private function getConfigurationListData(string $modelName): array
+    {
+        $model = $this->getMVCFactory()->createModel($modelName, 'Administrator');
+
+        if (!$model instanceof ConfigurationListModel) {
+            throw new RuntimeException($modelName . 'Model konnte nicht erstellt werden.');
+        }
+
+        $filterForm = $model->getFilterForm();
+
+        if ($filterForm instanceof Form) {
+            $filterForm
+                ->addControlField('option', 'com_fdshop')
+                ->addControlField('task', '')
+                ->addControlField('boxchecked', '0');
+        }
+
+        return [
+            'items'         => $model->getItems(),
+            'state'         => $model->getState(),
+            'pagination'    => $model->getPagination(),
+            'filterForm'    => $filterForm,
+            'activeFilters' => $model->getActiveFilters(),
+        ];
     }
 }
