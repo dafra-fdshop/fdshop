@@ -11,6 +11,7 @@ use Joomla\CMS\Layout\LayoutHelper;
 use Joomla\CMS\Router\Route;
 
 HTMLHelper::_('bootstrap.tooltip');
+$this->getDocument()->getWebAssetManager()->useScript('form.validate');
 
 $user = $this->getCurrentUser();
 
