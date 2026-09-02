@@ -56,6 +56,9 @@ scripts/fdshop reinstall
 scripts/fdshop sync
 scripts/fdshop logs
 scripts/fdshop check-logs
+scripts/fdshop fixtures
+scripts/fdshop fixtures-verify
+scripts/fdshop test-reset
 scripts/fdshop stop
 scripts/fdshop rebuild
 scripts/fdshop reset
@@ -74,6 +77,13 @@ wieder entfernt.
 Paketinstallation. Es synchronisiert PHP-, Template-, Formular-, SQL-, CSS- und
 JavaScript-Quellen. Laufzeitbilder sowie Manifest und Installer-Script werden
 nicht am Joomla-Paketweg vorbei verändert.
+
+`fixtures` ersetzt ausschließlich FDShop-Fachdaten in der lokalen Sandbox
+durch einen künstlichen, reproduzierbaren Ausgangszustand und verifiziert
+Relationen, Mengen und Testdateien. `fixtures-verify` prüft ohne Datenänderung.
+`test-reset` führt den Phase-1-Reset aus, installiert FDShop und lädt danach
+diesen Fixture-Zustand. Die Sicherheitsgrenzen und die Abgrenzung zu späteren
+Business- und Browsertests stehen in `tests/fixtures/README.md`.
 
 ## Daten und Reset
 

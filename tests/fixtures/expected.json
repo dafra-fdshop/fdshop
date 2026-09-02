@@ -1,0 +1,32 @@
+{
+  "schemaVersion": "0.0.19",
+  "counts": {
+    "manufacturers": 2, "categories": 4, "buyer_groups": 3,
+    "products": 10, "products_details": 10,
+    "product_category_map": 11, "product_buyer_group_map": 3,
+    "user_buyer_group_map": 1,
+    "media": 1, "bundles": 2, "bundle_items": 2,
+    "bundle_discount_rules": 2, "coupons": 8,
+    "coupon_user_map": 1, "coupon_buyer_group_map": 1,
+    "coupon_product_map": 1, "coupon_category_map": 1,
+    "shipments": 2, "payment_methods": 2, "order_statuses": 3,
+    "orders": 2, "order_items": 2, "order_bundles": 1,
+    "order_bundle_items": 2, "order_history": 2,
+    "order_status_history": 2
+  },
+  "stableKeys": {
+    "productSkus": [
+      "E2E-PROD-ACTIVE", "E2E-PROD-INACTIVE", "E2E-PROD-DELETED",
+      "E2E-PROD-IMAGE", "E2E-PROD-NOIMAGE", "E2E-PROD-DISCOUNT",
+      "E2E-PROD-SOLDOUT", "E2E-PROD-LOW", "E2E-PROD-MULTICAT",
+      "E2E-PROD-BUYERGROUP"
+    ],
+    "couponCodes": [
+      "E2E-PERCENT", "E2E-FIXED", "E2E-EXPIRED", "E2E-FUTURE",
+      "E2E-MINIMUM", "E2E-PRODUCT", "E2E-CATEGORY", "E2E-GROUP-USER"
+    ],
+    "bundleNumbers": ["E2E-BUNDLE-ACTIVE", "E2E-BUNDLE-INACTIVE"],
+    "orderNumbers": ["E2E-ORDER-NORMAL", "E2E-ORDER-BUNDLE"]
+  },
+  "files": ["images/FDShop/products/e2e-fixture-product.svg"]
+}

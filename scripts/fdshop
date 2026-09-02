@@ -200,6 +200,14 @@ assert_clean_logs() {
   printf 'No fatal PHP, uncaught exception or SQL error found in current logs.\n'
 }
 
+load_fixtures() {
+  bash "$REPO_ROOT/tests/fixtures/bin/load.sh"
+}
+
+verify_fixtures() {
+  bash "$REPO_ROOT/tests/fixtures/bin/verify.sh"
+}
+
 lifecycle() {
   build_package
   compose down --volumes --remove-orphans
@@ -233,6 +241,9 @@ Usage: scripts/fdshop COMMAND
   verify-uninstall  Verify extension record and all FDShop tables are absent
   logs              Print current logs and collect them under .docker/logs
   check-logs        Fail on fatal PHP, uncaught exception or SQL errors
+  fixtures          Reset FDShop domain data, load and verify fixtures
+  fixtures-verify   Verify the existing fixture state without changing data
+  test-reset        Phase-1 reset, install FDShop, then load fixtures
   lifecycle         Reset and test fresh install -> uninstall -> fresh install
   status            Show Compose service state
   versions          Show actual Joomla, PHP, Apache and MariaDB versions
@@ -261,6 +272,9 @@ main() {
         verify-uninstall) verify_uninstalled ;;
         logs) compose logs --tail 200; collect_logs ;;
         check-logs) assert_clean_logs ;;
+        fixtures) load_fixtures ;;
+        fixtures-verify) verify_fixtures ;;
+        test-reset) compose down --volumes --remove-orphans; compose up --detach --build; wait_healthy; install_fdshop; load_fixtures ;;
         lifecycle) lifecycle ;;
         status) compose ps ;;
         versions)
