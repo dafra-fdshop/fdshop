@@ -23,3 +23,7 @@ node_modules/
 cache/
 logs/
 tmp/
+
+# FDShop Docker test environment (generated/local only)
+.env
+.docker/

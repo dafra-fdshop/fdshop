@@ -1,0 +1,278 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+readonly SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+readonly REPO_ROOT="$(cd -- "$SCRIPT_DIR/.." && pwd)"
+readonly COMPOSE_PROJECT="fdshop"
+readonly COMPOSE_FILE="$REPO_ROOT/compose.yaml"
+readonly ENV_FILE="$REPO_ROOT/.env"
+readonly ARTIFACT_DIR="$REPO_ROOT/.docker/artifacts"
+readonly LOG_DIR="$REPO_ROOT/.docker/logs"
+readonly PACKAGE_PATH="$ARTIFACT_DIR/com_fdshop.zip"
+
+compose() {
+  docker compose --project-name "$COMPOSE_PROJECT" --file "$COMPOSE_FILE" --env-file "$ENV_FILE" "$@"
+}
+
+require_file() {
+  if [[ ! -f "$1" ]]; then
+    printf 'Required file is missing: %s\n' "$1" >&2
+    [[ "$1" == "$ENV_FILE" ]] && printf 'Create it with: cp .env.example .env\n' >&2
+    exit 1
+  fi
+}
+
+prepare_dirs() {
+  mkdir -p "$ARTIFACT_DIR" "$LOG_DIR"
+}
+
+build_package() {
+  prepare_dirs
+  local stage_dir
+  stage_dir="$(mktemp -d -t fdshop-package.XXXXXXXX)"
+  trap '[[ -n "${stage_dir:-}" && "$stage_dir" == /tmp/fdshop-package.* ]] && rm -rf -- "$stage_dir"' RETURN
+
+  cp -a "$REPO_ROOT/administrator" "$stage_dir/administrator"
+  cp -a "$REPO_ROOT/site" "$stage_dir/site"
+  cp -a "$REPO_ROOT/media" "$stage_dir/media"
+  cp "$REPO_ROOT/fdshop.xml" "$REPO_ROOT/script.php" "$stage_dir/"
+
+  find "$stage_dir" -exec touch -h -d '2000-01-01 00:00:00 UTC' {} +
+  (
+    cd "$stage_dir"
+    find administrator site media -type f -print \
+      | LC_ALL=C sort \
+      | zip -X -q "$PACKAGE_PATH" -@
+    zip -X -q "$PACKAGE_PATH" fdshop.xml script.php
+  )
+
+  printf 'Built %s\n' "$PACKAGE_PATH"
+  sha256sum "$PACKAGE_PATH"
+}
+
+wait_healthy() {
+  local deadline=$((SECONDS + 300))
+  while (( SECONDS < deadline )); do
+    local db_health joomla_health mailpit_health
+    db_health="$(compose ps --format json db 2>/dev/null | grep -o '"Health":"[^"]*"' | head -1 || true)"
+    joomla_health="$(compose ps --format json joomla 2>/dev/null | grep -o '"Health":"[^"]*"' | head -1 || true)"
+    mailpit_health="$(compose ps --format json mailpit 2>/dev/null | grep -o '"Health":"[^"]*"' | head -1 || true)"
+    if [[ "$db_health" == *healthy* && "$joomla_health" == *healthy* && "$mailpit_health" == *healthy* ]]; then
+      printf 'All FDShop services are healthy.\n'
+      return 0
+    fi
+    sleep 5
+  done
+  compose ps
+  compose logs --tail 100
+  printf 'Timed out waiting for healthy services.\n' >&2
+  return 1
+}
+
+sql() {
+  compose exec -T --env "MYSQL_PWD=${MARIADB_PASSWORD}" db mariadb \
+    --batch --skip-column-names \
+    --user="${MARIADB_USER}" \
+    "${MARIADB_DATABASE}" \
+    --execute "$1"
+}
+
+load_env() {
+  require_file "$ENV_FILE"
+  set -a
+  # shellcheck disable=SC1090
+  source "$ENV_FILE"
+  set +a
+  : "${MARIADB_DATABASE:?Missing MARIADB_DATABASE in .env}"
+  : "${MARIADB_USER:?Missing MARIADB_USER in .env}"
+  : "${MARIADB_PASSWORD:?Missing MARIADB_PASSWORD in .env}"
+  : "${JOOMLA_DB_PREFIX:=fd_}"
+}
+
+extension_id() {
+  sql "SELECT extension_id FROM ${JOOMLA_DB_PREFIX}extensions WHERE type='component' AND element='com_fdshop' LIMIT 1;"
+}
+
+verify_installed() {
+  local id actual_tables expected_tables schema_version manifest_version
+  id="$(extension_id)"
+  [[ "$id" =~ ^[0-9]+$ ]] || { printf 'FDShop extension record is missing.\n' >&2; return 1; }
+
+  expected_tables="$(grep -oE '#__fdshop_[A-Za-z0-9_]+' "$REPO_ROOT/administrator/sql/install.mysql.utf8.sql" | sort -u | wc -l)"
+  actual_tables="$(sql "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='${MARIADB_DATABASE}' AND table_name LIKE '${JOOMLA_DB_PREFIX}fdshop\\_%';")"
+  [[ "$actual_tables" == "$expected_tables" ]] || {
+    printf 'FDShop table count mismatch: expected %s, found %s.\n' "$expected_tables" "$actual_tables" >&2
+    return 1
+  }
+
+  manifest_version="$(sed -n 's:.*<version>\([^<]*\)</version>.*:\1:p' "$REPO_ROOT/fdshop.xml" | head -1)"
+  schema_version="$(sql "SELECT version_id FROM ${JOOMLA_DB_PREFIX}schemas WHERE extension_id=${id};")"
+  [[ "$schema_version" == "$manifest_version" ]] || {
+    printf 'Schema mismatch: manifest %s, Joomla %s.\n' "$manifest_version" "$schema_version" >&2
+    return 1
+  }
+
+  compose exec -T joomla test -f /var/www/html/administrator/components/com_fdshop/fdshop.xml
+  compose exec -T joomla test -d /var/www/html/components/com_fdshop
+  compose exec -T joomla test -f /var/www/html/media/com_fdshop/joomla.asset.json
+  compose exec -T joomla test -d /var/www/html/images/FDShop/products
+
+  printf 'FDShop installed: extension_id=%s, schema=%s, tables=%s; installation paths present.\n' "$id" "$schema_version" "$actual_tables"
+}
+
+verify_uninstalled() {
+  local id actual_tables
+  id="$(extension_id)"
+  actual_tables="$(sql "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='${MARIADB_DATABASE}' AND table_name LIKE '${JOOMLA_DB_PREFIX}fdshop\\_%';")"
+  [[ -z "$id" ]] || { printf 'FDShop extension record still exists: %s\n' "$id" >&2; return 1; }
+  [[ "$actual_tables" == "0" ]] || { printf 'FDShop tables remain after uninstall: %s\n' "$actual_tables" >&2; return 1; }
+  compose exec -T joomla test ! -e /var/www/html/administrator/components/com_fdshop
+  compose exec -T joomla test ! -e /var/www/html/components/com_fdshop
+  compose exec -T joomla test ! -e /var/www/html/media/com_fdshop
+  printf 'FDShop uninstalled: extension record absent, tables=0, component paths absent.\n'
+}
+
+install_fdshop() {
+  local container_package="/var/www/html/tmp/com_fdshop.zip"
+
+  build_package
+
+  compose exec -T --user root joomla install \
+    --owner=www-data \
+    --group=www-data \
+    --mode=0644 \
+    /workspace/artifacts/com_fdshop.zip \
+    "$container_package"
+
+  if ! compose exec -T --user www-data joomla php cli/joomla.php extension:install \
+    --path="$container_package" --no-interaction; then
+    compose exec -T --user root joomla rm -f "$container_package"
+    return 1
+  fi
+
+  compose exec -T --user root joomla rm -f "$container_package"
+  verify_installed
+}
+
+uninstall_fdshop() {
+  local id
+  id="$(extension_id)"
+  [[ "$id" =~ ^[0-9]+$ ]] || { printf 'FDShop is not installed.\n' >&2; return 1; }
+  compose exec -T joomla php cli/joomla.php extension:remove "$id" --no-interaction
+  verify_uninstalled
+}
+
+sync_source() {
+  compose exec -T --user root joomla bash -Eeuo pipefail -c '
+    test -d /var/www/html/administrator/components/com_fdshop
+    rsync -a --delete /workspace/fdshop/administrator/ /var/www/html/administrator/components/com_fdshop/
+    rsync -a --delete /workspace/fdshop/site/ /var/www/html/components/com_fdshop/
+    rsync -a --delete /workspace/fdshop/media/css/ /var/www/html/media/com_fdshop/css/
+    rsync -a --delete /workspace/fdshop/media/js/ /var/www/html/media/com_fdshop/js/
+    cp /workspace/fdshop/media/joomla.asset.json /var/www/html/media/com_fdshop/joomla.asset.json
+    chown -R www-data:www-data /var/www/html/administrator/components/com_fdshop /var/www/html/components/com_fdshop /var/www/html/media/com_fdshop
+  '
+  printf 'FDShop source synchronized. Manifest and installer lifecycle were not bypassed.\n'
+}
+
+collect_logs() {
+  prepare_dirs
+  local stamp target
+  stamp="$(date -u +%Y%m%dT%H%M%SZ)"
+  target="$LOG_DIR/$stamp"
+  mkdir -p "$target"
+  compose ps >"$target/compose-ps.txt"
+  compose logs --no-color >"$target/compose.log"
+  compose exec -T joomla sh -c 'find /var/www/html/administrator/logs -maxdepth 1 -type f -print -exec tail -n 500 {} \;' >"$target/joomla.log" 2>&1 || true
+  printf 'Logs collected in %s\n' "$target"
+}
+
+assert_clean_logs() {
+  local combined
+  combined="$(mktemp -t fdshop-log-check.XXXXXXXX)"
+  trap '[[ -n "${combined:-}" && "$combined" == /tmp/fdshop-log-check.* ]] && rm -f -- "$combined"' RETURN
+  compose logs --no-color >"$combined"
+  compose exec -T joomla sh -c 'find /var/www/html/administrator/logs -maxdepth 1 -type f -exec cat {} \;' >>"$combined" 2>/dev/null || true
+  if grep -E -i 'PHP Fatal error|Uncaught (Error|Exception)|SQLSTATE\[|mysqli_sql_exception|Joomla[^:]*: error' "$combined"; then
+    printf 'Serious errors were found in the Phase-1 logs.\n' >&2
+    return 1
+  fi
+  printf 'No fatal PHP, uncaught exception or SQL error found in current logs.\n'
+}
+
+lifecycle() {
+  build_package
+  compose down --volumes --remove-orphans
+  compose up --detach --build
+  wait_healthy
+  compose exec -T joomla php --version
+  compose exec -T joomla php cli/joomla.php --version
+  compose exec -T db mariadb --version
+  install_fdshop
+  uninstall_fdshop
+  install_fdshop
+  assert_clean_logs
+  collect_logs
+  printf 'Fresh install -> uninstall -> fresh install completed successfully.\n'
+}
+
+usage() {
+  cat <<'USAGE'
+Usage: scripts/fdshop COMMAND
+
+  start             Start/build Phase-1 services and wait until healthy
+  stop              Stop services and retain all volumes
+  rebuild           Rebuild images and retain all volumes
+  reset             Remove only fdshop Compose resources/volumes, then start fresh
+  package           Build deterministic .docker/artifacts/com_fdshop.zip
+  install           Build and install/update through Joomla CLI
+  uninstall         Uninstall through Joomla CLI and verify cleanup
+  reinstall         Uninstall, then build/install through Joomla CLI
+  sync              Fast source sync after a proper package installation
+  verify-install    Verify extension record, schema and all FDShop tables
+  verify-uninstall  Verify extension record and all FDShop tables are absent
+  logs              Print current logs and collect them under .docker/logs
+  check-logs        Fail on fatal PHP, uncaught exception or SQL errors
+  lifecycle         Reset and test fresh install -> uninstall -> fresh install
+  status            Show Compose service state
+  versions          Show actual Joomla, PHP, Apache and MariaDB versions
+USAGE
+}
+
+main() {
+  cd "$REPO_ROOT"
+  local command="${1:-}"
+  case "$command" in
+    ""|-h|--help|help) usage ;;
+    package) build_package ;;
+    *)
+      load_env
+      prepare_dirs
+      case "$command" in
+        start) compose up --detach --build; wait_healthy ;;
+        stop) compose stop ;;
+        rebuild) compose up --detach --build; wait_healthy ;;
+        reset) compose down --volumes --remove-orphans; compose up --detach --build; wait_healthy ;;
+        install) install_fdshop ;;
+        uninstall) uninstall_fdshop ;;
+        reinstall) uninstall_fdshop; install_fdshop ;;
+        sync) sync_source ;;
+        verify-install) verify_installed ;;
+        verify-uninstall) verify_uninstalled ;;
+        logs) compose logs --tail 200; collect_logs ;;
+        check-logs) assert_clean_logs ;;
+        lifecycle) lifecycle ;;
+        status) compose ps ;;
+        versions)
+          compose exec -T joomla php cli/joomla.php --version
+          compose exec -T joomla php --version
+          compose exec -T joomla apache2 -v
+          compose exec -T db mariadb --version
+          ;;
+        *) usage; return 1 ;;
+      esac
+      ;;
+  esac
+}
+
+main "$@"

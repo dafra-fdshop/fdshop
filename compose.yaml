@@ -1,0 +1,89 @@
+name: fdshop
+
+services:
+  db:
+    image: mariadb:11.8
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: ${MARIADB_DATABASE:?Set MARIADB_DATABASE in .env}
+      MARIADB_USER: ${MARIADB_USER:?Set MARIADB_USER in .env}
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD:?Set MARIADB_PASSWORD in .env}
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:?Set MARIADB_ROOT_PASSWORD in .env}
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "healthcheck.sh --connect --innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+    networks:
+      - fdshop_internal
+
+  mailpit:
+    image: axllent/mailpit:v1.31.0
+    restart: unless-stopped
+    environment:
+      MP_DATABASE: /data/mailpit.db
+      MP_SMTP_AUTH_ACCEPT_ANY: "1"
+      MP_SMTP_AUTH_ALLOW_INSECURE: "1"
+    ports:
+      - "127.0.0.1:${MAILPIT_HTTP_PORT:-8025}:8025"
+    volumes:
+      - mailpit_data:/data
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    networks:
+      - fdshop_internal
+      - fdshop_access
+
+  joomla:
+    build:
+      context: ./docker/joomla
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      mailpit:
+        condition: service_healthy
+    environment:
+      JOOMLA_DB_HOST: db:3306
+      JOOMLA_DB_TYPE: mysqli
+      JOOMLA_DB_NAME: ${MARIADB_DATABASE:?Set MARIADB_DATABASE in .env}
+      JOOMLA_DB_USER: ${MARIADB_USER:?Set MARIADB_USER in .env}
+      JOOMLA_DB_PASSWORD: ${MARIADB_PASSWORD:?Set MARIADB_PASSWORD in .env}
+      JOOMLA_DB_PREFIX: ${JOOMLA_DB_PREFIX:-fd_}
+      JOOMLA_SITE_NAME: ${JOOMLA_SITE_NAME:-FDShop Sandbox}
+      JOOMLA_ADMIN_USER: ${JOOMLA_ADMIN_USER:-FDShop Administrator}
+      JOOMLA_ADMIN_USERNAME: ${JOOMLA_ADMIN_USERNAME:-fdadmin}
+      JOOMLA_ADMIN_PASSWORD: ${JOOMLA_ADMIN_PASSWORD:?Set JOOMLA_ADMIN_PASSWORD in .env}
+      JOOMLA_ADMIN_EMAIL: ${JOOMLA_ADMIN_EMAIL:-fdshop-sandbox@example.test}
+      JOOMLA_SMTP_HOST: mailpit:1025
+    ports:
+      - "127.0.0.1:${JOOMLA_HTTP_PORT:-8080}:80"
+    volumes:
+      - joomla_data:/var/www/html
+      - ./:/workspace/fdshop:ro
+      - ./.docker/artifacts:/workspace/artifacts:ro
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent --show-error http://127.0.0.1/ >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+    networks:
+      - fdshop_internal
+      - fdshop_access
+
+volumes:
+  db_data:
+  joomla_data:
+  mailpit_data:
+
+networks:
+  fdshop_internal:
+    internal: true
+  fdshop_access: {}
