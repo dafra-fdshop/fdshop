@@ -208,6 +208,10 @@ verify_fixtures() {
   bash "$REPO_ROOT/tests/fixtures/bin/verify.sh"
 }
 
+run_smoke() {
+  bash "$REPO_ROOT/tests/smoke/run.sh"
+}
+
 lifecycle() {
   build_package
   compose down --volumes --remove-orphans
@@ -244,6 +248,7 @@ Usage: scripts/fdshop COMMAND
   fixtures          Reset FDShop domain data, load and verify fixtures
   fixtures-verify   Verify the existing fixture state without changing data
   test-reset        Phase-1 reset, install FDShop, then load fixtures
+  smoke             Fast health, HTTP, FDShop, fixture and new-log checks
   lifecycle         Reset and test fresh install -> uninstall -> fresh install
   status            Show Compose service state
   versions          Show actual Joomla, PHP, Apache and MariaDB versions
@@ -275,6 +280,7 @@ main() {
         fixtures) load_fixtures ;;
         fixtures-verify) verify_fixtures ;;
         test-reset) compose down --volumes --remove-orphans; compose up --detach --build; wait_healthy; install_fdshop; load_fixtures ;;
+        smoke) run_smoke ;;
         lifecycle) lifecycle ;;
         status) compose ps ;;
         versions)

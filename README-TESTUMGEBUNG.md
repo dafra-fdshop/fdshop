@@ -59,6 +59,7 @@ scripts/fdshop check-logs
 scripts/fdshop fixtures
 scripts/fdshop fixtures-verify
 scripts/fdshop test-reset
+scripts/fdshop smoke
 scripts/fdshop stop
 scripts/fdshop rebuild
 scripts/fdshop reset
@@ -84,6 +85,18 @@ Relationen, Mengen und Testdateien. `fixtures-verify` prüft ohne Datenänderung
 `test-reset` führt den Phase-1-Reset aus, installiert FDShop und lädt danach
 diesen Fixture-Zustand. Die Sicherheitsgrenzen und die Abgrenzung zu späteren
 Business- und Browsertests stehen in `tests/fixtures/README.md`.
+
+`smoke` erwartet eine laufende, gesunde Sandbox mit installiertem FDShop und
+geladenen Fixtures. Es verändert diesen Zustand nicht. Geprüft werden Dienste,
+lokale HTTP-Endpunkte, Installation, Schema, Tabellen, Fixtures und nur die
+während des aktuellen Laufs neu geschriebenen Container-/Joomla-Loganteile.
+Fehlt der definierte Zustand, endet der Befehl eindeutig mit einem Fehler und
+führt keinen Reset aus. Ein vollständiger Ausgangszustand entsteht weiterhin
+über `test-reset`, danach kann `smoke` ausgeführt werden.
+
+Für die ausschließlich testinterne Negativabnahme kann
+`FDSHOP_SMOKE_INJECT_FAILURE=joomla-http scripts/fdshop smoke` verwendet werden.
+Der Schalter verändert keine Container, Daten oder Produktdateien.
 
 ## Daten und Reset
 
