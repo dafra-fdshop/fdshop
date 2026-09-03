@@ -10,6 +10,9 @@ async function installDiagnostics(page, baseURL) {
   page.on('pageerror', error => errors.push(`pageerror: ${error.message}`));
   page.on('requestfailed', request => {
     const failure = request.failure();
+    if (failure?.errorText === 'net::ERR_ABORTED' && request.resourceType() !== 'document') {
+      return;
+    }
     errors.push(`requestfailed: ${request.method()} ${request.url()} (${failure?.errorText || 'unknown'})`);
   });
   page.on('response', response => {

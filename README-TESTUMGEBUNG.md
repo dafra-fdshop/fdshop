@@ -64,6 +64,7 @@ scripts/fdshop browser
 scripts/fdshop test-browser
 scripts/fdshop browser-readonly
 scripts/fdshop test-readonly
+scripts/fdshop browser-crud-manufacturers
 scripts/fdshop stop
 scripts/fdshop rebuild
 scripts/fdshop reset
@@ -134,6 +135,12 @@ Die Read-only-Negativabnahme liegt in
 Basisprofil nicht erzwungen: Die zehn Produkte liegen unter dem Seitenlimit 20.
 Ein späteres separates Pagination-Fixtureprofil kann diesen Fall ergänzen, ohne
 die schlanke Fixture-Basis aufzublähen.
+
+`browser-crud-manufacturers` prüft die Herstellerverwaltung schreibend über die
+echte Joomla-Oberfläche: Pflichtfeldvalidierung, Neuanlage, Apply mit ID-Erhalt,
+Save & Close, Statuswechsel, Löschschutz eines verwendeten Herstellers und das
+abschließende Löschen des isolierten `E2E-CRUD-MANUFACTURER-*`-Datensatzes. Für
+einen garantiert sauberen Ausgangszustand vorher `test-reset` ausführen.
 
 ## Daten und Reset
 
