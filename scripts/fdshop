@@ -311,6 +311,57 @@ run_browser_crud_categories() {
   printf 'Category CRUD artifacts: %s\nFDShop category CRUD suite: PASS (database state and cleanup verified)\n' "$host_output"
 }
 
+run_browser_crud_products() {
+  verify_installed >/dev/null
+  verify_fixtures >/dev/null
+  local run_id="${FDSHOP_PRODUCTS_CRUD_RUN_ID:-$(date -u +%Y%m%dT%H%M%SZ)-products-crud-$RANDOM}"
+  [[ "$run_id" =~ ^[A-Za-z0-9._-]+$ ]] || { printf 'Invalid products CRUD run id.\n' >&2; return 1; }
+  local container_output="/workspace/artifacts/$run_id"
+  local host_output="$REPO_ROOT/.docker/test-results/playwright/$run_id"
+  local fixture_hash_before media_count_before image_count_before
+  mkdir -p "$host_output"
+  fixture_hash_before="$(compose exec -T joomla sha256sum /var/www/html/images/FDShop/products/e2e-fixture-product.svg | awk '{print $1}')"
+  media_count_before="$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_media;")"
+  image_count_before="$(compose exec -T joomla find /var/www/html/images/FDShop/products -type f | wc -l)"
+  compose build browser
+
+  if ! compose run --rm --no-deps --env "PLAYWRIGHT_OUTPUT_DIR=$container_output" browser \
+    npx playwright test tests/products-crud.spec.js --grep 'product invalid save'; then
+    printf 'Product CRUD artifacts: %s\nFDShop product CRUD suite: FAIL\n' "$host_output" >&2
+    return 1
+  fi
+
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_products WHERE product_name='E2E-CRUD-PRODUCT-REFERENCE';")" == "1" ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_products p JOIN ${JOOMLA_DB_PREFIX}fdshop_products_details d ON d.product_id=p.id WHERE p.product_name='E2E-CRUD-PRODUCT-REFERENCE' AND p.manufacturer_id=900001 AND p.sale_price=32.5000 AND p.discount_price=27.5000 AND p.discount_active=1 AND p.in_stock='Verfügbar' AND p.meta_title='CRUD meta title after save-close' AND d.sku='E2E-CRUD-PRODUCT-REFERENCE' AND d.stock_quantity=3 AND d.low_stock=4 AND d.reserved_quantity=2;")" == "1" ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_product_category_map pcm JOIN ${JOOMLA_DB_PREFIX}fdshop_products p ON p.id=pcm.product_id WHERE p.product_name='E2E-CRUD-PRODUCT-REFERENCE';")" == "2" ]]
+  [[ "$(sql "SELECT COUNT(DISTINCT pcm.category_id) FROM ${JOOMLA_DB_PREFIX}fdshop_product_category_map pcm JOIN ${JOOMLA_DB_PREFIX}fdshop_products p ON p.id=pcm.product_id WHERE p.product_name='E2E-CRUD-PRODUCT-REFERENCE';")" == "2" ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_product_buyer_group_map pbgm JOIN ${JOOMLA_DB_PREFIX}fdshop_products p ON p.id=pbgm.product_id WHERE p.product_name='E2E-CRUD-PRODUCT-REFERENCE';")" == "2" ]]
+  [[ "$(sql "SELECT COUNT(DISTINCT pbgm.buyer_group_id) FROM ${JOOMLA_DB_PREFIX}fdshop_product_buyer_group_map pbgm JOIN ${JOOMLA_DB_PREFIX}fdshop_products p ON p.id=pbgm.product_id WHERE p.product_name='E2E-CRUD-PRODUCT-REFERENCE';")" == "2" ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_media m JOIN ${JOOMLA_DB_PREFIX}fdshop_products p ON p.id=m.product_id WHERE p.product_name='E2E-CRUD-PRODUCT-REFERENCE' AND m.media_type='image';")" == "1" ]]
+
+  if ! compose run --rm --no-deps --env "PLAYWRIGHT_OUTPUT_DIR=$container_output" browser \
+    npx playwright test tests/products-crud.spec.js --grep 'fixture image survives'; then
+    printf 'Product CRUD artifacts: %s\nFDShop product fixture-image/protection checks: FAIL\n' "$host_output" >&2
+    return 1
+  fi
+  [[ "$(sql "SELECT CONCAT(is_deleted, '|', description) FROM ${JOOMLA_DB_PREFIX}fdshop_products WHERE id=900100;")" == "0|Aktiv mit Bestand" ]]
+  [[ "$(sql "SELECT CONCAT(is_deleted, '|', description) FROM ${JOOMLA_DB_PREFIX}fdshop_products WHERE id=900103;")" == "0|Mit synthetischem Bild" ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_media WHERE id=900340 AND product_id=900103;")" == "1" ]]
+  [[ "$(compose exec -T joomla sha256sum /var/www/html/images/FDShop/products/e2e-fixture-product.svg | awk '{print $1}')" == "$fixture_hash_before" ]]
+
+  if ! compose run --rm --no-deps --env "PLAYWRIGHT_OUTPUT_DIR=$container_output" browser \
+    npx playwright test tests/products-crud.spec.js --grep 'product trash'; then
+    printf 'Product CRUD artifacts: %s\nFDShop product CRUD cleanup: FAIL\n' "$host_output" >&2
+    return 1
+  fi
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_products WHERE product_name='E2E-CRUD-PRODUCT-REFERENCE';")" == "0" ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_products_details d LEFT JOIN ${JOOMLA_DB_PREFIX}fdshop_products p ON p.id=d.product_id WHERE p.id IS NULL;")" == "0" ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_media;")" == "$media_count_before" ]]
+  [[ "$(compose exec -T joomla find /var/www/html/images/FDShop/products -type f | wc -l)" == "$image_count_before" ]]
+  verify_fixtures >/dev/null
+  printf 'Product CRUD artifacts: %s\nFDShop product CRUD suite: PASS (database, media and cleanup verified)\n' "$host_output"
+}
+
 run_browser_crud_configuration() {
   verify_installed >/dev/null
   verify_fixtures >/dev/null
@@ -399,6 +450,7 @@ Usage: scripts/fdshop COMMAND
   test-readonly     Run reset, smoke, foundation and read-only browser tests
   browser-crud-manufacturers  Run manufacturer CRUD browser tests
   browser-crud-categories  Run category CRUD browser tests with cleanup
+  browser-crud-products  Run product CRUD browser tests with media cleanup
   browser-crud-configuration  Run configuration, shipment, payment and order-status CRUD tests
   lifecycle         Reset and test fresh install -> uninstall -> fresh install
   status            Show Compose service state
@@ -438,6 +490,7 @@ main() {
         test-readonly) test_readonly ;;
         browser-crud-manufacturers) run_browser_crud_manufacturers ;;
         browser-crud-categories) run_browser_crud_categories ;;
+        browser-crud-products) run_browser_crud_products ;;
         browser-crud-configuration) run_browser_crud_configuration ;;
         lifecycle) lifecycle ;;
         status) compose ps ;;
