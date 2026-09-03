@@ -362,6 +362,51 @@ run_browser_crud_products() {
   printf 'Product CRUD artifacts: %s\nFDShop product CRUD suite: PASS (database, media and cleanup verified)\n' "$host_output"
 }
 
+run_browser_crud_coupons() {
+  verify_installed >/dev/null
+  verify_fixtures >/dev/null
+  local run_id="${FDSHOP_COUPONS_CRUD_RUN_ID:-$(date -u +%Y%m%dT%H%M%SZ)-coupons-crud-$RANDOM}"
+  [[ "$run_id" =~ ^[A-Za-z0-9._-]+$ ]] || { printf 'Invalid coupons CRUD run id.\n' >&2; return 1; }
+  local container_output="/workspace/artifacts/$run_id"
+  local host_output="$REPO_ROOT/.docker/test-results/playwright/$run_id"
+  local coupon_id
+  mkdir -p "$host_output"
+  compose build browser
+
+  if ! compose run --rm --no-deps --env "PLAYWRIGHT_OUTPUT_DIR=$container_output" browser \
+    npx playwright test tests/coupons-crud.spec.js --grep 'coupon invalid save'; then
+    printf 'Coupon CRUD artifacts: %s\nFDShop coupon CRUD suite: FAIL\n' "$host_output" >&2
+    return 1
+  fi
+
+  coupon_id="$(sql "SELECT id FROM ${JOOMLA_DB_PREFIX}fdshop_coupons WHERE coupon_code='E2E-CRUD-COUPON-REFERENCE';")"
+  [[ "$coupon_id" =~ ^[0-9]+$ ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_coupons WHERE id=${coupon_id} AND coupon_name='E2E-CRUD-COUPON-UPDATED' AND discount_type='fixed' AND discount_value=8.7500 AND minimum_order_total=55.5000 AND usage_limit_total=30 AND usage_limit_per_user=3 AND valid_from='2027-01-01 00:00:00' AND valid_to='2032-12-31 23:59:59' AND published=1;")" == "1" ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_coupon_product_map WHERE coupon_id=${coupon_id};")" == "2" ]]
+  [[ "$(sql "SELECT COUNT(DISTINCT product_id) FROM ${JOOMLA_DB_PREFIX}fdshop_coupon_product_map WHERE coupon_id=${coupon_id};")" == "2" ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_coupon_category_map WHERE coupon_id=${coupon_id};")" == "2" ]]
+  [[ "$(sql "SELECT COUNT(DISTINCT category_id) FROM ${JOOMLA_DB_PREFIX}fdshop_coupon_category_map WHERE coupon_id=${coupon_id};")" == "2" ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_coupon_buyer_group_map WHERE coupon_id=${coupon_id};")" == "2" ]]
+  [[ "$(sql "SELECT COUNT(DISTINCT buyer_group_id) FROM ${JOOMLA_DB_PREFIX}fdshop_coupon_buyer_group_map WHERE coupon_id=${coupon_id};")" == "2" ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_coupon_user_map WHERE coupon_id=${coupon_id};")" == "1" ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_coupon_usage WHERE coupon_id=${coupon_id};")" == "0" ]]
+
+  if ! compose run --rm --no-deps --env "PLAYWRIGHT_OUTPUT_DIR=$container_output" browser \
+    npx playwright test tests/coupons-crud.spec.js --grep 'coupon direct delete'; then
+    printf 'Coupon CRUD artifacts: %s\nFDShop coupon CRUD cleanup: FAIL\n' "$host_output" >&2
+    return 1
+  fi
+
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_coupons WHERE id=${coupon_id};")" == "0" ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_coupon_product_map WHERE coupon_id=${coupon_id};")" == "0" ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_coupon_category_map WHERE coupon_id=${coupon_id};")" == "0" ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_coupon_buyer_group_map WHERE coupon_id=${coupon_id};")" == "0" ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_coupon_user_map WHERE coupon_id=${coupon_id};")" == "0" ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_coupon_usage WHERE coupon_id=${coupon_id};")" == "0" ]]
+  verify_fixtures >/dev/null
+  printf 'Coupon CRUD artifacts: %s\nFDShop coupon CRUD suite: PASS (database, mappings, usage and cleanup verified)\n' "$host_output"
+}
+
 run_browser_crud_configuration() {
   verify_installed >/dev/null
   verify_fixtures >/dev/null
@@ -451,6 +496,7 @@ Usage: scripts/fdshop COMMAND
   browser-crud-manufacturers  Run manufacturer CRUD browser tests
   browser-crud-categories  Run category CRUD browser tests with cleanup
   browser-crud-products  Run product CRUD browser tests with media cleanup
+  browser-crud-coupons  Run coupon CRUD browser tests with mapping cleanup
   browser-crud-configuration  Run configuration, shipment, payment and order-status CRUD tests
   lifecycle         Reset and test fresh install -> uninstall -> fresh install
   status            Show Compose service state
@@ -491,6 +537,7 @@ main() {
         browser-crud-manufacturers) run_browser_crud_manufacturers ;;
         browser-crud-categories) run_browser_crud_categories ;;
         browser-crud-products) run_browser_crud_products ;;
+        browser-crud-coupons) run_browser_crud_coupons ;;
         browser-crud-configuration) run_browser_crud_configuration ;;
         lifecycle) lifecycle ;;
         status) compose ps ;;
