@@ -325,6 +325,7 @@ run_browser_crud_configuration() {
   [[ "$(sql "SELECT CONCAT(general_vat_rate, '|', general_currency, '|', image_size_default) FROM ${JOOMLA_DB_PREFIX}fdshop_config WHERE id=1;")" == "19.0000|EUR|400" ]]
   [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_shipments WHERE shipment_name='E2E-CRUD-SHIPMENT-REFERENCE' AND shipment_description='CRUD shipment after save-close' AND published=0;")" == "1" ]]
   [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_payment_methods WHERE id=900610 AND payment_name='E2E Zahlung Rechnung' AND payment_description='Eindeutig künstlich' AND published=1;")" == "1" ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_payment_methods WHERE payment_name='E2E-CRUD-PAYMENT-REFERENCE' AND payment_description='CRUD payment after save-close' AND published=1;")" == "1" ]]
   [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_order_statuses WHERE id=900702 AND status_name='E2E Status Inaktiv' AND stock_action='none';")" == "1" ]]
   printf 'Configuration CRUD artifacts: %s\nFDShop configuration CRUD suite: PASS (database state and restoration verified)\n' "$host_output"
 }
