@@ -71,7 +71,7 @@ class CategoriesModel extends ListModel
 
         $published = $this->getState('filter.published');
 
-        if ($published !== '') {
+        if (in_array((string) $published, ['0', '1'], true)) {
             $query->where($db->quoteName('a.is_active') . ' = ' . (int) $published);
         }
 

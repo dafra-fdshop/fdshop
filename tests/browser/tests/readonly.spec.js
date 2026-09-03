@@ -46,15 +46,24 @@ test('Dashboard: central structure is reachable', async ({ page }) => {
 
 test('Products: fixtures, filters and forms are readable', async ({ page }) => {
   await openView(page, 'products');
+  await selectFilter(page, '#filter_published', '*');
   await expect(page.locator('#productList')).toContainText('E2E-PROD-ACTIVE');
+  await expect(page.locator('#productList')).toContainText('E2E-PROD-INACTIVE');
+  await expect(page.locator('#productList')).not.toContainText('E2E-PROD-DELETED');
+  await selectFilter(page, '#filter_published', '1');
+  await expect(page.locator('#productList')).toContainText('E2E-PROD-ACTIVE');
+  await expect(page.locator('#productList')).not.toContainText('E2E-PROD-INACTIVE');
   await search(page, 'E2E-PROD-ACTIVE');
   await expect(page.locator('#productList')).toContainText('E2E Produkt Aktiv');
   await openView(page, 'products');
   await selectFilter(page, '#filter_published', '0');
   await expect(page.locator('#productList')).toContainText('E2E-PROD-INACTIVE');
+  await expect(page.locator('#productList')).not.toContainText('E2E-PROD-ACTIVE');
   await openView(page, 'products');
   await selectFilter(page, '#filter_deleted', '1');
   await expect(page.locator('#productList')).toContainText('E2E-PROD-DELETED');
+  await expect(page.locator('#productList')).not.toContainText('E2E-PROD-ACTIVE');
+  await expect(page.locator('#productList')).not.toContainText('E2E-PROD-INACTIVE');
   await openView(page, 'products');
   await clearFilters(page);
   await search(page, 'E2E-PROD-IMAGE');
@@ -81,8 +90,12 @@ test('Products: fixtures, filters and forms are readable', async ({ page }) => {
 
 test('Categories: fixtures, status, hierarchy and form values are readable', async ({ page }) => {
   await openView(page, 'categories');
+  await selectFilter(page, '#filter_published', '*');
   await expect(page.locator('#categoryList')).toContainText('E2E Hauptkategorie');
+  await expect(page.locator('#categoryList')).toContainText('E2E Inaktive Kategorie');
   await selectFilter(page, '#filter_published', '1');
+  await expect(page.locator('#categoryList')).toContainText('E2E Hauptkategorie');
+  await expect(page.locator('#categoryList')).not.toContainText('E2E Inaktive Kategorie');
   await search(page, 'E2E Unterkategorie');
   await page.getByRole('link', { name: 'E2E Unterkategorie', exact: true }).click();
   await expect(page.locator('#jform_category_name')).toHaveValue('E2E Unterkategorie');
@@ -91,6 +104,7 @@ test('Categories: fixtures, status, hierarchy and form values are readable', asy
   await openView(page, 'categories');
   await selectFilter(page, '#filter_published', '0');
   await expect(page.locator('#categoryList')).toContainText('E2E Inaktive Kategorie');
+  await expect(page.locator('#categoryList')).not.toContainText('E2E Hauptkategorie');
 });
 
 test('Manufacturers: fixtures, status and form values are readable', async ({ page }) => {
@@ -113,8 +127,12 @@ test('Manufacturers: fixtures, status and form values are readable', async ({ pa
 
 test('Bundles: fixtures, products and discount tiers are readable', async ({ page }) => {
   await openView(page, 'bundles');
+  await selectFilter(page, '#filter_published', '');
   await expect(page.locator('#bundleList')).toContainText('E2E-BUNDLE-ACTIVE');
+  await expect(page.locator('#bundleList')).toContainText('E2E-BUNDLE-INACTIVE');
   await selectFilter(page, '#filter_published', '1');
+  await expect(page.locator('#bundleList')).toContainText('E2E-BUNDLE-ACTIVE');
+  await expect(page.locator('#bundleList')).not.toContainText('E2E-BUNDLE-INACTIVE');
   await search(page, 'E2E-BUNDLE-ACTIVE');
   await page.getByRole('link', { name: 'E2E-BUNDLE-ACTIVE', exact: true }).click();
   await expect(page.locator('#jform_bundle_number')).toHaveValue('E2E-BUNDLE-ACTIVE');
@@ -125,11 +143,18 @@ test('Bundles: fixtures, products and discount tiers are readable', async ({ pag
   await openView(page, 'bundles');
   await selectFilter(page, '#filter_published', '0');
   await expect(page.locator('#bundleList')).toContainText('E2E-BUNDLE-INACTIVE');
+  await expect(page.locator('#bundleList')).not.toContainText('E2E-BUNDLE-ACTIVE');
 });
 
 test('Coupons: implemented values and restrictions are readable', async ({ page }) => {
   await openView(page, 'coupons');
+  await selectFilter(page, '#filter_published', '');
   await expect(page.locator('#couponList')).toContainText('E2E-PERCENT');
+  await selectFilter(page, '#filter_published', '1');
+  await expect(page.locator('#couponList')).toContainText('E2E-PERCENT');
+  await selectFilter(page, '#filter_published', '0');
+  await expect(page.locator('#couponList')).not.toContainText('E2E-PERCENT');
+  await selectFilter(page, '#filter_published', '');
   await search(page, 'E2E-PRODUCT');
   await page.getByRole('link', { name: 'E2E Produktbeschränkt', exact: true }).click();
   await expect(page.locator('#jform_coupon_code')).toHaveValue('E2E-PRODUCT');
