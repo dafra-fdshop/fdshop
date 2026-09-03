@@ -95,8 +95,12 @@ test('Categories: fixtures, status, hierarchy and form values are readable', asy
 
 test('Manufacturers: fixtures, status and form values are readable', async ({ page }) => {
   await openView(page, 'manufacturers');
+  await selectFilter(page, '#filter_published', '*');
   await expect(page.locator('#manufacturerList')).toContainText('E2E Hersteller Aktiv');
+  await expect(page.locator('#manufacturerList')).toContainText('E2E Hersteller Inaktiv');
   await selectFilter(page, '#filter_published', '1');
+  await expect(page.locator('#manufacturerList')).toContainText('E2E Hersteller Aktiv');
+  await expect(page.locator('#manufacturerList')).not.toContainText('E2E Hersteller Inaktiv');
   await search(page, 'E2E Hersteller Aktiv');
   await page.getByRole('link', { name: 'E2E Hersteller Aktiv', exact: true }).click();
   await expect(page.locator('#jform_manufacturer_name')).toHaveValue('E2E Hersteller Aktiv');
@@ -104,6 +108,7 @@ test('Manufacturers: fixtures, status and form values are readable', async ({ pa
   await openView(page, 'manufacturers');
   await selectFilter(page, '#filter_published', '0');
   await expect(page.locator('#manufacturerList')).toContainText('E2E Hersteller Inaktiv');
+  await expect(page.locator('#manufacturerList')).not.toContainText('E2E Hersteller Aktiv');
 });
 
 test('Bundles: fixtures, products and discount tiers are readable', async ({ page }) => {

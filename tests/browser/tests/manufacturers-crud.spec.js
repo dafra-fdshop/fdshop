@@ -15,7 +15,7 @@ test.afterEach(async ({}, testInfo) => {
   testInfo.diagnostics.expectClean();
 });
 
-async function searchManufacturer(page, name, status = 'Published') {
+async function searchManufacturer(page, name, status = 'All') {
   await openView(page, 'manufacturers');
   const clearButton = page.getByRole('button', { name: 'Clear' });
   if (await clearButton.isVisible() && await clearButton.isEnabled()) {
