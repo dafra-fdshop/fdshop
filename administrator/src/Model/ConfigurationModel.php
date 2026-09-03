@@ -87,7 +87,7 @@ class ConfigurationModel extends AdminModel
     {
         return [
             'shipments'      => $this->getConfigurationListData('Shipments'),
-            'paymentmethods' => $this->getConfigurationListData('Paymentmethods'),
+            'paymentmethods' => $this->getConfigurationListData('PaymentMethods'),
             'orderstatuses'  => $this->getConfigurationListData('Orderstatuses'),
         ];
     }
