@@ -28,6 +28,11 @@ prepare_dirs() {
 
 build_package() {
   prepare_dirs
+  [[ "$PACKAGE_PATH" == "$ARTIFACT_DIR/com_fdshop.zip" ]] || {
+    printf 'Refusing to remove unexpected package path: %s\n' "$PACKAGE_PATH" >&2
+    return 1
+  }
+  rm -f -- "$PACKAGE_PATH"
   local stage_dir
   stage_dir="$(mktemp -d -t fdshop-package.XXXXXXXX)"
   trap '[[ -n "${stage_dir:-}" && "$stage_dir" == /tmp/fdshop-package.* ]] && rm -rf -- "$stage_dir"' RETURN
