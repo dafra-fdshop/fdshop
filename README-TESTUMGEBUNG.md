@@ -62,6 +62,8 @@ scripts/fdshop test-reset
 scripts/fdshop smoke
 scripts/fdshop browser
 scripts/fdshop test-browser
+scripts/fdshop browser-readonly
+scripts/fdshop test-readonly
 scripts/fdshop stop
 scripts/fdshop rebuild
 scripts/fdshop reset
@@ -119,6 +121,19 @@ bereits ignorierte `.docker/`-Struktur von Git ausgeschlossen.
 Für die testinterne Negativabnahme steht
 `tests/browser/bin/test-controlled-failure.sh` bereit. Sie erwartet absichtlich
 ein fehlendes Element und verifiziert non-zero, FAIL, Screenshot und Trace.
+
+`browser-readonly` führt die ausschließlich lesenden Administrator-Regressionen
+für Dashboard, Produkte, Kategorien, Hersteller, Bundles, Gutscheine,
+Bestellungen und Konfiguration aus. Formulare werden geöffnet und Werte gelesen;
+Speichern, Anwenden, Statusänderungen und andere persistierende Aktionen werden
+nicht ausgeführt. `test-readonly` kombiniert Reset, Smoke, Foundation und die
+Read-only-Suite.
+
+Die Read-only-Negativabnahme liegt in
+`tests/browser/bin/test-readonly-controlled-failure.sh`. Pagination wird im
+Basisprofil nicht erzwungen: Die zehn Produkte liegen unter dem Seitenlimit 20.
+Ein späteres separates Pagination-Fixtureprofil kann diesen Fall ergänzen, ohne
+die schlanke Fixture-Basis aufzublähen.
 
 ## Daten und Reset
 
