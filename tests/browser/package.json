@@ -1,0 +1,14 @@
+{
+  "name": "fdshop-browser-tests",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.55.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -60,6 +60,8 @@ scripts/fdshop fixtures
 scripts/fdshop fixtures-verify
 scripts/fdshop test-reset
 scripts/fdshop smoke
+scripts/fdshop browser
+scripts/fdshop test-browser
 scripts/fdshop stop
 scripts/fdshop rebuild
 scripts/fdshop reset
@@ -97,6 +99,26 @@ führt keinen Reset aus. Ein vollständiger Ausgangszustand entsteht weiterhin
 Für die ausschließlich testinterne Negativabnahme kann
 `FDSHOP_SMOKE_INJECT_FAILURE=joomla-http scripts/fdshop smoke` verwendet werden.
 Der Schalter verändert keine Container, Daten oder Produktdateien.
+
+`browser` startet den schlanken, optionalen Playwright-Dienst mit Chromium im
+Headless-Modus. Er erwartet wie `smoke` eine vorbereitete Sandbox und verändert
+keine FDShop-Fachdaten. Der Browser erreicht Joomla ausschließlich intern über
+`http://joomla`; der Dienst besitzt nur das Netzwerk `fdshop_access` und keine
+veröffentlichten Ports. `test-browser` führt `test-reset`, `smoke` und danach
+`browser` aus.
+
+Playwright ist auf 1.55.0 und das Image auf
+`mcr.microsoft.com/playwright:v1.55.0-noble` festgelegt. Der lokale, von Phase 1
+erzeugte Testadministrator wird über die nicht versionierte `.env` übergeben.
+Credentials werden weder in Testcode noch Reports ausgegeben. Ein nach echtem
+Formularlogin erzeugter `storageState` liegt nur im jeweiligen Ergebnisordner.
+Screenshots und Traces entstehen nur bei Fehlern, Videos sind deaktiviert.
+Alle Artefakte liegen unter `.docker/test-results/playwright/` und sind über die
+bereits ignorierte `.docker/`-Struktur von Git ausgeschlossen.
+
+Für die testinterne Negativabnahme steht
+`tests/browser/bin/test-controlled-failure.sh` bereit. Sie erwartet absichtlich
+ein fehlendes Element und verifiziert non-zero, FAIL, Screenshot und Trace.
 
 ## Daten und Reset
 

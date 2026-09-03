@@ -78,6 +78,25 @@ services:
       - fdshop_internal
       - fdshop_access
 
+  browser:
+    profiles: ["browser"]
+    build:
+      context: .
+      dockerfile: docker/browser/Dockerfile
+    depends_on:
+      joomla:
+        condition: service_healthy
+    environment:
+      FDSHOP_BASE_URL: http://joomla
+      JOOMLA_ADMIN_USERNAME: ${JOOMLA_ADMIN_USERNAME:?Set JOOMLA_ADMIN_USERNAME in .env}
+      JOOMLA_ADMIN_PASSWORD: ${JOOMLA_ADMIN_PASSWORD:?Set JOOMLA_ADMIN_PASSWORD in .env}
+      PLAYWRIGHT_OUTPUT_DIR: /workspace/artifacts/manual
+    volumes:
+      - ./.docker/test-results/playwright:/workspace/artifacts
+    networks:
+      - fdshop_access
+    shm_size: 256mb
+
 volumes:
   db_data:
   joomla_data:
