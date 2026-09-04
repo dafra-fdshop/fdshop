@@ -1,0 +1,385 @@
+=====================================================================
+FDShop_Projektworkflow_V3
+=====================================================================
+
+Status: VERBINDLICHE PROJEKTQUELLE Version: V3 Ersetzt:
+FDShop_Projektworkflow_V2 Stand: 04.09.2026
+
+===================================================================== 1.
+ZWECK
+=====================================================================
+
+Diese Quelle definiert den verbindlichen Arbeitsworkflow des
+FDShop-Projektes. Sie beschreibt den maßgeblichen Projektstand,
+Git-/Branch-Regeln, Analyse, Umsetzung, Test, Abnahme,
+Codex-Selbstkorrektur, Commit/Push/Merge sowie nachgelagerte
+Quellenpflege.
+
+Sie beschreibt keine Businessregeln, technische Detailarchitektur oder
+den tatsächlichen Implementierungsstand.
+
+===================================================================== 2.
+MASSGEBLICHER TECHNISCHER PROJEKTSTAND
+=====================================================================
+
+Maßgeblicher aktueller Codebestand ist das Git-Repository:
+
+dafra-fdshop/fdshop
+
+Regulärer Entwicklungsbranch: feature Freigegebener stabiler Branch:
+main
+
+Vor jeder Umsetzung sind Branch, HEAD, origin/feature und Working Tree
+zu prüfen.
+
+Ein älteres Projekt-ZIP ist keine reguläre aktuelle Codequelle mehr. Es
+darf als Sicherung, historische Referenz oder Daten-/Migrationsquelle
+bestehen, aber einen neueren Repository-Stand nicht überschreiben.
+
+Vor Änderungen sind die tatsächlich betroffenen Dateien aus dem
+Repository zu analysieren. Arbeiten ausschließlich nach Erinnerung,
+alten Einzeldateien oder rekonstruiertem Chatinhalt sind unzulässig.
+
+===================================================================== 3.
+PROJEKTQUELLEN UND CODE
+=====================================================================
+
+Projektquellen definieren beschlossene Regeln, Architektur, Fachregeln,
+Dokumentationsregeln und Workflow.
+
+Der Repository-Code zeigt den tatsächlich vorhandenen technischen Stand.
+
+Eine beschlossene Zielregel darf vom Code abweichen, solange sie noch
+nicht implementiert ist. Codebestand und Implementierungsstand
+dokumentieren Ist-Stände und ersetzen bei konkreten Änderungen nicht die
+Prüfung des Repository-Codes.
+
+===================================================================== 4.
+VERBINDLICHE ENTWICKLUNGS- UND TESTUMGEBUNG
+=====================================================================
+
+Für Codex-basierte Entwicklung ist die real abgenommene lokale Sandbox
+vorgesehen.
+
+Arbeitsclone: /home/daniel/projects/fdshop
+
+Referenzumgebung: • Windows 11 Host • WSL2 / Ubuntu 24.04 • Docker
+Desktop • Docker Compose • Joomla 6.1.3 • PHP 8.4 • Apache • MariaDB
+11.8 • Mailpit • Playwright / Chromium
+
+Der WSL2-Linux-Clone ist für automatisierte Codex-Arbeit dem
+Windows-Clone vorzuziehen. Linux-/PSR-4-/Case-Sensitivity-Probleme
+werden dort real sichtbar.
+
+Produktivdaten, Produktivzugänge und Produktivsysteme sind
+ausgeschlossen.
+
+===================================================================== 5.
+GIT- UND BRANCH-WORKFLOW
+=====================================================================
+
+feature ist der aktive Entwicklungsbranch.
+
+Freigegebene Änderungen werden dort umgesetzt, getestet, committed und
+nach origin/feature gepusht.
+
+main bleibt während laufender Entwicklungsarbeit unverändert. Ein Merge
+nach main erfolgt ausschließlich nach ausdrücklicher Freigabe der
+Projektleitung.
+
+Ein Arbeitspaket darf erst als fertig committed/gepusht werden, wenn
+seine Abnahmekriterien erfüllt sind.
+
+Bei Blocker: • kein falsches PASS • kein Fertig-Commit • kein
+Fertig-Push • Befund dokumentieren • Projektleitung entscheidet über
+Folgeauftrag
+
+Kein Force-Push ohne ausdrückliche Freigabe.
+
+===================================================================== 6.
+VERBINDLICHER ARBEITSABLAUF
+=====================================================================
+
+1.  Aufgabe / Änderungsbedarf feststellen
+2.  Prüfen, ob Projektentscheidung erforderlich ist
+3.  Falls erforderlich: Entscheidung durch Projektleitung
+4.  Branch / Commit / Remote prüfen
+5.  Relevante Projektquellen und betroffene Dateien analysieren
+6.  Auftrag und Scope festlegen
+7.  Unverbindliche Zeitschätzung für die Projektleitung
+8.  Umsetzung
+9.  QUICK
+10. passende STANDARD-Abnahme
+11. bei Fehler: Diagnose und zulässige Selbstkorrektur
+12. Tests wiederholen
+13. bei breiter / risikoreicher Änderung FULL
+14. erst bei Grün Commit
+15. Push nach origin/feature
+16. menschliche Abnahme
+17. Quellenpflegebedarf prüfen
+18. Merge nach main nur nach ausdrücklicher Freigabe
+
+Die Zeitschätzung dient ausschließlich der Orientierung und ist weder
+Deadline noch Abnahmekriterium.
+
+===================================================================== 7.
+CODEX-SELBSTKORREKTUR
+=====================================================================
+
+Codex darf innerhalb eines ausdrücklich freigegebenen Auftrags eigene
+Implementierungs- und Testfehler selbstständig analysieren, anhand von
+Logs, SQL, Screenshots und Traces eingrenzen, innerhalb des Scopes
+korrigieren und erneut testen.
+
+Nicht durch Codex eigenständig zu entscheiden: • neue Businessregeln •
+Architekturentscheidungen • Datenmodellentscheidungen • Governance •
+Scope-Erweiterungen
+
+Ist eine solche Entscheidung erforderlich, wird gestoppt und ein Befund
+gemeldet.
+
+===================================================================== 8.
+TESTSTUFEN
+=====================================================================
+
+QUICK: scripts/fdshop test-quick
+
+Schneller, nicht destruktiver Gesundheitscheck einer vorbereiteten
+Sandbox.
+
+STANDARD: scripts/fdshop test-standard
+
+Unterstützte Bereiche: • manufacturers • categories • configuration •
+products • coupons • bundles • orders
+
+STANDARD stellt einen definierten Testzustand her und kombiniert
+technische Basisprüfung, Browserprüfung, Read-only-Regression und
+passende CRUD-Suite.
+
+FULL: scripts/fdshop test-full
+
+Vollständige Integrations- und Regressionsabnahme einschließlich
+Fixtures, Smoke, Browser, Read-only, CRUD, Datenintegrität, Logs, Paket
+und Lifecycle.
+
+FULL ist insbesondere vorgesehen bei Installer-, Schema-, zentralen
+Service-/ Model-, Paketbau-, Docker-/Testinfrastrukturänderungen, vor
+größeren Merges nach main sowie bei Release-/Gesamtabnahmen.
+
+Kleine isolierte CSS-, Text- oder Templateänderungen benötigen nicht
+automatisch FULL.
+
+===================================================================== 9.
+TESTDATEN UND ISOLATION
+=====================================================================
+
+Tests verwenden ausschließlich künstliche Fixture-Daten.
+
+Unzulässig: • echte Kunden • echte Bestellungen • echte Zugangsdaten •
+Produktivdatenbank • Produktivbilder • externe Produktivsysteme
+
+SQL-Fixtures stellen reproduzierbare Ausgangszustände her. Sie gelten
+nicht als fachlicher Nachweis von Save-/CRUD-Abläufen. Diese werden über
+den echten Joomla-/FDShop-Anwendungsweg getestet.
+
+test-reset stellt den definierten Ausgangszustand wieder her.
+
+=====================================================================
+10. PAKETWEG
+=====================================================================
+
+Der reguläre Joomla-Paketweg ist verbindlicher Installations- und
+Abnahmeweg.
+
+Paket: .docker/artifacts/com_fdshop.zip
+
+Der Paketbau erfolgt stale-frei. Vorherige Archive dürfen keine
+Altdateien in einen neuen Build übernehmen.
+
+Nicht Bestandteil des Produktpakets: • tests/ • Node-/Playwright-Dateien
+• .docker/ • .env • Logs • Screenshots • Traces • generierte
+Testartefakte
+
+=====================================================================
+11. FEHLER- UND STOP-REGEL
+=====================================================================
+
+Reproduzierbare Fehler werden eingeordnet als: • Testfehler •
+Infrastrukturfehler • Produktfehler • Soll-/Ist-Abweichung • notwendige
+Projektentscheidung
+
+Tests dürfen nicht auf falsches Produktverhalten angepasst werden.
+Produktcode darf nicht außerhalb des freigegebenen Scopes passend
+gemacht werden.
+
+Bei blockierendem Produktfehler außerhalb des Scopes: STOP -> Befund ->
+enger Folgeauftrag.
+
+=====================================================================
+12. SANDBOX-SICHERHEIT
+=====================================================================
+
+Reset und Cleanup dürfen ausschließlich FDShop-Projektressourcen
+betreffen. Keine globale Docker-Bereinigung.
+
+MariaDB besitzt keinen veröffentlichten Host-Port. Joomla und Mailpit
+sind ausschließlich lokal erreichbar. Secrets werden nicht versioniert.
+
+=====================================================================
+13. FACH-KI- UND TEMPORÄRE ROLLEN
+=====================================================================
+
+Dauerhafte Fach-KIs und temporäre Umsetzungsrollen bleiben gültig.
+
+Ein fachübergreifender Codex-/Work-Auftrag darf mehrere technische
+Ebenen bearbeiten, wenn dies ausdrücklich freigegeben ist. Die
+Architekturverantwortung der Ebenen bleibt dabei unverändert.
+
+=====================================================================
+14. DOKUMENTATION NACH UMSETZUNG
+=====================================================================
+
+Nicht nach jeder Einzeländerung werden alle Quellen neu erstellt.
+
+Nach bestätigten Projektänderungen ist zu prüfen, welche Quellen
+tatsächlich betroffen sind.
+
+Führend: • Governance -> organisatorische Regeln •
+Dokumentationsstandard -> Dokumentationsregeln • Architektur ->
+technische Architektur • Fachregeln -> Businessregeln • Codebestand ->
+vorhandener Code • Implementierungsstand -> funktional nachgewiesener
+Stand • Projektworkflow -> Arbeitsablauf
+
+=====================================================================
+15. CI / ZUSÄTZLICHE TESTSYSTEME
+=====================================================================
+
+GitHub Actions / CI ist derzeit kein verbindlicher Bestandteil.
+
+Die lokale WSL2-/Docker-Sandbox ist die primäre automatisierte
+Testumgebung.
+
+Eine zusätzliche externe PHP-8.5-/Hosting-Abnahme kann separat erfolgen
+und ersetzt die primäre Sandbox nicht.
+
+=====================================================================
+16. QUALITÄTSCHECK
+=====================================================================
+
+□ richtiger Branch / Commit / Remote? □ Working Tree bekannt? □ aktuelle
+Projektquellen berücksichtigt? □ betroffene Dateien analysiert? □ Scope
+eingehalten? □ keine Grundsatzentscheidung still getroffen? □ QUICK /
+STANDARD / FULL passend ausgeführt? □ Fehler real reproduziert? □ Logs /
+Browserdiagnose geprüft? □ Produktpaket sauber? □ Fixtures /
+Datenintegrität wiederhergestellt? □ Commit / Push erst nach Grün? □
+main unverändert, sofern kein Merge freigegeben? □ Quellenpflegebedarf
+geprüft?
+
+=====================================================================
+ERGÄNZENDE VERBINDLICHE DETAILREGELN AUS V2
+=====================================================================
+
+VERBINDLICHE ARBEITSGRUNDLAGEN
+
+Vor jeder Umsetzung sind die für den Auftrag relevanten aktuellen
+Quellen zu berücksichtigen: Governance, Dokumentationsstandard,
+Architektur, Fachregeln, Admin-List-Standard, Codebestand,
+Implementierungsstand, Projektworkflow und – soweit relevant – temporäre
+Umsetzungsrollen.
+
+Codebestand und Implementierungsstand sind dokumentierte
+Ist-Stand-Quellen. Sie ersetzen bei konkreten Änderungen niemals die
+Prüfung des tatsächlich maßgeblichen Repository-Codes.
+
+PROJEKT-ZIP UND VERSIONSSICHERUNG
+
+Das Repository ist die reguläre aktuelle Codequelle. Ein Projekt-ZIP
+darf weiterhin als Sicherung, historische Referenz,
+Daten-/Migrationsquelle oder für einen ausdrücklich abgegrenzten
+Sonderauftrag verwendet werden.
+
+Wird für einen Sonderauftrag ausdrücklich ein bestimmtes ZIP als
+maßgeblich festgelegt, gilt dessen Inhalt für genau diesen Auftrag. Ein
+älteres ZIP darf einen neueren Repository-Stand niemals stillschweigend
+überschreiben.
+
+Versionssicherung und Entwicklungsworkflow bleiben getrennte Aufgaben.
+Eine Sicherung ist nicht automatisch der maßgebliche Projektstand.
+
+PROJEKTENTSCHEIDUNG UND DOKUMENTATION
+
+Eine offiziell beschlossene Zielregel darf vor ihrer technischen
+Umsetzung in der zuständigen Fachquelle dokumentiert werden. Sie gilt
+dadurch nicht automatisch als implementiert.
+
+Nach Umsetzung ist zu prüfen, ob Codebestand, Implementierungsstand oder
+weitere Quellen aktualisiert werden müssen.
+
+FACH-KI-/CODEX-ARBEITSWEISE
+
+Ein Auftrag erhält einen klar abgegrenzten Scope. Vor Änderungen werden
+die betroffenen Dateien direkt analysiert. Bei fachübergreifenden
+Änderungen werden auch die unmittelbar zusammenhängenden Ebenen geprüft.
+
+Beispiel: Toolbar -> Formular -> Request -> Controller -> Model ->
+Service/Table -> Redirect -> erneutes Laden
+
+Eine Fach-KI oder Codex verändert grundsätzlich nur den eigenen bzw.
+ausdrücklich freigegebenen Bereich. Erforderliche Änderungen außerhalb
+werden koordiniert, ausdrücklich freigegeben oder als Befund gemeldet.
+
+Nach Abschluss muss nachvollziehbar sein: • was geändert wurde • welche
+Dateien betroffen sind • welche Prüfungen erfolgten • welche Punkte
+offen blieben • welche Quellen betroffen sind • welcher
+Git-/Remote-/Working-Tree-Zustand besteht
+
+FACHÜBERGREIFENDE UMSETZUNG
+
+Ein ausdrücklich freigegebener Auftrag darf Datenbank, Service, Table,
+Model, Controller, View, Template, Formular, Installation, Integration
+und Tests gemeinsam bearbeiten. Die Architekturverantwortungen der
+Ebenen bleiben trotzdem verbindlich.
+
+UMGANG MIT ABWEICHUNGEN
+
+Code weicht von beschlossener Zielregel ab: -> Zielregel bleibt
+verbindlich; Abweichung ist Implementierungsbedarf.
+
+Ist-Dokumentation weicht vom nachweisbaren Code ab: -> Dokumentation
+aktualisieren; Code nicht künstlich an veraltete Ist-Dokumentation
+anpassen.
+
+Neue Grundsatzentscheidung erforderlich: -> keine stille Entscheidung;
+STOP/Einwand/Projektleitung.
+
+=====================================================================
+17. ÄNDERUNGSPROTOKOLL
+=====================================================================
+
+V3: • erfolgreichen Git-/Repository-/Codex-Pilotworkflow dauerhaft
+übernommen • GitHub-Repository als maßgeblichen technischen Codebestand
+festgelegt • feature als Entwicklungsbranch und main als stabilen
+Freigabebranch festgelegt • WSL2-/Docker-Sandbox als primäre
+Codex-Testumgebung aufgenommen • QUICK / STANDARD / FULL integriert •
+Fixtures, Smoke, Playwright, Read-only und CRUD eingeordnet •
+Codex-Selbstkorrektur innerhalb freigegebener Aufträge geregelt •
+Commit-/Push-/STOP-Regeln präzisiert • regulären Joomla-Paketweg als
+verbindliche Abnahmebasis festgelegt • Projekt-ZIP aus der Rolle des
+regulären aktuellen Codebestands entfernt • offenen V2-Prüfpunkt zur
+dauerhaften Workfloweinführung geschlossen
+
+=====================================================================
+18. SCHLUSSBESTIMMUNG
+=====================================================================
+
+FDShop_Projektworkflow_V3 ersetzt FDShop_Projektworkflow_V2 vollständig.
+
+Der in V2 geführte Pilot-/Prüfpunkt zum Git-/Repository-/Work-basierten
+Entwicklungsworkflow ist nach erfolgreicher realer
+Phase-1-/Phase-2-Abnahme geschlossen.
+
+Neue Versionen ersetzen ältere Versionen vollständig.
+
+=====================================================================
+ENDE DER QUELLE FDShop_Projektworkflow_V3
+=====================================================================

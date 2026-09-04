@@ -1,0 +1,517 @@
+=====================================================================
+FDShop_Implementierungsstand_V7
+=====================================================================
+
+Status: VERBINDLICHE PROJEKTQUELLE Version: V7 Ersetzt:
+FDShop_Implementierungsstand_V6 Prüfdatum: 04.09.2026
+
+Technische Grundlage: Git-Repository dafra-fdshop/fdshop Branch: feature
+Technischer Referenzcommit: c970bca1d92673b0cdc4ee841acf0d2c583a88ee
+
+===================================================================== 1.
+STATUSLEGENDE
+=====================================================================
+
+🟢 Weitgehend umgesetzt / real geprüft 🟡 Teilweise implementiert ⏳
+Vorbereitet / geplant ❌ Nicht implementiert
+
+===================================================================== 2.
+TECHNISCHE KOMPONENTENBASIS
+=====================================================================
+
+Status: 🟢
+
+Umgesetzt und real geprüft: • Joomla-6-Komponentenstruktur •
+Standard-MVCFactory / DI • Service-Registrierungen •
+Install-/Update-/Uninstall-SQL bis 0.0.19 • 32 Tabellen •
+WebAssetManager • ACL / CSRF / serverseitige Formvalidierung • Fresh
+Install -> Uninstall -> Fresh Install • keine bestätigte
+BC6-Abhängigkeit • Joomla-6.1-Audit A–D abgeschlossen
+
+Referenzlaufzeit: Joomla 6.1.3 / PHP 8.4 / MariaDB 11.8 in der lokalen
+Sandbox.
+
+===================================================================== 3.
+TEST- UND ENTWICKLUNGSUMGEBUNG
+=====================================================================
+
+Status: 🟢 Phase 1 + Phase 2 abgeschlossen
+
+Real umgesetzt: • WSL2-/Ubuntu-Arbeitsclone • Docker Compose • Joomla /
+MariaDB / Mailpit • reproduzierbarer stale-freier Paketbau • echter
+Joomla-Lifecycle • künstliche Fixtures • Fixture-Verifier / Fingerprint
+• Smoke-Test • Playwright / Chromium • echter Joomla-Administrator-Login
+• Browserdiagnose / Screenshot / Trace • Read-only-Regression •
+CRUD-Suiten • QUICK • STANDARD • FULL
+
+FULL-Abschluss: 24/24 PASS
+
+Produktcode und Testinfrastruktur sind im Paket strikt getrennt.
+
+===================================================================== 4.
+PRODUKTVERWALTUNG
+=====================================================================
+
+Status: 🟢 Weitgehend umgesetzt und automatisiert real geprüft
+
+Real geprüft: • Liste / Suche / Statusfilter • Pflichtfeldvalidierung •
+Create • Stammdaten / Produktdetails • Preise / Aktionspreis • Lager /
+FDShop-Bestandsstatus • Hersteller • Mehrfach-Kategorien •
+Mehrfach-Käufergruppen • Apply / ID-Erhalt / keine Dubletten • Save &
+Close • Publish / Unpublish • vorhandenes Bild ohne Neu-Upload speichern
+• synthetischer Bild-Upload • Media-Datensatz / Bildvarianten • Trash /
+Restore / endgültiges Löschen • Löschschutz bei referenziertem Produkt •
+Cleanup / zweiter unabhängiger Lauf
+
+Offen: • Produktbild über eigene Adminfunktion löschen •
+Frontend-Produktdarstellung
+
+===================================================================== 5.
+KATEGORIEN UND HERSTELLER
+=====================================================================
+
+Kategorien: 🟢 Real geprüft: • Liste / Suche / Statusfilter • Invalid
+Save • Create • Apply / Save & Close • ID-Erhalt / Dublettenfreiheit •
+Publish / Unpublish • Delete eigener Datensatz • Löschschutz verwendeter
+Kategorie • Cleanup
+
+Hersteller: 🟢 Real geprüft: • Liste / Suche / Statusfilter • Invalid
+Save • Create • Apply / Save & Close • ID-Erhalt / Dublettenfreiheit •
+Publish / Unpublish • Delete • Löschschutz verwendeter Hersteller •
+Cleanup
+
+All-Statusfilterfehler wurden in Hersteller, Kategorien und Produkten
+behoben und automatisiert abgesichert.
+
+===================================================================== 6.
+KÄUFERGRUPPEN / PREISE / LAGER
+=====================================================================
+
+Käufergruppen: 🟡 Vorhanden: • DB-Basis • User-Mapping • Produkt-Mapping
+• Produkt-CRUD-Mehrfachzuordnung • Gutschein-Mapping
+
+Offen: • vollständige eigene Administration • Frontend-/Checkout-Prüfung
+
+Preisarchitektur: 🟡 Vorhanden und im Produkt-CRUD geprüft: • reguläre
+Preise • Aktionspreise • Produktpreis-Persistenz
+
+Offen: • vollständiger eigenständiger Preisworkflow •
+Recherche-/KI-Schnittstelle
+
+Lager: 🟡 Vorhanden: • stock/reserved/threshold/negative-Stock-Felder •
+is_in_stock als manuelles Feld • in_stock als abgeleiteter Status •
+ProductService-Bestandsableitung
+
+Real im Produkt-CRUD geprüft.
+
+Offen: • eigener Lagerverwaltungsbereich • Wareneingänge / Bewegungen /
+Historie
+
+===================================================================== 7.
+BUNDLES
+=====================================================================
+
+Status: 🟢 Adminbereich weitgehend umgesetzt und automatisiert real
+geprüft
+
+Real geprüft: • Invalid Save • Create • automatische Bundle-Nummer •
+AJAX-SKU-Suche • Produktzuordnungen / Dublettenvermeidung • Rabattstufen
+hinzufügen / ändern / entfernen • Produkt entfernen • Apply / Save &
+Close • Statusfilter • direkte Mehrfachlöschung • transaktionaler
+Cleanup von bundle_items und bundle_discount_rules • zweiter
+unabhängiger Lauf
+
+Behobener Produktfehler: Bundle-Löschung hinterließ verwaiste
+Unterdaten. Der Löschpfad wird jetzt transaktional über BundleService
+koordiniert.
+
+Offen: • Trash / Restore • Frontend-Bundle-Darstellung •
+Checkout-Integration
+
+===================================================================== 8.
+BESTELLUNGEN
+=====================================================================
+
+Status: 🟢 Admin-Kernbereich automatisiert real geprüft
+
+Real geprüft: • Liste / Suche / Statusfilter • normale Bestellung •
+Bundle-Snapshot-Bestellung • Produkt-Snapshotwerte • Statusänderung /
+Rücksetzung • Statuspersistenz • Statushistory • allgemeine History •
+Position hinzufügen • Menge ändern • Soft-Remove • Summenneuberechnung •
+Snapshot-Stabilität • zwei unabhängige Läufe
+
+Bestandsnebenwirkung: Die aktuell vorhandenen administrativen
+Positionsoperationen verändern den Produktbestand nicht.
+
+Offen / nicht dargestellt: • Bundle-Nummer im Bestelldetail •
+Bundle-Unterpositionen im Detail • Bundle-Item-Editing •
+Checkout-Erzeugung • Frontend-Kundenworkflow • vollständige
+Zahlungs-/Versandintegration
+
+===================================================================== 9.
+KONFIGURATION
+=====================================================================
+
+Status: 🟢 Weitgehend umgesetzt und automatisiert real geprüft
+
+Real geprüft: • Allgemein speichern / wiederherstellen • Bilder
+speichern / wiederherstellen • isolierte Versand-, Zahlungs- und
+Bestellstatuslisten • SearchTools / Statusfilter • getrennte Formulare /
+Requestkontexte • CRUD-Regression
+
+Behobener Produktfehler: Configuration konnte PaymentmethodsModel wegen
+falscher Schreibweise nicht auflösen. Auflösung auf PaymentMethods
+korrigiert.
+
+=====================================================================
+10. VERSANDARTEN
+=====================================================================
+
+Status: 🟢 Admin-Grundverwaltung real geprüft
+
+Real geprüft: • Pflichtfeldvalidierung • Create / Edit • Apply / Save &
+Close • Publish / Unpublish • Statusfilter • ID-Erhalt / keine Dubletten
+
+Offen: • Delete-UI • vollständige Checkout-Versandlogik
+
+=====================================================================
+11. ZAHLUNGSARTEN
+=====================================================================
+
+Status: 🟢 Admin-Grundverwaltung real geprüft
+
+Real geprüft: • Formular • Pflichtfeldvalidierung • Create / Edit •
+Apply / Save & Close • Publish / Unpublish • Statusfilter • ID-Erhalt /
+keine Dubletten
+
+Behobener Produktfehler: Paymentmethod-Controller/Model/Table-Dateinamen
+waren unter Linux nicht PSR-4/Joomla-case-konform und verursachten HTTP
+500. Dateinamen wurden korrigiert.
+
+Offen: • Delete-UI • Payment-Provider • Checkout-/Zahlungsintegration
+
+=====================================================================
+12. BESTELLSTATUS
+=====================================================================
+
+Status: 🟢 vorhandener Adminumfang real geprüft
+
+Real geprüft: • bestehende Status bearbeiten • Apply • Save & Close •
+ID-Erhalt • Persistenz • Suche / Sortierung / Listenisolation
+
+Nicht vorhanden: • Neuanlage über aktuelle UI •
+Publish/Delete-Funktionen
+
+=====================================================================
+13. GUTSCHEINE
+=====================================================================
+
+Status: 🟢 tatsächlich implementierter Adminumfang automatisiert real
+geprüft
+
+Real geprüft: • Invalid Save • Create • percent / fixed • Rabattwert •
+Mindestbestellwert • usage_limit_total / usage_limit_per_user •
+valid_from / valid_to • Apply / Save & Close • Publish / Unpublish /
+Statusfilter • Mehrfach-Produktmapping • Mehrfach-Kategoriemapping •
+Mehrfach-Käufergruppenmapping • lokales Benutzer-Mapping • direkte
+UI-Löschung • Cleanup aller Mappingtabellen • keine unbeabsichtigten
+coupon_usage-Einträge • zwei unabhängige Läufe
+
+Bekannte Soll-/Ist-Abweichungen: • maximum_discount_amount nicht
+technisch vorhanden • coupon_type nicht technisch vorhanden •
+Allow/Exclude-Mappingmodus nicht vorhanden • technisch valid_to •
+technisch usage_limit_per_user • technisch fixed statt amount
+
+Frontend-Einlösung bleibt offen.
+
+=====================================================================
+14. MEDIEN / BENUTZER / WARENKORB
+=====================================================================
+
+Medien: 🟡 Vorhanden und real geprüft: • Produktbild-Upload •
+Media-Datensatz • Bildvarianten • Bildbestand bei Save ohne Neu-Upload •
+reproduzierbarer Datei-/Media-Zustand
+
+Offen: • allgemeine Medienverwaltung • Produktbild-Löschfunktion •
+Frontend-Medienausgabe
+
+Benutzer/Kunden: 🟡 Vorhanden: • Joomla-User-Bezug •
+Käufergruppen-Mappings • Gutschein-User-Mapping • Bestellbezug
+
+Offen: • Kundenkonto / Kundenbereich • vollständige
+Käufergruppenverwaltung • Checkout-Kundendatenworkflow
+
+Warenkorb: ⏳ Datenbasis vorhanden (#__fdshop_cart).
+
+Offen: • Warenkorblogik • Site-Model/View • Add-to-cart • Mengenänderung
+• Preisermittlung • Gutschein-/Versand-/Zahlungsintegration • Checkout
+
+=====================================================================
+15. REALER AUTOMATISIERTER ABNAHMESTAND
+=====================================================================
+
+Phase 1: 🟢 Fresh Install -> Uninstall -> Fresh Install
+
+Phase 2: 🟢 Fixtures 🟢 Smoke 🟢 Browser Foundation 🟢 Read-only 8/8 🟢
+Hersteller CRUD 🟢 Kategorien CRUD 🟢 Configuration CRUD 🟢 Produkte
+CRUD 🟢 Gutscheine CRUD 🟢 Bundles CRUD 🟢 Bestellungen CRUD 🟢 QUICK 🟢
+STANDARD 🟢 FULL 24/24 🟢 Paketprüfung 🟢 Logprüfung
+
+Finaler Fixture-Fingerprint:
+1a2ac51fd98b8597260b47a4a695734ee58837bca91a686395cfb715bfd6577e
+
+=====================================================================
+16. BEHOBENE FEHLER IM RAHMEN DER TESTEINFÜHRUNG
+=====================================================================
+
+Real gefunden und behoben: • Configuration
+PaymentMethods-Modellauflösung • Hersteller-All-Statusfilter •
+Kategorien-All-Statusfilter • Produkte-All-Statusfilter • Paymentmethod
+PSR-4-/Case-Dateinamen • Bundle-Löschung mit verwaisten
+Items/DiscountRules • stale ZIP-Inhalte beim Paketbau
+
+Zusätzlich wurde ein Playwright-Testfehler beim sichtbaren
+Joomla-Radio-Label korrigiert; dies war kein Produktfehler.
+
+=====================================================================
+17. BEKANNTE FUNKTIONSLÜCKEN / BEWUSSTE SKIPS
+=====================================================================
+
+Aktuell insbesondere: • Pagination mit kleinem Basis-Fixture nicht
+ausgelöst • Produktbild löschen • Versandart löschen • Zahlungsart
+löschen • Bestellstatus neu anlegen • Bundle Trash/Restore •
+Bundle-Nummer im Bestelldetail • Bundle-Unterpositionen im Bestelldetail
+• Bundle-Item-Editing in Bestellung • einzelne
+Bestell-Trash/Restore-Abnahme nicht Bestandteil der isolierten Suite •
+bekannte Gutschein-Soll-/Ist-Abweichungen • Frontend / Checkout
+
+SKIPPED bedeutet nicht PASS, sondern eine dokumentierte technische
+Grenze.
+
+=====================================================================
+18. GESAMTBEWERTUNG
+=====================================================================
+
+Der aktuelle FDShop-Stand ist eine weit fortgeschrittene und auf Joomla
+6.1.3 real automatisiert geprüfte Administrator-/Backend-Basis.
+
+Besonders weit entwickelt und real CRUD-geprüft: • Produkte • Kategorien
+• Hersteller • Bundles • Bestellungen • Konfiguration • Versandarten •
+Zahlungsarten • Gutscheine
+
+Teilweise: • Preisarchitektur • Lager • Käufergruppen • Medien •
+Benutzer-/Kundenfunktionen
+
+Vorbereitet: • Warenkorb-Datenbasis
+
+Noch nicht fachlich implementiert: • Frontend-Shop • Warenkorblogik •
+Checkout • Frontend-Gutscheineinlösung • vollständige Zahlungsabwicklung
+• vollständige Versandlogik
+
+Der nächste große Entwicklungsbereich ist das Frontend.
+
+=====================================================================
+ERGÄNZENDE FORTGEFÜHRTE IST-STAND-DETAILS AUS V6
+=====================================================================
+
+DASHBOARD
+
+Status: 🟢 Implementiert als Grundansicht
+
+Vorhanden: • Administrator-Dashboard-View • Dashboard-Template • Aufruf
+über Backend-Menü
+
+Offen: • fachliche Dashboard-Auswertungen • Kennzahlen • Schnellzugriffe
+• Analysefunktionen
+
+PRODUKTBEREICH — WEITERE BESTÄTIGTE DETAILS
+
+Weiterhin nachweisbar: • getrennte Produkt-/Produktdetail-Datenhaltung •
+ProductService / ProductServiceInterface • ProductTable /
+ProductDetailsTable • Produktvorschaubilder über Models •
+ProductService-Kontextentkopplung • Joomla-6.1-konformer
+komponentenbezogener Servicebezug im Model • bestehende Produktdaten
+bleiben beim Bearbeiten erhalten
+
+Die fehlende Produktbild-Löschfunktion ist keine Regression; eine
+entsprechende Benutzerfunktion existiert derzeit schlicht nicht.
+
+KATEGORIEN
+
+Weiterhin bestätigt: • eigene FDShop-Kategorietabelle • CategoryService
+/ CategoryTable • Produkt-Kategorie-Mapping • Mehrfachzuordnung •
+FDShop-Kategoriesystem statt Joomla-Core-Kategorien • kontextgerecht
+escapte Plaintext-Ausgabe im Administrator
+
+HERSTELLER
+
+Weiterhin bestätigt: • ManufacturerService / Interface / Table •
+Herstellerzuordnung im Produktkontext • CSRF / core.create/core.edit /
+serverseitige Formvalidierung • kontextgerecht escapte Plaintext-Ausgabe
+
+PREISARCHITEKTUR / KALKULATION
+
+Status: 🟡
+
+Vorhandene Datenbasis: #__fdshop_product_prices
+#__fdshop_price_calc_rules #__fdshop_product_prices_research
+
+Nachweisbare Preisverwendung: • sale_price als reguläre
+kundenorientierte Verkaufspreisbasis • discount_price bei aktivem
+positiven Aktionspreis • dieselbe Verkaufspreisgrundlage in
+Bundleverwaltung • dieselbe Grundlage beim administrativen Hinzufügen
+neuer Bestellpositionen
+
+Offen: • vollständige Administrationsoberfläche für Preisregeln •
+vollständige Kalkulationslogik • KI-/Recherche-Schnittstelle •
+automatisierte Konkurrenzpreisrecherche • vollständiger operativer
+Preisworkflow
+
+LAGER / BESTAND
+
+Status: 🟡
+
+Vorhanden: • stock_quantity • reserved_quantity • low_stock_threshold •
+allow_negative_stock • is_in_stock als manuelles Produktdetailfeld •
+in_stock als abgeleiteter Snapshot/Status •
+ProductService-Bestandsableitung • Speicherung der Produktdetaildaten
+
+BUNDLE-BESTELLUNGEN
+
+Die Datenbasis für historische Bundle-Snapshots ist vorhanden: •
+#__fdshop_order_bundles • #__fdshop_order_bundle_items
+
+Phase 2 hat einen künstlichen Bundle-Bestellsnapshot read-only
+bestätigt.
+
+Weiter offen: • operative Bundle-Auflösung im Checkout •
+Bundle-Preislogik im Checkout • vollständige Bundle-Erzeugung im
+Bestellprozess
+
+BESTELLUNGEN — HISTORISCHE DETAILS
+
+Weiterhin gültig: • Snapshot neuer administrativ hinzugefügter
+Positionen umfasst product_id, product_name, sku, gtin,
+manufacturer_name, quantity, regular_price_gross, discount_price_gross,
+unit_price_net, unit_price_gross, tax_rate, line_total_net,
+line_total_gross, currency und is_removed • #__fdshop_order_history =
+allgemeine Historie • #__fdshop_order_status_history = spezialisierte
+Statushistorie • #__fdshop_orders_history wurde mit 0.0.19 migriert und
+entfernt • Legacy-Snapshotwerte dürfen historisch unbekannt leer/0
+bleiben • aktuelle Stammdaten werden nicht rückwirkend als historische
+Wahrheit in Legacy-Bestellungen geschrieben
+
+WICHTIGE KORREKTUR GEGENÜBER V6 — BESTELLSTATUS
+
+V6 dokumentierte „Bestellstatus erstellen“ als real geprüft. Die spätere
+Phase-2-Browseranalyse des aktuellen Referenzstands hat jedoch
+festgestellt, dass die aktuelle UI keine Neuanlagefunktion für
+Bestellstatus anbietet.
+
+Daher gilt für den aktuellen Referenzstand: • bestehende Bestellstatus
+bearbeiten: PASS • Apply / Save & Close / Persistenz: PASS • Suche /
+Sortierung / Listenisolation: PASS • Neuanlage über aktuelle UI: NICHT
+VORHANDEN / nicht als PASS führen • Publish/Delete: technisch nicht
+vorhanden
+
+Diese neuere reale Browserprüfung ersetzt die ältere V6-Ist-Aussage.
+
+CONFIGURATION — FORTGEFÜHRTE DETAILS
+
+Vorhanden: • ConfigurationController • ConfigurationModel •
+ConfigurationListModel • ConfigurationTable •
+Configuration-View/-Template • configuration.xml • Katalogmodus als
+zentrale Konfiguration • getrennte Formulare und Request-/State-Kontexte
+• getrennte SearchTools/Sortierung/Pagination/ControlFields •
+Standard-MVCFactory für Unterlistenmodels • form.validate
+
+Frühere Regression: adminForm verwendete form-validate ohne geladenes
+form.validate. Dies wurde bereits vor Phase 2 behoben und real getestet.
+
+MEDIEN
+
+Weiterhin vorhanden: • Media-Tabelle • Produktbildverarbeitung im
+ProductService • Bildvarianten • Media-Datensätze • Bildpfade/-daten
+über Models • media/css/site.css • media/js/site.js •
+media/js/admin-bundle.js • media/joomla.asset.json
+
+BENUTZER / KUNDEN
+
+Weiterhin vorhanden: • Joomla-User-Bezug • User-Käufergruppen-Mapping •
+Produkt-Käufergruppen-Mapping • Gutschein-User-Mapping • Bestellbezug zu
+Joomla-Usern • Admin-Benutzerbezug in Bestellhistorien
+
+Offen: • Kundenkonto • Adressverwaltung im Frontend • vollständige
+Käufergruppenverwaltung • automatischer Käufergruppenworkflow •
+Checkout-Kundendatenworkflow
+
+HISTORISCHE REALTESTS 31.08.2026
+
+Weiterhin gültig und durch spätere Regressionen nicht aufgehoben: •
+Produkte bearbeiten/speichern/Papierkorb/Restore/Delete • Kategorien
+anlegen/bearbeiten/speichern/Löschschutz • Hersteller
+anlegen/bearbeiten/speichern/Löschschutz • Bundle Apply/Save,
+Preisregel, SKU-Autocomplete, Papierkorbprodukt-Ausschluss, inaktive
+Produkte auswählbar • Bestellposition hinzufügen, Menge ändern, logisch
+entfernen, Summen, Status, Historien, Papierkorb/Wiederherstellung,
+Snapshot
+
+REALTESTS 01.09.2026 — JOOMLA 6.1.3
+
+Weiterhin gültig: • Fresh Install -> Uninstall -> vollständige
+Tabellenentfernung -> Fresh Install • Auditpakete A–D real bestanden •
+Configuration-Mehrlistenisolation •
+Produkt-/Bild-/Bundle-Regressionsprüfungen • Bundle-JavaScript und
+SKU-Suche • keine offenen bestätigten A–D-Blocker
+
+TECHNISCHE CLOSURE DES JOOMLA-6.1-AUDITS
+
+Statisch bestätigt: • Joomla-> 0 aktive Treffer •
+Factory::getApplication()->input -> 0 aktive Treffer • $app->input -> 0
+aktive Treffer • direkte SQL-/DatabaseInterface-Zugriffe in aktiven
+Views -> 0 • direkte Model-Neuinstanziierung in aktiven Views -> 0 •
+HTTP-/Userzugriff im ProductService-Speicherpfad -> 0 • alter
+Bundle-Scriptladeweg -> 0 • alt_/alt2_-Sicherungsdateien -> 0 •
+administrator/access.xml vorhanden • Configuration-Isolation vorhanden •
+form.validate vorhanden • keine bestätigte neue
+BC6-/Joomla-5-Abhängigkeit
+
+Bewusst verbleibend: • komponentenbezogener Servicezugriff in
+BundleModel, CategoryModel, CouponModel, ManufacturerModel, ProductModel
+• Containerzugriffe in BundleController, OrderController,
+OrdersController, FdshopComponent • unterstützte Factory::*-Verwendungen
+für Joomla-Kontextfunktionen • globale Benutzerauflösung in
+CouponService und OrderService
+
+ALT-/SICHERUNGSDATEIEN
+
+Die sechs früheren alt_/alt2_-Dateien wurden entfernt und sind weder
+aktive Implementierung noch offener Bereinigungspunkt.
+
+=====================================================================
+19. ÄNDERUNGSPROTOKOLL
+=====================================================================
+
+V7: • Referenzcommit auf Phase-2-Abschluss aktualisiert •
+Docker-/Testumgebung als real abgeschlossen aufgenommen • automatisierte
+Read-only-/CRUD-Abdeckung dokumentiert • QUICK / STANDARD / FULL
+aufgenommen • real behobene Produktfehler dokumentiert • Produkt-,
+Bundle-, Coupon- und Order-Abnahme präzisiert • bekannte SKIPs /
+Funktionslücken aktualisiert • Gutschein-Soll-/Ist-Abweichungen explizit
+getrennt • Frontend weiterhin als nächster nicht implementierter
+Hauptbereich ausgewiesen
+
+=====================================================================
+20. SCHLUSSBESTIMMUNG
+=====================================================================
+
+FDShop_Implementierungsstand_V7 dokumentiert den nachweisbaren
+funktionalen Umsetzungsgrad zum technischen Referenzcommit:
+
+c970bca1d92673b0cdc4ee841acf0d2c583a88ee
+
+Sie ersetzt FDShop_Implementierungsstand_V6 vollständig.
+
+=====================================================================
+ENDE DER QUELLE FDShop_Implementierungsstand_V7
+=====================================================================

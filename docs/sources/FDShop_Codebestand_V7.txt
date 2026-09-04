@@ -1,0 +1,533 @@
+=====================================================================
+FDShop_Codebestand_V7
+=====================================================================
+
+Status: VERBINDLICHE PROJEKTQUELLE Version: V7 Ersetzt:
+FDShop_Codebestand_V6 Prüfdatum: 04.09.2026
+
+Technische Grundlage: Git-Repository dafra-fdshop/fdshop Branch: feature
+Technischer Referenzcommit: c970bca1d92673b0cdc4ee841acf0d2c583a88ee
+
+===================================================================== 1.
+TECHNISCHER BASISSTAND
+=====================================================================
+
+Zielplattform: Joomla 6.1.x Real getestete Referenzversion: Joomla 6.1.3
+Manifest-/Schema-Stand: 0.0.19
+
+Installationsstruktur: • administrator/ • site/ • media/ • fdshop.xml •
+script.php
+
+administrator/script.php: entfernt administrator/config.xml: entfernt
+administrator/access.xml: vorhanden
+
+SQL: • administrator/sql/install.mysql.utf8.sql •
+administrator/sql/uninstall.mysql.utf8.sql •
+administrator/sql/updates/0.0.2.sql bis 0.0.19.sql
+
+Fresh Install: 32 Tabellen Uninstall: 0 FDShop-Tabellen Fresh Install ->
+Uninstall -> Fresh Install: real bestanden
+
+===================================================================== 2.
+ADMINISTRATOR-MVC / SERVICES
+=====================================================================
+
+Controller vorhanden für: Bundle(s), Category/Categories, Configuration,
+Coupon(s), Display, Manufacturer(s), Order(s), Orderstatus,
+Paymentmethod(s), Product(s), Shipment(s).
+
+Models vorhanden für: Bundle(s), Category/Categories,
+Configuration/ConfigurationList, Coupon(s), Manufacturer(s), Order(s),
+Orderstatus(es), Paymentmethod(s), Product(s), Shipment(s).
+
+Services: • BundleService / Interface • CategoryService / Interface •
+CouponService / Interface • ManufacturerService / Interface •
+OrderService / Interface • ProductService / Interface
+
+Tables: • BundleTable • BundleItemTable • BundleDiscountRuleTable •
+CategoryTable • ConfigurationTable • CouponTable • ManufacturerTable •
+OrderstatusTable • PaymentmethodTable • ProductTable •
+ProductDetailsTable • ShipmentTable
+
+Joomla-Standard-MVCFactory bleibt aktiv. Keine Custom-MVCFactory.
+
+===================================================================== 3.
+JOOMLA-/PSR-4-KORREKTUREN SEIT V6
+=====================================================================
+
+ConfigurationModel: PaymentMethods-Modellname auf die reale
+Joomla-/PSR-4-Klassenschreibweise korrigiert.
+
+Paymentmethod-Dateien: • PaymentMethodController.php ->
+PaymentmethodController.php • PaymentMethodModel.php ->
+PaymentmethodModel.php • PaymentMethodTable.php ->
+PaymentmethodTable.php
+
+Damit stimmen Joomla-Klassenauflösung und Linux-case-sensitive
+Dateipfade überein.
+
+Statusfilter: All-/Statusverarbeitung korrigiert in: •
+ManufacturersModel • CategoriesModel • ProductsModel
+
+Nur konkrete Statuswerte 0/1 erzeugen dort eine Statusbedingung; der
+Joomla- All-Wert wird nicht zu 0 gecastet.
+
+Bundles und Coupons wurden geprüft und benötigten diesen Fix nicht.
+
+===================================================================== 4.
+BUNDLE-LÖSCHUNG
+=====================================================================
+
+BundleModel besitzt einen koordinierten Löschpfad über BundleService.
+
+BundleServiceInterface / BundleService enthalten deleteBundles().
+
+Transaktionaler Ablauf: • bundle_discount_rules • bundle_items • bundles
+• Commit / Rollback bei Exception
+
+Mehrfach-ID-Löschung wird normalisiert innerhalb derselben Transaktion
+verarbeitet.
+
+Historische order_bundles-Daten werden nicht als aktuelle
+Bundle-Unterdaten gelöscht.
+
+===================================================================== 5.
+CONFIGURATION
+=====================================================================
+
+Vorhanden: • ConfigurationController • ConfigurationModel •
+ConfigurationListModel • ConfigurationTable • View / Template / Form
+
+Vier getrennte Formulare: • adminForm • shipmentForm • paymentmethodForm
+• orderstatusForm
+
+Getrennte Requestwurzeln: • shipments[…] • paymentmethods[…] •
+orderstatuses[…]
+
+Jede Unterliste besitzt eigenen State, SearchTools, Sortierung,
+Pagination, ControlFields und Formular-/Task-Kontext.
+
+form.validate wird geladen. Single Source: #__fdshop_config
+
+===================================================================== 6.
+PRODUKTE / KATEGORIEN / HERSTELLER
+=====================================================================
+
+Produkte: • Liste / Formular / Save • ProductService • ProductTable /
+ProductDetailsTable • Herstellerbezug • Mehrfach-Kategorien •
+Mehrfach-Käufergruppen • Preise / Aktionspreis • Lager-/Bestandsdaten •
+in_stock-Ableitung • Produktbild-Upload • vier Bildvarianten im
+getesteten Uploadpfad • Media-Datensatz • Trash / Restore / Delete •
+Löschschutz bei Referenzen
+
+Kategorien: • Liste / Formular / Save • CategoryService • Hierarchie •
+Status • Delete / Löschschutz
+
+Hersteller: • Liste / Formular / Save • ManufacturerService • Status •
+Delete / Löschschutz
+
+===================================================================== 7.
+BUNDLES
+=====================================================================
+
+Vorhanden: • Bundleliste • Bundleformular • automatische Bundle-Nummer •
+BundleService / Interface • Bundle-/Item-/DiscountRule-Tables •
+Produktzuordnung • Rabattstufen • AJAX-SKU-Lookup •
+media/js/admin-bundle.js • WebAssetManager / joomla.asset.json • Status
+• direkte Löschung mit transaktionalem Unterdaten-Cleanup
+
+Asset: com_fdshop.admin-bundle URI: com_fdshop/admin-bundle.js
+
+===================================================================== 8.
+BESTELLUNGEN
+=====================================================================
+
+Vorhanden: • Bestellliste / Suche / Statusfilter • Bestelldetail •
+Produkt- und Bundle-Snapshots • Position hinzufügen • Menge ändern •
+Soft-Remove über is_removed • Summe neu berechnen • Status ändern •
+allgemeine History • Statushistory • Snapshot neuer administrativ
+hinzugefügter Positionen
+
+Historientabellen: • #__fdshop_order_history •
+#__fdshop_order_status_history
+
+Bundle-Snapshot: • #__fdshop_order_bundles •
+#__fdshop_order_bundle_items
+
+===================================================================== 9.
+GUTSCHEINE
+=====================================================================
+
+Vorhanden: • Liste / Formular / Save / Delete • CouponService /
+Interface • CouponTable • percent / fixed • minimum_order_total •
+usage_limit_total • usage_limit_per_user • valid_from / valid_to •
+Publish / Unpublish • Produkt-, Kategorie-, Käufergruppen- und
+User-Mappings • coupon_usage-Datenbasis
+
+Nicht technisch vorhanden: • maximum_discount_amount • coupon_type •
+Allow/Exclude-Modus in Käufergruppen-Mappings
+
+Frontend-Einlösung ist nicht fertig implementiert.
+
+=====================================================================
+10. TEST-/ENTWICKLUNGSINFRASTRUKTUR
+=====================================================================
+
+Neu gegenüber V6 im Repository:
+
+• .env.example • compose.yaml • docker/joomla/Dockerfile •
+docker/joomla/development.ini • docker/browser/Dockerfile •
+scripts/fdshop • README-TESTUMGEBUNG.md • tests/fixtures/ • tests/smoke/
+• tests/browser/
+
+Diese Dateien sind Test-/Entwicklungsinfrastruktur und nicht Bestandteil
+des installierbaren FDShop-Produktpakets.
+
+=====================================================================
+11. DOCKER-UMGEBUNG
+=====================================================================
+
+Compose-Projekt: fdshop
+
+Dienste: • Joomla 6.1.3 / PHP 8.4 / Apache • MariaDB 11.8 • Mailpit •
+optionaler Browserdienst für Playwright / Chromium
+
+Joomla lokal über Port 8080. Mailpit lokal über Port 8025. MariaDB ohne
+veröffentlichten Host-Port.
+
+=====================================================================
+12. FIXTURES
+=====================================================================
+
+tests/fixtures/ enthält: • README.md • base.sql • expected.json •
+bin/load.sh • bin/verify.sh • synthetische Testbilddatei
+
+Fixture-Basis umfasst künstliche Testdaten für: • Hersteller •
+Kategorien • Käufergruppen • Produkte / Details •
+Kategorien-/Käufergruppen-Mappings • Media • Bundles / Rabattstufen •
+Gutscheine / Mappings • Versandarten • Zahlungsarten • Bestellstatus •
+zwei Bestell-Snapshots / Historien
+
+Fixture-Fingerprint des Referenzstands:
+1a2ac51fd98b8597260b47a4a695734ee58837bca91a686395cfb715bfd6577e
+
+=====================================================================
+13. SMOKE
+=====================================================================
+
+tests/smoke/ enthält den technischen Smoke-Runner und kontrollierten
+Fehlernachweis.
+
+Geprüft werden insbesondere: • Compose-Dienste / Health • Joomla
+Frontend HTTP • Joomla Administrator HTTP • Mailpit HTTP •
+Erweiterungseintrag • Schema • 32 Tabellen • Installationspfade •
+Fixtures • laufbezogene schwere Logfehler
+
+=====================================================================
+14. PLAYWRIGHT / BROWSER
+=====================================================================
+
+tests/browser/ enthält: • package.json • playwright.config.js •
+Support-/Diagnosehelper • Foundation-Test • Read-only-Test • CRUD-Tests
+für: - manufacturers - categories - configuration - products - coupons -
+bundles - orders • kontrollierte Negativtests
+
+Referenz: Playwright 1.55.0 Chromium 140.0.7339.16 / Bundle-Revision
+1187
+
+Browserdiagnose: • console.error • pageerror • requestfailed • relevante
+HTTP-Fehler • Screenshot bei Fehler • Trace bei Fehler • Video
+standardmäßig aus
+
+=====================================================================
+15. SCRIPTS/FDSHOP
+=====================================================================
+
+Zentrale Steuerung: scripts/fdshop
+
+Phase-1-/Basisbefehle: • package • install • uninstall • reinstall •
+sync • reset • logs • check-logs • versions • status • lifecycle
+
+Fixtures: • fixtures • fixtures-verify • test-reset
+
+Tests: • smoke • browser • test-browser • browser-readonly •
+test-readonly • browser-crud-manufacturers • browser-crud-categories •
+browser-crud-configuration • browser-crud-products •
+browser-crud-coupons • browser-crud-bundles • browser-crud-orders
+
+Orchestrierung: • test-quick • test-standard • test-full
+
+=====================================================================
+16. PAKETBAU
+=====================================================================
+
+Paket: .docker/artifacts/com_fdshop.zip
+
+Der Paketbau entfernt das definierte alte Zielarchiv vor dem Neuaufbau
+und verhindert damit stale ZIP-Einträge.
+
+Mehrfacher Build desselben unveränderten Quellstands ist reproduzierbar.
+
+Test-/Node-/Playwright-/Artefaktdateien sind ausgeschlossen.
+
+=====================================================================
+17. REALER TESTSTAND
+=====================================================================
+
+Technischer Referenzcommit: c970bca1d92673b0cdc4ee841acf0d2c583a88ee
+
+Real bestanden: • Phase-1-Lifecycle • Fixture-Load / Verify / Idempotenz
+• Smoke • Browser Foundation • Read-only 8/8 • Hersteller CRUD •
+Kategorien CRUD • Configuration CRUD • Produkte CRUD • Gutscheine CRUD •
+Bundles CRUD • Bestellungen CRUD • QUICK • STANDARD • FULL 24/24 •
+Paketprüfung • Logprüfung
+
+=====================================================================
+18. SITE / FRONTEND
+=====================================================================
+
+Site-Grundstruktur ist vorhanden.
+
+Fachliche Site-Controller, Models, Views und Templates für
+Shopdarstellung, Warenkorb und Checkout sind noch nicht als umgesetzt
+dokumentiert.
+
+Frontend ist der nächste große Entwicklungsbereich.
+
+=====================================================================
+19. BEKANNTE TECHNISCHE GRENZEN
+=====================================================================
+
+Aktuell unter anderem nicht vorhanden bzw. bewusst nicht automatisiert:
+• Produktbild-Löschfunktion • Versandart-Löschfunktion •
+Zahlungsart-Löschfunktion • Bundle Trash/Restore • Pagination mit
+kleinem Basis-Fixture nicht ausgelöst • Bundle-Nummer im Bestelldetail
+nicht ausgegeben • Bundle-Unterpositionen im Bestelldetail nicht
+dargestellt/editierbar • Bestellstatus-Neuanlage über UI nicht vorhanden
+• bekannte Gutschein-Soll-/Ist-Abweichungen
+
+=====================================================================
+20. JOOMLA-6.1-AUDIT A–D
+=====================================================================
+
+Der in V6 dokumentierte Auditstand bleibt gültig: • keine direkten
+SQL-/DB-Zugriffe in aktiven Views • keine direkte
+Model-Neuinstanziierung in aktiven Views • ProductService im geprüften
+Speicherpfad ohne direkten HTTP-/Userzugriff • WebAssetManager für
+Bundle-JavaScript • Configuration-Listenisolation • ACL / CSRF /
+serverseitige Formvalidierung • keine alt_/alt2_-Produktivdateien •
+keine bestätigte BC6-/Joomla-5-Abhängigkeit
+
+=====================================================================
+ERGÄNZENDES DETAILINVENTAR — FORTGEFÜHRT AUS V6
+=====================================================================
+
+ADMINISTRATOR — CONTROLLER
+
+Pfad: administrator/src/Controller/
+
+Vorhanden: BundleController.php BundlesController.php
+CategoriesController.php CategoryController.php
+ConfigurationController.php CouponController.php CouponsController.php
+DisplayController.php ManufacturerController.php
+ManufacturersController.php OrderController.php OrdersController.php
+OrderstatusController.php PaymentmethodController.php
+PaymentmethodsController.php ProductController.php
+ProductsController.php ShipmentController.php ShipmentsController.php
+
+Besondere nachweisbare Aufgaben: BundleController -> Speichern,
+Abbrechen, Produkt-SKU-Lookup CategoryController -> Speichern
+CouponController -> Speichern, Abbrechen ManufacturerController ->
+Speichern OrderController -> Position hinzufügen/entfernen, Menge ändern
+OrdersController -> Listen-/Model-Anbindung, Bestellbearbeitung,
+Papierkorb/Wiederherstellung OrderstatusController -> Speichern
+PaymentmethodController -> Speichern ProductController -> Speichern
+ShipmentController -> Speichern
+
+Individuelle Save-Pfade von Coupon, Manufacturer, Shipment,
+Paymentmethod und Orderstatus besitzen CSRF, core.create/core.edit,
+serverseitige Joomla-Formvalidierung und Apply-ID-Erhalt.
+
+ADMINISTRATOR — MODELS
+
+Pfad: administrator/src/Model/
+
+Aktiv: BundleModel.php BundlesModel.php CategoriesModel.php
+CategoryModel.php ConfigurationListModel.php ConfigurationModel.php
+CouponModel.php CouponsModel.php ManufacturerModel.php
+ManufacturersModel.php OrderModel.php OrdersModel.php
+OrderstatusModel.php OrderstatusesModel.php PaymentmethodModel.php
+PaymentmethodsModel.php ProductModel.php ProductsModel.php
+ShipmentModel.php ShipmentsModel.php
+
+ConfigurationModel erzeugt Unterlistenmodels über die
+Joomla-Standard-MVCFactory.
+
+Komponentenbezogener Servicebezug besteht bewusst in BundleModel,
+CategoryModel, CouponModel, ManufacturerModel und ProductModel.
+
+ADMINISTRATOR — SERVICES
+
+Pfad: administrator/src/Service/
+
+Vorhanden: BundleService.php / BundleServiceInterface.php
+CategoryService.php / CategoryServiceInterface.php CouponService.php /
+CouponServiceInterface.php ManufacturerService.php /
+ManufacturerServiceInterface.php OrderService.php /
+OrderServiceInterface.php ProductService.php /
+ProductServiceInterface.php
+
+ProductService: • Produkt speichern • Produkt-/Produktdetaildaten
+aufteilen • Kategorie-/Käufergruppen-Mappings speichern/laden • Produkt
+laden • in_stock ableiten • Bild-Upload/Bildvarianten • Media-Datensatz
+• Filesystem über Joomla • Request-/User-Kontext im geprüften
+Speicherpfad durch ProductModel übergeben
+
+CategoryService: • Kategorie speichern
+
+ManufacturerService: • Hersteller speichern/laden
+
+BundleService: • Bundle speichern • Produkte/Rabattregeln speichern •
+Bundle-Nummer • Bundle laden • Rabattregel • SKU-Suche • deleteBundles()
+mit transaktionalem Unterdaten-Cleanup
+
+OrderService: • Position hinzufügen • vollständigen Snapshot erzeugen •
+is_removed • Menge ändern • Summe berechnen • Status ändern •
+Status-/allgemeine Historie • Papierkorb/Wiederherstellung •
+zusammenhängende Mutationen transaktional koordinieren
+
+CouponService: • speichern/löschen • Laden über ID/Code • Validierung •
+vorbereitende Einlöseprüfung • Mappings laden/speichern/löschen •
+Nutzungszahlen • Code/Rabattart normalisieren
+
+Globale Benutzerauflösungen in CouponService und OrderService bestehen
+im dokumentierten Auditstand weiterhin.
+
+ADMINISTRATOR — TABLES
+
+Pfad: administrator/src/Table/
+
+Aktiv: BundleTable.php BundleItemTable.php BundleDiscountRuleTable.php
+CategoryTable.php ConfigurationTable.php CouponTable.php
+ManufacturerTable.php OrderstatusTable.php PaymentmethodTable.php
+ProductTable.php ProductDetailsTable.php ShipmentTable.php
+
+Alt-/Sicherungstables: keine.
+
+ADMINISTRATOR — VIEWS
+
+Pfad: administrator/src/View/
+
+Vorhanden: Bundle/HtmlView.php Bundles/HtmlView.php
+Category/HtmlView.php Categories/HtmlView.php Configuration/HtmlView.php
+Coupon/HtmlView.php Coupons/HtmlView.php Dashboard/HtmlView.php
+Manufacturer/HtmlView.php Manufacturers/HtmlView.php Order/HtmlView.php
+Orders/HtmlView.php Orderstatus/HtmlView.php Paymentmethod/HtmlView.php
+Product/HtmlView.php Products/HtmlView.php Shipment/HtmlView.php
+
+Direkte SQL-/DatabaseInterface-Zugriffe in aktiven Views: 0 Direkte
+Model-Neuinstanziierung in aktiven Views: 0
+
+ADMINISTRATOR — TEMPLATES
+
+Pfad: administrator/tmpl/
+
+Aktiv: bundle/edit.php bundles/default.php categories/default.php
+category/edit.php configuration/default.php coupon/edit.php
+coupons/default.php dashboard/default.php manufacturer/edit.php
+manufacturers/default.php order/default.php orders/default.php
+orderstatus/edit.php paymentmethod/edit.php product/edit.php
+products/default.php shipment/edit.php
+
+Alt-/Sicherungstemplates: keine.
+
+ADMINISTRATOR — FORMULARE / FILTER
+
+Edit-/Konfigurationsformulare: bundle.xml category.xml configuration.xml
+coupon.xml manufacturer.xml orderstatus.xml paymentmethod.xml
+product.xml shipment.xml
+
+Filter: filter_bundles.xml filter_categories.xml filter_coupons.xml
+filter_manufacturers.xml filter_orders.xml filter_orderstatuses.xml
+filter_paymentmethods.xml filter_products.xml filter_shipments.xml
+
+ACL / DI / COMPONENT BOOT
+
+Vorhanden: administrator/access.xml administrator/services/provider.php
+administrator/src/Extension/FdshopComponent.php
+
+access.xml: core.manage core.create core.delete core.edit
+core.edit.state
+
+provider.php registriert insbesondere: ComponentDispatcherFactory
+MVCFactory CategoryService CouponService ManufacturerService
+ProductService BundleService OrderService ComponentInterface
+
+Bewusst verbleibende Container-/Komponentenwege: • BundleModel,
+CategoryModel, CouponModel, ManufacturerModel, ProductModel •
+BundleController, OrderController, OrdersController, FdshopComponent
+
+DATENBANKBESTAND — 32 AKTIVE TABELLEN
+
+#__fdshop_products #__fdshop_products_details #__fdshop_product_prices
+#__fdshop_price_calc_rules #__fdshop_product_prices_research
+#__fdshop_categories #__fdshop_product_category_map
+#__fdshop_manufacturers #__fdshop_buyer_groups
+#__fdshop_user_buyer_group_map #__fdshop_product_buyer_group_map
+#__fdshop_bundles #__fdshop_bundle_items #__fdshop_bundle_discount_rules
+#__fdshop_orders #__fdshop_order_items #__fdshop_order_bundles
+#__fdshop_order_bundle_items #__fdshop_order_statuses
+#__fdshop_order_history #__fdshop_order_status_history #__fdshop_config
+#__fdshop_media #__fdshop_coupons #__fdshop_coupon_user_map
+#__fdshop_coupon_buyer_group_map #__fdshop_coupon_product_map
+#__fdshop_coupon_category_map #__fdshop_coupon_usage #__fdshop_cart
+#__fdshop_shipments #__fdshop_payment_methods
+
+Historisch nicht mehr aktiv: #__fdshop_orders_history
+#__fdshop_product_price_calc
+
+MEDIA / ASSETS
+
+Vorhanden: media/css/site.css media/js/site.js media/js/admin-bundle.js
+media/joomla.asset.json media/images/index.html
+
+Asset: com_fdshop.admin-bundle -> com_fdshop/admin-bundle.js
+
+ALT-/SICHERUNGSDATEIEN
+
+Im Audit entfernt: administrator/src/Model/alt_ProductsModel.php
+administrator/src/Model/alt2_ProductsModel.php
+administrator/src/Table/alt_ProductTable.php
+administrator/src/View/Products/alt_HtmlView.php
+administrator/tmpl/products/alt_default.php
+administrator/tmpl/products/alt2_default.php
+
+Nach Audit: alt_* = 0, alt2_* = 0.
+
+=====================================================================
+21. ÄNDERUNGSPROTOKOLL
+=====================================================================
+
+V7: • Referenzcommit auf Phase-2-Abschluss aktualisiert •
+Docker-/WSL2-/Compose-Testinfrastruktur aufgenommen • Fixtures / Smoke /
+Playwright / CRUD-Testbestand dokumentiert • QUICK / STANDARD / FULL
+aufgenommen • Paymentmethod-PSR-4-Dateinamen korrigiert dokumentiert •
+Configuration-PaymentMethods-Auflösung aktualisiert •
+All-Statusfilterfixes dokumentiert • transaktionalen Bundle-Delete
+aufgenommen • stale-freien Paketbau dokumentiert • realen FULL-Abschluss
+dokumentiert • bekannte technische Grenzen aktualisiert
+
+=====================================================================
+22. SCHLUSSBESTIMMUNG
+=====================================================================
+
+FDShop_Codebestand_V7 dokumentiert den nachweisbaren Codebestand zum
+technischen Referenzcommit:
+
+c970bca1d92673b0cdc4ee841acf0d2c583a88ee
+
+Sie ersetzt FDShop_Codebestand_V6 vollständig.
+
+=====================================================================
+ENDE DER QUELLE FDShop_Codebestand_V7
+=====================================================================

@@ -1,0 +1,362 @@
+=====================================================================
+FDShop_Admin_List_Standard_V5
+=====================================================================
+
+Status: VERBINDLICHE PROJEKTQUELLE Version: V5 Ersetzt vollständig:
+FDShop_Admin_List_Standard_V4 Stand: 04.09.2026
+
+===================================================================== 1.
+ZWECK
+=====================================================================
+
+Diese Quelle definiert den verbindlichen FDShop-Standard für sämtliche
+Administrationslisten.
+
+Sie beschreibt: • Listenarchitektur • native
+Joomla-6.1-Listenmechanismen • SearchTools • Filter / Statusfilter •
+Sortierung • Pagination • Listen-Formulare • ListModel-Regeln •
+Filterzustände • technische Listenaktionen • Mehrlisten-Ansichten
+
+Nicht Bestandteil sind Edit-Formulare, Businesslogik, fachliche
+Löschentscheidungen, Datenmodell, SQL-Struktur oder Architektur
+außerhalb von Administrationslisten.
+
+Gesamtarchitektur -> FDShop_Architektur_Struktur_Installation Fachliche
+Status-/Löschregeln -> FDShop_Fachregeln_Daten_und_Formulare
+
+===================================================================== 2.
+GELTUNGSBEREICH
+=====================================================================
+
+Verbindlich für sämtliche FDShop-Administrationslisten und alle Rollen,
+die diese entwickeln, prüfen oder dokumentieren.
+
+===================================================================== 3.
+GRUNDPRINZIPIEN
+=====================================================================
+
+3.1 LISTENSTANDARD
+
+Jede Administrationsliste besitzt mindestens:
+
+MODEL -> Daten, Filter, Sortierung, Pagination
+
+VIEW -> stellt Listeninformationen für das Template bereit
+
+FILTER-XML -> definiert Filter- und Sortierfelder
+
+TEMPLATE -> stellt die Liste dar
+
+Für technische Bulk-Aktionen wird zusätzlich der passende Joomla-
+Controller verwendet, soweit die Liste solche Aktionen besitzt.
+
+3.2 JOOMLA-6.1-STANDARD
+
+Alle FDShop-Administrationslisten orientieren sich ausschließlich am
+nativen Joomla-6.1-Core-Pattern.
+
+Aktuelle Referenz- und Abnahmebasis: Joomla 6.1.x, derzeit Joomla 6.1.3.
+
+Joomla 5.4.x ist kein Entwicklungs- oder Kompatibilitätsziel mehr.
+Listen dürfen nicht von Behaviour – Backward Compatibility 6 abhängen.
+
+3.3 SINGLE SOURCE OF TRUTH
+
+Filterdefinition -> eigene Filter-XML Filterzustände -> eigenes
+ListModel View -> stellt Modeldaten bereit fachliche Statussemantik ->
+zuständige Fachquelle
+
+3.4 JOOMLA-STANDARD VOR EIGENLÖSUNG
+
+Bevorzugt: • ListModel • AdminController für technische Bulk-Aktionen •
+Joomla Form API • SearchTools • Pagination • HTMLHelper • ToolbarHelper
+• Joomla-Checkboxmechanismen • ACL • CSRF • Joomla-Standardredirects
+
+Keine parallelen Listenframeworks, wenn Joomla den Zweck vollständig
+erfüllt.
+
+===================================================================== 4.
+PFLICHTARCHITEKTUR
+=====================================================================
+
+4.1 MODEL
+
+ListModel verantwortet: • filter_fields • populateState() •
+getListQuery() • Filter • Sortierung • Pagination • Datenbereitstellung
+
+Keine Darstellung und keine Businesslogik.
+
+4.2 VIEW
+
+Die View stellt mindestens bereit: • $this->items • $this->state •
+$this->pagination • $this->filterForm • $this->activeFilters
+
+Zusätzlich werden erforderliche ControlFields vorbereitet.
+
+4.3 TEMPLATE
+
+Verantwortlich: • Tabellenlayout • SearchTools • Sortierlinks •
+Pagination • Checkbox-/Listenbedienung • renderControlFields()
+
+Keine Businesslogik, DB-Zugriffe, Filterlogik oder fachliche
+Statusentscheidungen.
+
+4.4 FILTER-XML
+
+Jede Liste besitzt eine eigene Filterdefinition für die tatsächlich
+unterstützten Such-, Filter-, Sortier- und Limitzustände.
+
+Die Filter-XML definiert nur Filter, die zum tatsächlichen Daten- und
+Statusmodell passen.
+
+4.5 CONTROLLER FÜR LISTENAKTIONEN
+
+Für technische Bulk-Aktionen wird bevorzugt AdminController bzw. der
+passende native Joomla-Mechanismus verwendet.
+
+Controller orchestriert: • Request • Auswahl • ACL • CSRF •
+Model-/Service-Aufruf • Meldung • Redirect
+
+Fachliche Lösch-, Schutz-, Status- oder Abhängigkeitsentscheidungen
+bleiben im Service Layer.
+
+===================================================================== 5.
+MODEL-STANDARD
+=====================================================================
+
+5.1 FILTER_FIELDS
+
+Jedes ListModel definiert sämtliche unterstützten Sortierfelder über
+filter_fields.
+
+Nur dort freigegebene Felder dürfen dynamisch sortiert werden.
+ORDER-BY-Felder aus Request/Listenzuständen dürfen nicht ungeprüft in
+SQL übernommen werden.
+
+5.2 POPULATESTATE()
+
+populateState() verwaltet: • filter.search • fachlich tatsächlich
+vorhandenen Statusfilter • weitere bereichsspezifische Filter •
+list.ordering • list.direction • list.limit
+
+Der Statusfilter wird nicht pauschal als filter.published
+vorgeschrieben.
+
+Verwendet der Bereich published, wird darauf gefiltert. Verwendet der
+Bereich is_active, wird dieser Status entsprechend Joomla-konform
+abgebildet.
+
+Die Listenquelle ändert niemals eigenständig die Fachsemantik.
+
+5.3 GETLISTQUERY()
+
+getListQuery() ist ausschließlich für den Listenabfrageaufbau zuständig.
+
+Zulässig: • Filter • Sortierung • Joins • Where-Bedingungen
+
+Keine Businesslogik oder fachliche Berechnung.
+
+5.4 STATUSFILTER / ALL-WERT
+
+published ist kein universeller Zwang.
+
+Bestehende Fachstatusfelder wie is_active bleiben gültig.
+
+WICHTIG: Ein neutraler Joomla-Statuswert wie “*” oder ein leerer
+All-Wert darf nicht ungeprüft numerisch gecastet und dadurch
+versehentlich zu Status 0 werden.
+
+Nur tatsächlich gültige konkrete Statuswerte dürfen eine SQL-
+Statusbedingung erzeugen.
+
+Dieses Verhalten wurde in Phase 2 insbesondere für Hersteller,
+Kategorien und Produkte real geprüft und korrigiert.
+
+===================================================================== 6.
+VIEW- UND TEMPLATE-STANDARD
+=====================================================================
+
+6.1 PFLICHTEIGENSCHAFTEN
+
+Jede Listen-View stellt mindestens items, state, pagination, filterForm
+und activeFilters bereit.
+
+6.2 SEARCHTOOLS
+
+SearchTools werden über den nativen Joomla-6-Layoutmechanismus
+LayoutHelper::render() eingebunden.
+
+Eigene parallele Filterleisten werden nicht eingeführt, wenn SearchTools
+den Umfang vollständig abbilden.
+
+6.3 CONTROLFIELDS
+
+Technische ControlFields wie task, boxchecked und Token werden über die
+Joomla-ControlField-/Formmechanik bereitgestellt.
+
+Ausgabe über renderControlFields().
+
+Manuelle technische Hidden-Fields dürfen diese Mechanik nicht ersetzen.
+
+6.4 PAGINATION
+
+Pagination läuft über die native Joomla-ListModel-/Pagination-Kette.
+Keine parallele Eigenlogik.
+
+===================================================================== 7.
+VERBINDLICHE LISTENREGELN
+=====================================================================
+
+REGEL 1 – NATIVE JOOMLA-6-SORTIERUNG searchtools.sortlist ist
+projektweit unzulässig. Sortierlinks verwenden den aktuellen
+Joomla-6-Mechanismus, insbesondere HTMLHelper::_(‘searchtools.sort’, …),
+soweit vorgesehen.
+
+REGEL 2 – SEARCHTOOLS VOLLSTÄNDIG filterForm, activeFilters,
+vollständige Filter-XML und renderControlFields().
+
+REGEL 3 – LIST-DEFINITION Filter-XML muss die für Sortierung, Limit und
+Pagination notwendigen Listenfelder enthalten.
+
+REGEL 4 – EIGENE CONTROLFIELDS Jede Liste verwendet ausschließlich ihre
+eigenen technischen ControlFields.
+
+REGEL 5 – KEINE MANUELLEN TECHNISCHEN HIDDEN-FIELDS ALS ERSATZ Keine
+widersprüchlichen Parallelzustände.
+
+REGEL 6 – EIGENSTÄNDIGER FORM-KONTEXT Jede Liste besitzt eigene
+filterForm, activeFilters, populateState(), Requestparameter,
+Filterzustände und Pagination.
+
+REGEL 7 – SEARCHTOOLS NUR FÜR LISTEN Edit-Formulare rendern keine
+SearchTools, Listenfilter oder Pagination.
+
+REGEL 8 – LISTEN BEEINFLUSSEN KEINE EDIT-SPEICHERVORGÄNGE
+Listen-ControlFields dürfen keinen fremden Edit-Save beeinflussen.
+
+REGEL 9 – MEHRERE LISTEN IN EINER ANSICHT Jede Liste besitzt eigenen
+Formular-/Request-/SearchTools-/Pagination- Kontext.
+
+REGEL 10 – RENDERCONTROLFIELDS NUR AUS EIGENEM KONTEXT Ein Formular
+rendert ausschließlich die ControlFields seines Kontexts.
+
+REGEL 11 – STATUSSEMANTIK FOLGT DER FACHQUELLE is_active, published oder
+andere Statusfelder werden nicht durch diese Quelle umbenannt.
+
+REGEL 12 – JOOMLA-STANDARDAKTION UND FACHENTSCHEIDUNG GETRENNT
+Technische Aktion über Joomla; fachliche Bedeutung über FDShop-Service.
+
+REGEL 13 – ACL UND CSRF Schreibende Listenaktionen verwenden Joomla-ACL
+und CSRF.
+
+REGEL 14 – KEINE JOOMLA-5-/BC-LISTENALTLASTEN Neue Listen dürfen nicht
+von nur über BC6 verfügbaren APIs abhängen.
+
+REGEL 15 – NEUTRALER STATUS BLEIBT NEUTRAL All/Alle darf nicht durch
+Cast oder Fallback zu aktiv/inaktiv werden. Nur explizit ausgewählte
+konkrete Statuswerte filtern.
+
+===================================================================== 8.
+REAL BESTÄTIGTER LISTENSTAND
+=====================================================================
+
+Der in V4 noch offene Joomla-6.1-Audit bestehender Administrationslisten
+ist abgeschlossen.
+
+Zusätzlich wurden in Phase 2 reale Browser-/Read-only-/CRUD-Prüfungen
+durchgeführt.
+
+Technischer Referenzcommit: c970bca1d92673b0cdc4ee841acf0d2c583a88ee
+
+Real geprüft wurden unter anderem Listen/Filter in: • Produkte •
+Kategorien • Hersteller • Bundles • Gutscheine • Bestellungen •
+Configuration-Unterlisten • Versandarten • Zahlungsarten • Bestellstatus
+
+Read-only-Regression: 8/8 PASS
+
+FULL-Gesamtabnahme: 24/24 PASS
+
+Pagination: Die Basis-Fixtures lösen wegen geringer Datensatzanzahl
+nicht in jeder Phase-2-Suite eine echte zweite Seite aus. Dies ist kein
+Listenfehler. Pagination wurde bereits im Joomla-6.1-Audit mit
+zusätzlichen sauberen Testeinträgen real geprüft.
+
+===================================================================== 9.
+QUALITÄTSSICHERUNG
+=====================================================================
+
+□ native Joomla-6.1-Mechanismen? □ keine BC6-Abhängigkeit? □ eigene
+Filter-XML? □ eigene filterForm / activeFilters? □ renderControlFields()
+im eigenen Kontext? □ eigenes populateState()? □ filter_fields
+vollständige Sortier-Whitelist? □ keine ungeprüften ORDER-BY-Felder? □
+SearchTools vollständig? □ Pagination funktionsfähig? □ unabhängig von
+anderen Listen? □ Statusfilter entspricht Fachsemantik? □ neutraler
+All-Wert bleibt neutral? □ kein published/is_active-Umbau nur aus
+Namenskonvention? □ schreibende Aktionen mit ACL und CSRF? □ fachliche
+Entscheidungen im Service Layer? □ Bulk-Aktionen über vollständige
+Joomla-Kette?
+
+=====================================================================
+10. PROJEKTQUELLEN
+=====================================================================
+
+Diese Quelle ergänzt: FDShop_Governance_und_Dokumentation
+FDShop_Dokumentationsstandard FDShop_Fachregeln_Daten_und_Formulare
+FDShop_Architektur_Struktur_Installation FDShop_Implementierungsstand
+FDShop_Codebestand FDShop_Projektworkflow
+
+Sie ersetzt keine dieser Quellen.
+
+=====================================================================
+11. EINWÄNDE / OFFENE PRÜFPUNKTE
+=====================================================================
+
+Der frühere offene Prüfpunkt „Joomla-6.1-Audit bestehender
+Administrationslisten“ ist abgeschlossen.
+
+EINWAND / FORTGELTENDE ABGRENZUNG
+
+Keine pauschale Umstellung bestehender FDShop-Statusfelder auf
+published.
+
+Joomla-Core-Konventionen rechtfertigen allein keine Änderung einer
+bewusst beschlossenen FDShop-Fachsemantik. Eine Statusumbenennung
+benötigt einen eigenständigen fachlichen oder technischen Grund.
+
+=====================================================================
+12. ÄNDERUNGSPROTOKOLL
+=====================================================================
+
+V1: Erste Definition des FDShop-Listenstandards.
+
+V2: Joomla-5-SearchTools, Filterstruktur und renderControlFields().
+
+V3: Refactoring, Trennung Listen/Edit, eigenständige Form-Kontexte,
+SearchTools nur für Listen, Mehrlisten-Regeln.
+
+V4: Umstellung auf native Joomla-6.1-Entwicklung, BC6-Ausschluss,
+Sortier-Whitelist, Statussemantik, AdminController, ACL/CSRF und
+Joomla-6.1-Audit-Prüfpunkt.
+
+V5: • sämtliche weiterhin gültigen V4-Regeln fortgeführt • früheren
+Joomla-6.1-Audit-Prüfpunkt geschlossen • realen
+Phase-2-Read-only-/CRUD-/FULL-Stand aufgenommen • neutralen
+All-Statuswert als explizite Listenregel präzisiert • reale
+Statusfilterkorrekturen Hersteller/Kategorien/Produkte berücksichtigt •
+Pagination-Abgrenzung zwischen Basis-Fixtures und früherem Realtest
+präzisiert
+
+=====================================================================
+13. SCHLUSSBESTIMMUNG
+=====================================================================
+
+FDShop_Admin_List_Standard_V5 definiert den verbindlichen technischen
+FDShop-Standard für Administrationslisten.
+
+Sie ersetzt FDShop_Admin_List_Standard_V4 vollständig.
+
+Neue Versionen ersetzen ältere Versionen vollständig.
+
+=====================================================================
+ENDE DER QUELLE FDShop_Admin_List_Standard_V5
+=====================================================================
