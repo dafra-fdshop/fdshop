@@ -479,6 +479,25 @@ run_browser_crud_configuration() {
   [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_order_statuses WHERE id=900702 AND status_name='E2E Status Inaktiv' AND stock_action='none';")" == "1" ]]
   printf 'Configuration CRUD artifacts: %s\nFDShop configuration CRUD suite: PASS (database state and restoration verified)\n' "$host_output"
 }
+run_browser_crud_orders() {
+  verify_installed >/dev/null; verify_fixtures >/dev/null
+  local run_id="${FDSHOP_ORDERS_CRUD_RUN_ID:-$(date -u +%Y%m%dT%H%M%SZ)-orders-crud-$RANDOM}"
+  [[ "$run_id" =~ ^[A-Za-z0-9._-]+$ ]] || { printf 'Invalid orders CRUD run id.\n' >&2; return 1; }
+  local container_output="/workspace/artifacts/$run_id" host_output="$REPO_ROOT/.docker/test-results/playwright/$run_id"
+  mkdir -p "$host_output"; compose build browser
+  if ! compose run --rm --no-deps --env "PLAYWRIGHT_OUTPUT_DIR=$container_output" browser npx playwright test tests/orders-crud.spec.js; then
+    printf 'Order CRUD artifacts: %s\nFDShop order CRUD suite: FAIL\n' "$host_output" >&2; return 1
+  fi
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_orders WHERE id=900800 AND order_status_id=900700 AND order_status='e2e-ordered' AND grand_total=19.9900;")" == 1 ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_order_items WHERE id=900810 AND product_name='E2E Produkt Aktiv' AND sku='E2E-PROD-ACTIVE' AND gtin='9900000000001' AND manufacturer_name='E2E Hersteller Aktiv' AND quantity=1 AND unit_price_gross=19.9900 AND line_total_gross=19.9900 AND is_removed=0;")" == 1 ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_order_items WHERE order_id=900800 AND product_id=900105 AND quantity=3 AND is_removed=1;")" == 1 ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_order_status_history WHERE order_id=900800;")" == 3 ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_order_history WHERE order_id=900800;")" == 6 ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_order_history WHERE order_id=900800 AND event_type IN ('item_added','quantity_changed','item_removed','status_changed');")" == 5 ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_order_bundles WHERE order_id=900801 AND bundle_id=900400;")" == 1 ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_order_bundle_items WHERE order_bundle_id=900820;")" == 2 ]]
+  printf 'Order CRUD artifacts: %s\nFDShop order CRUD suite: PASS (snapshots, totals and histories verified)\n' "$host_output"
+}
 
 test_browser() {
   compose down --volumes --remove-orphans
@@ -547,6 +566,7 @@ Usage: scripts/fdshop COMMAND
   browser-crud-products  Run product CRUD browser tests with media cleanup
   browser-crud-coupons  Run coupon CRUD browser tests with mapping cleanup
   browser-crud-bundles  Run bundle CRUD browser tests with cleanup
+  browser-crud-orders  Run order administration CRUD browser tests
   browser-crud-configuration  Run configuration, shipment, payment and order-status CRUD tests
   lifecycle         Reset and test fresh install -> uninstall -> fresh install
   status            Show Compose service state
@@ -589,6 +609,7 @@ main() {
         browser-crud-products) run_browser_crud_products ;;
         browser-crud-coupons) run_browser_crud_coupons ;;
         browser-crud-bundles) run_browser_crud_bundles ;;
+        browser-crud-orders) run_browser_crud_orders ;;
         browser-crud-configuration) run_browser_crud_configuration ;;
         lifecycle) lifecycle ;;
         status) compose ps ;;
