@@ -139,6 +139,17 @@ class BundleModel extends AdminModel
         }
     }
 
+    public function delete(&$pks): bool
+    {
+        try {
+            return $this->getBundleService()->deleteBundles((array) $pks);
+        } catch (\Throwable $e) {
+            $this->setError($e->getMessage());
+
+            return false;
+        }
+    }
+
     private function resolveBundleId($pk = null): int
     {
         if ($pk !== null) {

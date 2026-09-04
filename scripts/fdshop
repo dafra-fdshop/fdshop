@@ -28,6 +28,11 @@ prepare_dirs() {
 
 build_package() {
   prepare_dirs
+  [[ "$PACKAGE_PATH" == "$ARTIFACT_DIR/com_fdshop.zip" ]] || {
+    printf 'Refusing to remove unexpected package path: %s\n' "$PACKAGE_PATH" >&2
+    return 1
+  }
+  rm -f -- "$PACKAGE_PATH"
   local stage_dir
   stage_dir="$(mktemp -d -t fdshop-package.XXXXXXXX)"
   trap '[[ -n "${stage_dir:-}" && "$stage_dir" == /tmp/fdshop-package.* ]] && rm -rf -- "$stage_dir"' RETURN
@@ -200,6 +205,404 @@ assert_clean_logs() {
   printf 'No fatal PHP, uncaught exception or SQL error found in current logs.\n'
 }
 
+load_fixtures() {
+  bash "$REPO_ROOT/tests/fixtures/bin/load.sh"
+}
+
+verify_fixtures() {
+  bash "$REPO_ROOT/tests/fixtures/bin/verify.sh"
+}
+
+run_smoke() {
+  bash "$REPO_ROOT/tests/smoke/run.sh"
+}
+
+run_browser() {
+  verify_installed >/dev/null
+  verify_fixtures >/dev/null
+
+  local run_id="${FDSHOP_BROWSER_RUN_ID:-$(date -u +%Y%m%dT%H%M%SZ)-$RANDOM}"
+  [[ "$run_id" =~ ^[A-Za-z0-9._-]+$ ]] || { printf 'Invalid browser run id.\n' >&2; return 1; }
+  local container_output="/workspace/artifacts/$run_id"
+  local host_output="$REPO_ROOT/.docker/test-results/playwright/$run_id"
+  mkdir -p "$host_output"
+
+  compose build browser
+  if compose run --rm --no-deps \
+    --env "PLAYWRIGHT_OUTPUT_DIR=$container_output" \
+    --env "FDSHOP_BROWSER_INJECT_FAILURE=${FDSHOP_BROWSER_INJECT_FAILURE:-}" \
+    browser npx playwright test tests/foundation.spec.js; then
+    printf 'Browser artifacts: %s\nFDShop browser test: PASS\n' "$host_output"
+  else
+    printf 'Browser artifacts: %s\nFDShop browser test: FAIL\n' "$host_output" >&2
+    return 1
+  fi
+}
+
+run_browser_readonly() {
+  verify_installed >/dev/null
+  verify_fixtures >/dev/null
+  local run_id="${FDSHOP_READONLY_RUN_ID:-$(date -u +%Y%m%dT%H%M%SZ)-readonly-$RANDOM}"
+  [[ "$run_id" =~ ^[A-Za-z0-9._-]+$ ]] || { printf 'Invalid read-only run id.\n' >&2; return 1; }
+  local container_output="/workspace/artifacts/$run_id"
+  local host_output="$REPO_ROOT/.docker/test-results/playwright/$run_id"
+  mkdir -p "$host_output"
+  compose build browser
+  if compose run --rm --no-deps \
+    --env "PLAYWRIGHT_OUTPUT_DIR=$container_output" \
+    --env "FDSHOP_READONLY_INJECT_FAILURE=${FDSHOP_READONLY_INJECT_FAILURE:-}" \
+    browser npx playwright test tests/readonly.spec.js; then
+    printf 'Browser read-only artifacts: %s\nFDShop browser read-only suite: PASS\n' "$host_output"
+  else
+    printf 'Browser read-only artifacts: %s\nFDShop browser read-only suite: FAIL\n' "$host_output" >&2
+    return 1
+  fi
+}
+
+run_browser_crud_manufacturers() {
+  verify_installed >/dev/null
+  verify_fixtures >/dev/null
+  local run_id="${FDSHOP_MANUFACTURERS_CRUD_RUN_ID:-$(date -u +%Y%m%dT%H%M%SZ)-manufacturers-crud-$RANDOM}"
+  [[ "$run_id" =~ ^[A-Za-z0-9._-]+$ ]] || { printf 'Invalid manufacturers CRUD run id.\n' >&2; return 1; }
+  local container_output="/workspace/artifacts/$run_id"
+  local host_output="$REPO_ROOT/.docker/test-results/playwright/$run_id"
+  mkdir -p "$host_output"
+  compose build browser
+  if compose run --rm --no-deps \
+    --env "PLAYWRIGHT_OUTPUT_DIR=$container_output" \
+    browser npx playwright test tests/manufacturers-crud.spec.js; then
+    printf 'Manufacturer CRUD artifacts: %s\nFDShop manufacturer CRUD suite: PASS\n' "$host_output"
+  else
+    printf 'Manufacturer CRUD artifacts: %s\nFDShop manufacturer CRUD suite: FAIL\n' "$host_output" >&2
+    return 1
+  fi
+}
+
+run_browser_crud_categories() {
+  verify_installed >/dev/null
+  verify_fixtures >/dev/null
+  local run_id="${FDSHOP_CATEGORIES_CRUD_RUN_ID:-$(date -u +%Y%m%dT%H%M%SZ)-categories-crud-$RANDOM}"
+  [[ "$run_id" =~ ^[A-Za-z0-9._-]+$ ]] || { printf 'Invalid categories CRUD run id.\n' >&2; return 1; }
+  local container_output="/workspace/artifacts/$run_id"
+  local host_output="$REPO_ROOT/.docker/test-results/playwright/$run_id"
+  mkdir -p "$host_output"
+  compose build browser
+  if ! compose run --rm --no-deps \
+    --env "PLAYWRIGHT_OUTPUT_DIR=$container_output" \
+    browser npx playwright test tests/categories-crud.spec.js \
+      --grep 'category validation, create, apply, save-close, status and protection'; then
+    printf 'Category CRUD artifacts: %s\nFDShop category CRUD suite: FAIL\n' "$host_output" >&2
+    return 1
+  fi
+
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_categories WHERE category_name='E2E-CRUD-CATEGORY-REFERENCE';")" == "1" ]]
+  [[ "$(sql "SELECT is_active FROM ${JOOMLA_DB_PREFIX}fdshop_categories WHERE category_name='E2E-CRUD-CATEGORY-REFERENCE';")" == "0" ]]
+  [[ "$(sql "SELECT description FROM ${JOOMLA_DB_PREFIX}fdshop_categories WHERE category_name='E2E-CRUD-CATEGORY-REFERENCE';")" == "CRUD category description after save-close" ]]
+
+  if ! compose run --rm --no-deps \
+    --env "PLAYWRIGHT_OUTPUT_DIR=$container_output" \
+    browser npx playwright test tests/categories-crud.spec.js --grep 'category cleanup'; then
+    printf 'Category CRUD artifacts: %s\nFDShop category CRUD cleanup: FAIL\n' "$host_output" >&2
+    return 1
+  fi
+
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_categories WHERE category_name='E2E-CRUD-CATEGORY-REFERENCE';")" == "0" ]]
+  verify_fixtures >/dev/null
+  printf 'Category CRUD artifacts: %s\nFDShop category CRUD suite: PASS (database state and cleanup verified)\n' "$host_output"
+}
+
+run_browser_crud_products() {
+  verify_installed >/dev/null
+  verify_fixtures >/dev/null
+  local run_id="${FDSHOP_PRODUCTS_CRUD_RUN_ID:-$(date -u +%Y%m%dT%H%M%SZ)-products-crud-$RANDOM}"
+  [[ "$run_id" =~ ^[A-Za-z0-9._-]+$ ]] || { printf 'Invalid products CRUD run id.\n' >&2; return 1; }
+  local container_output="/workspace/artifacts/$run_id"
+  local host_output="$REPO_ROOT/.docker/test-results/playwright/$run_id"
+  local fixture_hash_before media_count_before image_count_before
+  mkdir -p "$host_output"
+  fixture_hash_before="$(compose exec -T joomla sha256sum /var/www/html/images/FDShop/products/e2e-fixture-product.svg | awk '{print $1}')"
+  media_count_before="$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_media;")"
+  image_count_before="$(compose exec -T joomla find /var/www/html/images/FDShop/products -type f | wc -l)"
+  compose build browser
+
+  if ! compose run --rm --no-deps --env "PLAYWRIGHT_OUTPUT_DIR=$container_output" browser \
+    npx playwright test tests/products-crud.spec.js --grep 'product invalid save'; then
+    printf 'Product CRUD artifacts: %s\nFDShop product CRUD suite: FAIL\n' "$host_output" >&2
+    return 1
+  fi
+
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_products WHERE product_name='E2E-CRUD-PRODUCT-REFERENCE';")" == "1" ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_products p JOIN ${JOOMLA_DB_PREFIX}fdshop_products_details d ON d.product_id=p.id WHERE p.product_name='E2E-CRUD-PRODUCT-REFERENCE' AND p.manufacturer_id=900001 AND p.sale_price=32.5000 AND p.discount_price=27.5000 AND p.discount_active=1 AND p.in_stock='Verfügbar' AND p.meta_title='CRUD meta title after save-close' AND d.sku='E2E-CRUD-PRODUCT-REFERENCE' AND d.stock_quantity=3 AND d.low_stock=4 AND d.reserved_quantity=2;")" == "1" ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_product_category_map pcm JOIN ${JOOMLA_DB_PREFIX}fdshop_products p ON p.id=pcm.product_id WHERE p.product_name='E2E-CRUD-PRODUCT-REFERENCE';")" == "2" ]]
+  [[ "$(sql "SELECT COUNT(DISTINCT pcm.category_id) FROM ${JOOMLA_DB_PREFIX}fdshop_product_category_map pcm JOIN ${JOOMLA_DB_PREFIX}fdshop_products p ON p.id=pcm.product_id WHERE p.product_name='E2E-CRUD-PRODUCT-REFERENCE';")" == "2" ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_product_buyer_group_map pbgm JOIN ${JOOMLA_DB_PREFIX}fdshop_products p ON p.id=pbgm.product_id WHERE p.product_name='E2E-CRUD-PRODUCT-REFERENCE';")" == "2" ]]
+  [[ "$(sql "SELECT COUNT(DISTINCT pbgm.buyer_group_id) FROM ${JOOMLA_DB_PREFIX}fdshop_product_buyer_group_map pbgm JOIN ${JOOMLA_DB_PREFIX}fdshop_products p ON p.id=pbgm.product_id WHERE p.product_name='E2E-CRUD-PRODUCT-REFERENCE';")" == "2" ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_media m JOIN ${JOOMLA_DB_PREFIX}fdshop_products p ON p.id=m.product_id WHERE p.product_name='E2E-CRUD-PRODUCT-REFERENCE' AND m.media_type='image';")" == "1" ]]
+
+  if ! compose run --rm --no-deps --env "PLAYWRIGHT_OUTPUT_DIR=$container_output" browser \
+    npx playwright test tests/products-crud.spec.js --grep 'fixture image survives'; then
+    printf 'Product CRUD artifacts: %s\nFDShop product fixture-image/protection checks: FAIL\n' "$host_output" >&2
+    return 1
+  fi
+  [[ "$(sql "SELECT CONCAT(is_deleted, '|', description) FROM ${JOOMLA_DB_PREFIX}fdshop_products WHERE id=900100;")" == "0|Aktiv mit Bestand" ]]
+  [[ "$(sql "SELECT CONCAT(is_deleted, '|', description) FROM ${JOOMLA_DB_PREFIX}fdshop_products WHERE id=900103;")" == "0|Mit synthetischem Bild" ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_media WHERE id=900340 AND product_id=900103;")" == "1" ]]
+  [[ "$(compose exec -T joomla sha256sum /var/www/html/images/FDShop/products/e2e-fixture-product.svg | awk '{print $1}')" == "$fixture_hash_before" ]]
+
+  if ! compose run --rm --no-deps --env "PLAYWRIGHT_OUTPUT_DIR=$container_output" browser \
+    npx playwright test tests/products-crud.spec.js --grep 'product trash'; then
+    printf 'Product CRUD artifacts: %s\nFDShop product CRUD cleanup: FAIL\n' "$host_output" >&2
+    return 1
+  fi
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_products WHERE product_name='E2E-CRUD-PRODUCT-REFERENCE';")" == "0" ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_products_details d LEFT JOIN ${JOOMLA_DB_PREFIX}fdshop_products p ON p.id=d.product_id WHERE p.id IS NULL;")" == "0" ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_media;")" == "$media_count_before" ]]
+  [[ "$(compose exec -T joomla find /var/www/html/images/FDShop/products -type f | wc -l)" == "$image_count_before" ]]
+  verify_fixtures >/dev/null
+  printf 'Product CRUD artifacts: %s\nFDShop product CRUD suite: PASS (database, media and cleanup verified)\n' "$host_output"
+}
+
+run_browser_crud_coupons() {
+  verify_installed >/dev/null
+  verify_fixtures >/dev/null
+  local run_id="${FDSHOP_COUPONS_CRUD_RUN_ID:-$(date -u +%Y%m%dT%H%M%SZ)-coupons-crud-$RANDOM}"
+  [[ "$run_id" =~ ^[A-Za-z0-9._-]+$ ]] || { printf 'Invalid coupons CRUD run id.\n' >&2; return 1; }
+  local container_output="/workspace/artifacts/$run_id"
+  local host_output="$REPO_ROOT/.docker/test-results/playwright/$run_id"
+  local coupon_id
+  mkdir -p "$host_output"
+  compose build browser
+
+  if ! compose run --rm --no-deps --env "PLAYWRIGHT_OUTPUT_DIR=$container_output" browser \
+    npx playwright test tests/coupons-crud.spec.js --grep 'coupon invalid save'; then
+    printf 'Coupon CRUD artifacts: %s\nFDShop coupon CRUD suite: FAIL\n' "$host_output" >&2
+    return 1
+  fi
+
+  coupon_id="$(sql "SELECT id FROM ${JOOMLA_DB_PREFIX}fdshop_coupons WHERE coupon_code='E2E-CRUD-COUPON-REFERENCE';")"
+  [[ "$coupon_id" =~ ^[0-9]+$ ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_coupons WHERE id=${coupon_id} AND coupon_name='E2E-CRUD-COUPON-UPDATED' AND discount_type='fixed' AND discount_value=8.7500 AND minimum_order_total=55.5000 AND usage_limit_total=30 AND usage_limit_per_user=3 AND valid_from='2027-01-01 00:00:00' AND valid_to='2032-12-31 23:59:59' AND published=1;")" == "1" ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_coupon_product_map WHERE coupon_id=${coupon_id};")" == "2" ]]
+  [[ "$(sql "SELECT COUNT(DISTINCT product_id) FROM ${JOOMLA_DB_PREFIX}fdshop_coupon_product_map WHERE coupon_id=${coupon_id};")" == "2" ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_coupon_category_map WHERE coupon_id=${coupon_id};")" == "2" ]]
+  [[ "$(sql "SELECT COUNT(DISTINCT category_id) FROM ${JOOMLA_DB_PREFIX}fdshop_coupon_category_map WHERE coupon_id=${coupon_id};")" == "2" ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_coupon_buyer_group_map WHERE coupon_id=${coupon_id};")" == "2" ]]
+  [[ "$(sql "SELECT COUNT(DISTINCT buyer_group_id) FROM ${JOOMLA_DB_PREFIX}fdshop_coupon_buyer_group_map WHERE coupon_id=${coupon_id};")" == "2" ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_coupon_user_map WHERE coupon_id=${coupon_id};")" == "1" ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_coupon_usage WHERE coupon_id=${coupon_id};")" == "0" ]]
+
+  if ! compose run --rm --no-deps --env "PLAYWRIGHT_OUTPUT_DIR=$container_output" browser \
+    npx playwright test tests/coupons-crud.spec.js --grep 'coupon direct delete'; then
+    printf 'Coupon CRUD artifacts: %s\nFDShop coupon CRUD cleanup: FAIL\n' "$host_output" >&2
+    return 1
+  fi
+
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_coupons WHERE id=${coupon_id};")" == "0" ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_coupon_product_map WHERE coupon_id=${coupon_id};")" == "0" ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_coupon_category_map WHERE coupon_id=${coupon_id};")" == "0" ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_coupon_buyer_group_map WHERE coupon_id=${coupon_id};")" == "0" ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_coupon_user_map WHERE coupon_id=${coupon_id};")" == "0" ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_coupon_usage WHERE coupon_id=${coupon_id};")" == "0" ]]
+  verify_fixtures >/dev/null
+  printf 'Coupon CRUD artifacts: %s\nFDShop coupon CRUD suite: PASS (database, mappings, usage and cleanup verified)\n' "$host_output"
+}
+
+run_browser_crud_bundles() {
+  verify_installed >/dev/null
+  verify_fixtures >/dev/null
+  local run_id="${FDSHOP_BUNDLES_CRUD_RUN_ID:-$(date -u +%Y%m%dT%H%M%SZ)-bundles-crud-$RANDOM}"
+  [[ "$run_id" =~ ^[A-Za-z0-9._-]+$ ]] || { printf 'Invalid bundles CRUD run id.\n' >&2; return 1; }
+  local container_output="/workspace/artifacts/$run_id"
+  local host_output="$REPO_ROOT/.docker/test-results/playwright/$run_id"
+  local bundle_id bundle_number multi_bundle_id
+  local items_before rules_before main_after items_after rules_after
+  mkdir -p "$host_output"
+  compose build browser
+
+  if ! compose run --rm --no-deps --env "PLAYWRIGHT_OUTPUT_DIR=$container_output" browser \
+    npx playwright test tests/bundles-crud.spec.js --grep 'bundle invalid save'; then
+    printf 'Bundle CRUD artifacts: %s\nFDShop bundle CRUD suite: FAIL\n' "$host_output" >&2
+    return 1
+  fi
+  bundle_id="$(sql "SELECT id FROM ${JOOMLA_DB_PREFIX}fdshop_bundles WHERE bundle_name='E2E-CRUD-BUNDLE-UPDATED';")"
+  bundle_number="$(sql "SELECT bundle_number FROM ${JOOMLA_DB_PREFIX}fdshop_bundles WHERE id=${bundle_id};")"
+  multi_bundle_id="$(sql "SELECT id FROM ${JOOMLA_DB_PREFIX}fdshop_bundles WHERE bundle_name='E2E-CRUD-BUNDLE-MULTI';")"
+  [[ "$bundle_id" =~ ^[0-9]+$ && "$bundle_number" =~ ^BUN-[0-9]+$ ]]
+  [[ "$multi_bundle_id" =~ ^[0-9]+$ ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_bundles WHERE id=${bundle_id} AND bundle_number='${bundle_number}' AND description='CRUD bundle after apply' AND is_active=1;")" == "1" ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_bundle_items WHERE bundle_id=${bundle_id} AND product_id=900100 AND ordering=1;")" == "1" ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_bundle_discount_rules WHERE bundle_id=${bundle_id} AND min_quantity=4 AND discount_percent=12.5000;")" == "1" ]]
+  items_before="$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_bundle_items WHERE bundle_id IN (${bundle_id},${multi_bundle_id});")"
+  rules_before="$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_bundle_discount_rules WHERE bundle_id IN (${bundle_id},${multi_bundle_id});")"
+  [[ "$items_before" == "2" ]]
+  [[ "$rules_before" == "2" ]]
+  printf 'Bundle CRUD delete: ids=%s,%s; child rows before delete: items=%s, rules=%s\n' \
+    "$bundle_id" "$multi_bundle_id" "$items_before" "$rules_before"
+
+  if ! compose run --rm --no-deps --env "PLAYWRIGHT_OUTPUT_DIR=$container_output" browser \
+    npx playwright test tests/bundles-crud.spec.js --grep 'bundle direct delete'; then
+    printf 'Bundle CRUD artifacts: %s\nFDShop bundle CRUD delete: FAIL\n' "$host_output" >&2
+    return 1
+  fi
+  main_after="$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_bundles WHERE id IN (${bundle_id},${multi_bundle_id});")"
+  items_after="$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_bundle_items WHERE bundle_id IN (${bundle_id},${multi_bundle_id});")"
+  rules_after="$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_bundle_discount_rules WHERE bundle_id IN (${bundle_id},${multi_bundle_id});")"
+  printf 'Bundle CRUD delete: parent rows after delete=%s; child rows after delete: items=%s, rules=%s\n' \
+    "$main_after" "$items_after" "$rules_after"
+  [[ "$main_after" == "0" ]]
+  [[ "$items_after" == "0" ]]
+  [[ "$rules_after" == "0" ]]
+  verify_fixtures >/dev/null
+  printf 'Bundle CRUD artifacts: %s\nFDShop bundle CRUD suite: PASS (database and cleanup verified)\n' "$host_output"
+}
+
+run_browser_crud_configuration() {
+  verify_installed >/dev/null
+  verify_fixtures >/dev/null
+  local run_id="${FDSHOP_CONFIGURATION_CRUD_RUN_ID:-$(date -u +%Y%m%dT%H%M%SZ)-configuration-crud-$RANDOM}"
+  [[ "$run_id" =~ ^[A-Za-z0-9._-]+$ ]] || { printf 'Invalid configuration CRUD run id.\n' >&2; return 1; }
+  local container_output="/workspace/artifacts/$run_id"
+  local host_output="$REPO_ROOT/.docker/test-results/playwright/$run_id"
+  mkdir -p "$host_output"
+  compose build browser
+  if ! compose run --rm --no-deps \
+    --env "PLAYWRIGHT_OUTPUT_DIR=$container_output" \
+    browser npx playwright test tests/configuration-crud.spec.js; then
+    printf 'Configuration CRUD artifacts: %s\nFDShop configuration CRUD suite: FAIL\n' "$host_output" >&2
+    return 1
+  fi
+
+  [[ "$(sql "SELECT CONCAT(general_vat_rate, '|', general_currency, '|', image_size_default) FROM ${JOOMLA_DB_PREFIX}fdshop_config WHERE id=1;")" == "19.0000|EUR|400" ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_shipments WHERE shipment_name='E2E-CRUD-SHIPMENT-REFERENCE' AND shipment_description='CRUD shipment after save-close' AND published=0;")" == "1" ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_payment_methods WHERE id=900610 AND payment_name='E2E Zahlung Rechnung' AND payment_description='Eindeutig künstlich' AND published=1;")" == "1" ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_payment_methods WHERE payment_name='E2E-CRUD-PAYMENT-REFERENCE' AND payment_description='CRUD payment after save-close' AND published=1;")" == "1" ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_order_statuses WHERE id=900702 AND status_name='E2E Status Inaktiv' AND stock_action='none';")" == "1" ]]
+  printf 'Configuration CRUD artifacts: %s\nFDShop configuration CRUD suite: PASS (database state and restoration verified)\n' "$host_output"
+}
+run_browser_crud_orders() {
+  verify_installed >/dev/null; verify_fixtures >/dev/null
+  local run_id="${FDSHOP_ORDERS_CRUD_RUN_ID:-$(date -u +%Y%m%dT%H%M%SZ)-orders-crud-$RANDOM}"
+  [[ "$run_id" =~ ^[A-Za-z0-9._-]+$ ]] || { printf 'Invalid orders CRUD run id.\n' >&2; return 1; }
+  local container_output="/workspace/artifacts/$run_id" host_output="$REPO_ROOT/.docker/test-results/playwright/$run_id"
+  mkdir -p "$host_output"; compose build browser
+  if ! compose run --rm --no-deps --env "PLAYWRIGHT_OUTPUT_DIR=$container_output" browser npx playwright test tests/orders-crud.spec.js; then
+    printf 'Order CRUD artifacts: %s\nFDShop order CRUD suite: FAIL\n' "$host_output" >&2; return 1
+  fi
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_orders WHERE id=900800 AND order_status_id=900700 AND order_status='e2e-ordered' AND grand_total=19.9900;")" == 1 ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_order_items WHERE id=900810 AND product_name='E2E Produkt Aktiv' AND sku='E2E-PROD-ACTIVE' AND gtin='9900000000001' AND manufacturer_name='E2E Hersteller Aktiv' AND quantity=1 AND unit_price_gross=19.9900 AND line_total_gross=19.9900 AND is_removed=0;")" == 1 ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_order_items WHERE order_id=900800 AND product_id=900105 AND quantity=3 AND is_removed=1;")" == 1 ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_order_status_history WHERE order_id=900800;")" == 3 ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_order_history WHERE order_id=900800;")" == 6 ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_order_history WHERE order_id=900800 AND event_type IN ('item_added','quantity_changed','item_removed','status_changed');")" == 5 ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_order_bundles WHERE order_id=900801 AND bundle_id=900400;")" == 1 ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_order_bundle_items WHERE order_bundle_id=900820;")" == 2 ]]
+  printf 'Order CRUD artifacts: %s\nFDShop order CRUD suite: PASS (snapshots, totals and histories verified)\n' "$host_output"
+}
+
+test_browser() {
+  compose down --volumes --remove-orphans
+  compose up --detach --build
+  wait_healthy
+  install_fdshop
+  load_fixtures
+  run_smoke
+  run_browser
+}
+
+test_readonly() {
+  compose down --volumes --remove-orphans
+  compose up --detach --build
+  wait_healthy
+  install_fdshop
+  load_fixtures
+  run_smoke
+  run_browser
+  run_browser_readonly
+}
+test_reset_environment() {
+  compose down --volumes --remove-orphans
+  compose up --detach --build
+  wait_healthy
+  install_fdshop
+  load_fixtures
+}
+run_test_step() {
+  local label="$1"; shift
+  printf '\n==> %s\n' "$label"
+  if "$@"; then printf '<== %s: PASS\n' "$label"; else printf '<== %s: FAIL\n' "$label" >&2; return 1; fi
+}
+crud_runner() {
+  case "$1" in
+    manufacturers) run_browser_crud_manufacturers ;;
+    categories) run_browser_crud_categories ;;
+    configuration) run_browser_crud_configuration ;;
+    products) run_browser_crud_products ;;
+    coupons) run_browser_crud_coupons ;;
+    bundles) run_browser_crud_bundles ;;
+    orders) run_browser_crud_orders ;;
+    *) printf 'Unknown standard test area: %s\nValid areas: manufacturers categories configuration products coupons bundles orders\n' "$1" >&2; return 2 ;;
+  esac
+}
+valid_crud_area() {
+  case "$1" in manufacturers|categories|configuration|products|coupons|bundles|orders) return 0 ;; esac
+  printf 'Unknown standard test area: %s\nValid areas: manufacturers categories configuration products coupons bundles orders\n' "$1" >&2
+  return 2
+}
+verify_package_scope() {
+  build_package
+  local entries
+  entries="$(unzip -Z1 "$PACKAGE_PATH")"
+  if grep -Eq '(^|/)(tests?|node_modules|playwright|\.docker)(/|$)|(^|/)(alt_|alt2_)' <<<"$entries"; then
+    printf 'Package contains forbidden test, tooling, artifact or legacy files.\n' >&2; return 1
+  fi
+  printf 'FDShop package scope: PASS (no tests, Node, Playwright, artifacts or alt files)\n'
+}
+test_quick() {
+  run_test_step 'Quick smoke' run_smoke
+  printf '\nFDShop quick test suite: PASS\n'
+}
+test_standard() {
+  local area="${1:-}"
+  valid_crud_area "$area" || return $?
+  run_test_step 'Test reset' test_reset_environment
+  run_test_step 'Smoke' run_smoke
+  run_test_step 'Browser foundation' run_browser
+  run_test_step 'Read-only regression' run_browser_readonly
+  if ! run_test_step "$area CRUD" crud_runner "$area"; then
+    printf 'Restoring fixture sandbox after failed %s CRUD; diagnostic artifacts are retained.\n' "$area" >&2
+    test_reset_environment || true
+    return 1
+  fi
+  run_test_step 'Final test reset' test_reset_environment
+  run_test_step 'Fixture integrity' verify_fixtures
+  run_test_step 'Log check' assert_clean_logs
+  printf '\nFDShop standard test suite (%s): PASS\n' "$area"
+}
+test_full() {
+  local areas=(manufacturers categories configuration products coupons bundles orders)
+  local total=24 step=0 area
+  full_step() { step=$((step + 1)); run_test_step "[$step/$total] $1" "${@:2}"; }
+  full_step 'Initial test reset' test_reset_environment
+  full_step 'Smoke' run_smoke
+  full_step 'Browser foundation' run_browser
+  full_step 'Read-only regression' run_browser_readonly
+  for area in "${areas[@]}"; do
+    full_step "Reset before $area CRUD" test_reset_environment
+    if ! full_step "$area CRUD" crud_runner "$area"; then
+      printf 'Restoring fixture sandbox after failed %s CRUD; diagnostic artifacts are retained.\n' "$area" >&2
+      test_reset_environment || true
+      return 1
+    fi
+  done
+  full_step 'Final test reset' test_reset_environment
+  full_step 'Fixture integrity' verify_fixtures
+  full_step 'Final smoke' run_smoke
+  full_step 'Log check' assert_clean_logs
+  full_step 'Package scope' verify_package_scope
+  full_step 'Lifecycle' lifecycle
+  printf '\nFDShop full test suite: PASS\n'
+}
+
 lifecycle() {
   build_package
   compose down --volumes --remove-orphans
@@ -233,6 +636,24 @@ Usage: scripts/fdshop COMMAND
   verify-uninstall  Verify extension record and all FDShop tables are absent
   logs              Print current logs and collect them under .docker/logs
   check-logs        Fail on fatal PHP, uncaught exception or SQL errors
+  fixtures          Reset FDShop domain data, load and verify fixtures
+  fixtures-verify   Verify the existing fixture state without changing data
+  test-reset        Phase-1 reset, install FDShop, then load fixtures
+  smoke             Fast health, HTTP, FDShop, fixture and new-log checks
+  browser           Run headless Chromium foundation test on prepared sandbox
+  test-browser      Run test-reset, smoke and browser foundation test
+  browser-readonly  Run read-only FDShop administrator browser regressions
+  test-readonly     Run reset, smoke, foundation and read-only browser tests
+  browser-crud-manufacturers  Run manufacturer CRUD browser tests
+  browser-crud-categories  Run category CRUD browser tests with cleanup
+  browser-crud-products  Run product CRUD browser tests with media cleanup
+  browser-crud-coupons  Run coupon CRUD browser tests with mapping cleanup
+  browser-crud-bundles  Run bundle CRUD browser tests with cleanup
+  browser-crud-orders  Run order administration CRUD browser tests
+  test-quick        Fast non-destructive smoke check on a prepared sandbox
+  test-standard AREA  Reset, baseline, one CRUD area, integrity and logs
+  test-full         Run the complete Phase-2 regression and lifecycle suite
+  browser-crud-configuration  Run configuration, shipment, payment and order-status CRUD tests
   lifecycle         Reset and test fresh install -> uninstall -> fresh install
   status            Show Compose service state
   versions          Show actual Joomla, PHP, Apache and MariaDB versions
@@ -261,6 +682,24 @@ main() {
         verify-uninstall) verify_uninstalled ;;
         logs) compose logs --tail 200; collect_logs ;;
         check-logs) assert_clean_logs ;;
+        fixtures) load_fixtures ;;
+        fixtures-verify) verify_fixtures ;;
+        test-reset) compose down --volumes --remove-orphans; compose up --detach --build; wait_healthy; install_fdshop; load_fixtures ;;
+        smoke) run_smoke ;;
+        browser) run_browser ;;
+        test-browser) test_browser ;;
+        browser-readonly) run_browser_readonly ;;
+        test-readonly) test_readonly ;;
+        browser-crud-manufacturers) run_browser_crud_manufacturers ;;
+        browser-crud-categories) run_browser_crud_categories ;;
+        browser-crud-products) run_browser_crud_products ;;
+        browser-crud-coupons) run_browser_crud_coupons ;;
+        browser-crud-bundles) run_browser_crud_bundles ;;
+        browser-crud-orders) run_browser_crud_orders ;;
+        browser-crud-configuration) run_browser_crud_configuration ;;
+        test-quick) test_quick ;;
+        test-standard) test_standard "${2:-}" ;;
+        test-full) test_full ;;
         lifecycle) lifecycle ;;
         status) compose ps ;;
         versions)
