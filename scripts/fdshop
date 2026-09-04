@@ -407,6 +407,55 @@ run_browser_crud_coupons() {
   printf 'Coupon CRUD artifacts: %s\nFDShop coupon CRUD suite: PASS (database, mappings, usage and cleanup verified)\n' "$host_output"
 }
 
+run_browser_crud_bundles() {
+  verify_installed >/dev/null
+  verify_fixtures >/dev/null
+  local run_id="${FDSHOP_BUNDLES_CRUD_RUN_ID:-$(date -u +%Y%m%dT%H%M%SZ)-bundles-crud-$RANDOM}"
+  [[ "$run_id" =~ ^[A-Za-z0-9._-]+$ ]] || { printf 'Invalid bundles CRUD run id.\n' >&2; return 1; }
+  local container_output="/workspace/artifacts/$run_id"
+  local host_output="$REPO_ROOT/.docker/test-results/playwright/$run_id"
+  local bundle_id bundle_number multi_bundle_id
+  local items_before rules_before main_after items_after rules_after
+  mkdir -p "$host_output"
+  compose build browser
+
+  if ! compose run --rm --no-deps --env "PLAYWRIGHT_OUTPUT_DIR=$container_output" browser \
+    npx playwright test tests/bundles-crud.spec.js --grep 'bundle invalid save'; then
+    printf 'Bundle CRUD artifacts: %s\nFDShop bundle CRUD suite: FAIL\n' "$host_output" >&2
+    return 1
+  fi
+  bundle_id="$(sql "SELECT id FROM ${JOOMLA_DB_PREFIX}fdshop_bundles WHERE bundle_name='E2E-CRUD-BUNDLE-UPDATED';")"
+  bundle_number="$(sql "SELECT bundle_number FROM ${JOOMLA_DB_PREFIX}fdshop_bundles WHERE id=${bundle_id};")"
+  multi_bundle_id="$(sql "SELECT id FROM ${JOOMLA_DB_PREFIX}fdshop_bundles WHERE bundle_name='E2E-CRUD-BUNDLE-MULTI';")"
+  [[ "$bundle_id" =~ ^[0-9]+$ && "$bundle_number" =~ ^BUN-[0-9]+$ ]]
+  [[ "$multi_bundle_id" =~ ^[0-9]+$ ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_bundles WHERE id=${bundle_id} AND bundle_number='${bundle_number}' AND description='CRUD bundle after apply' AND is_active=1;")" == "1" ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_bundle_items WHERE bundle_id=${bundle_id} AND product_id=900100 AND ordering=1;")" == "1" ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_bundle_discount_rules WHERE bundle_id=${bundle_id} AND min_quantity=4 AND discount_percent=12.5000;")" == "1" ]]
+  items_before="$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_bundle_items WHERE bundle_id IN (${bundle_id},${multi_bundle_id});")"
+  rules_before="$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_bundle_discount_rules WHERE bundle_id IN (${bundle_id},${multi_bundle_id});")"
+  [[ "$items_before" == "2" ]]
+  [[ "$rules_before" == "2" ]]
+  printf 'Bundle CRUD delete: ids=%s,%s; child rows before delete: items=%s, rules=%s\n' \
+    "$bundle_id" "$multi_bundle_id" "$items_before" "$rules_before"
+
+  if ! compose run --rm --no-deps --env "PLAYWRIGHT_OUTPUT_DIR=$container_output" browser \
+    npx playwright test tests/bundles-crud.spec.js --grep 'bundle direct delete'; then
+    printf 'Bundle CRUD artifacts: %s\nFDShop bundle CRUD delete: FAIL\n' "$host_output" >&2
+    return 1
+  fi
+  main_after="$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_bundles WHERE id IN (${bundle_id},${multi_bundle_id});")"
+  items_after="$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_bundle_items WHERE bundle_id IN (${bundle_id},${multi_bundle_id});")"
+  rules_after="$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_bundle_discount_rules WHERE bundle_id IN (${bundle_id},${multi_bundle_id});")"
+  printf 'Bundle CRUD delete: parent rows after delete=%s; child rows after delete: items=%s, rules=%s\n' \
+    "$main_after" "$items_after" "$rules_after"
+  [[ "$main_after" == "0" ]]
+  [[ "$items_after" == "0" ]]
+  [[ "$rules_after" == "0" ]]
+  verify_fixtures >/dev/null
+  printf 'Bundle CRUD artifacts: %s\nFDShop bundle CRUD suite: PASS (database and cleanup verified)\n' "$host_output"
+}
+
 run_browser_crud_configuration() {
   verify_installed >/dev/null
   verify_fixtures >/dev/null
@@ -497,6 +546,7 @@ Usage: scripts/fdshop COMMAND
   browser-crud-categories  Run category CRUD browser tests with cleanup
   browser-crud-products  Run product CRUD browser tests with media cleanup
   browser-crud-coupons  Run coupon CRUD browser tests with mapping cleanup
+  browser-crud-bundles  Run bundle CRUD browser tests with cleanup
   browser-crud-configuration  Run configuration, shipment, payment and order-status CRUD tests
   lifecycle         Reset and test fresh install -> uninstall -> fresh install
   status            Show Compose service state
@@ -538,6 +588,7 @@ main() {
         browser-crud-categories) run_browser_crud_categories ;;
         browser-crud-products) run_browser_crud_products ;;
         browser-crud-coupons) run_browser_crud_coupons ;;
+        browser-crud-bundles) run_browser_crud_bundles ;;
         browser-crud-configuration) run_browser_crud_configuration ;;
         lifecycle) lifecycle ;;
         status) compose ps ;;

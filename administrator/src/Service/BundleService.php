@@ -102,6 +102,46 @@ class BundleService implements BundleServiceInterface
         }
     }
 
+    public function deleteBundles(array $bundleIds): bool
+    {
+        $bundleIds = $this->normalizeIds($bundleIds);
+
+        if ($bundleIds === []) {
+            return true;
+        }
+
+        $table = $this->mvcFactory->createTable('Bundle', 'Administrator');
+
+        if (!$table) {
+            throw new RuntimeException('BundleTable konnte nicht erstellt werden.');
+        }
+
+        $this->db->transactionStart();
+
+        try {
+            foreach ($bundleIds as $bundleId) {
+                foreach (['#__fdshop_bundle_discount_rules', '#__fdshop_bundle_items'] as $tableName) {
+                    $deleteQuery = $this->db->getQuery(true)
+                        ->delete($this->db->quoteName($tableName))
+                        ->where($this->db->quoteName('bundle_id') . ' = ' . $bundleId);
+
+                    $this->db->setQuery($deleteQuery)->execute();
+                }
+
+                if (!$table->delete($bundleId)) {
+                    throw new RuntimeException($table->getError());
+                }
+            }
+
+            $this->db->transactionCommit();
+
+            return true;
+        } catch (\Throwable $e) {
+            $this->db->transactionRollback();
+            throw $e;
+        }
+    }
+
     public function saveBundleItems(int $bundleId, array $productIds): void
     {
         if ($bundleId <= 0) {

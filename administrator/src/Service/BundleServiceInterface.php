@@ -16,6 +16,8 @@ interface BundleServiceInterface
         array $discountRules = []
     ): int;
 
+    public function deleteBundles(array $bundleIds): bool;
+
     public function saveBundleItems(int $bundleId, array $productIds): void;
 
     public function saveBundleDiscountRules(int $bundleId, array $discountRules): void;
