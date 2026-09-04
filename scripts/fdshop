@@ -519,6 +519,89 @@ test_readonly() {
   run_browser
   run_browser_readonly
 }
+test_reset_environment() {
+  compose down --volumes --remove-orphans
+  compose up --detach --build
+  wait_healthy
+  install_fdshop
+  load_fixtures
+}
+run_test_step() {
+  local label="$1"; shift
+  printf '\n==> %s\n' "$label"
+  if "$@"; then printf '<== %s: PASS\n' "$label"; else printf '<== %s: FAIL\n' "$label" >&2; return 1; fi
+}
+crud_runner() {
+  case "$1" in
+    manufacturers) run_browser_crud_manufacturers ;;
+    categories) run_browser_crud_categories ;;
+    configuration) run_browser_crud_configuration ;;
+    products) run_browser_crud_products ;;
+    coupons) run_browser_crud_coupons ;;
+    bundles) run_browser_crud_bundles ;;
+    orders) run_browser_crud_orders ;;
+    *) printf 'Unknown standard test area: %s\nValid areas: manufacturers categories configuration products coupons bundles orders\n' "$1" >&2; return 2 ;;
+  esac
+}
+valid_crud_area() {
+  case "$1" in manufacturers|categories|configuration|products|coupons|bundles|orders) return 0 ;; esac
+  printf 'Unknown standard test area: %s\nValid areas: manufacturers categories configuration products coupons bundles orders\n' "$1" >&2
+  return 2
+}
+verify_package_scope() {
+  build_package
+  local entries
+  entries="$(unzip -Z1 "$PACKAGE_PATH")"
+  if grep -Eq '(^|/)(tests?|node_modules|playwright|\.docker)(/|$)|(^|/)(alt_|alt2_)' <<<"$entries"; then
+    printf 'Package contains forbidden test, tooling, artifact or legacy files.\n' >&2; return 1
+  fi
+  printf 'FDShop package scope: PASS (no tests, Node, Playwright, artifacts or alt files)\n'
+}
+test_quick() {
+  run_test_step 'Quick smoke' run_smoke
+  printf '\nFDShop quick test suite: PASS\n'
+}
+test_standard() {
+  local area="${1:-}"
+  valid_crud_area "$area" || return $?
+  run_test_step 'Test reset' test_reset_environment
+  run_test_step 'Smoke' run_smoke
+  run_test_step 'Browser foundation' run_browser
+  run_test_step 'Read-only regression' run_browser_readonly
+  if ! run_test_step "$area CRUD" crud_runner "$area"; then
+    printf 'Restoring fixture sandbox after failed %s CRUD; diagnostic artifacts are retained.\n' "$area" >&2
+    test_reset_environment || true
+    return 1
+  fi
+  run_test_step 'Final test reset' test_reset_environment
+  run_test_step 'Fixture integrity' verify_fixtures
+  run_test_step 'Log check' assert_clean_logs
+  printf '\nFDShop standard test suite (%s): PASS\n' "$area"
+}
+test_full() {
+  local areas=(manufacturers categories configuration products coupons bundles orders)
+  local total=24 step=0 area
+  full_step() { step=$((step + 1)); run_test_step "[$step/$total] $1" "${@:2}"; }
+  full_step 'Initial test reset' test_reset_environment
+  full_step 'Smoke' run_smoke
+  full_step 'Browser foundation' run_browser
+  full_step 'Read-only regression' run_browser_readonly
+  for area in "${areas[@]}"; do
+    full_step "Reset before $area CRUD" test_reset_environment
+    if ! full_step "$area CRUD" crud_runner "$area"; then
+      printf 'Restoring fixture sandbox after failed %s CRUD; diagnostic artifacts are retained.\n' "$area" >&2
+      test_reset_environment || true
+      return 1
+    fi
+  done
+  full_step 'Final test reset' test_reset_environment
+  full_step 'Fixture integrity' verify_fixtures
+  full_step 'Final smoke' run_smoke
+  full_step 'Log check' assert_clean_logs
+  full_step 'Package scope' verify_package_scope
+  full_step 'Lifecycle' lifecycle
+  printf '\nFDShop full test suite: PASS\n'
+}
 
 lifecycle() {
   build_package
@@ -567,6 +650,9 @@ Usage: scripts/fdshop COMMAND
   browser-crud-coupons  Run coupon CRUD browser tests with mapping cleanup
   browser-crud-bundles  Run bundle CRUD browser tests with cleanup
   browser-crud-orders  Run order administration CRUD browser tests
+  test-quick        Fast non-destructive smoke check on a prepared sandbox
+  test-standard AREA  Reset, baseline, one CRUD area, integrity and logs
+  test-full         Run the complete Phase-2 regression and lifecycle suite
   browser-crud-configuration  Run configuration, shipment, payment and order-status CRUD tests
   lifecycle         Reset and test fresh install -> uninstall -> fresh install
   status            Show Compose service state
@@ -611,6 +697,9 @@ main() {
         browser-crud-bundles) run_browser_crud_bundles ;;
         browser-crud-orders) run_browser_crud_orders ;;
         browser-crud-configuration) run_browser_crud_configuration ;;
+        test-quick) test_quick ;;
+        test-standard) test_standard "${2:-}" ;;
+        test-full) test_full ;;
         lifecycle) lifecycle ;;
         status) compose ps ;;
         versions)

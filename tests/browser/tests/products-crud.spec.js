@@ -52,7 +52,11 @@ async function acceptDelete(page, action) {
 }
 
 async function setRadio(page, field, value) {
-  await page.locator(`input[name="jform[${field}]"][value="${value}"]`).check({ force: true });
+  const radio = page.locator(`input[name="jform[${field}]"][value="${value}"]`);
+  const id = await radio.getAttribute('id');
+
+  await page.locator(`label[for="${id}"]`).click();
+  await expect(radio).toBeChecked();
 }
 
 test('product invalid save, create, apply, save-close, mappings, stock, status and upload', async ({ page }, testInfo) => {
