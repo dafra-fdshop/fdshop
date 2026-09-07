@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata>
+	<layout title="FDShop Kategorieansicht" option="FDShop Kategorieansicht">
+		<message><![CDATA[Zeigt die Produkte genau einer gewählten FDShop-Kategorie.]]></message>
+	</layout>
+	<fields name="request">
+		<fieldset name="request">
+			<field name="id" type="sql" label="FDShop-Kategorie" description="Wähle die Kategorie, deren direkt zugeordnete Produkte angezeigt werden." query="SELECT id, category_name FROM #__fdshop_categories WHERE is_active = 1 ORDER BY category_name" key_field="id" value_field="category_name" required="true"/>
+		</fieldset>
+	</fields>
+</metadata>

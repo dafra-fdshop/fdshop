@@ -8,11 +8,15 @@ namespace FDShop\Component\FDShop\Administrator\Extension;
 
 defined('_JEXEC') or die;
 
+use Joomla\CMS\Component\Router\RouterServiceInterface;
+use Joomla\CMS\Component\Router\RouterServiceTrait;
 use Joomla\CMS\Extension\MVCComponent;
 use Joomla\DI\Container;
 
-final class FdshopComponent extends MVCComponent
+final class FdshopComponent extends MVCComponent implements RouterServiceInterface
 {
+    use RouterServiceTrait;
+
     private ?Container $container = null;
 
     public function setContainer(Container $container): void

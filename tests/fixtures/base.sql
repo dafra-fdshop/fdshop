@@ -1,6 +1,8 @@
 SET NAMES utf8mb4;
 START TRANSACTION;
 
+DELETE FROM `__PREFIX__menu` WHERE `alias` = 'batterien' AND `link` LIKE 'index.php?option=com_fdshop&view=category%';
+
 DELETE FROM `__PREFIX__fdshop_coupon_usage`;
 DELETE FROM `__PREFIX__fdshop_coupon_user_map`;
 DELETE FROM `__PREFIX__fdshop_coupon_buyer_group_map`;

@@ -20,9 +20,11 @@ use FDShop\Component\FDShop\Administrator\Service\ProductServiceInterface;
 use FDShop\Component\FDShop\Administrator\Service\OrderService;
 use FDShop\Component\FDShop\Administrator\Service\OrderServiceInterface;
 use Joomla\CMS\Dispatcher\ComponentDispatcherFactoryInterface;
+use Joomla\CMS\Component\Router\RouterFactoryInterface;
 use Joomla\CMS\Extension\ComponentInterface;
 use Joomla\CMS\Extension\Service\Provider\ComponentDispatcherFactory;
 use Joomla\CMS\Extension\Service\Provider\MVCFactory;
+use Joomla\CMS\Extension\Service\Provider\RouterFactory;
 use Joomla\CMS\MVC\Factory\MVCFactoryInterface;
 use Joomla\Database\DatabaseInterface;
 use Joomla\DI\Container;
@@ -38,6 +40,10 @@ return new class () implements ServiceProviderInterface {
 
         $container->registerServiceProvider(
             new MVCFactory('FDShop\\Component\\FDShop')
+        );
+
+        $container->registerServiceProvider(
+            new RouterFactory('FDShop\\Component\\FDShop')
         );
 
         $container->set(
@@ -150,6 +156,10 @@ return new class () implements ServiceProviderInterface {
 
 				$component->setMVCFactory(
 					$container->get(MVCFactoryInterface::class)
+				);
+
+				$component->setRouterFactory(
+					$container->get(RouterFactoryInterface::class)
 				);
 
 				$component->setContainer($container);

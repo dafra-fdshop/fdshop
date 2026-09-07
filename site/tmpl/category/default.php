@@ -1,0 +1,89 @@
+<?php
+
+defined('_JEXEC') or die;
+
+$sort = (string) $this->state->get('filter.sort', 'name');
+$direction = (string) $this->state->get('filter.direction', 'asc');
+$selectedSort = $sort . ':' . $direction;
+$limit = (int) $this->state->get('list.limit', 24);
+$start = (int) $this->state->get('list.start', 0);
+$total = (int) $this->pagination->total;
+$first = $total > 0 ? $start + 1 : 0;
+$last = min($start + $limit, $total);
+$resultsText = sprintf('%d–%d von %d', $first, $last, $total);
+?>
+<main class="fdshop-category" data-fdshop-category="<?php echo (int) $this->category->id; ?>">
+    <header class="fdshop-category__header">
+        <h1><?php echo $this->escape((string) $this->category->category_name); ?></h1>
+        <?php if (trim((string) $this->category->description) !== '') : ?>
+            <div class="fdshop-category__description"><?php echo nl2br($this->escape((string) $this->category->description)); ?></div>
+        <?php endif; ?>
+    </header>
+
+    <form class="fdshop-toolbar" method="get" aria-label="Produktliste steuern">
+        <input type="hidden" name="option" value="com_fdshop">
+        <input type="hidden" name="view" value="category">
+        <input type="hidden" name="id" value="<?php echo (int) $this->category->id; ?>">
+        <label><span>Sortierung</span><select name="sortdir" data-fdshop-sort>
+            <?php foreach ($this->sortOptions as $value => $label) : ?>
+                <option value="<?php echo $this->escape($value); ?>"<?php echo $selectedSort === $value ? ' selected' : ''; ?>><?php echo $this->escape($label); ?></option>
+            <?php endforeach; ?>
+        </select></label>
+        <input type="hidden" name="sort" value="<?php echo $this->escape($sort); ?>" data-fdshop-sort-field>
+        <input type="hidden" name="dir" value="<?php echo $this->escape($direction); ?>" data-fdshop-sort-direction>
+        <label><span>Produkte pro Seite</span><select name="limit" data-fdshop-submit>
+            <?php foreach ($this->limitOptions as $option) : ?>
+                <option value="<?php echo (int) $option; ?>"<?php echo $limit === $option ? ' selected' : ''; ?>><?php echo (int) $option; ?></option>
+            <?php endforeach; ?>
+        </select></label>
+        <span class="fdshop-toolbar__results" data-fdshop-results><?php echo $this->escape($resultsText); ?></span>
+        <noscript><button type="submit">Übernehmen</button></noscript>
+    </form>
+
+    <?php if ($total > $limit) : ?><nav class="fdshop-pagination fdshop-pagination--top" aria-label="Seitennavigation oben"><?php echo $this->pagination->getPagesLinks(); ?></nav><?php endif; ?>
+
+    <?php if ($this->items === []) : ?>
+        <p class="fdshop-category__empty">In dieser Kategorie sind aktuell keine Produkte verfügbar.</p>
+    <?php else : ?>
+        <div class="fdshop-products">
+            <?php foreach ($this->items as $item) : ?>
+                <article class="fdshop-card" data-product-id="<?php echo (int) $item->id; ?>" data-price="<?php echo $this->escape((string) $item->current_price); ?>">
+                    <div class="fdshop-card__media">
+                        <img src="<?php echo $this->escape($item->image_url); ?>" alt="<?php echo $this->escape((string) $item->product_name); ?>" loading="lazy" width="400" height="400">
+                        <div class="fdshop-card__ribbons" aria-label="Produktkennzeichnungen">
+                            <?php if ((int) $item->ribbon_new === 1) : ?><span class="fdshop-ribbon fdshop-ribbon--new">Neu</span><?php endif; ?>
+                            <?php if ((int) $item->ribbon_hot === 1) : ?><span class="fdshop-ribbon fdshop-ribbon--hot">Hot</span><?php endif; ?>
+                            <?php if ((int) $item->ribbon_bundle === 1) : ?><span class="fdshop-ribbon fdshop-ribbon--bundle">Bundle</span><?php endif; ?>
+                        </div>
+                    </div>
+                    <div class="fdshop-card__body">
+                        <h2 class="fdshop-card__title"><?php echo $this->escape((string) $item->product_name); ?></h2>
+                        <?php if (trim((string) $item->short_description) !== '') : ?><p class="fdshop-card__description"><?php echo $this->escape((string) $item->short_description); ?></p><?php endif; ?>
+                        <p class="fdshop-card__availability"><span>Verfügbarkeit:</span> <strong><?php echo $this->escape((string) $item->in_stock); ?></strong></p>
+                        <dl class="fdshop-card__facts">
+                            <?php if ((float) $item->nem > 0) : ?><div><dt>NEM</dt><dd><?php echo $this->escape(rtrim(rtrim(number_format((float) $item->nem, 3, ',', '.'), '0'), ',')); ?> g</dd></div><?php endif; ?>
+                            <?php if ((float) $item->shot_count > 0) : ?><div><dt>Schusszahl</dt><dd><?php echo $this->escape(rtrim(rtrim(number_format((float) $item->shot_count, 3, ',', '.'), '0'), ',')); ?></dd></div><?php endif; ?>
+                            <?php if (trim((string) $item->caliber) !== '' && (float) $item->caliber !== 0.0) : ?><div><dt>Kaliber</dt><dd><?php echo $this->escape((string) $item->caliber); ?></dd></div><?php endif; ?>
+                            <?php if (trim((string) $item->burn_time) !== '' && (float) $item->burn_time !== 0.0) : ?><div><dt>Brenndauer</dt><dd><?php echo $this->escape((string) $item->burn_time); ?></dd></div><?php endif; ?>
+                            <?php if (trim((string) $item->rise_height) !== '' && (float) $item->rise_height !== 0.0) : ?><div><dt>Steighöhe</dt><dd><?php echo $this->escape((string) $item->rise_height); ?></dd></div><?php endif; ?>
+                        </dl>
+                        <div class="fdshop-card__price" data-effective-price="<?php echo $this->escape((string) $item->current_price); ?>">
+                            <?php if ($item->has_discount) : ?><span class="fdshop-card__regular-price"><?php echo $this->escape($item->regular_price_formatted); ?></span><?php endif; ?>
+                            <strong><?php echo $this->escape($item->price_formatted); ?></strong>
+                        </div>
+                        <div class="fdshop-card__actions">
+                            <a class="fdshop-button" href="<?php echo $this->escape($item->detail_url); ?>">Details</a>
+                            <?php if ($item->media['video'] !== null) : ?><button class="fdshop-button fdshop-button--video" type="button" data-fdshop-video="<?php echo $this->escape($item->media['video']); ?>" data-product-name="<?php echo $this->escape((string) $item->product_name); ?>">Video</button><?php endif; ?>
+                        </div>
+                    </div>
+                </article>
+            <?php endforeach; ?>
+        </div>
+    <?php endif; ?>
+
+    <?php if ($total > $limit) : ?><nav class="fdshop-pagination fdshop-pagination--bottom" aria-label="Seitennavigation unten"><?php echo $this->pagination->getPagesLinks(); ?></nav><?php endif; ?>
+    <dialog class="fdshop-video" data-fdshop-video-dialog aria-labelledby="fdshop-video-title">
+        <div class="fdshop-video__header"><h2 id="fdshop-video-title" data-fdshop-video-title>Produktvideo</h2><button type="button" class="fdshop-video__close" data-fdshop-video-close aria-label="Video schließen">×</button></div>
+        <div class="fdshop-video__content" data-fdshop-video-content></div>
+    </dialog>
+</main>
