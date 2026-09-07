@@ -1,0 +1,84 @@
+Auflistung der Ordnerpfade
+Volumeseriennummer : 76FF-AC5B
+C:.
++---administrator
+|   +---forms
+|   +---layouts
+|   |   \---fdshop
+|   |       \---pagination
+|   +---services
+|   +---sql
+|   |   \---updates
+|   +---src
+|   |   +---Controller
+|   |   +---Event
+|   |   +---Extension
+|   |   +---Field
+|   |   +---Helper
+|   |   +---Model
+|   |   +---Service
+|   |   +---Table
+|   |   \---View
+|   |       +---Bundle
+|   |       +---Bundles
+|   |       +---Categories
+|   |       +---Category
+|   |       +---Configuration
+|   |       +---Coupon
+|   |       +---Coupons
+|   |       +---Dashboard
+|   |       +---Manufacturer
+|   |       +---Manufacturers
+|   |       +---Order
+|   |       +---Orders
+|   |       +---Orderstatus
+|   |       +---Paymentmethod
+|   |       +---Product
+|   |       +---Products
+|   |       \---Shipment
+|   \---tmpl
+|       +---bundle
+|       +---bundles
+|       +---categories
+|       +---category
+|       +---configuration
+|       +---coupon
+|       +---coupons
+|       +---dashboard
+|       +---manufacturer
+|       +---manufacturers
+|       +---order
+|       +---orders
+|       +---orderstatus
+|       +---paymentmethod
+|       +---product
+|       +---products
+|       \---shipment
++---docker
+|   +---browser
+|   \---joomla
++---docs
+|   \---sources
++---media
+|   +---css
+|   +---images
+|   \---js
++---scripts
++---site
+|   +---src
+|   |   +---Controller
+|   |   +---Helper
+|   |   +---Model
+|   |   +---Router
+|   |   +---Service
+|   |   \---View
+|   \---tmpl
+\---tests
+    +---browser
+    |   +---bin
+    |   +---support
+    |   \---tests
+    +---fixtures
+    |   +---bin
+    |   \---files
+    \---smoke

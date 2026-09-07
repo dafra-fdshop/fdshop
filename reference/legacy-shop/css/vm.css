@@ -1,0 +1,873 @@
+/* ==================================================
+   VM GENERAL (category, product, shared)
+   ================================================== */
+
+
+
+
+
+
+/* ==========================
+   PRICE BLOCK (global)
+   ========================== */
+
+
+
+
+
+
+
+
+/*---- ALT ----*/
+/*.product-price { color: #de8603; text-align: unset !important; min-height: 70px; }*/
+/*.vm-prices-info { color: #777; font-size: 0.7rem; vertical-align: bottom; }*/
+
+.PricetaxAmount { color: #aaa; }
+
+
+
+.vm-btn-secondary-eigen{ background-color: #e0a721; color: #fff; }
+.vm-btn-eigen, .vm-btn-eigen:link, .vm-btn-eigen:active, .vm-btn-eigen:visited{
+  display: inline-block;
+  width: 11.5rem;
+  padding: 5px 3px;
+  font-size: 0.9rem;
+  border-radius: 4px;
+  text-decoration: none;
+  line-height: normal;
+  text-align: center;
+  border: 1px solid #ccc;
+}
+
+.desc-back { background-color:#CCCCCC; padding: 15px 15px; width: 100%; }
+.pagenav { padding: 8px 8px !important; background-color: #f7930f !important; color: #FFFFFF !important; border: unset !important; }
+a.pagenav { color: #fff !important; }
+.display-number select.inputbox { padding: 0.5rem 1rem !important; margin-left: 0.5rem !important; }
+
+
+
+.vm-pagination ul { padding-left: 0.5rem; }
+
+.vm-product-descr-container-1{ padding: 5px; text-decoration: none; min-height: 100px !important; }
+.vm-order-list{ margin: 0px 0px 20px 0.4rem; }
+
+.orderlistcontainer{ font-size: unset !important; color: white; background-color: #e0a721; }
+.orderlistcontainer a{ color: white; }
+.orderlistcontainer div.activeOrder{
+  background: unset !important;
+  cursor: pointer;
+  border: unset !important;
+  border-radius: unset !important;
+  font-weight: 600;
+  padding: 9px !important;
+}
+.orderlistcontainer .title{ display: none; }
+/*.orderlistcontainer div.orderlist{ z-index: 11 !important; }*/
+.orderlistcontainer div.orderlist a{
+  color: #777;
+  /*border-bottom: 1px solid #dfe3e7;*/
+  padding: 8px 10px;
+  text-decoration: none;
+  line-height: 2;
+}
+.orderlistcontainer div.orderlist a:hover{ background-color: #e0a721; color: #FFFFFF; }
+.orderlistcontainer div.orderlist div:hover{ background-color: unset !important; color: unset !important; }
+
+.detail-container{ background-color: #ddd; padding: 15px 5px 5px 5px; }
+.product_s_desc{ height: 50px !important; font-size: 0.9rem; }
+
+.video_con{ 
+	padding: 5px;
+	display: flex;
+    gap: .3rem;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.info_container {
+	display: inline-flex;
+    gap: .3rem;
+}
+
+.video_btn{ background-color: #000000; border: none; color: white; padding: .2rem .5rem; font-size: .75rem; cursor: pointer; }
+.video_con .btn{ font-size: 0.75rem; padding: .2rem .5rem; border-radius: unset; font-weight: 700; }
+
+.vm-product-media-container .vmicon{ position: absolute; top: 10px; right: 10px; width: 63px; }
+
+.detail-padding{ padding: 10px 15px; background-color: #ffffff; margin-left: 15px; border: 3px solid #cac9c9; }
+
+.product-details-header{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: .5rem;
+  gap: .5rem;
+}
+.product-title{ margin: 0; font-size: 2.0rem; }
+.ratingbox{ margin: unset !important; }
+
+.product-separator{ border: 0; height: 2px; background-color: #cac9c9; margin: 0.5rem 0rem; }
+.product-short-description{ margin: unset !Important; }
+
+.vmproduct .card{ border: 1px solid #e3e3e3; transition: transform 0.3s ease; }
+.vmproduct .card:hover{ transform: scale(1.02); }
+
+
+
+
+
+/* ==================================================
+   VM CATEGORY GRID (modern)
+   ================================================== */
+
+
+
+/* 1) Grid: moderne, responsive Spalten – ohne VM perRow-Zwang */
+.vm-products-grid{
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+@media (max-width: 1200px){
+  .vm-products-grid{ grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 900px){
+  .vm-products-grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 560px){
+  .vm-products-grid{ grid-template-columns: 1fr; }
+}
+
+/* 2) Karten-Layout: alles schön untereinander, Footer nach unten */
+.vm-product-card .spacers{
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 3) Bildbereich darf nicht wachsen/schrumpfen */
+.vm-product-card .vm-product-media-container{
+  position: relative;
+  height: 250px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+}
+
+/*.vm-product-media-container img {
+	max-width: 250px;
+    max-height: 250px;
+    width: auto;
+}*/
+
+/* 4) Titel + Kurztext als “feste Zone” */
+.vm-product-card .vm-product-descr-container-1{
+  flex: 0 0 auto;
+}
+
+.vm-product-card .vm-product-media-container .circle_btns{
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 6;
+
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.vm-product-card .vm-product-media-container .circle_btn{
+  position: static; /* wichtig: nicht mehr absolute */
+}
+
+
+/* ===== Produkt-Titel (Kategoriegrid) ===== */
+
+.vm-product-card .vm-product-descr-container-1 h5{
+  margin: .75rem 0 .5rem;
+  line-height: 1.2;
+}
+
+/* Link selbst */
+.vm-product-card .vm-product-descr-container-1 h5 a{
+  display: block;
+
+  white-space: nowrap;          /* nur 1 Zeile */
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  text-decoration: none;        /* kein Unterstrich */
+  font-weight: 600;
+}
+
+/* Hover bewusst ruhig halten */
+.vm-product-card .vm-product-descr-container-1 h5 a:hover{
+  text-decoration: none;
+}
+
+
+
+/* Kurzbeschreibung optional ebenfalls clampen */
+.vm-product-card .product_s_desc{
+  margin: 0 0 .75rem;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+/* 5) Detailcontainer nimmt den “Rest” und schiebt AddToCart nach unten */
+.vm-product-card .detail-container{
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* Spezi-Felder: bleibt oben im Detailcontainer */
+.vm-product-card .product-fields-spezi{
+  flex: 0 0 auto;
+}
+
+/* Preis: bleibt oben, aber stabil */
+.vm-product-card .vm3pr-1{
+  flex: 0 0 auto;
+}
+
+/* AddToCart/Notify: immer am Kartenboden */
+.vm-product-card .addtocart-area{
+  margin-top: auto;
+}
+
+/* 6) Entfernt alte VM “clear”-Hacks in deinem neuen Layout */
+.vm-products-grid .clear,
+.vm-products-grid .horizontal-separator{
+  display: none !important;
+}
+
+
+/*========= LAGER BESTAND =============*/
+.fdlager{
+  display: inline-flex;
+  gap: .3rem;
+  font-size: .7rem;
+  border-radius: 999px;
+  color: #fff;
+  padding: 0rem .5rem;	
+}
+
+.fdlager-normalstock {
+	background: #2e9d45;
+}
+
+.fdlager-lowstock {
+	background: #f0c419;
+}
+
+.fdlager-nostock {
+	background: #d93025;
+}
+
+/* das Kästchen */
+.fdlager::before{
+  content: "";
+  display: inline-grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 12px;
+/*  line-height: 1;*/
+  color: #fff;
+}
+
+/* grün + Haken */
+.fdlager-normalstock::before{
+  content: "✓";
+}
+
+/* gelb + ! (Text schwarz ist besser lesbar) */
+.fdlager-lowstock::before{
+  content: "!";  
+  color: #111;
+}
+
+/* rot + X */
+.fdlager-nostock::before{
+  content: "×";
+}
+
+
+
+
+/* ==================================================
+   VM CATEGORY TOOLBAR (Layout + Fixes) – schlank & sauber gescoped
+   Scope: nur innerhalb .vm-toolbar (Kategorie)
+   ================================================== */
+
+.vm-toolbar{
+  padding: 1rem 0;
+}
+
+.vm-toolbar-top{
+  border-bottom: 1px solid rgba(0,0,0,.08);
+  margin-bottom: 1rem;
+}
+
+.vm-toolbar-bottom{
+  border-top: 1px solid rgba(0,0,0,.08);
+  margin-top: 1.25rem;
+}
+
+/* --- 3 Zeilen Layout --- */
+.vm-toolbar-row{
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.vm-toolbar-row-1{ justify-content: space-between; }
+.vm-toolbar-row-2{ justify-content: flex-end; margin-top: .75rem; }
+.vm-toolbar-row-3{ justify-content: center; margin-top: .5rem; }
+
+@media (max-width: 900px){
+  .vm-toolbar-row-1{ flex-direction: column; align-items: stretch; }
+  .vm-toolbar-row-2{ justify-content: flex-start; }
+}
+
+/* ==================================================
+   Sortierung (orderlistcontainer) – Dropdown wie „große Version“
+   ================================================== */
+
+.vm-toolbar .orderlistcontainer{
+  position: relative;
+}
+
+/* Default: Dropdown ist zu (wichtig wegen Altlasten/VM/Cassiopeia) */
+.vm-toolbar .orderlistcontainer .orderlist{
+  display: none !important;   /* <- das hat dir gerade gefehlt */
+  position: absolute;
+  left: 0;
+  /*top: calc(100% + .35rem);*/
+  z-index: 50;
+  min-width: 260px;
+  padding: .4rem;
+  /*border-radius: .75rem;
+  border: 1px solid rgba(0,0,0,.12);*/
+  background: #fff;
+  box-shadow: 0 12px 30px rgba(0,0,0,.10);
+}
+
+/* Auf bei Hover / Fokus (Tastatur) */
+.vm-toolbar .orderlistcontainer:hover .orderlist,
+.vm-toolbar .orderlistcontainer:focus-within .orderlist{
+  display: block !important;
+}
+
+/* ==================================================
+   Pagination – Cassiopeia UL/LI reset + horizontal
+   ================================================== */
+
+.vm-toolbar nav.vm-pager ul{
+  list-style: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: flex !important;
+  flex-wrap: wrap;
+  gap: .35rem;
+  align-items: center;
+}
+
+.vm-toolbar nav.vm-pager li{
+  margin: 0 !important;
+  padding: 0 !important;
+  display: inline-flex;
+}
+
+.vm-toolbar nav.vm-pager li::marker{
+  content: "" !important;
+}
+
+/* Buttons: eckig + Farbe */
+.vm-toolbar nav.vm-pager .pagenav{
+  background-color: #e0a721 !important;
+  border-radius: 0 !important;
+  color: #fff !important;
+}
+
+.vm-toolbar nav.vm-pager a.pagenav{ color: #fff !important; }
+
+/* ==================================================
+   Limitbox eckig (nur Toolbar)
+   ================================================== */
+
+.vm-toolbar .vm-limit select.inputbox,
+.vm-toolbar .vm-limit select,
+.vm-toolbar .vm-limit .inputbox{
+  border-radius: 0 !important;
+}
+
+.vm-toolbar .vm-results-count{ margin-bottom: .35rem; }
+.vm-toolbar .vm-page-counter{ text-align: center; }
+
+/* ==================================================
+   VM PRODUCTDETAILS (Layout Grid)
+   ================================================== */
+
+.productdetails-view .vm-product-container{
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1.25rem;
+  align-items: start;
+}
+
+/* Breakpoints: ab Tablet untereinander */
+@media (max-width: 992px){
+  .productdetails-view .vm-product-container{
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Alte Clear-Hacks im Produktdetail ausblenden */
+.productdetails-view .vm-product-container > .clear{
+  display: none !important;
+}
+
+/* Details-Box darf nicht “wegdrücken” */
+.productdetails-view .vm-product-details-container{
+  min-width: 0;
+}
+
+/* Bildbox sauber */
+.productdetails-view .vm-product-media-container{
+  min-width: 0;
+}
+
+/* EVTL. auch noch mal anschauen siehe Produktdetails (default.php) !!!!!!!!!!!!*/
+/* Ribbons im Bild immer sichtbar */
+.productdetails-view .spacers{ position: relative; }
+.productdetails-view .ribbons{ z-index: 5; }
+.productdetails-view .main-image{ position: relative; z-index: 1; }
+
+/* ==================================================
+   VM Rating System
+   ================================================== */
+
+.fd_rating_container{
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  line-height: 1;
+}
+
+.fd_rating_wrapper {
+  position: relative;
+  display: inline-block;
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+/* Leere Sterne */
+.fd_rating_base {
+  /*opacity: .35; /* “leer”-Look */
+  color: #ccc;
+}
+
+/* Gefüllte Ebene darüber, per width geclippt */
+.fd_rating_fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  color: #f5b301; /* Gold */
+  pointer-events: none;
+}
+
+/* Damit absolute Ebene korrekt sitzt */
+.fd_rating_container .fd_rating_base{
+  position: relative;
+}
+
+/* Zahl optional */
+.fd_rating_value{
+  font-size: .95rem;
+  opacity: .8;
+}
+
+
+/* ==================================================
+   CART GRID (2 Spalten) – fd_shop
+   ================================================== */
+
+#cart-view .fd-cart-grid{
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 2fr 1fr; /* Mitte breiter */
+  align-items: start;
+}
+
+/* Linke Spalte */
+#cart-view .fd-cart-left{
+  min-width: 0;
+}
+
+/* Das checkoutForm soll über Spalte 1-2 laufen */
+#cart-view form#checkoutForm.fd-cart-form{
+  grid-column: 1 / span 2;
+  min-width: 0;
+}
+
+/* Inneres Grid: Step1 links, Step2 mitte */
+#checkoutForm .fd-checkout-grid{
+  display: grid;
+ /* gap: 1rem;*/
+  grid-template-columns: 1fr;
+  align-items: start;
+}
+
+/* Rechte Spalte (außerhalb Form) */
+#cart-view .fd-cart-right{
+  min-width: 0;
+}
+
+/* Responsive: alles untereinander */
+@media (max-width: 992px){
+  #cart-view .fd-cart-grid{
+    grid-template-columns: 1fr;
+  }
+  #cart-view form#checkoutForm.fd-cart-form{
+    grid-column: auto;
+  }
+  #checkoutForm .fd-checkout-grid{
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ==================================================
+   VM Registrierung
+   ================================================== */
+
+.container-register {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.container-content {
+    border: 2px solid #ccc;
+    padding: 20px;
+    box-sizing: border-box;
+    background: #f8f8f8;
+}
+
+.titel {
+    min-height: 120px;
+    width: 100%;
+}
+
+.container-second {
+    display: flex;
+    gap: 20px;
+	align-items: flex-start;
+}
+
+.login {
+    flex: 1;
+    min-height: 150px;
+}
+
+.fields {
+    flex: 3;
+    min-height: 150px;
+}
+
+.login,
+.fields {
+    min-width: 0;
+}
+
+@media (max-width: 991.98px) {
+    .container-second {
+        flex-direction: column;
+    }
+}
+
+/* ==================================================
+   VM Registrierung / Userfields modern
+   ================================================== */
+
+.vm-userfield-fieldset {
+    margin-top: .5rem;
+}
+
+.vm-userfields-group {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.vm-userfield-row {
+    display: grid;
+    grid-template-columns: minmax(180px, 240px) minmax(0, 1fr);
+    gap: 0.75rem 1rem;
+    align-items: start;
+}
+
+.vm-userfield-input {
+    min-width: 0;
+}
+
+
+.vm-userfield-input .radio,
+.vm-userfield-input .checkbox {
+    width: auto;
+}
+
+.vm-userfield-input label {
+    margin-right: 1rem;
+    font-weight: 400;
+}
+
+/* Feld Vollständiger Name ausblenden und verstecken */
+.vm-userfield-row.name {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+}
+
+.vm-newsletter-row {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.75rem;
+    /*align-items: start;*/
+    margin: 1.25rem 0;
+    padding: 1rem 1.25rem;
+    border: 1px solid #d8dde3;
+    /*border-radius: 0.75rem;*/
+    background: #fff;
+}
+
+.vm-newsletter-check input[type="checkbox"] {
+    width: 1.1rem;
+    height: 1.1rem;
+    margin-top: 0.15rem;
+}
+
+.vm-newsletter-label label {
+    margin: 0;
+    /*line-height: 1.45;*/
+}
+
+.asterisk {
+    color: #c62828;
+    font-weight: 700;
+}
+
+@media (max-width: 991.98px) {
+    .vm-userfield-row {
+        grid-template-columns: 1fr;
+    }
+
+    .vm-userfield-label {
+        margin-bottom: 0.15rem;
+    }
+}
+
+
+#fancybox-content {
+    max-width: min(900px, 92vw);
+    max-height: 80vh;
+    overflow: hidden;
+}
+
+/* Scrollcontainer */
+#fancybox-content > div {
+    max-height: 80vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 10px;
+}
+
+
+
+/* ==================================================
+   VM CART + CHECKOUT WICHTIG ÜBERARBEITEN WEGEN ALTLASTEN
+   ================================================== */
+
+.table-step{
+  background-color: #FFFFFF;
+  padding: 10px;
+  margin-bottom: 30px;
+}
+
+/* NUR Warenkorb: table/td Regeln scopen */
+.com_virtuemart .cart-summary table{
+  width: 99.9% !important;
+  margin-bottom: 10px !important;
+}
+.com_virtuemart .cart-summary td{
+  padding: 8px 10px;
+}
+
+td.key{ padding: 0 6px; width: 150px; } /* falls das im Warenkorb gebraucht wird */
+.user-details tr, .user-details td, .user-details th{ border: 1px; }
+
+
+th, td {
+    border-bottom: thin solid #B4B1B1; /* Schwarzer Rahmen */
+}
+
+
+.user-details tr:nth-child(even) td{ background-color: #f9f9f9; }
+
+table.cart-summary tr th{
+  background-color: #dedede !important;
+  background-image:none !important;
+  border: solid #777 1px !important;
+  padding: 6px 10px !Important;
+}
+
+span.cart-images{ width: 50px; display: inline-block; }
+
+.cart-summary span.PricesalesPrice{
+  font-size: clamp(0.75rem, 0.9rem, 1.0rem) !important;
+}
+
+/* VM Icons/Sprites im Warenkorb */
+.vmicon, .vmiconFE{
+  background-image: url("../images/vm2-sprite.png") !important;
+}
+
+button.vmicon, button.vmicon:hover{
+  background-color: transparent !important;
+  padding: 0px !important;
+  border-width: 0px !important;
+}
+
+.vm2-add_quantity_cart{
+  background-position: 0 0;
+  width: 28px !important;
+  height: 26px;
+  vertical-align: middle !important;
+  border: 0px;
+  cursor: pointer;
+}
+
+.vm2-remove_from_cart{
+  background-position: 0 -212px !important;
+  border: 0 none;
+  cursor: pointer;
+  display: inline-block;
+  height: 32px;
+  vertical-align: middle;
+  width: 26px;
+  padding: 0px;
+  margin: 0px 2px;
+}
+
+/* cart panel */
+a#cartpanel{ background-color: #ffffff; }
+
+/* Warenkorb-Modul-Button */
+.cart-button{
+  position: relative;
+  width: 33px;
+  height: 33px;
+  margin: 3px 0px 1px 4px;
+  text-align: center;
+  cursor: pointer;
+  border-radius: 100%;
+  box-shadow: 0px 1px 2px rgba(0,0,0,0.22);
+  background-color: #fff;
+  color: #000000;
+}
+.cart-button i{
+  position: relative;
+  z-index: 2;
+  display: block;
+  font-size: 18px;
+  line-height: 36px;
+}
+
+
+.product-fields .product-field + .product-field {
+    margin-top: .2rem;
+}
+
+/* Generic Toggle (Shipment + Payment) */
+.fd-shipment-head,
+.fd-payment-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:.75rem;
+}
+
+.fd-shipment-current,
+.fd-payment-current{ 
+	margin-top:.25rem;
+	display: flex;
+    flex-direction: column;
+}
+
+.fd-shipment-summary,
+.fd-payment-summary{
+  list-style:none;
+  cursor:pointer;
+  user-select:none;
+  display:inline-flex;
+  align-items:center;
+  padding:.35rem .6rem;
+  border:1px solid rgba(0,0,0,.15);
+  border-radius:.375rem;
+  background:#fff;
+  font-weight:600;
+}
+
+.fd-shipment-summary::-webkit-details-marker,
+.fd-payment-summary::-webkit-details-marker{ display:none; }
+.fd-shipment-summary::marker,
+.fd-payment-summary::marker{ content:""; }
+
+.fd-shipment-body,
+.fd-payment-body{ margin-top:.75rem; }
+
+.vmshipment_name {
+	font-weight: 600;
+}
+
+.vmshipment_description {
+	font-style: italic;
+    font-size: .85rem;
+}
+
+.vm-fieldset-customer-note {
+	margin-top: 2em;
+}
+
+.vmpayment_name {
+	font-weight: 600;
+}
+
+.vmpayment_description {
+	font-style: italic;
+    font-size: .85rem;
+}
+
+.vm-fieldset-customer-note .form-control {
+    height: 7em;
+}
+
+
+
+
+
+/* ==================================================
+   ALT / DEPRECATED (nur zur Sicherheit aufbewahren)
+   ==================================================
+   Hier sammeln wir später bewusst Altlasten, falls du
+   nochmal vergleichen willst. Im Moment leer.
+   ================================================== */
