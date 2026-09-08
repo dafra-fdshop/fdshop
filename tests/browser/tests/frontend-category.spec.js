@@ -32,18 +32,29 @@ test('menu category renders mapped visible products and complete cards', async (
   await expect(product).toContainText('Brenndauer');
   await expect(product).toContainText('Steighöhe');
   await expect(product.locator('.fdshop-ribbon')).toHaveCount(3);
-  await expect(product.getByRole('link', { name: 'Details' })).toHaveAttribute('href', /\/batterien\//);
+  const detailLink = product.getByRole('link', { name: 'Details', exact: true });
+  await expect(detailLink).toHaveAttribute('href', /\/batterien\//);
+  const detailHref = await detailLink.getAttribute('href');
+  await expect(product.locator('.fdshop-card__image-link')).toHaveAttribute('href', detailHref);
+  await expect(product.locator('.fdshop-card__title a')).toHaveAttribute('href', detailHref);
 
   await expect(page.locator('[data-product-id="900103"] img')).toHaveAttribute('src', /e2e-fixture-product\.svg$/);
   await expect(page.locator('[data-product-id="900104"] img')).toHaveAttribute('src', /product-placeholder\.svg$/);
   for (const status of ['Verfügbar', 'wenige Verfügbar', 'Bestellbar', 'wenige Bestellbar', 'Ausverkauft']) {
-    await expect(page.locator('.fdshop-card__availability', { hasText: status }).first()).toBeVisible();
+    await expect(page.locator('.fdshop-stock', { hasText: status }).first()).toBeVisible();
   }
+  await expect(page.locator('.fdshop-stock--normal', { hasText: 'Verfügbar' }).first()).toBeVisible();
+  await expect(page.locator('.fdshop-stock--normal', { hasText: 'Bestellbar' }).first()).toBeVisible();
+  await expect(page.locator('.fdshop-stock--low', { hasText: 'wenige Verfügbar' }).first()).toBeVisible();
+  await expect(page.locator('.fdshop-stock--low', { hasText: 'wenige Bestellbar' }).first()).toBeVisible();
+  await expect(page.locator('.fdshop-stock--none', { hasText: 'Ausverkauft' }).first()).toBeVisible();
+  await expect(page.locator('.fdshop-category')).not.toContainText('Verfügbarkeit:');
 
   const discount = page.locator('[data-product-id="900105"]');
   await expect(discount.locator('[data-effective-price] strong')).toHaveText('39,99 EUR');
   await expect(discount.locator('.fdshop-card__regular-price')).toHaveText('50,00 EUR');
   await expect(page.locator('[data-product-id="900100"] [data-effective-price] strong')).toHaveText('19,99 EUR');
+  await expect(page.locator('[data-product-id="900100"] [data-effective-price] small')).toHaveText('inkl. MwSt.');
 
   await expect(page.locator('iframe')).toHaveCount(0);
   await expect(product.getByRole('button', { name: 'Video' })).toBeVisible();

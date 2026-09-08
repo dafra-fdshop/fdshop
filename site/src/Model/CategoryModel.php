@@ -177,7 +177,7 @@ final class CategoryModel extends ListModel
             ])
             ->from($db->quoteName('#__fdshop_media'))
             ->whereIn($db->quoteName('product_id'), $productIds)
-            ->whereIn($db->quoteName('media_type'), ['image', 'video'], ParameterType::STRING)
+            ->whereIn($db->quoteName('media_type'), ['image', 'youtube'], ParameterType::STRING)
             ->order($db->quoteName('product_id') . ' ASC')
             ->order($db->quoteName('is_primary') . ' DESC')
             ->order($db->quoteName('ordering') . ' ASC')
@@ -195,7 +195,7 @@ final class CategoryModel extends ListModel
                 $grouped[$productId]['image'] = $path !== '' ? $path : null;
             }
 
-            if ($medium->media_type === 'video' && $grouped[$productId]['video'] === null) {
+            if ($medium->media_type === 'youtube' && $grouped[$productId]['video'] === null) {
                 $grouped[$productId]['video'] = $this->normaliseVideoUrl((string) $medium->external_url);
             }
         }

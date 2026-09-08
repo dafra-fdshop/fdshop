@@ -6,11 +6,13 @@ SET `in_stock` = CASE `id`
     WHEN 900100 THEN 'Verfügbar'
     WHEN 900103 THEN 'Bestellbar'
     WHEN 900104 THEN 'wenige Bestellbar'
+    WHEN 900105 THEN 'Verfügbar'
     WHEN 900106 THEN 'Ausverkauft'
     WHEN 900107 THEN 'wenige Verfügbar'
+    WHEN 900108 THEN 'Verfügbar'
     ELSE `in_stock`
 END
-WHERE `id` IN (900100,900103,900104,900106,900107);
+WHERE `id` IN (900100,900103,900104,900105,900106,900107,900108);
 
 UPDATE `__PREFIX__fdshop_products`
 SET `nem` = 125.500, `shot_count` = 25.000, `caliber` = '20 mm', `burn_time` = '35 s', `rise_height` = '30 m',
@@ -22,7 +24,7 @@ INSERT IGNORE INTO `__PREFIX__fdshop_product_category_map` (`id`,`product_id`,`c
 
 INSERT INTO `__PREFIX__fdshop_media`
 (`id`,`product_id`,`media_type`,`external_url`,`file_name`,`file_type`,`path_standard`,`path_small`,`path_mobile`,`path_invoice`,`is_primary`,`ordering`,`created`,`created_by`)
-VALUES (900341,900100,'video','https://www.youtube.com/watch?v=aqz-KE-bpKQ',NULL,NULL,NULL,NULL,NULL,NULL,0,2,'2026-01-01 00:00:00',0);
+VALUES (900341,900100,'youtube','https://www.youtube.com/embed/aqz-KE-bpKQ',NULL,NULL,NULL,NULL,NULL,NULL,0,2,'2026-01-01 00:00:00',0);
 
 INSERT INTO `__PREFIX__fdshop_products`
 (`id`,`manufacturer_id`,`product_name`,`alias`,`short_description`,`description`,`buyer_group_id`,`sale_price`,`discount_price`,`discount_active`,`currency`,`min_order_qty`,`max_order_qty`,`step_order_qty`,`is_active`,`is_deleted`,`publish_up`,`publish_down`,`meta_title`,`in_stock`,`unit_type`,`unit_quantity`)

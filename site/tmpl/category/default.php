@@ -24,14 +24,14 @@ $resultsText = sprintf('%d–%d von %d', $first, $last, $total);
         <input type="hidden" name="option" value="com_fdshop">
         <input type="hidden" name="view" value="category">
         <input type="hidden" name="id" value="<?php echo (int) $this->category->id; ?>">
-        <label><span>Sortierung</span><select name="sortdir" data-fdshop-sort>
+        <label><span class="form-label">Sortierung</span><select class="form-select form-select-sm" name="sortdir" data-fdshop-sort>
             <?php foreach ($this->sortOptions as $value => $label) : ?>
                 <option value="<?php echo $this->escape($value); ?>"<?php echo $selectedSort === $value ? ' selected' : ''; ?>><?php echo $this->escape($label); ?></option>
             <?php endforeach; ?>
         </select></label>
         <input type="hidden" name="sort" value="<?php echo $this->escape($sort); ?>" data-fdshop-sort-field>
         <input type="hidden" name="dir" value="<?php echo $this->escape($direction); ?>" data-fdshop-sort-direction>
-        <label><span>Produkte pro Seite</span><select name="limit" data-fdshop-submit>
+        <label><span class="form-label">Produkte pro Seite</span><select class="form-select form-select-sm" name="limit" data-fdshop-submit>
             <?php foreach ($this->limitOptions as $option) : ?>
                 <option value="<?php echo (int) $option; ?>"<?php echo $limit === $option ? ' selected' : ''; ?>><?php echo (int) $option; ?></option>
             <?php endforeach; ?>
@@ -49,7 +49,9 @@ $resultsText = sprintf('%d–%d von %d', $first, $last, $total);
             <?php foreach ($this->items as $item) : ?>
                 <article class="fdshop-card" data-product-id="<?php echo (int) $item->id; ?>" data-price="<?php echo $this->escape((string) $item->current_price); ?>">
                     <div class="fdshop-card__media">
-                        <img src="<?php echo $this->escape($item->image_url); ?>" alt="<?php echo $this->escape((string) $item->product_name); ?>" loading="lazy" width="400" height="400">
+                        <a class="fdshop-card__image-link" href="<?php echo $this->escape($item->detail_url); ?>" aria-label="Details zu <?php echo $this->escape((string) $item->product_name); ?>">
+                            <img src="<?php echo $this->escape($item->image_url); ?>" alt="<?php echo $this->escape((string) $item->product_name); ?>" loading="lazy" width="400" height="400">
+                        </a>
                         <div class="fdshop-card__ribbons" aria-label="Produktkennzeichnungen">
                             <?php if ((int) $item->ribbon_new === 1) : ?><span class="fdshop-ribbon fdshop-ribbon--new">Neu</span><?php endif; ?>
                             <?php if ((int) $item->ribbon_hot === 1) : ?><span class="fdshop-ribbon fdshop-ribbon--hot">Hot</span><?php endif; ?>
@@ -57,23 +59,26 @@ $resultsText = sprintf('%d–%d von %d', $first, $last, $total);
                         </div>
                     </div>
                     <div class="fdshop-card__body">
-                        <h2 class="fdshop-card__title"><?php echo $this->escape((string) $item->product_name); ?></h2>
+                        <h2 class="fdshop-card__title"><a href="<?php echo $this->escape($item->detail_url); ?>"><?php echo $this->escape((string) $item->product_name); ?></a></h2>
                         <?php if (trim((string) $item->short_description) !== '') : ?><p class="fdshop-card__description"><?php echo $this->escape((string) $item->short_description); ?></p><?php endif; ?>
-                        <p class="fdshop-card__availability"><span>Verfügbarkeit:</span> <strong><?php echo $this->escape((string) $item->in_stock); ?></strong></p>
-                        <dl class="fdshop-card__facts">
-                            <?php if ((float) $item->nem > 0) : ?><div><dt>NEM</dt><dd><?php echo $this->escape(rtrim(rtrim(number_format((float) $item->nem, 3, ',', '.'), '0'), ',')); ?> g</dd></div><?php endif; ?>
-                            <?php if ((float) $item->shot_count > 0) : ?><div><dt>Schusszahl</dt><dd><?php echo $this->escape(rtrim(rtrim(number_format((float) $item->shot_count, 3, ',', '.'), '0'), ',')); ?></dd></div><?php endif; ?>
-                            <?php if (trim((string) $item->caliber) !== '' && (float) $item->caliber !== 0.0) : ?><div><dt>Kaliber</dt><dd><?php echo $this->escape((string) $item->caliber); ?></dd></div><?php endif; ?>
-                            <?php if (trim((string) $item->burn_time) !== '' && (float) $item->burn_time !== 0.0) : ?><div><dt>Brenndauer</dt><dd><?php echo $this->escape((string) $item->burn_time); ?></dd></div><?php endif; ?>
-                            <?php if (trim((string) $item->rise_height) !== '' && (float) $item->rise_height !== 0.0) : ?><div><dt>Steighöhe</dt><dd><?php echo $this->escape((string) $item->rise_height); ?></dd></div><?php endif; ?>
-                        </dl>
-                        <div class="fdshop-card__price" data-effective-price="<?php echo $this->escape((string) $item->current_price); ?>">
-                            <?php if ($item->has_discount) : ?><span class="fdshop-card__regular-price"><?php echo $this->escape($item->regular_price_formatted); ?></span><?php endif; ?>
-                            <strong><?php echo $this->escape($item->price_formatted); ?></strong>
-                        </div>
                         <div class="fdshop-card__actions">
-                            <a class="fdshop-button" href="<?php echo $this->escape($item->detail_url); ?>">Details</a>
-                            <?php if ($item->media['video'] !== null) : ?><button class="fdshop-button fdshop-button--video" type="button" data-fdshop-video="<?php echo $this->escape($item->media['video']); ?>" data-product-name="<?php echo $this->escape((string) $item->product_name); ?>">Video</button><?php endif; ?>
+                            <a class="btn btn-primary btn-sm" href="<?php echo $this->escape($item->detail_url); ?>">Details</a>
+                            <?php if ($item->media['video'] !== null) : ?><button class="btn btn-dark btn-sm" type="button" data-fdshop-video="<?php echo $this->escape($item->media['video']); ?>" data-product-name="<?php echo $this->escape((string) $item->product_name); ?>">Video</button><?php endif; ?>
+                        </div>
+                        <div class="fdshop-card__info">
+                            <p class="fdshop-stock <?php echo $this->escape($item->stock_class); ?>"><strong><?php echo $this->escape((string) $item->in_stock); ?></strong></p>
+                            <dl class="fdshop-card__facts">
+                                <?php if ((float) $item->nem > 0) : ?><div><dt>NEM</dt><dd><?php echo $this->escape(rtrim(rtrim(number_format((float) $item->nem, 3, ',', '.'), '0'), ',')); ?> g</dd></div><?php endif; ?>
+                                <?php if ((float) $item->shot_count > 0) : ?><div><dt>Schusszahl</dt><dd><?php echo $this->escape(rtrim(rtrim(number_format((float) $item->shot_count, 3, ',', '.'), '0'), ',')); ?></dd></div><?php endif; ?>
+                                <?php if (trim((string) $item->caliber) !== '' && (float) $item->caliber !== 0.0) : ?><div><dt>Kaliber</dt><dd><?php echo $this->escape((string) $item->caliber); ?></dd></div><?php endif; ?>
+                                <?php if (trim((string) $item->burn_time) !== '' && (float) $item->burn_time !== 0.0) : ?><div><dt>Brenndauer</dt><dd><?php echo $this->escape((string) $item->burn_time); ?></dd></div><?php endif; ?>
+                                <?php if (trim((string) $item->rise_height) !== '' && (float) $item->rise_height !== 0.0) : ?><div><dt>Steighöhe</dt><dd><?php echo $this->escape((string) $item->rise_height); ?></dd></div><?php endif; ?>
+                            </dl>
+                            <div class="fdshop-card__price" data-effective-price="<?php echo $this->escape((string) $item->current_price); ?>">
+                                <?php if ($item->has_discount) : ?><span class="fdshop-card__regular-price"><?php echo $this->escape($item->regular_price_formatted); ?></span><?php endif; ?>
+                                <strong><?php echo $this->escape($item->price_formatted); ?></strong>
+                                <small>inkl. MwSt.</small>
+                            </div>
                         </div>
                     </div>
                 </article>

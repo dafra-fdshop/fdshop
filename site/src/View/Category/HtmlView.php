@@ -45,6 +45,13 @@ final class HtmlView extends BaseHtmlView
 
         $root = rtrim(Uri::root(true), '/');
         $placeholder = $root . '/media/com_fdshop/images/product-placeholder.svg';
+        $stockClasses = [
+            'Verfügbar'          => 'fdshop-stock--normal',
+            'Bestellbar'         => 'fdshop-stock--normal',
+            'wenige Verfügbar'   => 'fdshop-stock--low',
+            'wenige Bestellbar'  => 'fdshop-stock--low',
+            'Ausverkauft'        => 'fdshop-stock--none',
+        ];
 
         foreach ($this->items as $item) {
             $item->detail_url = RouteHelper::getProductRoute((int) $item->id, (int) $category->id);
@@ -53,6 +60,7 @@ final class HtmlView extends BaseHtmlView
                 : $placeholder;
             $item->price_formatted = $this->formatPrice((float) $item->current_price, (string) $item->currency);
             $item->regular_price_formatted = $this->formatPrice((float) $item->sale_price, (string) $item->currency);
+            $item->stock_class = $stockClasses[(string) $item->in_stock] ?? 'fdshop-stock--none';
         }
 
         Factory::getApplication()->getDocument()->getWebAssetManager()
