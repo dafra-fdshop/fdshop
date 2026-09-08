@@ -32,6 +32,9 @@ test('menu category renders mapped visible products and complete cards', async (
     .toEqual(['NEM', 'Schusszahl', 'Kaliber', 'Brenndauer', 'Steighöhe']);
   await expect(page.locator('[data-product-id="901001"] .fdshop-card__fact dd')).toHaveText(['-', '-', '-', '-', '-']);
   await expect(product.locator('.fdshop-ribbon')).toHaveCount(3);
+  await expect(product).toHaveCSS('border-top-width', '4px');
+  await expect(product).toHaveCSS('border-top-color', 'rgb(173, 181, 189)');
+  await expect(product).toHaveCSS('background-color', 'rgb(255, 255, 255)');
   const detailLink = product.getByRole('link', { name: 'Details', exact: true });
   await expect(detailLink).toHaveAttribute('href', /\/batterien\//);
   const detailHref = await detailLink.getAttribute('href');
@@ -57,8 +60,18 @@ test('menu category renders mapped visible products and complete cards', async (
   await expect(page.locator('[data-product-id="900100"] [data-effective-price] small')).toHaveText('inkl. MwSt.');
 
   await expect(page.locator('iframe')).toHaveCount(0);
-  await expect(product.getByRole('button', { name: 'Video' })).toBeVisible();
-  await expect(page.locator('[data-product-id="900104"] button', { hasText: 'Video' })).toHaveCount(0);
+  const videoButton = product.getByRole('button', { name: 'Produktvideo zu E2E Produkt Aktiv ansehen' });
+  await expect(videoButton).toBeVisible();
+  await expect(videoButton).toHaveText('');
+  await expect(videoButton.locator('.fa-solid.fa-video')).toHaveCount(1);
+  await expect(product.locator('.fdshop-card__actions > .fdshop-stock')).toHaveCount(1);
+  expect(await product.locator('.fdshop-card__actions').evaluate(element =>
+    new Set([...element.children].map(child => Math.round(child.getBoundingClientRect().top))).size
+  )).toBe(1);
+  const productWithoutVideo = page.locator('[data-product-id="900104"]');
+  await expect(productWithoutVideo.locator('.fdshop-card__actions button')).toHaveCount(0);
+  await expect(productWithoutVideo.locator('.fdshop-card__actions')).toHaveCount(1);
+  await expect(productWithoutVideo.locator('.fdshop-card__actions > *')).toHaveCount(2);
   diagnostics.expectClean();
 });
 
@@ -127,7 +140,7 @@ test('video iframe is created only by user action and removed on close', async (
   await openCategory(page);
   const product = page.locator('[data-product-id="900100"]');
   await expect(page.locator('iframe')).toHaveCount(0);
-  await product.getByRole('button', { name: 'Video' }).click();
+  await product.getByRole('button', { name: 'Produktvideo zu E2E Produkt Aktiv ansehen' }).click();
   await expect(page.locator('[data-fdshop-video-dialog]')).toBeVisible();
   await expect(page.locator('iframe')).toHaveAttribute('src', 'https://www.youtube-nocookie.com/embed/aqz-KE-bpKQ');
   await page.locator('[data-fdshop-video-close]').click();
