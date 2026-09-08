@@ -25,12 +25,12 @@ test('menu category renders mapped visible products and complete cards', async (
 
   const product = page.locator('[data-product-id="900100"]');
   await expect(product).toContainText('Verfügbar');
-  await expect(product).toContainText('NEM');
   await expect(product).toContainText('125,5 g');
-  await expect(product).toContainText('Schusszahl');
-  await expect(product).toContainText('Kaliber');
-  await expect(product).toContainText('Brenndauer');
-  await expect(product).toContainText('Steighöhe');
+  await expect(product.locator('.fdshop-card__fact')).toHaveCount(5);
+  await expect(product.locator('.fdshop-card__fact img')).toHaveCount(5);
+  expect(await product.locator('.fdshop-card__fact').evaluateAll(items => items.map(item => item.title)))
+    .toEqual(['NEM', 'Schusszahl', 'Kaliber', 'Brenndauer', 'Steighöhe']);
+  await expect(page.locator('[data-product-id="901001"] .fdshop-card__fact dd')).toHaveText(['-', '-', '-', '-', '-']);
   await expect(product.locator('.fdshop-ribbon')).toHaveCount(3);
   const detailLink = product.getByRole('link', { name: 'Details', exact: true });
   await expect(detailLink).toHaveAttribute('href', /\/batterien\//);
@@ -38,8 +38,8 @@ test('menu category renders mapped visible products and complete cards', async (
   await expect(product.locator('.fdshop-card__image-link')).toHaveAttribute('href', detailHref);
   await expect(product.locator('.fdshop-card__title a')).toHaveAttribute('href', detailHref);
 
-  await expect(page.locator('[data-product-id="900103"] img')).toHaveAttribute('src', /e2e-fixture-product\.svg$/);
-  await expect(page.locator('[data-product-id="900104"] img')).toHaveAttribute('src', /product-placeholder\.svg$/);
+  await expect(page.locator('[data-product-id="900103"] .fdshop-card__media img')).toHaveAttribute('src', /e2e-fixture-product\.svg$/);
+  await expect(page.locator('[data-product-id="900104"] .fdshop-card__media img')).toHaveAttribute('src', /product-placeholder\.svg$/);
   for (const status of ['Verfügbar', 'wenige Verfügbar', 'Bestellbar', 'wenige Bestellbar', 'Ausverkauft']) {
     await expect(page.locator('.fdshop-stock', { hasText: status }).first()).toBeVisible();
   }
@@ -76,6 +76,11 @@ test('detail placeholder is reachable and card grid responds with four to one co
     await page.setViewportSize({ width, height: 900 });
     const template = await page.locator('.fdshop-products').evaluate(element => getComputedStyle(element).gridTemplateColumns);
     expect(template.trim().split(/\s+/)).toHaveLength(columns);
+    const factLayout = await page.locator('[data-product-id="900100"] .fdshop-card__facts').evaluate(element => ({
+      columns: getComputedStyle(element).gridTemplateColumns.trim().split(/\s+/).length,
+      rows: new Set([...element.children].map(item => Math.round(item.getBoundingClientRect().top))).size,
+    }));
+    expect(factLayout).toEqual({ columns: 5, rows: 1 });
   }
   diagnostics.expectClean();
 });
