@@ -29,6 +29,10 @@ final class Router extends RouterView
         $product->setKey('id')->setParent($category, 'catid');
         $this->registerView($product);
 
+        $manufacturer = new RouterViewConfiguration('manufacturer');
+        $manufacturer->setKey('id');
+        $this->registerView($manufacturer);
+
         parent::__construct($app, $menu);
         $this->attachRule(new MenuRules($this));
         $this->attachRule(new StandardRules($this));
@@ -53,6 +57,20 @@ final class Router extends RouterView
     }
 
     public function getProductId($segment, $query): int|false
+    {
+        $id = (int) $segment;
+
+        return $id > 0 ? $id : false;
+    }
+
+    public function getManufacturerSegment($id, $query): array
+    {
+        $manufacturerId = (int) $id;
+
+        return $manufacturerId > 0 ? [$manufacturerId => (string) $id] : [];
+    }
+
+    public function getManufacturerId($segment, $query): int|false
     {
         $id = (int) $segment;
 

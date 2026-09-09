@@ -24,5 +24,6 @@ compose exec -T --env "MYSQL_PWD=${MARIADB_PASSWORD}" db mariadb --user="$MARIAD
 [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_products p JOIN ${JOOMLA_DB_PREFIX}fdshop_product_category_map pcm ON pcm.product_id=p.id WHERE pcm.category_id=900010 AND p.is_active=1 AND p.is_deleted=0 AND (p.publish_up IS NULL OR p.publish_up<=UTC_TIMESTAMP()) AND (p.publish_down IS NULL OR p.publish_down>=UTC_TIMESTAMP());")" == 30 ]] || fail 'expected 30 visible category products'
 [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}menu WHERE id=900900 AND alias='batterien' AND component_id=${component_id};")" == 1 ]] || fail 'frontend menu item missing'
 [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_media WHERE id=900341 AND product_id=900100 AND media_type='youtube' AND external_url='https://www.youtube.com/embed/aqz-KE-bpKQ';")" == 1 ]] || fail 'canonical YouTube medium missing'
+[[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_media WHERE product_id=900100 AND media_type='image';")" == 2 ]] || fail 'product gallery images missing'
 [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_media WHERE media_type='video';")" == 0 ]] || fail 'non-canonical video medium present'
 printf 'FDShop frontend category fixtures loaded: category=900010 visible_products=30 menu=/batterien\n'

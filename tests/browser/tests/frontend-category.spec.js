@@ -75,14 +75,14 @@ test('menu category renders mapped visible products and complete cards', async (
   diagnostics.expectClean();
 });
 
-test('detail placeholder is reachable and card grid responds with four to one columns', async ({ page, baseURL }) => {
+test('product detail is reachable and card grid responds with four to one columns', async ({ page, baseURL }) => {
   const diagnostics = await installDiagnostics(page, baseURL);
+  await page.route('https://i.ytimg.com/**', route => route.fulfill({ status: 200, contentType: 'image/svg+xml', body: '<svg xmlns="http://www.w3.org/2000/svg"/>' }));
   await openCategory(page);
   const detailUrl = await page.locator('[data-product-id="900100"] a', { hasText: 'Details' }).getAttribute('href');
   const response = await page.goto(detailUrl);
   expect(response?.status()).toBe(200);
-  await expect(page.locator('.fdshop-product-placeholder h1')).toHaveText('E2E Produkt Aktiv');
-  await expect(page.getByRole('link', { name: 'Zurück zur Kategorie' })).toBeVisible();
+  await expect(page.locator('.fdshop-product h1')).toHaveText('E2E Produkt Aktiv');
 
   await page.goto('/batterien');
   for (const [width, columns] of [[1400, 4], [1000, 3], [700, 2], [480, 1]]) {
@@ -95,6 +95,59 @@ test('detail placeholder is reachable and card grid responds with four to one co
     }));
     expect(factLayout).toEqual({ columns: 5, rows: 1 });
   }
+  diagnostics.expectClean();
+});
+
+test('product detail renders gallery, video, manufacturer and public product information', async ({ page, baseURL }) => {
+  const diagnostics = await installDiagnostics(page, baseURL);
+  await page.route('https://i.ytimg.com/**', route => route.fulfill({ status: 200, contentType: 'image/svg+xml', body: '<svg xmlns="http://www.w3.org/2000/svg"/>' }));
+  await openCategory(page);
+  const detailHref = await page.locator('[data-product-id="900100"] a', { hasText: 'Details' }).getAttribute('href');
+  await page.goto(detailHref);
+  const product = page.locator('.fdshop-product[data-product-id="900100"]');
+
+  await expect(product.getByRole('heading', { level: 1 })).toHaveText('E2E Produkt Aktiv');
+  await expect(product.locator('[data-fdshop-main-image]')).toHaveAttribute('src', /e2e-fixture-product\.svg$/);
+  await expect(product.locator('[data-fdshop-thumbnail]')).toHaveCount(2);
+  await product.getByRole('button', { name: 'Produktbild 2 anzeigen' }).click();
+  await expect(product.locator('[data-fdshop-main-image]')).toHaveAttribute('src', /product-placeholder\.svg$/);
+
+  const manufacturer = product.getByRole('link', { name: 'E2E Hersteller Aktiv' });
+  await manufacturer.click();
+  await expect(page.locator('.fdshop-manufacturer h1')).toHaveText('E2E Hersteller Aktiv');
+  await page.goBack();
+
+  await expect(product.locator('.fdshop-product__fact')).toHaveCount(5);
+  await expect(product.locator('.fdshop-product__fact img')).toHaveCount(5);
+  await expect(product).toContainText('125,5 g');
+  await expect(product.locator('.fdshop-stock')).toHaveText(/Verfügbar/);
+  await expect(product.locator('[data-effective-price] strong')).toHaveText('19,99 EUR');
+  await expect(product.locator('[data-effective-price] small')).toHaveText('inkl. MwSt.');
+  await expect(product.locator('.fdshop-product__description')).toContainText('Aktiv mit Bestand');
+  await expect(product.locator('iframe')).toHaveCount(0);
+  await expect(product.locator('.fdshop-product__video-play img')).toHaveAttribute('src', /i\.ytimg\.com\/vi\/aqz-KE-bpKQ\/hqdefault\.jpg/);
+  await page.route('https://www.youtube-nocookie.com/**', route => route.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html><title>Video fixture</title>' }));
+  await product.getByRole('button', { name: 'Produktvideo zu E2E Produkt Aktiv abspielen' }).click();
+  await expect(product.locator('iframe')).toHaveAttribute('src', 'https://www.youtube-nocookie.com/embed/aqz-KE-bpKQ');
+
+  await expect(product.locator('[class*="rating"], [class*="review"]')).toHaveCount(0);
+  await expect(product).not.toContainText(/Vorheriges Produkt|Nächstes Produkt|PDF|Drucken|Freund empfehlen|Frage zu diesem Produkt|SKU|GTIN|Gewicht|Länge|Breite/);
+  diagnostics.expectClean();
+});
+
+test('product detail rejects unpublished products and handles fallback and discount cases', async ({ page, baseURL }) => {
+  const diagnostics = await installDiagnostics(page, baseURL);
+  const unpublished = await page.request.get('/index.php?option=com_fdshop&view=product&id=900101&catid=900010');
+  expect(unpublished.status()).toBe(404);
+
+  await page.goto('/index.php?option=com_fdshop&view=product&id=900104&catid=900010');
+  await expect(page.locator('[data-fdshop-main-image]')).toHaveAttribute('src', /product-placeholder\.svg$/);
+  await expect(page.locator('[data-fdshop-thumbnail]')).toHaveCount(0);
+  await expect(page.locator('[data-fdshop-product-video]')).toHaveCount(0);
+
+  await page.goto('/index.php?option=com_fdshop&view=product&id=900105&catid=900010');
+  await expect(page.locator('[data-effective-price] strong')).toHaveText('39,99 EUR');
+  await expect(page.locator('.fdshop-product__regular-price')).toHaveText('50,00 EUR');
   diagnostics.expectClean();
 });
 
