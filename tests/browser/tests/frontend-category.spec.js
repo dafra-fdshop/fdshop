@@ -114,6 +114,23 @@ test('product detail renders gallery, video, manufacturer and public product inf
 
   const manufacturer = product.getByRole('link', { name: 'E2E Hersteller Aktiv' });
   await expect(product.locator('.fdshop-product__manufacturer')).not.toContainText('Hersteller:');
+  expect(await product.locator('.fdshop-product__heading').evaluate(element => {
+    const heading = element.querySelector('h1').getBoundingClientRect();
+    const manufacturerName = element.querySelector('.fdshop-product__manufacturer').getBoundingClientRect();
+    const shortDescription = element.nextElementSibling.getBoundingClientRect();
+    return {
+      sameRow: Math.abs(heading.top - manufacturerName.top) < 2,
+      manufacturerRight: manufacturerName.left > heading.left,
+      descriptionBelow: shortDescription.top >= Math.max(heading.bottom, manufacturerName.bottom),
+    };
+  })).toEqual({ sameRow: true, manufacturerRight: true, descriptionBelow: true });
+  await page.setViewportSize({ width: 480, height: 900 });
+  expect(await product.locator('.fdshop-product__heading').evaluate(element => {
+    const heading = element.querySelector('h1').getBoundingClientRect();
+    const manufacturerName = element.querySelector('.fdshop-product__manufacturer').getBoundingClientRect();
+    return manufacturerName.top >= heading.bottom && Math.abs(manufacturerName.left - heading.left) < 2;
+  })).toBe(true);
+  await page.setViewportSize({ width: 1280, height: 720 });
   await manufacturer.click();
   await expect(page.locator('.fdshop-manufacturer h1')).toHaveText('E2E Hersteller Aktiv');
   await page.goBack();
@@ -131,6 +148,7 @@ test('product detail renders gallery, video, manufacturer and public product inf
   await expect(product.locator('.fdshop-product__stock-copy')).toContainText('Im Lager');
   await expect(product.locator('[data-effective-price] strong')).toHaveText('19,99 EUR');
   await expect(product.locator('[data-effective-price] strong')).toHaveCSS('color', 'rgb(224, 167, 33)');
+  await expect(product.locator('.fdshop-product__price')).toHaveCSS('background-color', 'rgb(240, 244, 251)');
   await expect(product.locator('.fdshop-product__regular-price')).toHaveCount(0);
   await expect(product.locator('[data-effective-price] small')).toHaveText('inkl. MwSt.');
   await expect(product.locator('.fdshop-product__description')).toContainText('Aktiv mit Bestand');

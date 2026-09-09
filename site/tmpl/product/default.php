@@ -33,8 +33,10 @@ $factIcons = ['NEM' => 'icon_nem.svg', 'Schusszahl' => 'icon_anzahl.svg', 'Kalib
             <?php endif; ?>
         </section>
         <section class="fdshop-product__details">
-            <h1><?php echo $this->escape((string) $item->product_name); ?></h1>
-            <?php if ($item->manufacturer_url !== '') : ?><p class="fdshop-product__manufacturer"><a href="<?php echo $this->escape($item->manufacturer_url); ?>"><?php echo $this->escape((string) $item->manufacturer_name); ?></a></p><?php endif; ?>
+            <div class="fdshop-product__heading">
+                <h1><?php echo $this->escape((string) $item->product_name); ?></h1>
+                <?php if ($item->manufacturer_url !== '') : ?><p class="fdshop-product__manufacturer"><a href="<?php echo $this->escape($item->manufacturer_url); ?>"><?php echo $this->escape((string) $item->manufacturer_name); ?></a></p><?php endif; ?>
+            </div>
             <?php if (trim((string) $item->short_description) !== '') : ?><div class="fdshop-product__short-description"><?php echo nl2br($this->escape((string) $item->short_description)); ?></div><?php endif; ?>
             <dl class="fdshop-product__facts" aria-label="Technische Produktdaten">
                 <?php foreach ($factValues as $label => $value) : ?><div class="fdshop-product__fact" title="<?php echo $this->escape($label); ?>"><dt class="visually-hidden"><?php echo $this->escape($label); ?></dt><dd aria-label="<?php echo $this->escape($label . ': ' . $value); ?>"><img src="<?php echo $this->escape(\Joomla\CMS\Uri\Uri::root(true) . '/media/com_fdshop/images/product-facts/' . $factIcons[$label]); ?>" alt="" aria-hidden="true" width="42" height="42"><span><?php echo $this->escape($value); ?></span></dd></div><?php endforeach; ?>
