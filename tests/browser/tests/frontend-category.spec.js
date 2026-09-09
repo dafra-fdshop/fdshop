@@ -113,20 +113,36 @@ test('product detail renders gallery, video, manufacturer and public product inf
   await expect(product.locator('[data-fdshop-main-image]')).toHaveAttribute('src', /product-placeholder\.svg$/);
 
   const manufacturer = product.getByRole('link', { name: 'E2E Hersteller Aktiv' });
+  await expect(product.locator('.fdshop-product__manufacturer')).not.toContainText('Hersteller:');
   await manufacturer.click();
   await expect(page.locator('.fdshop-manufacturer h1')).toHaveText('E2E Hersteller Aktiv');
   await page.goBack();
 
   await expect(product.locator('.fdshop-product__fact')).toHaveCount(5);
   await expect(product.locator('.fdshop-product__fact img')).toHaveCount(5);
+  expect(await product.locator('.fdshop-product__facts').evaluate(element => ({
+    columns: getComputedStyle(element).gridTemplateColumns.trim().split(/\s+/).length,
+    rows: new Set([...element.children].map(item => Math.round(item.getBoundingClientRect().top))).size,
+  }))).toEqual({ columns: 5, rows: 1 });
+  await expect(product.locator('.fdshop-product__fact img').first()).toHaveCSS('width', '32px');
   await expect(product).toContainText('125,5 g');
   await expect(product.locator('.fdshop-stock')).toHaveText(/Verfügbar/);
+  await expect(product.locator('.fdshop-product__stock-copy')).toContainText('LAGERBESTAND:');
+  await expect(product.locator('.fdshop-product__stock-copy')).toContainText('Im Lager');
   await expect(product.locator('[data-effective-price] strong')).toHaveText('19,99 EUR');
+  await expect(product.locator('[data-effective-price] strong')).toHaveCSS('color', 'rgb(224, 167, 33)');
+  await expect(product.locator('.fdshop-product__regular-price')).toHaveCount(0);
   await expect(product.locator('[data-effective-price] small')).toHaveText('inkl. MwSt.');
   await expect(product.locator('.fdshop-product__description')).toContainText('Aktiv mit Bestand');
   await expect(product.locator('iframe')).toHaveCount(0);
   await expect(product.locator('.fdshop-product__video-play img')).toHaveAttribute('src', /i\.ytimg\.com\/vi\/aqz-KE-bpKQ\/hqdefault\.jpg/);
+  await expect(product.locator('[data-fdshop-detail-video]')).toHaveCount(2);
+  await expect(product.locator('iframe')).toHaveCount(0);
   await page.route('https://www.youtube-nocookie.com/**', route => route.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html><title>Video fixture</title>' }));
+  await product.getByRole('button', { name: 'Produktvideo 2 zu E2E Produkt Aktiv abspielen' }).click();
+  await expect(product.locator('[data-fdshop-detail-video-dialog] iframe')).toHaveAttribute('src', 'https://www.youtube-nocookie.com/embed/M7lc1UVf-VE');
+  await product.getByRole('button', { name: 'Video schließen' }).click();
+  await expect(product.locator('iframe')).toHaveCount(0);
   await product.getByRole('button', { name: 'Produktvideo zu E2E Produkt Aktiv abspielen' }).click();
   await expect(product.locator('iframe')).toHaveAttribute('src', 'https://www.youtube-nocookie.com/embed/aqz-KE-bpKQ');
 
@@ -144,10 +160,18 @@ test('product detail rejects unpublished products and handles fallback and disco
   await expect(page.locator('[data-fdshop-main-image]')).toHaveAttribute('src', /product-placeholder\.svg$/);
   await expect(page.locator('[data-fdshop-thumbnail]')).toHaveCount(0);
   await expect(page.locator('[data-fdshop-product-video]')).toHaveCount(0);
+  await expect(page.locator('.fdshop-product__stock-copy')).toContainText('Verfügbar ab 15.10.2026');
+
+  await page.goto('/index.php?option=com_fdshop&view=product&id=900106&catid=900010');
+  await expect(page.locator('.fdshop-product__stock-copy')).toContainText('Noch nicht im Lager');
+  await expect(page.locator('.fdshop-stock')).toHaveText(/Ausverkauft/);
 
   await page.goto('/index.php?option=com_fdshop&view=product&id=900105&catid=900010');
   await expect(page.locator('[data-effective-price] strong')).toHaveText('39,99 EUR');
+  await expect(page.locator('[data-effective-price] strong')).toHaveCSS('color', 'rgb(224, 167, 33)');
   await expect(page.locator('.fdshop-product__regular-price')).toHaveText('50,00 EUR');
+  await expect(page.locator('.fdshop-product__regular-price')).toHaveCSS('color', 'rgb(220, 53, 69)');
+  await expect(page.locator('.fdshop-product__regular-price')).toHaveCSS('text-decoration-line', 'line-through');
   diagnostics.expectClean();
 });
 

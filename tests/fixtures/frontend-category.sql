@@ -15,6 +15,14 @@ END
 WHERE `id` IN (900100,900103,900104,900105,900106,900107,900108);
 
 UPDATE `__PREFIX__fdshop_products`
+SET `available_from` = CASE WHEN `id` = 900104 THEN '2026-10-15 00:00:00' ELSE NULL END
+WHERE `id` IN (900104,900106);
+
+UPDATE `__PREFIX__fdshop_products_details`
+SET `is_in_stock` = CASE WHEN `product_id` = 900100 THEN 1 ELSE 0 END
+WHERE `product_id` IN (900100,900104,900106);
+
+UPDATE `__PREFIX__fdshop_products`
 SET `nem` = 125.500, `shot_count` = 25.000, `caliber` = '20 mm', `burn_time` = '35 s', `rise_height` = '30 m',
     `ribbon_new` = 1, `ribbon_hot` = 1, `ribbon_bundle` = 1
 WHERE `id` = 900100;
@@ -31,6 +39,12 @@ INSERT INTO `__PREFIX__fdshop_media`
 VALUES
 (900342,900100,'image',NULL,'e2e-fixture-product.svg','image/svg+xml','images/FDShop/products/e2e-fixture-product.svg',NULL,NULL,NULL,1,1,'2026-01-01 00:00:00',0),
 (900343,900100,'image',NULL,'product-placeholder.svg','image/svg+xml','media/com_fdshop/images/product-placeholder.svg',NULL,NULL,NULL,0,2,'2026-01-01 00:00:00',0);
+
+INSERT INTO `__PREFIX__fdshop_media`
+(`id`,`product_id`,`media_type`,`external_url`,`file_name`,`file_type`,`path_standard`,`path_small`,`path_mobile`,`path_invoice`,`is_primary`,`ordering`,`created`,`created_by`)
+VALUES
+(900344,900100,'youtube','https://youtu.be/M7lc1UVf-VE',NULL,NULL,NULL,NULL,NULL,NULL,0,3,'2026-01-01 00:00:00',0),
+(900345,900100,'youtube','https://www.youtube.com/watch?v=ysz5S6PUM-U',NULL,NULL,NULL,NULL,NULL,NULL,0,4,'2026-01-01 00:00:00',0);
 
 INSERT INTO `__PREFIX__fdshop_products`
 (`id`,`manufacturer_id`,`product_name`,`alias`,`short_description`,`description`,`buyer_group_id`,`sale_price`,`discount_price`,`discount_active`,`currency`,`min_order_qty`,`max_order_qty`,`step_order_qty`,`is_active`,`is_deleted`,`publish_up`,`publish_down`,`meta_title`,`in_stock`,`unit_type`,`unit_quantity`)

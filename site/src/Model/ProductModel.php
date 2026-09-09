@@ -37,6 +37,7 @@ final class ProductModel extends BaseDatabaseModel
                 $db->quoteName('p.discount_active'),
                 $db->quoteName('p.currency'),
                 $db->quoteName('p.in_stock'),
+                $db->quoteName('p.available_from'),
                 $db->quoteName('p.nem'),
                 $db->quoteName('p.shot_count'),
                 $db->quoteName('p.caliber'),
@@ -51,8 +52,10 @@ final class ProductModel extends BaseDatabaseModel
                 $db->quoteName('m.id', 'manufacturer_id'),
                 $db->quoteName('m.manufacturer_name'),
                 $db->quoteName('m.alias', 'manufacturer_alias'),
+                $db->quoteName('d.is_in_stock', 'physically_in_stock'),
             ])
             ->from($db->quoteName('#__fdshop_products', 'p'))
+            ->leftJoin($db->quoteName('#__fdshop_products_details', 'd') . ' ON ' . $db->quoteName('d.product_id') . ' = ' . $db->quoteName('p.id'))
             ->leftJoin($db->quoteName('#__fdshop_manufacturers', 'm') . ' ON ' . $db->quoteName('m.id') . ' = ' . $db->quoteName('p.manufacturer_id') . ' AND ' . $db->quoteName('m.is_active') . ' = 1')
             ->where($db->quoteName('p.id') . ' = :productId')
             ->where($db->quoteName('p.is_active') . ' = 1')
@@ -95,7 +98,7 @@ final class ProductModel extends BaseDatabaseModel
             ->order($db->quoteName('ordering') . ' ASC')
             ->order($db->quoteName('id') . ' ASC');
         $db->setQuery($query);
-        $media = ['images' => [], 'video' => null, 'video_id' => null];
+        $media = ['images' => [], 'videos' => [], 'video' => null, 'video_id' => null];
 
         foreach ($db->loadObjectList() as $medium) {
             if ($medium->media_type === 'image') {
@@ -103,11 +106,15 @@ final class ProductModel extends BaseDatabaseModel
                 if ($path !== '') {
                     $media['images'][] = $path;
                 }
-            } elseif ($medium->media_type === 'youtube' && $media['video'] === null) {
+            } elseif ($medium->media_type === 'youtube') {
                 $videoId = $this->extractYouTubeId((string) $medium->external_url);
                 if ($videoId !== null) {
-                    $media['video_id'] = $videoId;
-                    $media['video'] = 'https://www.youtube-nocookie.com/embed/' . $videoId;
+                    $video = ['id' => $videoId, 'embed_url' => 'https://www.youtube-nocookie.com/embed/' . $videoId];
+                    $media['videos'][] = $video;
+                    if ($media['video'] === null) {
+                        $media['video_id'] = $videoId;
+                        $media['video'] = $video['embed_url'];
+                    }
                 }
             }
         }

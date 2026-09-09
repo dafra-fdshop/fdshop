@@ -45,6 +45,12 @@ final class HtmlView extends BaseHtmlView
             'wenige Verfügbar', 'wenige Bestellbar' => 'fdshop-stock--low',
             default => 'fdshop-stock--none',
         };
+        $item->physical_stock_text = 'Noch nicht im Lager';
+        if ((int) $item->physically_in_stock === 1) {
+            $item->physical_stock_text = 'Im Lager';
+        } elseif (!empty($item->available_from)) {
+            $item->physical_stock_text = 'Verfügbar ab ' . Factory::getDate((string) $item->available_from)->format('d.m.Y', true);
+        }
 
         $document = Factory::getApplication()->getDocument();
         $document->setTitle(trim((string) $item->meta_title) ?: (string) $item->product_name);

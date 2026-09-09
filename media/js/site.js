@@ -67,5 +67,27 @@
             frame.allowFullscreen = true;
             playButton.replaceWith(frame);
         });
+
+        var detailDialog = product.querySelector('[data-fdshop-detail-video-dialog]');
+        var detailContent = product.querySelector('[data-fdshop-detail-video-content]');
+        var detailTitle = product.querySelector('[data-fdshop-detail-video-title]');
+        if (detailDialog && detailContent && detailTitle) {
+            product.querySelectorAll('[data-fdshop-detail-video]').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    var frame = document.createElement('iframe');
+                    frame.src = button.dataset.fdshopDetailVideo;
+                    frame.title = 'Produktvideo: ' + (button.dataset.productName || 'FDShop-Produkt');
+                    frame.allow = 'accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture';
+                    frame.allowFullscreen = true;
+                    detailContent.replaceChildren(frame);
+                    detailTitle.textContent = button.dataset.productName || 'Produktvideo';
+                    detailDialog.showModal();
+                });
+            });
+            var detailClose = product.querySelector('[data-fdshop-detail-video-close]');
+            if (detailClose) detailClose.addEventListener('click', function () { detailDialog.close(); });
+            detailDialog.addEventListener('close', function () { detailContent.replaceChildren(); });
+            detailDialog.addEventListener('click', function (event) { if (event.target === detailDialog) detailDialog.close(); });
+        }
     });
 }());
