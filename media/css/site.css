@@ -80,3 +80,40 @@
 @media (max-width: 800px) { .fdshop-products { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 800px) { .fdshop-product__overview { grid-template-columns: 1fr; } }
 @media (max-width: 520px) { .fdshop-products { grid-template-columns: 1fr; } .fdshop-card__media { height: 18rem; } .fdshop-toolbar { align-items: stretch; } .fdshop-toolbar label, .fdshop-toolbar select { width: 100%; } .fdshop-toolbar__results { margin-left: 0; } .fdshop-product__heading { grid-template-columns: 1fr; } .fdshop-product__manufacturer { text-align: left; } }
+.fdshop-cart { --fdshop-border: var(--border-color, #dfe3e7); max-width: 1440px; margin-inline: auto; }
+.fdshop-cart__grid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(19rem, 1fr); gap: 1.5rem; align-items: start; }
+.fdshop-cart__products, .fdshop-cart__checkout { padding: 1rem; border: 1px solid #adb5bd; background: #fff; }
+.fdshop-cart__products h2, .fdshop-cart__checkout h2 { margin-top: 0; }
+.fdshop-cart__table-head, .fdshop-cart__item { display: grid; grid-template-columns: minmax(4.5rem, .7fr) minmax(8rem, 1.5fr) minmax(5rem, .7fr) minmax(10rem, 1.25fr) minmax(5rem, .7fr); gap: .6rem; align-items: center; }
+.fdshop-cart__table-head { padding: .65rem; background: var(--template-bg-light, #f0f4fb); font-weight: 700; }
+.fdshop-cart__item { padding: .75rem .65rem; border-bottom: 1px solid var(--fdshop-border); }
+.fdshop-cart__product a { display: flex; align-items: center; gap: .65rem; text-decoration: none; }
+.fdshop-cart__product img { flex: 0 0 auto; width: 4.5rem; height: 4.5rem; object-fit: contain; }
+.fdshop-cart__unit-price { display: flex; flex-direction: column; align-items: flex-start; }
+.fdshop-cart__regular-price { color: #dc3545; text-decoration: line-through; }
+.fdshop-cart__quantity-controls { display: flex; flex-wrap: wrap; align-items: stretch; gap: .3rem; }
+.fdshop-cart__quantity-controls input { width: 4rem; }
+.fdshop-cart__line-total { text-align: right; }
+.fdshop-cart__mobile-label { display: none; }
+.fdshop-cart__empty { padding: 1.5rem 0; }
+.fdshop-cart__checkout { display: grid; gap: 1rem; }
+.fdshop-cart__totals { margin: 0; }
+.fdshop-cart__totals > div { display: flex; justify-content: space-between; gap: 1rem; padding: .35rem 0; }
+.fdshop-cart__totals dd { margin: 0; text-align: right; }
+.fdshop-cart__grand-total { margin-top: .5rem; padding-top: .75rem !important; border-top: 2px solid #adb5bd; font-size: 1.2rem; font-weight: 700; }
+.fdshop-cart__checkout h3 { margin: 0 0 .35rem; font-size: 1rem; }
+.fdshop-cart__choice { display: flex; justify-content: space-between; gap: 1rem; align-items: start; padding-block: .65rem; border-block: 1px solid var(--fdshop-border); }
+.fdshop-cart__choice .btn-link { padding: 0; }
+.fdshop-cart__remark { display: grid; gap: .45rem; }
+.fdshop-cart__remark label { font-weight: 700; }
+.fdshop-cart__order { width: 100%; }
+.fdshop-cart__dialog { width: min(32rem, calc(100vw - 2rem)); padding: 0; border: 0; }
+.fdshop-cart__dialog::backdrop { background: rgb(0 0 0 / 65%); }
+.fdshop-cart__dialog form { display: grid; gap: .5rem; padding: 1rem; }
+.fdshop-cart__dialog header { display: flex; justify-content: space-between; align-items: center; }
+.fdshop-cart__dialog header h2 { margin: 0; }
+.fdshop-cart__dialog header button { border: 0; background: transparent; font-size: 2rem; }
+.fdshop-cart__option { display: flex; justify-content: space-between; gap: 1rem; padding: .75rem; border: 1px solid var(--fdshop-border); background: #fff; text-align: left; }
+@media (max-width: 1100px) { .fdshop-cart__grid { grid-template-columns: 1fr; } }
+@media (max-width: 800px) { .fdshop-cart__table-head { display: none; } .fdshop-cart__item { grid-template-columns: 1fr 1fr; align-items: start; } .fdshop-cart__product { grid-column: 1 / -1; grid-row: 1; } .fdshop-cart__quantity { grid-column: 1 / -1; } .fdshop-cart__mobile-label { display: block; color: var(--fdshop-muted); font-size: .75rem; font-weight: 600; } .fdshop-cart__line-total { text-align: left; } }
+@media (max-width: 520px) { .fdshop-cart__item { grid-template-columns: 1fr; } .fdshop-cart__product, .fdshop-cart__quantity { grid-column: 1; } .fdshop-cart__quantity-controls { flex-wrap: wrap; } }

@@ -47,7 +47,6 @@ async function authenticateAdministrator(page, context, testInfo) {
   await page.locator('#mod-login-username').fill(username);
   await page.locator('#mod-login-password').fill(password);
   await page.locator('#btn-login-submit').click();
-  await page.waitForLoadState('networkidle');
   await expect(page.locator('#mod-login-username')).toHaveCount(0);
   const hideTourButton = page.getByRole('button', { name: 'Hide Forever' });
   const tourIsVisible = await hideTourButton.waitFor({ state: 'visible', timeout: 3_000 })
@@ -61,6 +60,22 @@ async function authenticateAdministrator(page, context, testInfo) {
   await context.storageState({ path: statePath });
 }
 
+async function authenticateSiteUser(page) {
+  const username = process.env.JOOMLA_ADMIN_USERNAME;
+  const password = process.env.JOOMLA_ADMIN_PASSWORD;
+  expect(username, 'local Joomla site username must be provided').toBeTruthy();
+  expect(password, 'local Joomla site password must be provided').toBeTruthy();
+  const response = await page.goto('/index.php?option=com_users&view=login');
+  expect(response?.status(), 'Joomla site login HTTP status').toBe(200);
+  const usernameField = page.locator('#username');
+  const passwordField = page.locator('#password');
+  await expect(usernameField).toBeVisible();
+  await usernameField.fill(username);
+  await passwordField.fill(password);
+  await page.locator('form').filter({ has: usernameField }).getByRole('button', { name: /Log in|Anmelden/i }).click();
+  await expect(usernameField).toHaveCount(0);
+}
+
 async function openView(page, view) {
   const response = await page.goto(`/administrator/index.php?option=com_fdshop&view=${view}`);
   expect(response?.status(), `${view} HTTP status`).toBe(200);
@@ -68,4 +83,4 @@ async function openView(page, view) {
   await expect(page.locator('#mod-login-username')).toHaveCount(0);
 }
 
-module.exports = { authenticateAdministrator, installDiagnostics, openView };
+module.exports = { authenticateAdministrator, authenticateSiteUser, installDiagnostics, openView };

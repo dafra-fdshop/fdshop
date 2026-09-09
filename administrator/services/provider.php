@@ -19,6 +19,8 @@ use FDShop\Component\FDShop\Administrator\Service\ProductService;
 use FDShop\Component\FDShop\Administrator\Service\ProductServiceInterface;
 use FDShop\Component\FDShop\Administrator\Service\OrderService;
 use FDShop\Component\FDShop\Administrator\Service\OrderServiceInterface;
+use FDShop\Component\FDShop\Site\Service\CartService;
+use FDShop\Component\FDShop\Site\Service\CartServiceInterface;
 use Joomla\CMS\Dispatcher\ComponentDispatcherFactoryInterface;
 use Joomla\CMS\Component\Router\RouterFactoryInterface;
 use Joomla\CMS\Extension\ComponentInterface;
@@ -146,6 +148,20 @@ return new class () implements ServiceProviderInterface {
 				return $container->get(OrderServiceInterface::class);
 			}
 		);
+
+        $container->set(
+            CartServiceInterface::class,
+            function (Container $container): CartServiceInterface {
+                return new CartService($container->get(DatabaseInterface::class));
+            }
+        );
+
+        $container->set(
+            CartService::class,
+            function (Container $container): CartService {
+                return $container->get(CartServiceInterface::class);
+            }
+        );
 
         $container->set(
 			ComponentInterface::class,

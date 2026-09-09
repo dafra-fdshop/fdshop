@@ -214,6 +214,10 @@ load_frontend_category_fixtures() {
   bash "$REPO_ROOT/tests/fixtures/bin/load-frontend-category.sh"
 }
 
+load_frontend_cart_fixtures() {
+  bash "$REPO_ROOT/tests/fixtures/bin/load-frontend-cart.sh"
+}
+
 verify_fixtures() {
   bash "$REPO_ROOT/tests/fixtures/bin/verify.sh"
 }
@@ -282,6 +286,33 @@ run_browser_frontend_category() {
     printf 'Frontend category artifacts: %s\nFDShop frontend category suite: PASS (targeted data and cleanup verified)\n' "$host_output"
   else
     printf 'Frontend category artifacts: %s\nFDShop frontend category suite: FAIL; restoring base fixtures.\n' "$host_output" >&2
+    load_fixtures || true
+    return 1
+  fi
+}
+
+run_browser_frontend_cart() {
+  verify_installed >/dev/null
+  verify_fixtures >/dev/null
+  local run_id="${FDSHOP_FRONTEND_CART_RUN_ID:-$(date -u +%Y%m%dT%H%M%SZ)-frontend-cart-$RANDOM}"
+  [[ "$run_id" =~ ^[A-Za-z0-9._-]+$ ]] || { printf 'Invalid frontend cart run id.\n' >&2; return 1; }
+  local container_output="/workspace/artifacts/$run_id"
+  local host_output="$REPO_ROOT/.docker/test-results/playwright/$run_id"
+  mkdir -p "$host_output"
+  load_frontend_cart_fixtures
+  compose build browser
+
+  if compose run --rm --no-deps \
+    --env "PLAYWRIGHT_OUTPUT_DIR=$container_output" \
+    browser npx playwright test tests/frontend-cart.spec.js; then
+    [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_orders;")" == 2 ]] || { printf 'Cart V1 unexpectedly changed orders.\n' >&2; return 1; }
+    [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_order_history;")" == 2 ]] || { printf 'Cart V1 unexpectedly changed order history.\n' >&2; return 1; }
+    [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_cart WHERE id=910003;")" == 1 ]] || { printf 'Cart V1 changed the isolated foreign cart item.\n' >&2; return 1; }
+    [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_order_status_history;")" == 2 ]] || { printf 'Cart V1 unexpectedly changed order status history.\n' >&2; return 1; }
+    load_fixtures >/dev/null
+    printf 'Frontend cart artifacts: %s\nFDShop frontend cart suite: PASS (no order or history created; cleanup verified)\n' "$host_output"
+  else
+    printf 'Frontend cart artifacts: %s\nFDShop frontend cart suite: FAIL; restoring base fixtures.\n' "$host_output" >&2
     load_fixtures || true
     return 1
   fi
@@ -569,12 +600,13 @@ crud_runner() {
     bundles) run_browser_crud_bundles ;;
     orders) run_browser_crud_orders ;;
     frontend-category) run_browser_frontend_category ;;
-    *) printf 'Unknown standard test area: %s\nValid areas: manufacturers categories configuration products coupons bundles orders frontend-category\n' "$1" >&2; return 2 ;;
+    frontend-cart) run_browser_frontend_cart ;;
+    *) printf 'Unknown standard test area: %s\nValid areas: manufacturers categories configuration products coupons bundles orders frontend-category frontend-cart\n' "$1" >&2; return 2 ;;
   esac
 }
 valid_crud_area() {
-  case "$1" in manufacturers|categories|configuration|products|coupons|bundles|orders|frontend-category) return 0 ;; esac
-  printf 'Unknown standard test area: %s\nValid areas: manufacturers categories configuration products coupons bundles orders frontend-category\n' "$1" >&2
+  case "$1" in manufacturers|categories|configuration|products|coupons|bundles|orders|frontend-category|frontend-cart) return 0 ;; esac
+  printf 'Unknown standard test area: %s\nValid areas: manufacturers categories configuration products coupons bundles orders frontend-category frontend-cart\n' "$1" >&2
   return 2
 }
 verify_package_scope() {
@@ -594,6 +626,7 @@ test_standard() {
   local area="${1:-}"
   local area_label="$area CRUD"
   [[ "$area" == frontend-category ]] && area_label='Frontend category suite'
+  [[ "$area" == frontend-cart ]] && area_label='Frontend cart suite'
   valid_crud_area "$area" || return $?
   run_test_step 'Test reset' test_reset_environment
   run_test_step 'Smoke' run_smoke
@@ -610,8 +643,8 @@ test_standard() {
   printf '\nFDShop standard test suite (%s): PASS\n' "$area"
 }
 test_full() {
-  local areas=(manufacturers categories configuration products coupons bundles orders frontend-category)
-  local total=26 step=0 area
+  local areas=(manufacturers categories configuration products coupons bundles orders frontend-category frontend-cart)
+  local total=28 step=0 area
   full_step() { step=$((step + 1)); run_test_step "[$step/$total] $1" "${@:2}"; }
   full_step 'Initial test reset' test_reset_environment
   full_step 'Smoke' run_smoke
@@ -620,6 +653,7 @@ test_full() {
   for area in "${areas[@]}"; do
     local area_label="$area CRUD"
     [[ "$area" == frontend-category ]] && area_label='Frontend category suite'
+    [[ "$area" == frontend-cart ]] && area_label='Frontend cart suite'
     full_step "Reset before $area_label" test_reset_environment
     if ! full_step "$area_label" crud_runner "$area"; then
       printf 'Restoring fixture sandbox after failed %s suite; diagnostic artifacts are retained.\n' "$area" >&2
@@ -677,6 +711,7 @@ Usage: scripts/fdshop COMMAND
   test-browser      Run test-reset, smoke and browser foundation test
   browser-readonly  Run read-only FDShop administrator browser regressions
   browser-frontend-category  Run the public category view browser suite with isolated fixtures
+  browser-frontend-cart  Run the authenticated frontend cart browser suite with isolated fixtures
   test-readonly     Run reset, smoke, foundation and read-only browser tests
   browser-crud-manufacturers  Run manufacturer CRUD browser tests
   browser-crud-categories  Run category CRUD browser tests with cleanup
@@ -724,6 +759,7 @@ main() {
         test-browser) test_browser ;;
         browser-readonly) run_browser_readonly ;;
         browser-frontend-category) run_browser_frontend_category ;;
+        browser-frontend-cart) run_browser_frontend_cart ;;
         test-readonly) test_readonly ;;
         browser-crud-manufacturers) run_browser_crud_manufacturers ;;
         browser-crud-categories) run_browser_crud_categories ;;

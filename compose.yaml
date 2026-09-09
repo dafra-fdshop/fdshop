@@ -2,7 +2,7 @@ name: fdshop
 
 services:
   db:
-    image: mariadb:11.8
+    image: mariadb:11.8.8
     restart: unless-stopped
     environment:
       MARIADB_DATABASE: ${MARIADB_DATABASE:?Set MARIADB_DATABASE in .env}

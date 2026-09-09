@@ -35,4 +35,9 @@ final class RouteHelper
 
         return Route::_('index.php?option=com_fdshop&view=manufacturer&id=' . rawurlencode($segment));
     }
+
+    public static function getCartRoute(): string
+    {
+        return Route::_('index.php?option=com_fdshop&view=cart');
+    }
 }
