@@ -1,12 +1,44 @@
 const { test, expect } = require('@playwright/test');
 const { authenticateSiteUser, installDiagnostics } = require('../support/browser');
 
-test('guest cannot use the database-backed cart', async ({ page, baseURL }) => {
+test('guest cart is isolated by session and cannot create an order', async ({ page, browser, baseURL }) => {
   const diagnostics = await installDiagnostics(page, baseURL);
-  const response = await page.goto('/warenkorb');
-  expect(response?.status()).toBe(200);
-  await expect(page.locator('.fdshop-cart')).toContainText('Bitte melden Sie sich an');
-  await expect(page.getByRole('button', { name: 'Zahlungspflichtig bestellen' })).toHaveCount(0);
+  await page.goto('/warenkorb');
+  const cart = page.locator('[data-fdshop-cart]');
+  await expect(cart.locator('[data-cart-item]')).toHaveCount(0);
+  const tokenName = await cart.locator('[data-cart-token] input').getAttribute('name');
+  const payload = await page.evaluate(async ({ tokenName }) => {
+    const body = new FormData(); body.append(tokenName, '1'); body.append('product_id', '900100'); body.append('quantity', '1');
+    return (await fetch('index.php?option=com_fdshop&format=json&task=cart.add', { method: 'POST', body })).json();
+  }, { tokenName });
+  expect(payload.success, payload.message).toBe(true);
+  await page.reload();
+  await expect(cart.locator('[data-cart-item]')).toHaveCount(1);
+  const item = cart.locator('[data-cart-item]').first();
+  await item.getByRole('button', { name: 'Menge erhöhen' }).click();
+  await item.getByRole('button', { name: 'Menge aktualisieren' }).click();
+  await expect(item.locator('[data-cart-quantity]')).toHaveValue('2');
+  await cart.getByRole('button', { name: 'ändern' }).first().click();
+  await cart.locator('[data-cart-select-shipment="900601"]').click();
+  await cart.getByRole('button', { name: 'ändern' }).nth(1).click();
+  await cart.locator('[data-cart-select-payment="900611"]').click();
+  await expect(cart.locator('[data-cart-total]')).toHaveText('52,47 €');
+
+  const otherContext = await browser.newContext({ baseURL });
+  const otherPage = await otherContext.newPage();
+  await otherPage.goto('/warenkorb');
+  await expect(otherPage.locator('[data-cart-item]')).toHaveCount(0);
+  await otherContext.close();
+
+  await cart.getByRole('button', { name: 'Zahlungspflichtig bestellen' }).click();
+  await expect(cart.locator('[data-fdshop-cart-message]')).toContainText('an oder registrieren');
+  await item.getByRole('button', { name: /entfernen/ }).click();
+  await expect(cart.locator('[data-cart-item]')).toHaveCount(0);
+  const replacement = await page.evaluate(async ({ tokenName }) => {
+    const body = new FormData(); body.append(tokenName, '1'); body.append('product_id', '900100'); body.append('quantity', '1');
+    return (await fetch('index.php?option=com_fdshop&format=json&task=cart.add', { method: 'POST', body })).json();
+  }, { tokenName });
+  expect(replacement.success, replacement.message).toBe(true);
   diagnostics.expectClean();
 });
 
@@ -36,6 +68,9 @@ test('authenticated cart validates mutations and keeps checkout state correctly 
   await expect(cart.locator('[data-cart-shipment-fee]')).toHaveText('4,99 €');
   await expect(cart.locator('[data-cart-payment-fee]')).toHaveText('0,00 €');
   await expect(cart.locator('[data-cart-total]')).toHaveText('131,96 €');
+  await expect(cart.locator('[data-cart-terms]')).toHaveAttribute('data-required', '1');
+  await expect(cart.locator('[data-cart-remark]')).toHaveCount(0);
+  await expect(normal.getByRole('button', { name: 'Menge aktualisieren' })).toHaveAttribute('title', 'Menge aktualisieren');
 
   await page.setViewportSize({ width: 480, height: 900 });
   await expect(cart.locator('[data-cart-item="910000"]')).toBeVisible();
@@ -48,7 +83,7 @@ test('authenticated cart validates mutations and keeps checkout state correctly 
   page.on('request', request => { if (request.resourceType() === 'document') documentRequests += 1; });
   await normal.getByRole('button', { name: 'Menge erhöhen' }).click();
   const firstUpdateResponse = page.waitForResponse(response => response.url().includes('task=cart.updateQuantity'));
-  await normal.getByRole('button', { name: 'Aktualisieren' }).click();
+  await normal.getByRole('button', { name: 'Menge aktualisieren' }).click();
   const firstUpdatePayload = await (await firstUpdateResponse).json();
   expect(firstUpdatePayload.success, firstUpdatePayload.message).toBe(true);
   expect(firstUpdatePayload.data.items.find(item => item.id === 910000)).toMatchObject({ quantity: 2, lineTotal: '39,98 €' });
@@ -56,30 +91,46 @@ test('authenticated cart validates mutations and keeps checkout state correctly 
   await expect(normal.locator('[data-cart-quantity]')).toHaveValue('2');
   await expect(normal.locator('[data-cart-line-total]')).toContainText('39,98 €');
   await normal.getByRole('button', { name: 'Menge reduzieren' }).click();
-  await normal.getByRole('button', { name: 'Aktualisieren' }).click();
+  await normal.getByRole('button', { name: 'Menge aktualisieren' }).click();
   await expect(normal.locator('[data-cart-quantity]')).toHaveValue('1');
 
   await normal.locator('[data-cart-quantity]').fill('3');
-  await normal.getByRole('button', { name: 'Aktualisieren' }).click();
+  await normal.getByRole('button', { name: 'Menge aktualisieren' }).click();
   await expect(normal.locator('[data-cart-quantity]')).toHaveValue('3');
   await expect(cart.locator('[data-cart-total]')).toHaveText('171,94 €');
   expect(documentRequests).toBe(0);
 
   await normal.locator('[data-cart-quantity]').fill('0');
-  await normal.getByRole('button', { name: 'Aktualisieren' }).click();
+  await normal.getByRole('button', { name: 'Menge aktualisieren' }).click();
   await expect(cart.locator('[data-fdshop-cart-message]')).toContainText('Mindestbestellmenge');
   await expect(normal.locator('[data-cart-quantity]')).toHaveValue('3');
-  await normal.locator('[data-cart-quantity]').fill('11');
-  await normal.getByRole('button', { name: 'Aktualisieren' }).click();
-  await expect(cart.locator('[data-fdshop-cart-message]')).toContainText('Höchstbestellmenge');
+  await normal.locator('[data-cart-quantity]').fill('-1');
+  await normal.getByRole('button', { name: 'Menge aktualisieren' }).click();
   await expect(normal.locator('[data-cart-quantity]')).toHaveValue('3');
+  await normal.locator('[data-cart-quantity]').fill('11');
+  await normal.getByRole('button', { name: 'Menge aktualisieren' }).click();
+  await expect(normal.locator('[data-cart-quantity]')).toHaveValue('11');
+  await normal.locator('[data-cart-quantity]').fill('21');
+  await normal.getByRole('button', { name: 'Menge aktualisieren' }).click();
+  await expect(cart.locator('[data-fdshop-cart-message]')).toContainText('Gewünschte Menge nicht verfügbar');
+  await expect(normal.locator('[data-cart-quantity]')).toHaveValue('11');
+  await normal.locator('[data-cart-quantity]').fill('3');
+  await normal.getByRole('button', { name: 'Menge aktualisieren' }).click();
 
+  await discount.locator('[data-cart-quantity]').fill('1');
+  await discount.getByRole('button', { name: 'Menge aktualisieren' }).click();
+  await expect(cart.locator('[data-fdshop-cart-message]')).toContainText('Mindestbestellmenge');
+  await expect(discount.locator('[data-cart-quantity]')).toHaveValue('2');
+  await discount.locator('[data-cart-quantity]').fill('10');
+  await discount.getByRole('button', { name: 'Menge aktualisieren' }).click();
+  await expect(cart.locator('[data-fdshop-cart-message]')).toContainText('Höchstbestellmenge');
+  await expect(discount.locator('[data-cart-quantity]')).toHaveValue('2');
   await discount.locator('[data-cart-quantity]').fill('3');
-  await discount.getByRole('button', { name: 'Aktualisieren' }).click();
+  await discount.getByRole('button', { name: 'Menge aktualisieren' }).click();
   await expect(cart.locator('[data-fdshop-cart-message]')).toContainText('Bestellschrittweite');
   await expect(discount.locator('[data-cart-quantity]')).toHaveValue('2');
   await lowStock.locator('[data-cart-quantity]').fill('3');
-  await lowStock.getByRole('button', { name: 'Aktualisieren' }).click();
+  await lowStock.getByRole('button', { name: 'Menge aktualisieren' }).click();
   await expect(cart.locator('[data-fdshop-cart-message]')).toContainText('Gewünschte Menge nicht verfügbar');
   await expect(lowStock.locator('[data-cart-quantity]')).toHaveValue('1');
 
@@ -93,12 +144,8 @@ test('authenticated cart validates mutations and keeps checkout state correctly 
   await expect(cart.locator('[data-cart-payment-fee]')).toHaveText('2,50 €');
   await expect(cart.locator('[data-cart-total]')).toHaveText('179,44 €');
 
-  await cart.locator('[data-cart-remark]').fill('Bitte zur Abholung bereitstellen.');
-  await cart.getByRole('button', { name: 'Bemerkung speichern' }).click();
-  await expect(cart.locator('[data-fdshop-cart-message]')).toContainText('Bemerkung wurde gespeichert');
   await cart.locator('[data-cart-terms]').check();
   await page.reload();
-  await expect(cart.locator('[data-cart-remark]')).toHaveValue('Bitte zur Abholung bereitstellen.');
   await expect(cart.locator('[data-cart-shipment-name]')).toHaveText('E2E Versand Inaktiv');
   await expect(cart.locator('[data-cart-payment-name]')).toHaveText('E2E Zahlung Inaktiv');
   await expect(cart.locator('[data-cart-terms]')).not.toBeChecked();

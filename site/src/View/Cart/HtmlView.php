@@ -11,9 +11,8 @@ use Joomla\CMS\Uri\Uri;
 
 final class HtmlView extends BaseHtmlView
 {
-    public ?array $cart = null;
+    public array $cart = [];
     public object $config;
-    public string $remark = '';
     public string $placeholderImage;
 
     public function display($tpl = null): void
@@ -21,18 +20,15 @@ final class HtmlView extends BaseHtmlView
         $model = $this->getModel();
         $this->cart = $model->getCartData();
         $this->config = $model->getConfig();
-        $this->remark = $model->getRemark();
         $this->placeholderImage = rtrim(Uri::root(true), '/') . '/media/com_fdshop/images/product-placeholder.svg';
 
-        if ($this->cart !== null) {
-            foreach ($this->cart['items'] as $item) {
+        foreach ($this->cart['items'] as $item) {
                 $item->product_url = RouteHelper::getProductRoute((int) $item->product_id, (int) $item->category_id);
                 $item->image_url = $item->image !== '' ? rtrim(Uri::root(true), '/') . '/' . ltrim($item->image, '/') : $this->placeholderImage;
                 $item->quantity_formatted = $this->formatQuantity((float) $item->quantity);
                 $item->unit_price_formatted = $this->formatPrice((float) $item->unit_price, (string) $item->currency);
                 $item->regular_price_formatted = $this->formatPrice((float) $item->sale_price, (string) $item->currency);
                 $item->line_total_formatted = $this->formatPrice((float) $item->line_total, (string) $item->currency);
-            }
         }
 
         Factory::getApplication()->getDocument()->setTitle('Warenkorb');

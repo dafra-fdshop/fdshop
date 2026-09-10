@@ -3,16 +3,12 @@
 defined('_JEXEC') or die;
 
 use Joomla\CMS\HTML\HTMLHelper;
-use Joomla\CMS\Router\Route;
 
 $cart = $this->cart;
 $currency = (string) ($cart['currency'] ?? 'EUR');
 ?>
 <main class="fdshop-cart" data-fdshop-cart>
     <h1>Warenkorb</h1>
-    <?php if ($cart === null) : ?>
-        <div class="alert alert-info" role="status">Bitte melden Sie sich an, um den Warenkorb zu verwenden und später eine Bestellung abzuschließen.</div>
-    <?php else : ?>
         <div class="fdshop-cart__message" data-fdshop-cart-message role="status" aria-live="polite" hidden></div>
         <div class="fdshop-cart__grid">
             <section class="fdshop-cart__products" aria-labelledby="fdshop-cart-products-heading">
@@ -29,10 +25,10 @@ $currency = (string) ($cart['currency'] ?? 'EUR');
                                 <label class="visually-hidden" for="fdshop-cart-quantity-<?php echo (int) $item->id; ?>">Menge für <?php echo $this->escape((string) $item->product_name); ?></label>
                                 <div class="fdshop-cart__quantity-controls">
                                     <button type="button" class="btn btn-outline-secondary" data-cart-decrease aria-label="Menge reduzieren">−</button>
-                                    <input id="fdshop-cart-quantity-<?php echo (int) $item->id; ?>" class="form-control" type="number" value="<?php echo $this->escape($item->quantity_formatted); ?>" min="<?php echo $this->escape((string) $item->min_order_qty); ?>" max="<?php echo $this->escape((string) $item->max_order_qty); ?>" step="<?php echo $this->escape((string) $item->step_order_qty); ?>" inputmode="decimal" data-cart-quantity>
+                                    <input id="fdshop-cart-quantity-<?php echo (int) $item->id; ?>" class="form-control" type="number" value="<?php echo $this->escape($item->quantity_formatted); ?>" min="<?php echo $this->escape((string) $item->min_order_qty); ?>"<?php echo $item->max_order_qty > 0 ? ' max="' . $this->escape((string) $item->max_order_qty) . '"' : ''; ?> step="<?php echo $this->escape((string) $item->step_order_qty); ?>" inputmode="decimal" data-cart-quantity>
                                     <button type="button" class="btn btn-outline-secondary" data-cart-increase aria-label="Menge erhöhen">+</button>
-                                    <button type="button" class="btn btn-primary" data-cart-update>Aktualisieren</button>
-                                    <button type="button" class="btn btn-outline-danger" data-cart-remove aria-label="<?php echo $this->escape((string) $item->product_name); ?> entfernen" title="Produkt entfernen"><span aria-hidden="true">×</span></button>
+                                    <button type="button" class="btn btn-primary" data-cart-update aria-label="Menge aktualisieren" title="Menge aktualisieren"><span class="fa-solid fa-rotate" aria-hidden="true"></span></button>
+                                    <button type="button" class="btn btn-outline-danger" data-cart-remove aria-label="<?php echo $this->escape((string) $item->product_name); ?> entfernen" title="Produkt entfernen"><span class="fa-solid fa-trash" aria-hidden="true"></span></button>
                                 </div>
                             </div>
                             <strong class="fdshop-cart__line-total" data-cart-line-total><span class="fdshop-cart__mobile-label">Betrag</span><span data-cart-line-value><?php echo $this->escape($item->line_total_formatted); ?></span></strong>
@@ -42,17 +38,18 @@ $currency = (string) ($cart['currency'] ?? 'EUR');
             </section>
             <aside class="fdshop-cart__checkout" aria-labelledby="fdshop-cart-summary-heading">
                 <h2 id="fdshop-cart-summary-heading">Bestellübersicht</h2>
+                <div class="fdshop-cart__subtotal"><span>Summe der Produktpreise</span><strong data-cart-subtotal><?php echo $this->escape($this->formatPrice((float) $cart['subtotal'], $currency)); ?></strong></div>
+                <section class="fdshop-cart__coupon"><h3>Gutschein</h3><div class="input-group"><input class="form-control" type="text" aria-label="Gutscheincode" placeholder="Gutscheincode" disabled><button class="btn btn-outline-secondary" type="button" disabled>Übernehmen</button></div><small>Die Gutscheineinlösung wird in einem folgenden Paket aktiviert.</small></section>
+                <section class="fdshop-cart__choice"><div><h3>Abholstation</h3><strong data-cart-shipment-name><?php echo $this->escape((string) ($cart['shipment']->name ?? 'Keine aktive Abholstation')); ?></strong></div><strong data-cart-shipment-selection-fee><?php echo $this->escape($this->formatPrice((float) $cart['shipment_fee'], $currency)); ?></strong><button type="button" class="btn btn-link" data-cart-open="shipment">ändern</button></section>
+                <section class="fdshop-cart__choice"><div><h3>Zahlungsart</h3><strong data-cart-payment-name><?php echo $this->escape((string) ($cart['payment']->name ?? 'Keine aktive Zahlungsart')); ?></strong></div><strong data-cart-payment-selection-fee><?php echo $this->escape($this->formatPrice((float) $cart['payment_fee'], $currency)); ?></strong><button type="button" class="btn btn-link" data-cart-open="payment">ändern</button></section>
                 <dl class="fdshop-cart__totals">
-                    <div><dt>Summe der Produktpreise</dt><dd data-cart-subtotal><?php echo $this->escape($this->formatPrice((float) $cart['subtotal'], $currency)); ?></dd></div>
+                    <div><dt>Produktsumme</dt><dd data-cart-summary-subtotal><?php echo $this->escape($this->formatPrice((float) $cart['subtotal'], $currency)); ?></dd></div>
+                    <div><dt>Gutscheinabzug</dt><dd>0,00 €</dd></div>
                     <div><dt>Versand-/Abholgebühr</dt><dd data-cart-shipment-fee><?php echo $this->escape($this->formatPrice((float) $cart['shipment_fee'], $currency)); ?></dd></div>
                     <div><dt>Zahlungsgebühr</dt><dd data-cart-payment-fee><?php echo $this->escape($this->formatPrice((float) $cart['payment_fee'], $currency)); ?></dd></div>
                     <div class="fdshop-cart__grand-total"><dt>Gesamtbetrag</dt><dd data-cart-total><?php echo $this->escape($this->formatPrice((float) $cart['total'], $currency)); ?></dd></div>
                 </dl>
-                <section class="fdshop-cart__coupon"><h3>Gutschein</h3><div class="input-group"><input class="form-control" type="text" aria-label="Gutscheincode" placeholder="Gutscheincode" disabled><button class="btn btn-outline-secondary" type="button" disabled>Übernehmen</button></div><small>Die Gutscheineinlösung wird in einem folgenden Paket aktiviert.</small></section>
-                <section class="fdshop-cart__choice"><div><h3>Abholstation</h3><strong data-cart-shipment-name><?php echo $this->escape((string) ($cart['shipment']->name ?? 'Keine aktive Abholstation')); ?></strong></div><button type="button" class="btn btn-link" data-cart-open="shipment">ändern</button></section>
-                <section class="fdshop-cart__choice"><div><h3>Zahlungsart</h3><strong data-cart-payment-name><?php echo $this->escape((string) ($cart['payment']->name ?? 'Keine aktive Zahlungsart')); ?></strong></div><button type="button" class="btn btn-link" data-cart-open="payment">ändern</button></section>
-                <section class="fdshop-cart__remark"><label for="fdshop-cart-remark">Bemerkung</label><textarea id="fdshop-cart-remark" class="form-control" rows="4" maxlength="2000" data-cart-remark><?php echo $this->escape($this->remark); ?></textarea><button type="button" class="btn btn-outline-primary" data-cart-save-remark>Bemerkung speichern</button></section>
-                <div class="form-check fdshop-cart__terms"><input id="fdshop-cart-terms" class="form-check-input" type="checkbox" data-cart-terms data-required="<?php echo (int) $this->config->require_terms_checkbox; ?>"><label class="form-check-label" for="fdshop-cart-terms">Ich bestätige die AGB und die Widerrufsbelehrung.</label></div>
+                <?php if ((int) $this->config->show_terms_checkbox === 1) : ?><div class="form-check fdshop-cart__terms"><input id="fdshop-cart-terms" class="form-check-input" type="checkbox" data-cart-terms data-required="<?php echo (int) $this->config->require_terms_checkbox; ?>"><label class="form-check-label" for="fdshop-cart-terms">Ich bestätige die AGB und die Widerrufsbelehrung.</label></div><?php endif; ?>
                 <button type="button" class="btn btn-primary btn-lg fdshop-cart__order" data-cart-order>Zahlungspflichtig bestellen</button>
                 <small>Die Bestellfunktion ist in Warenkorb V1 noch nicht aktiv.</small>
             </aside>
@@ -60,5 +57,4 @@ $currency = (string) ($cart['currency'] ?? 'EUR');
         <dialog class="fdshop-cart__dialog" data-cart-dialog="shipment"><form method="dialog"><header><h2>Abholstation wählen</h2><button value="cancel" aria-label="Auswahl schließen">×</button></header><?php foreach ($cart['shipments'] as $shipment) : ?><button type="button" class="fdshop-cart__option" data-cart-select-shipment="<?php echo (int) $shipment->id; ?>"><strong><?php echo $this->escape((string) $shipment->name); ?></strong><span><?php echo $this->escape($this->formatPrice((float) $shipment->fee, $currency)); ?></span></button><?php endforeach; ?></form></dialog>
         <dialog class="fdshop-cart__dialog" data-cart-dialog="payment"><form method="dialog"><header><h2>Zahlungsart wählen</h2><button value="cancel" aria-label="Auswahl schließen">×</button></header><?php foreach ($cart['payments'] as $payment) : ?><button type="button" class="fdshop-cart__option" data-cart-select-payment="<?php echo (int) $payment->id; ?>"><strong><?php echo $this->escape((string) $payment->name); ?></strong><span><?php echo $this->escape($this->formatPrice((float) $payment->fee, $currency)); ?></span></button><?php endforeach; ?></form></dialog>
         <form hidden data-cart-token><?php echo HTMLHelper::_('form.token'); ?></form>
-    <?php endif; ?>
 </main>

@@ -12,54 +12,54 @@ use Joomla\CMS\Session\Session;
 
 final class CartController extends BaseController
 {
+    public function add(): void
+    {
+        $this->mutate(function (CartServiceInterface $service, int $userId, string $sessionId): array {
+            $input = Factory::getApplication()->getInput();
+            return $service->addItem($userId, $sessionId, $input->post->getInt('product_id'), $input->post->getFloat('quantity', 1));
+        });
+    }
+
     public function updateQuantity(): void
     {
-        $this->mutate(function (CartServiceInterface $service, int $userId, int $shipmentId, int $paymentId): array {
+        $this->mutate(function (CartServiceInterface $service, int $userId, string $sessionId, int $shipmentId, int $paymentId): array {
             $input = Factory::getApplication()->getInput();
-            return $service->updateQuantity($userId, $input->post->getInt('cart_id'), $input->post->getFloat('quantity'), $shipmentId, $paymentId);
+            return $service->updateQuantity($userId, $sessionId, $input->post->getInt('cart_id'), $input->post->getFloat('quantity'), $shipmentId, $paymentId);
         });
     }
 
     public function remove(): void
     {
-        $this->mutate(function (CartServiceInterface $service, int $userId, int $shipmentId, int $paymentId): array {
-            return $service->removeItem($userId, Factory::getApplication()->getInput()->post->getInt('cart_id'), $shipmentId, $paymentId);
+        $this->mutate(function (CartServiceInterface $service, int $userId, string $sessionId, int $shipmentId, int $paymentId): array {
+            return $service->removeItem($userId, $sessionId, Factory::getApplication()->getInput()->post->getInt('cart_id'), $shipmentId, $paymentId);
         });
     }
 
     public function selectShipment(): void
     {
-        $this->mutate(function (CartServiceInterface $service, int $userId, int $shipmentId, int $paymentId): array {
+        $this->mutate(function (CartServiceInterface $service, int $userId, string $sessionId, int $shipmentId, int $paymentId): array {
             $shipmentId = $service->validateShipment(Factory::getApplication()->getInput()->post->getInt('shipment_id'));
             Factory::getApplication()->getSession()->set($this->sessionKey($userId, 'shipment_id'), $shipmentId);
-            return $service->getCart($userId, $shipmentId, $paymentId);
+            return $service->getCart($userId, $sessionId, $shipmentId, $paymentId);
         });
     }
 
     public function selectPayment(): void
     {
-        $this->mutate(function (CartServiceInterface $service, int $userId, int $shipmentId, int $paymentId): array {
+        $this->mutate(function (CartServiceInterface $service, int $userId, string $sessionId, int $shipmentId, int $paymentId): array {
             $paymentId = $service->validatePayment(Factory::getApplication()->getInput()->post->getInt('payment_id'));
             Factory::getApplication()->getSession()->set($this->sessionKey($userId, 'payment_id'), $paymentId);
-            return $service->getCart($userId, $shipmentId, $paymentId);
-        });
-    }
-
-    public function saveRemark(): void
-    {
-        $this->mutate(function (CartServiceInterface $service, int $userId, int $shipmentId, int $paymentId): array {
-            $remark = $service->validateRemark(Factory::getApplication()->getInput()->post->getString('remark', ''));
-            Factory::getApplication()->getSession()->set($this->sessionKey($userId, 'remark'), $remark);
-            $cart = $service->getCart($userId, $shipmentId, $paymentId);
-            $cart['remark'] = $remark;
-            return $cart;
+            return $service->getCart($userId, $sessionId, $shipmentId, $paymentId);
         });
     }
 
     public function orderUnavailable(): void
     {
-        $this->mutate(function (CartServiceInterface $service, int $userId, int $shipmentId, int $paymentId): array {
-            $cart = $service->getCart($userId, $shipmentId, $paymentId);
+        $this->mutate(function (CartServiceInterface $service, int $userId, string $sessionId, int $shipmentId, int $paymentId): array {
+            if ($userId < 1) {
+                throw new \DomainException('Bitte melden Sie sich an oder registrieren Sie sich, um die Bestellung abzuschließen.');
+            }
+            $cart = $service->getCart($userId, $sessionId, $shipmentId, $paymentId);
             $cart['order_created'] = false;
             return $cart;
         }, 'Die Bestellfunktion wird in einem folgenden Paket aktiviert.');
@@ -73,14 +73,12 @@ final class CartController extends BaseController
                 throw new \RuntimeException('Ungültiger Sicherheitstoken.');
             }
             $userId = (int) $app->getIdentity()->id;
-            if ($userId < 1) {
-                throw new \DomainException('Bitte melden Sie sich an, um den Warenkorb zu verwenden.');
-            }
             $session = $app->getSession();
             $service = $this->getCartService();
             $data = $callback(
                 $service,
                 $userId,
+                $session->getId(),
                 (int) $session->get($this->sessionKey($userId, 'shipment_id'), 0),
                 (int) $session->get($this->sessionKey($userId, 'payment_id'), 0)
             );

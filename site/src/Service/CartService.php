@@ -14,10 +14,10 @@ final class CartService implements CartServiceInterface
     {
     }
 
-    public function getCart(int $userId, int $shipmentId = 0, int $paymentId = 0): array
+    public function getCart(int $userId, string $sessionId, int $shipmentId = 0, int $paymentId = 0): array
     {
-        $this->assertUser($userId);
-        $items = $this->loadItems($userId);
+        $this->assertOwner($userId, $sessionId);
+        $items = $this->loadItems($userId, $sessionId);
         $this->attachImages($items);
         $shipments = $this->loadChoices('shipments');
         $payments = $this->loadChoices('payment_methods');
@@ -27,6 +27,9 @@ final class CartService implements CartServiceInterface
 
         foreach ($items as $item) {
             $item->quantity = (float) $item->quantity;
+            $item->min_order_qty = (float) $item->min_order_qty > 0 ? (float) $item->min_order_qty : 1.0;
+            $item->max_order_qty = (float) $item->max_order_qty > 0 ? (float) $item->max_order_qty : 0.0;
+            $item->step_order_qty = (float) $item->step_order_qty > 0 ? (float) $item->step_order_qty : 1.0;
             $item->sale_price = (float) $item->sale_price;
             $item->discount_price = (float) $item->discount_price;
             $item->has_discount = (int) $item->discount_active === 1 && $item->discount_price > 0;
@@ -55,12 +58,12 @@ final class CartService implements CartServiceInterface
         ];
     }
 
-    public function addItem(int $userId, int $productId, float $quantity): array
+    public function addItem(int $userId, string $sessionId, int $productId, float $quantity): array
     {
-        $this->assertUser($userId);
+        $this->assertOwner($userId, $sessionId);
         $product = $this->loadProduct($productId);
         $this->validateQuantity($product, $quantity);
-        $existing = $this->findCartItem($userId, $productId);
+        $existing = $this->findCartItem($userId, $sessionId, $productId);
         $now = Factory::getDate()->toSql();
         $gross = $this->currentPrice($product);
         $net = $this->netPrice($gross);
@@ -76,12 +79,12 @@ final class CartService implements CartServiceInterface
                 ->set($this->db->quoteName('currency') . ' = ' . $this->db->quote((string) $product->currency))
                 ->set($this->db->quoteName('modified') . ' = ' . $this->db->quote($now))
                 ->where($this->db->quoteName('id') . ' = ' . (int) $existing->id)
-                ->where($this->db->quoteName('user_id') . ' = ' . $userId);
+                ->where($this->ownerWhere($userId, $sessionId));
             $this->db->setQuery($query)->execute();
         } else {
             $row = (object) [
                 'user_id' => $userId,
-                'session_id' => '',
+                'session_id' => $userId > 0 ? '' : $sessionId,
                 'product_id' => $productId,
                 'buyer_group_id' => (int) $product->buyer_group_id,
                 'quantity' => $quantity,
@@ -93,13 +96,13 @@ final class CartService implements CartServiceInterface
             $this->db->insertObject('#__fdshop_cart', $row);
         }
 
-        return $this->getCart($userId);
+        return $this->getCart($userId, $sessionId);
     }
 
-    public function updateQuantity(int $userId, int $cartId, float $quantity, int $shipmentId = 0, int $paymentId = 0): array
+    public function updateQuantity(int $userId, string $sessionId, int $cartId, float $quantity, int $shipmentId = 0, int $paymentId = 0): array
     {
-        $this->assertUser($userId);
-        $item = $this->loadOwnedCartItem($userId, $cartId);
+        $this->assertOwner($userId, $sessionId);
+        $item = $this->loadOwnedCartItem($userId, $sessionId, $cartId);
         $product = $this->loadProduct((int) $item->product_id);
         $this->validateQuantity($product, $quantity);
         $gross = $this->currentPrice($product);
@@ -111,23 +114,23 @@ final class CartService implements CartServiceInterface
             ->set($this->db->quoteName('currency') . ' = ' . $this->db->quote((string) $product->currency))
             ->set($this->db->quoteName('modified') . ' = ' . $this->db->quote(Factory::getDate()->toSql()))
             ->where($this->db->quoteName('id') . ' = ' . $cartId)
-            ->where($this->db->quoteName('user_id') . ' = ' . $userId);
+            ->where($this->ownerWhere($userId, $sessionId));
         $this->db->setQuery($query)->execute();
 
-        return $this->getCart($userId, $shipmentId, $paymentId);
+        return $this->getCart($userId, $sessionId, $shipmentId, $paymentId);
     }
 
-    public function removeItem(int $userId, int $cartId, int $shipmentId = 0, int $paymentId = 0): array
+    public function removeItem(int $userId, string $sessionId, int $cartId, int $shipmentId = 0, int $paymentId = 0): array
     {
-        $this->assertUser($userId);
-        $this->loadOwnedCartItem($userId, $cartId);
+        $this->assertOwner($userId, $sessionId);
+        $this->loadOwnedCartItem($userId, $sessionId, $cartId);
         $query = $this->db->getQuery(true)
             ->delete($this->db->quoteName('#__fdshop_cart'))
             ->where($this->db->quoteName('id') . ' = ' . $cartId)
-            ->where($this->db->quoteName('user_id') . ' = ' . $userId);
+            ->where($this->ownerWhere($userId, $sessionId));
         $this->db->setQuery($query)->execute();
 
-        return $this->getCart($userId, $shipmentId, $paymentId);
+        return $this->getCart($userId, $sessionId, $shipmentId, $paymentId);
     }
 
     public function validateShipment(int $shipmentId): int
@@ -140,17 +143,7 @@ final class CartService implements CartServiceInterface
         return $this->validateChoice('payment_methods', $paymentId, 'Zahlungsart');
     }
 
-    public function validateRemark(string $remark): string
-    {
-        $remark = trim($remark);
-        if (mb_strlen($remark) > 2000) {
-            throw new \DomainException('Die Bemerkung darf höchstens 2000 Zeichen lang sein.');
-        }
-
-        return $remark;
-    }
-
-    private function loadItems(int $userId): array
+    private function loadItems(int $userId, string $sessionId): array
     {
         $currentPrice = 'CASE WHEN ' . $this->db->quoteName('p.discount_active') . ' = 1 AND '
             . $this->db->quoteName('p.discount_price') . ' > 0 THEN ' . $this->db->quoteName('p.discount_price')
@@ -168,10 +161,9 @@ final class CartService implements CartServiceInterface
             ->from($this->db->quoteName('#__fdshop_cart', 'c'))
             ->innerJoin($this->db->quoteName('#__fdshop_products', 'p') . ' ON ' . $this->db->quoteName('p.id') . ' = ' . $this->db->quoteName('c.product_id'))
             ->innerJoin($this->db->quoteName('#__fdshop_products_details', 'd') . ' ON ' . $this->db->quoteName('d.product_id') . ' = ' . $this->db->quoteName('p.id'))
-            ->where($this->db->quoteName('c.user_id') . ' = :userId')
+            ->where($this->ownerWhere($userId, $sessionId, 'c'))
             ->where($this->db->quoteName('p.is_active') . ' = 1')
             ->where($this->db->quoteName('p.is_deleted') . ' = 0')
-            ->bind(':userId', $userId, ParameterType::INTEGER)
             ->order($this->db->quoteName('c.created') . ' ASC, ' . $this->db->quoteName('c.id') . ' ASC');
         $this->db->setQuery($query);
 
@@ -230,7 +222,7 @@ final class CartService implements CartServiceInterface
     private function validateQuantity(object $product, float $quantity): void
     {
         $quantityUnits = (int) round($quantity * 1000);
-        $min = (int) round((float) $product->min_order_qty * 1000);
+        $min = max(1000, (int) round((float) $product->min_order_qty * 1000));
         $max = (int) round((float) $product->max_order_qty * 1000);
         $step = max(1, (int) round((float) $product->step_order_qty * 1000));
         if ($quantityUnits < $min) {
@@ -248,12 +240,12 @@ final class CartService implements CartServiceInterface
         }
     }
 
-    private function loadOwnedCartItem(int $userId, int $cartId): object
+    private function loadOwnedCartItem(int $userId, string $sessionId, int $cartId): object
     {
         $query = $this->db->getQuery(true)->select(['id', 'product_id', 'quantity'])
             ->from($this->db->quoteName('#__fdshop_cart'))
             ->where($this->db->quoteName('id') . ' = ' . $cartId)
-            ->where($this->db->quoteName('user_id') . ' = ' . $userId);
+            ->where($this->ownerWhere($userId, $sessionId));
         $this->db->setQuery($query);
         $item = $this->db->loadObject();
         if (!$item) {
@@ -263,11 +255,11 @@ final class CartService implements CartServiceInterface
         return $item;
     }
 
-    private function findCartItem(int $userId, int $productId): ?object
+    private function findCartItem(int $userId, string $sessionId, int $productId): ?object
     {
         $query = $this->db->getQuery(true)->select(['id', 'quantity'])
             ->from($this->db->quoteName('#__fdshop_cart'))
-            ->where($this->db->quoteName('user_id') . ' = ' . $userId)
+            ->where($this->ownerWhere($userId, $sessionId))
             ->where($this->db->quoteName('product_id') . ' = ' . $productId);
         $this->db->setQuery($query);
         return $this->db->loadObject() ?: null;
@@ -328,11 +320,22 @@ final class CartService implements CartServiceInterface
         return round($gross / (1 + ($rate / 100)), 4);
     }
 
-    private function assertUser(int $userId): void
+    private function assertOwner(int $userId, string $sessionId): void
     {
-        if ($userId < 1) {
-            throw new \DomainException('Bitte melden Sie sich an, um den Warenkorb zu verwenden.');
+        if ($userId < 1 && $sessionId === '') {
+            throw new \DomainException('Die Warenkorbsitzung ist nicht verfügbar.');
         }
+    }
+
+    private function ownerWhere(int $userId, string $sessionId, string $alias = ''): string
+    {
+        $prefix = $alias !== '' ? $alias . '.' : '';
+        if ($userId > 0) {
+            return $this->db->quoteName($prefix . 'user_id') . ' = ' . $userId;
+        }
+
+        return $this->db->quoteName($prefix . 'user_id') . ' = 0 AND '
+            . $this->db->quoteName($prefix . 'session_id') . ' = ' . $this->db->quote($sessionId);
     }
 
     private function money(float $value): float

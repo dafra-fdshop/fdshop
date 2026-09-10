@@ -2,6 +2,7 @@ SET NAMES utf8mb4;
 START TRANSACTION;
 
 UPDATE `__PREFIX__fdshop_config` SET `show_terms_checkbox`=1, `require_terms_checkbox`=1 WHERE `id`=1;
+UPDATE `__PREFIX__fdshop_products` SET `min_order_qty`=0, `max_order_qty`=0, `step_order_qty`=0 WHERE `id`=900100;
 UPDATE `__PREFIX__fdshop_products` SET `min_order_qty`=2, `max_order_qty`=8, `step_order_qty`=2 WHERE `id`=900105;
 UPDATE `__PREFIX__fdshop_shipments` SET `published`=1, `is_default`=0 WHERE `id`=900601;
 UPDATE `__PREFIX__fdshop_payment_methods` SET `published`=1, `is_default`=0 WHERE `id`=900611;

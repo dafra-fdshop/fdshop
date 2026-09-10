@@ -14,23 +14,14 @@ final class CartModel extends BaseDatabaseModel
     {
         $app = Factory::getApplication();
         $userId = (int) $app->getIdentity()->id;
-        if ($userId < 1) {
-            return null;
-        }
         $session = $app->getSession();
 
         return $this->getCartService()->getCart(
             $userId,
+            $session->getId(),
             (int) $session->get('com_fdshop.cart.' . $userId . '.shipment_id', 0),
             (int) $session->get('com_fdshop.cart.' . $userId . '.payment_id', 0)
         );
-    }
-
-    public function getRemark(): string
-    {
-        $app = Factory::getApplication();
-        $userId = (int) $app->getIdentity()->id;
-        return $userId > 0 ? (string) $app->getSession()->get('com_fdshop.cart.' . $userId . '.remark', '') : '';
     }
 
     public function getConfig(): object
