@@ -53,6 +53,17 @@ final class CartController extends BaseController
         });
     }
 
+    public function applyCoupon(): void
+    {
+        $this->mutate(function (CartServiceInterface $service, int $userId, string $sessionId, int $shipmentId, int $paymentId): array {
+            $app = Factory::getApplication();
+            $couponCode = $app->getInput()->post->getString('coupon_code');
+            $cart = $service->validateCoupon($userId, $sessionId, $couponCode, $shipmentId, $paymentId);
+            $app->getSession()->set($this->sessionKey($userId, 'coupon_code'), $cart['coupon_code']);
+            return $cart;
+        }, 'Gutschein wurde berücksichtigt.');
+    }
+
     public function orderUnavailable(): void
     {
         $this->mutate(function (CartServiceInterface $service, int $userId, string $sessionId, int $shipmentId, int $paymentId): array {
@@ -75,13 +86,33 @@ final class CartController extends BaseController
             $userId = (int) $app->getIdentity()->id;
             $session = $app->getSession();
             $service = $this->getCartService();
+            $shipmentId = (int) $session->get($this->sessionKey($userId, 'shipment_id'), 0);
+            $paymentId = (int) $session->get($this->sessionKey($userId, 'payment_id'), 0);
+            $couponCode = (string) $session->get($this->sessionKey($userId, 'coupon_code'), '');
             $data = $callback(
                 $service,
                 $userId,
                 $session->getId(),
-                (int) $session->get($this->sessionKey($userId, 'shipment_id'), 0),
-                (int) $session->get($this->sessionKey($userId, 'payment_id'), 0)
+                $shipmentId,
+                $paymentId,
+                $couponCode
             );
+            if ($couponCode !== '' && ($data['coupon_code'] ?? '') === '') {
+                try {
+                    $data = $service->getCart(
+                        $userId,
+                        $session->getId(),
+                        (int) ($data['shipment']->id ?? $shipmentId),
+                        (int) ($data['payment']->id ?? $paymentId),
+                        $couponCode
+                    );
+                    if (($data['coupon_code'] ?? '') === '') {
+                        $session->set($this->sessionKey($userId, 'coupon_code'), '');
+                    }
+                } catch (\DomainException) {
+                    $session->set($this->sessionKey($userId, 'coupon_code'), '');
+                }
+            }
             echo new JsonResponse($this->normaliseState($data), $successMessage);
         } catch (\Throwable $error) {
             echo new JsonResponse(null, $error->getMessage(), true);
@@ -108,6 +139,8 @@ final class CartController extends BaseController
             'subtotal' => $format((float) $cart['subtotal'], $currency),
             'shipmentFee' => $format((float) $cart['shipment_fee'], $currency),
             'paymentFee' => $format((float) $cart['payment_fee'], $currency),
+            'couponCode' => (string) ($cart['coupon_code'] ?? ''),
+            'couponDiscount' => $format((float) ($cart['coupon_discount'] ?? 0), $currency),
             'total' => $format((float) $cart['total'], $currency),
             'shipmentId' => (int) ($cart['shipment']->id ?? 0),
             'shipmentName' => (string) ($cart['shipment']->name ?? 'Keine aktive Abholstation'),

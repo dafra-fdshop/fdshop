@@ -69,8 +69,24 @@ test('authenticated cart validates mutations and keeps checkout state correctly 
   await expect(cart.locator('[data-cart-payment-fee]')).toHaveText('0,00 €');
   await expect(cart.locator('[data-cart-total]')).toHaveText('131,96 €');
   await expect(cart.locator('[data-cart-terms]')).toHaveAttribute('data-required', '1');
-  await expect(cart.locator('[data-cart-remark]')).toHaveCount(0);
+  await expect(cart.locator('[data-cart-remark]')).toBeVisible();
+  await expect(cart.getByRole('button', { name: /Bemerkung speichern/i })).toHaveCount(0);
   await expect(normal.getByRole('button', { name: 'Menge aktualisieren' })).toHaveAttribute('title', 'Menge aktualisieren');
+  await expect(cart.locator('.fdshop-cart__table-head > span').first()).toHaveCSS('white-space', 'nowrap');
+  const headings = await cart.locator('.fdshop-cart__table-head > span').evaluateAll(elements => elements.map(element => ({ left: element.getBoundingClientRect().left, right: element.getBoundingClientRect().right })));
+  expect(headings[2].left).toBeGreaterThan(headings[1].left);
+  expect(headings[3].left).toBeGreaterThan(headings[2].left);
+  expect(headings[4].left).toBeGreaterThan(headings[3].left);
+
+  await cart.getByLabel('Gutscheincode').fill('E2E-EXPIRED');
+  await cart.getByRole('button', { name: 'Übernehmen' }).click();
+  await expect(cart.locator('[data-fdshop-cart-message]')).toContainText('abgelaufen');
+  await cart.getByLabel('Gutscheincode').fill('e2e-percent');
+  await cart.getByRole('button', { name: 'Übernehmen' }).click();
+  await expect(cart.locator('[data-cart-coupon-discount]')).toHaveText('12,70 €');
+  await expect(cart.locator('[data-cart-total]')).toHaveText('119,26 €');
+  await expect(cart.getByLabel('Gutscheincode')).toHaveValue('E2E-PERCENT');
+  await cart.locator('[data-cart-remark]').fill('Bitte sicher verpacken.');
 
   await page.setViewportSize({ width: 480, height: 900 });
   await expect(cart.locator('[data-cart-item="910000"]')).toBeVisible();
@@ -90,6 +106,7 @@ test('authenticated cart validates mutations and keeps checkout state correctly 
   await expect(cart.locator('[data-fdshop-cart-message]')).toContainText('Menge wurde aktualisiert');
   await expect(normal.locator('[data-cart-quantity]')).toHaveValue('2');
   await expect(normal.locator('[data-cart-line-total]')).toContainText('39,98 €');
+  await expect(cart.locator('[data-cart-remark]')).toHaveValue('Bitte sicher verpacken.');
   await normal.getByRole('button', { name: 'Menge reduzieren' }).click();
   await normal.getByRole('button', { name: 'Menge aktualisieren' }).click();
   await expect(normal.locator('[data-cart-quantity]')).toHaveValue('1');
@@ -97,7 +114,7 @@ test('authenticated cart validates mutations and keeps checkout state correctly 
   await normal.locator('[data-cart-quantity]').fill('3');
   await normal.getByRole('button', { name: 'Menge aktualisieren' }).click();
   await expect(normal.locator('[data-cart-quantity]')).toHaveValue('3');
-  await expect(cart.locator('[data-cart-total]')).toHaveText('171,94 €');
+  await expect(cart.locator('[data-cart-total]')).toHaveText('155,24 €');
   expect(documentRequests).toBe(0);
 
   await normal.locator('[data-cart-quantity]').fill('0');
@@ -142,7 +159,7 @@ test('authenticated cart validates mutations and keeps checkout state correctly 
   await cart.locator('[data-cart-select-payment="900611"]').click();
   await expect(cart.locator('[data-cart-payment-name]')).toHaveText('E2E Zahlung Inaktiv');
   await expect(cart.locator('[data-cart-payment-fee]')).toHaveText('2,50 €');
-  await expect(cart.locator('[data-cart-total]')).toHaveText('179,44 €');
+  await expect(cart.locator('[data-cart-total]')).toHaveText('162,74 €');
 
   await cart.locator('[data-cart-terms]').check();
   await page.reload();
@@ -150,8 +167,8 @@ test('authenticated cart validates mutations and keeps checkout state correctly 
   await expect(cart.locator('[data-cart-payment-name]')).toHaveText('E2E Zahlung Inaktiv');
   await expect(cart.locator('[data-cart-terms]')).not.toBeChecked();
 
-  await expect(cart.getByLabel('Gutscheincode')).toBeDisabled();
-  await expect(cart.getByRole('button', { name: 'Übernehmen' })).toBeDisabled();
+  await expect(cart.getByLabel('Gutscheincode')).toBeEnabled();
+  await expect(cart.getByRole('button', { name: 'Übernehmen' })).toBeEnabled();
   await cart.getByRole('button', { name: 'Zahlungspflichtig bestellen' }).click();
   await expect(cart.locator('[data-fdshop-cart-message]')).toContainText('folgenden Paket aktiviert');
   await expect(page).toHaveURL(/\/warenkorb/);
@@ -164,5 +181,6 @@ test('authenticated cart validates mutations and keeps checkout state correctly 
   await expect(cart.locator('[data-fdshop-cart-empty]')).toBeVisible();
   await expect(cart.locator('[data-cart-subtotal]')).toHaveText('0,00 €');
   await expect(cart.locator('[data-cart-total]')).toHaveText('12,49 €');
+  await expect(cart.locator('[data-cart-coupon-discount]')).toHaveText('0,00 €');
   diagnostics.expectClean();
 });

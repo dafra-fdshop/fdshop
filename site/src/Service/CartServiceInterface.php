@@ -6,7 +6,7 @@ defined('_JEXEC') or die;
 
 interface CartServiceInterface
 {
-    public function getCart(int $userId, string $sessionId, int $shipmentId = 0, int $paymentId = 0): array;
+    public function getCart(int $userId, string $sessionId, int $shipmentId = 0, int $paymentId = 0, string $couponCode = ''): array;
 
     public function addItem(int $userId, string $sessionId, int $productId, float $quantity): array;
 
@@ -17,5 +17,7 @@ interface CartServiceInterface
     public function validateShipment(int $shipmentId): int;
 
     public function validatePayment(int $paymentId): int;
+
+    public function validateCoupon(int $userId, string $sessionId, string $couponCode, int $shipmentId = 0, int $paymentId = 0): array;
 
 }

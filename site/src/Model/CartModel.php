@@ -20,7 +20,8 @@ final class CartModel extends BaseDatabaseModel
             $userId,
             $session->getId(),
             (int) $session->get('com_fdshop.cart.' . $userId . '.shipment_id', 0),
-            (int) $session->get('com_fdshop.cart.' . $userId . '.payment_id', 0)
+            (int) $session->get('com_fdshop.cart.' . $userId . '.payment_id', 0),
+            (string) $session->get('com_fdshop.cart.' . $userId . '.coupon_code', '')
         );
     }
 

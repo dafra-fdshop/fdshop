@@ -54,6 +54,8 @@
             cart.querySelector('[data-cart-shipment-selection-fee]').textContent = state.shipmentFee;
             cart.querySelector('[data-cart-payment-fee]').textContent = state.paymentFee;
             cart.querySelector('[data-cart-payment-selection-fee]').textContent = state.paymentFee;
+            cart.querySelector('[data-cart-coupon-discount]').textContent = state.couponDiscount;
+            cart.querySelector('[data-cart-coupon-code]').value = state.couponCode;
             cart.querySelector('[data-cart-total]').textContent = state.total;
             cart.querySelector('[data-cart-shipment-name]').textContent = state.shipmentName;
             cart.querySelector('[data-cart-payment-name]').textContent = state.paymentName;
@@ -75,6 +77,7 @@
             if (button.matches('[data-cart-open]')) cart.querySelector('[data-cart-dialog="' + button.dataset.cartOpen + '"]').showModal();
             if (button.matches('[data-cart-select-shipment]')) request('selectShipment', { shipment_id: button.dataset.cartSelectShipment }).then(function () { button.closest('dialog').close(); notify('Abholstation wurde geändert.', false); }).catch(function (error) { notify(error.message, true); });
             if (button.matches('[data-cart-select-payment]')) request('selectPayment', { payment_id: button.dataset.cartSelectPayment }).then(function () { button.closest('dialog').close(); notify('Zahlungsart wurde geändert.', false); }).catch(function (error) { notify(error.message, true); });
+            if (button.matches('[data-cart-apply-coupon]')) request('applyCoupon', { coupon_code: cart.querySelector('[data-cart-coupon-code]').value }).catch(function (error) { notify(error.message, true); });
             if (button.matches('[data-cart-order]')) request('orderUnavailable', {}).then(function () { notify('Die Bestellfunktion wird in einem folgenden Paket aktiviert.', false); }).catch(function (error) { notify(error.message, true); });
         });
     });

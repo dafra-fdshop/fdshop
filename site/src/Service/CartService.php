@@ -14,7 +14,7 @@ final class CartService implements CartServiceInterface
     {
     }
 
-    public function getCart(int $userId, string $sessionId, int $shipmentId = 0, int $paymentId = 0): array
+    public function getCart(int $userId, string $sessionId, int $shipmentId = 0, int $paymentId = 0, string $couponCode = ''): array
     {
         $this->assertOwner($userId, $sessionId);
         $items = $this->loadItems($userId, $sessionId);
@@ -41,6 +41,14 @@ final class CartService implements CartServiceInterface
         $shipmentFee = $shipment ? (float) $shipment->fee : 0.0;
         $paymentFee = $payment ? (float) $payment->fee : 0.0;
         $subtotal = $this->money($subtotal);
+        $coupon = ['code' => '', 'discount' => 0.0];
+        if ($couponCode !== '') {
+            try {
+                $coupon = $this->couponResult($items, $userId, $couponCode, $subtotal);
+            } catch (\DomainException) {
+                // A coupon that became invalid must never make the cart unusable.
+            }
+        }
 
         return [
             'items' => $items,
@@ -53,7 +61,9 @@ final class CartService implements CartServiceInterface
             'subtotal' => $subtotal,
             'shipment_fee' => $shipmentFee,
             'payment_fee' => $paymentFee,
-            'total' => $this->money($subtotal + $shipmentFee + $paymentFee),
+            'coupon_code' => $coupon['code'],
+            'coupon_discount' => $coupon['discount'],
+            'total' => $this->money($subtotal - $coupon['discount'] + $shipmentFee + $paymentFee),
             'currency' => $items[0]->currency ?? 'EUR',
         ];
     }
@@ -143,6 +153,21 @@ final class CartService implements CartServiceInterface
         return $this->validateChoice('payment_methods', $paymentId, 'Zahlungsart');
     }
 
+    public function validateCoupon(int $userId, string $sessionId, string $couponCode, int $shipmentId = 0, int $paymentId = 0): array
+    {
+        $couponCode = strtoupper(trim($couponCode));
+        if ($couponCode === '') {
+            throw new \DomainException('Bitte geben Sie einen Gutscheincode ein.');
+        }
+
+        $cart = $this->getCart($userId, $sessionId, $shipmentId, $paymentId);
+        $coupon = $this->couponResult($cart['items'], $userId, $couponCode, (float) $cart['subtotal']);
+        $cart['coupon_code'] = $coupon['code'];
+        $cart['coupon_discount'] = $coupon['discount'];
+        $cart['total'] = $this->money((float) $cart['subtotal'] - $coupon['discount'] + (float) $cart['shipment_fee'] + (float) $cart['payment_fee']);
+        return $cart;
+    }
+
     private function loadItems(int $userId, string $sessionId): array
     {
         $currentPrice = 'CASE WHEN ' . $this->db->quoteName('p.discount_active') . ' = 1 AND '
@@ -150,7 +175,7 @@ final class CartService implements CartServiceInterface
             . ' ELSE ' . $this->db->quoteName('p.sale_price') . ' END';
         $query = $this->db->getQuery(true)
             ->select([
-                $this->db->quoteName('c.id'), $this->db->quoteName('c.product_id'), $this->db->quoteName('c.quantity'),
+                $this->db->quoteName('c.id'), $this->db->quoteName('c.product_id'), $this->db->quoteName('c.buyer_group_id'), $this->db->quoteName('c.quantity'),
                 $this->db->quoteName('p.product_name'), $this->db->quoteName('p.alias'), $this->db->quoteName('p.sale_price'),
                 $this->db->quoteName('p.discount_price'), $this->db->quoteName('p.discount_active'), $this->db->quoteName('p.currency'),
                 $this->db->quoteName('p.min_order_qty'), $this->db->quoteName('p.max_order_qty'), $this->db->quoteName('p.step_order_qty'),
@@ -305,6 +330,108 @@ final class CartService implements CartServiceInterface
             }
         }
         throw new \DomainException('Die gewählte ' . $label . ' ist nicht verfügbar.');
+    }
+
+    private function couponResult(array $items, int $userId, string $couponCode, float $subtotal): array
+    {
+        $code = strtoupper(trim($couponCode));
+        $query = $this->db->getQuery(true)->select('*')->from($this->db->quoteName('#__fdshop_coupons'))
+            ->where($this->db->quoteName('coupon_code') . ' = ' . $this->db->quote($code));
+        $this->db->setQuery($query);
+        $coupon = $this->db->loadObject();
+        if (!$coupon) {
+            throw new \DomainException('Der Gutscheincode ist ungültig.');
+        }
+        $now = Factory::getDate()->toUnix();
+        if ((int) $coupon->published !== 1) {
+            throw new \DomainException('Der Gutschein ist nicht aktiv.');
+        }
+        if (!empty($coupon->valid_from) && strtotime((string) $coupon->valid_from) > $now) {
+            throw new \DomainException('Der Gutschein ist noch nicht gültig.');
+        }
+        if (!empty($coupon->valid_to) && strtotime((string) $coupon->valid_to) < $now) {
+            throw new \DomainException('Der Gutschein ist abgelaufen.');
+        }
+        if ($subtotal < (float) $coupon->minimum_order_total) {
+            throw new \DomainException('Der Mindestbestellwert für diesen Gutschein wurde nicht erreicht.');
+        }
+        if ((int) $coupon->usage_limit_total > 0 && $this->usageCount((int) $coupon->id) >= (int) $coupon->usage_limit_total) {
+            throw new \DomainException('Der Gutschein wurde bereits vollständig eingelöst.');
+        }
+        if ((int) $coupon->usage_limit_per_user > 0) {
+            if ($userId < 1) {
+                throw new \DomainException('Dieser Gutschein kann nur angemeldet eingelöst werden.');
+            }
+            if ($this->usageCount((int) $coupon->id, $userId) >= (int) $coupon->usage_limit_per_user) {
+                throw new \DomainException('Sie haben diesen Gutschein bereits vollständig eingelöst.');
+            }
+        }
+
+        $userIds = $this->mappedIds('coupon_user_map', 'user_id', (int) $coupon->id);
+        if ($userIds !== [] && !in_array($userId, $userIds, true)) {
+            throw new \DomainException('Der Gutschein ist diesem Benutzer nicht zugeordnet.');
+        }
+        $groupIds = $this->mappedIds('coupon_buyer_group_map', 'buyer_group_id', (int) $coupon->id);
+        $cartGroupIds = array_values(array_unique(array_map(static fn ($item): int => (int) $item->buyer_group_id, $items)));
+        if ($groupIds !== [] && array_intersect($groupIds, $cartGroupIds) === []) {
+            throw new \DomainException('Der Gutschein ist für diese Käufergruppe nicht gültig.');
+        }
+
+        $productIds = $this->mappedIds('coupon_product_map', 'product_id', (int) $coupon->id);
+        $categoryIds = $this->mappedIds('coupon_category_map', 'category_id', (int) $coupon->id);
+        $eligible = 0.0;
+        foreach ($items as $item) {
+            if ($productIds !== [] && !in_array((int) $item->product_id, $productIds, true)) {
+                continue;
+            }
+            if ($categoryIds !== [] && !$this->productInCategories((int) $item->product_id, $categoryIds)) {
+                continue;
+            }
+            $eligible += (float) $item->line_total;
+        }
+        $eligible = $this->money($eligible);
+        if ($eligible <= 0) {
+            throw new \DomainException('Der Gutschein gilt für kein Produkt im Warenkorb.');
+        }
+        $value = max(0.0, (float) $coupon->discount_value);
+        if ((string) $coupon->discount_type === 'percent') {
+            $discount = $this->money($eligible * $value / 100);
+        } elseif ((string) $coupon->discount_type === 'fixed') {
+            $discount = $this->money(min($eligible, $value));
+        } else {
+            throw new \DomainException('Die Rabattart des Gutscheins wird nicht unterstützt.');
+        }
+
+        return ['code' => $code, 'discount' => min($subtotal, $discount)];
+    }
+
+    private function mappedIds(string $table, string $column, int $couponId): array
+    {
+        $query = $this->db->getQuery(true)->select($this->db->quoteName($column))
+            ->from($this->db->quoteName('#__fdshop_' . $table))
+            ->where($this->db->quoteName('coupon_id') . ' = ' . $couponId);
+        $this->db->setQuery($query);
+        return array_map('intval', $this->db->loadColumn());
+    }
+
+    private function usageCount(int $couponId, int $userId = 0): int
+    {
+        $query = $this->db->getQuery(true)->select('COUNT(*)')->from($this->db->quoteName('#__fdshop_coupon_usage'))
+            ->where($this->db->quoteName('coupon_id') . ' = ' . $couponId);
+        if ($userId > 0) {
+            $query->where($this->db->quoteName('user_id') . ' = ' . $userId);
+        }
+        $this->db->setQuery($query);
+        return (int) $this->db->loadResult();
+    }
+
+    private function productInCategories(int $productId, array $categoryIds): bool
+    {
+        $query = $this->db->getQuery(true)->select('COUNT(*)')->from($this->db->quoteName('#__fdshop_product_category_map'))
+            ->where($this->db->quoteName('product_id') . ' = ' . $productId)
+            ->whereIn($this->db->quoteName('category_id'), $categoryIds);
+        $this->db->setQuery($query);
+        return (int) $this->db->loadResult() > 0;
     }
 
     private function currentPrice(object $product): float
