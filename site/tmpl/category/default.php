@@ -2,6 +2,9 @@
 
 defined('_JEXEC') or die;
 
+use FDShop\Component\FDShop\Site\Helper\PurchaseHelper;
+use Joomla\CMS\Layout\LayoutHelper;
+
 $sort = (string) $this->state->get('filter.sort', 'name');
 $direction = (string) $this->state->get('filter.direction', 'asc');
 $selectedSort = $sort . ':' . $direction;
@@ -98,11 +101,11 @@ $resultsText = sprintf('%d–%d von %d', $first, $last, $total);
                                     </div>
                                 <?php endforeach; ?>
                             </dl>
-                            <div class="fdshop-card__price" data-effective-price="<?php echo $this->escape((string) $item->current_price); ?>">
+                            <div class="fdshop-card__commerce"><div class="fdshop-card__price" data-effective-price="<?php echo $this->escape((string) $item->current_price); ?>">
                                 <?php if ($item->has_discount) : ?><span class="fdshop-card__regular-price"><?php echo $this->escape($item->regular_price_formatted); ?></span><?php endif; ?>
                                 <strong><?php echo $this->escape($item->price_formatted); ?></strong>
                                 <small>inkl. MwSt.</small>
-                            </div>
+                            </div><?php if ($this->purchaseEnabled) : ?><?php echo LayoutHelper::render('purchase.action', PurchaseHelper::data($item, 'card'), JPATH_COMPONENT_SITE . '/layouts'); ?><?php endif; ?></div>
                         </div>
                     </div>
                 </article>
@@ -115,4 +118,5 @@ $resultsText = sprintf('%d–%d von %d', $first, $last, $total);
         <div class="fdshop-video__header"><h2 id="fdshop-video-title" data-fdshop-video-title>Produktvideo</h2><button type="button" class="fdshop-video__close" data-fdshop-video-close aria-label="Video schließen">×</button></div>
         <div class="fdshop-video__content" data-fdshop-video-content></div>
     </dialog>
+    <?php if ($this->purchaseEnabled) : ?><?php echo LayoutHelper::render('purchase.modal', [], JPATH_COMPONENT_SITE . '/layouts'); ?><?php endif; ?>
 </main>

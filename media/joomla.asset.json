@@ -25,6 +25,14 @@
       }
     },
     {
+      "name": "com_fdshop.purchase",
+      "type": "script",
+      "uri": "com_fdshop/purchase.js",
+      "attributes": {
+        "defer": true
+      }
+    },
+    {
       "name": "com_fdshop.admin-bundle",
       "type": "script",
       "uri": "com_fdshop/admin-bundle.js",

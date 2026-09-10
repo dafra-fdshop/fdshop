@@ -5,6 +5,7 @@ namespace FDShop\Component\FDShop\Site\Controller;
 defined('_JEXEC') or die;
 
 use FDShop\Component\FDShop\Site\Service\CartServiceInterface;
+use FDShop\Component\FDShop\Site\Helper\RouteHelper;
 use Joomla\CMS\Factory;
 use Joomla\CMS\MVC\Controller\BaseController;
 use Joomla\CMS\Response\JsonResponse;
@@ -134,7 +135,7 @@ final class CartController extends BaseController
     {
         $format = static fn (float $value, string $currency): string => number_format($value, 2, ',', '.') . ' ' . (strtoupper($currency) === 'EUR' ? '€' : strtoupper($currency));
         $currency = (string) ($cart['currency'] ?? 'EUR');
-        return [
+        $state = [
             'items' => array_map(static fn ($item): array => ['id' => (int) $item->id, 'quantity' => (float) $item->quantity, 'unitPrice' => $format((float) $item->unit_price, (string) $item->currency), 'lineTotal' => $format((float) $item->line_total, (string) $item->currency)], $cart['items']),
             'subtotal' => $format((float) $cart['subtotal'], $currency),
             'shipmentFee' => $format((float) $cart['shipment_fee'], $currency),
@@ -148,5 +149,21 @@ final class CartController extends BaseController
             'paymentName' => (string) ($cart['payment']->name ?? 'Keine aktive Zahlungsart'),
             'orderCreated' => (bool) ($cart['order_created'] ?? false),
         ];
+        if (isset($cart['purchase'])) {
+            $purchase = $cart['purchase'];
+            $state['purchase'] = [
+                'productId' => (int) $purchase['product_id'],
+                'productName' => (string) $purchase['product_name'],
+                'requestedQuantity' => (float) $purchase['requested_quantity'],
+                'effectiveQuantity' => (float) $purchase['effective_quantity'],
+                'resultingCartQuantity' => (float) $purchase['resulting_cart_quantity'],
+                'adjusted' => (bool) $purchase['adjusted'],
+                'message' => (string) $purchase['message'],
+                'unitPrice' => $format((float) $purchase['unit_price'], $currency),
+                'lineAmount' => $format((float) $purchase['line_amount'], $currency),
+                'cartUrl' => RouteHelper::getCartRoute(),
+            ];
+        }
+        return $state;
     }
 }

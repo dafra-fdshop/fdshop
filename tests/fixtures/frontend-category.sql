@@ -27,6 +27,10 @@ SET `nem` = 125.500, `shot_count` = 25.000, `caliber` = '20 mm', `burn_time` = '
     `ribbon_new` = 1, `ribbon_hot` = 1, `ribbon_bundle` = 1
 WHERE `id` = 900100;
 
+UPDATE `__PREFIX__fdshop_products`
+SET `min_order_qty` = 2, `max_order_qty` = 8, `step_order_qty` = 2
+WHERE `id` = 900105;
+
 INSERT IGNORE INTO `__PREFIX__fdshop_product_category_map` (`id`,`product_id`,`category_id`,`is_primary`) VALUES
 (903100,900103,900010,0),(903101,900104,900010,0),(903102,900105,900010,0),(903103,900106,900010,0),(903104,900107,900010,0);
 

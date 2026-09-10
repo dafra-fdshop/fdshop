@@ -10,6 +10,7 @@ namespace FDShop\Component\FDShop\Site\View\Category;
 defined('_JEXEC') or die;
 
 use FDShop\Component\FDShop\Site\Helper\RouteHelper;
+use FDShop\Component\FDShop\Site\Helper\PurchaseHelper;
 use Joomla\CMS\Factory;
 use Joomla\CMS\MVC\View\HtmlView as BaseHtmlView;
 use Joomla\CMS\Uri\Uri;
@@ -22,6 +23,7 @@ final class HtmlView extends BaseHtmlView
     public object $state;
     public array $sortOptions = [];
     public array $limitOptions = [12, 24, 36, 48];
+    public bool $purchaseEnabled = false;
 
     public function display($tpl = null): void
     {
@@ -36,6 +38,7 @@ final class HtmlView extends BaseHtmlView
         $this->items = $model->getItems();
         $this->pagination = $model->getPagination();
         $this->state = $model->getState();
+        $this->purchaseEnabled = PurchaseHelper::isShopEnabled();
         $this->sortOptions = [
             'name:asc'   => 'Name aufsteigend',
             'name:desc'  => 'Name absteigend',
@@ -65,7 +68,8 @@ final class HtmlView extends BaseHtmlView
 
         Factory::getApplication()->getDocument()->getWebAssetManager()
             ->useStyle('com_fdshop.site')
-            ->useScript('com_fdshop.site');
+            ->useScript('com_fdshop.site')
+            ->useScript('com_fdshop.purchase');
 
         parent::display($tpl);
     }

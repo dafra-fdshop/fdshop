@@ -71,16 +71,23 @@ final class CartService implements CartServiceInterface
     public function addItem(int $userId, string $sessionId, int $productId, float $quantity): array
     {
         $this->assertOwner($userId, $sessionId);
+        $this->assertPurchasingEnabled();
         $product = $this->loadProduct($productId);
-        $this->validateQuantity($product, $quantity);
+        $requested = $quantity;
+        $this->validatePurchaseIncrement($product, $requested);
         $existing = $this->findCartItem($userId, $sessionId, $productId);
+        $existingQuantity = (float) ($existing->quantity ?? 0);
+        [$quantity, $adjusted] = $this->limitPurchaseQuantity($product, $existingQuantity + $requested);
+        $this->validateQuantity($product, $quantity);
+        $effectiveAdded = round($quantity - $existingQuantity, 3);
+        if ($effectiveAdded <= 0) {
+            throw new \DomainException('Die maximal verfügbare Menge dieses Produkts befindet sich bereits im Warenkorb.');
+        }
         $now = Factory::getDate()->toSql();
         $gross = $this->currentPrice($product);
         $net = $this->netPrice($gross);
 
         if ($existing) {
-            $quantity += (float) $existing->quantity;
-            $this->validateQuantity($product, $quantity);
             $query = $this->db->getQuery(true)
                 ->update($this->db->quoteName('#__fdshop_cart'))
                 ->set($this->db->quoteName('quantity') . ' = ' . $this->db->quote($quantity))
@@ -106,7 +113,21 @@ final class CartService implements CartServiceInterface
             $this->db->insertObject('#__fdshop_cart', $row);
         }
 
-        return $this->getCart($userId, $sessionId);
+        $cart = $this->getCart($userId, $sessionId);
+        $cart['purchase'] = [
+            'product_id' => (int) $product->id,
+            'product_name' => (string) $product->product_name,
+            'requested_quantity' => $requested,
+            'effective_quantity' => $effectiveAdded,
+            'resulting_cart_quantity' => $quantity,
+            'adjusted' => $adjusted,
+            'unit_price' => $gross,
+            'line_amount' => $this->money($effectiveAdded * $gross),
+            'message' => $adjusted
+                ? 'Die gewünschte Menge von ' . $this->formatQuantity($requested) . ' ist aktuell nicht verfügbar. Wir haben Ihnen die maximal verfügbare Menge von ' . $this->formatQuantity($effectiveAdded) . ' in den Warenkorb gelegt.'
+                : 'Das Produkt ' . (string) $product->product_name . ' wurde zum Warenkorb hinzugefügt.',
+        ];
+        return $cart;
     }
 
     public function updateQuantity(int $userId, string $sessionId, int $cartId, float $quantity, int $shipmentId = 0, int $paymentId = 0): array
@@ -224,7 +245,7 @@ final class CartService implements CartServiceInterface
     {
         $now = Factory::getDate()->toSql();
         $query = $this->db->getQuery(true)
-            ->select([$this->db->quoteName('p.id'), $this->db->quoteName('p.buyer_group_id'), $this->db->quoteName('p.sale_price'), $this->db->quoteName('p.discount_price'), $this->db->quoteName('p.discount_active'), $this->db->quoteName('p.currency'), $this->db->quoteName('p.min_order_qty'), $this->db->quoteName('p.max_order_qty'), $this->db->quoteName('p.step_order_qty'), $this->db->quoteName('d.stock_quantity'), $this->db->quoteName('d.reserved_quantity')])
+            ->select([$this->db->quoteName('p.id'), $this->db->quoteName('p.product_name'), $this->db->quoteName('p.buyer_group_id'), $this->db->quoteName('p.sale_price'), $this->db->quoteName('p.discount_price'), $this->db->quoteName('p.discount_active'), $this->db->quoteName('p.currency'), $this->db->quoteName('p.min_order_qty'), $this->db->quoteName('p.max_order_qty'), $this->db->quoteName('p.step_order_qty'), $this->db->quoteName('d.stock_quantity'), $this->db->quoteName('d.reserved_quantity')])
             ->from($this->db->quoteName('#__fdshop_products', 'p'))
             ->innerJoin($this->db->quoteName('#__fdshop_products_details', 'd') . ' ON ' . $this->db->quoteName('d.product_id') . ' = ' . $this->db->quoteName('p.id'))
             ->where($this->db->quoteName('p.id') . ' = :productId')
@@ -262,6 +283,48 @@ final class CartService implements CartServiceInterface
         $available = max(0, (float) $product->stock_quantity - (float) $product->reserved_quantity);
         if ($quantity > $available + 0.0001) {
             throw new \DomainException('Gewünschte Menge nicht verfügbar.');
+        }
+    }
+
+    private function validatePurchaseIncrement(object $product, float $quantity): void
+    {
+        if (!is_finite($quantity) || $quantity <= 0) {
+            throw new \DomainException('Die Menge muss größer als 0 sein.');
+        }
+        $units = (int) round($quantity * 1000);
+        $minimum = max(1000, (int) round((float) $product->min_order_qty * 1000));
+        $step = max(1, (int) round((float) $product->step_order_qty * 1000));
+        if ($units < $minimum) {
+            throw new \DomainException('Die Mindestbestellmenge beträgt ' . $this->formatQuantity($minimum / 1000) . '.');
+        }
+        if (($units - $minimum) % $step !== 0) {
+            throw new \DomainException('Die Menge muss der Bestellschrittweite ' . $this->formatQuantity($step / 1000) . ' entsprechen.');
+        }
+    }
+
+    private function limitPurchaseQuantity(object $product, float $desired): array
+    {
+        $minimum = max(1000, (int) round((float) $product->min_order_qty * 1000));
+        $step = max(1, (int) round((float) $product->step_order_qty * 1000));
+        $available = max(0, (int) floor(((float) $product->stock_quantity - (float) $product->reserved_quantity) * 1000 + 0.0001));
+        $configuredMax = (int) round((float) $product->max_order_qty * 1000);
+        $ceiling = $configuredMax > 0 ? min($available, $configuredMax) : $available;
+        if ($ceiling < $minimum) {
+            throw new \DomainException('Das Produkt ist aktuell nicht in einer bestellbaren Menge verfügbar.');
+        }
+        $maximumValid = $minimum + intdiv($ceiling - $minimum, $step) * $step;
+        $desiredUnits = (int) round($desired * 1000);
+        $resultUnits = min($desiredUnits, $maximumValid);
+        return [$resultUnits / 1000, $resultUnits !== $desiredUnits];
+    }
+
+    private function assertPurchasingEnabled(): void
+    {
+        $query = $this->db->getQuery(true)->select($this->db->quoteName('katalog_active'))
+            ->from($this->db->quoteName('#__fdshop_config'))->where($this->db->quoteName('id') . ' = 1');
+        $this->db->setQuery($query);
+        if ((int) $this->db->loadResult() === 1) {
+            throw new \DomainException('Im Katalogmodus können keine Produkte in den Warenkorb gelegt werden.');
         }
     }
 

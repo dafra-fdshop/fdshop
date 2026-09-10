@@ -37,6 +37,9 @@ final class ProductModel extends BaseDatabaseModel
                 $db->quoteName('p.discount_active'),
                 $db->quoteName('p.currency'),
                 $db->quoteName('p.in_stock'),
+                $db->quoteName('p.min_order_qty'),
+                $db->quoteName('p.max_order_qty'),
+                $db->quoteName('p.step_order_qty'),
                 $db->quoteName('p.available_from'),
                 $db->quoteName('p.nem'),
                 $db->quoteName('p.shot_count'),
@@ -53,6 +56,8 @@ final class ProductModel extends BaseDatabaseModel
                 $db->quoteName('m.manufacturer_name'),
                 $db->quoteName('m.alias', 'manufacturer_alias'),
                 $db->quoteName('d.is_in_stock', 'physically_in_stock'),
+                $db->quoteName('d.stock_quantity'),
+                $db->quoteName('d.reserved_quantity'),
             ])
             ->from($db->quoteName('#__fdshop_products', 'p'))
             ->leftJoin($db->quoteName('#__fdshop_products_details', 'd') . ' ON ' . $db->quoteName('d.product_id') . ' = ' . $db->quoteName('p.id'))

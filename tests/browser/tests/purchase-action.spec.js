@@ -1,0 +1,104 @@
+const { test, expect } = require('@playwright/test');
+const { authenticateSiteUser, installDiagnostics } = require('../support/browser');
+
+async function openCategory(page) {
+  const response = await page.goto('/batterien');
+  expect(response?.status()).toBe(200);
+}
+
+test('guest purchase uses the central action, adds quantities and reports a stock limit', async ({ page, baseURL }) => {
+  const diagnostics = await installDiagnostics(page, baseURL);
+  await openCategory(page);
+  const card = page.locator('[data-product-id="900100"]');
+  const action = card.locator('[data-fdshop-purchase]');
+  await expect(action).toBeVisible();
+  await expect(action.locator('[data-purchase-quantity]')).toHaveValue('1');
+  await action.hover();
+  await expect(action.locator('[data-purchase-quantity]')).toHaveCSS('opacity', '1');
+
+  const addResponse = page.waitForResponse(response => response.url().includes('task=cart.add'));
+  await action.locator('[data-purchase-submit]').click();
+  const first = await (await addResponse).json();
+  expect(first.success, first.message).toBe(true);
+  expect(first.data.purchase).toMatchObject({ productId: 900100, requestedQuantity: 1, effectiveQuantity: 1, resultingCartQuantity: 1, adjusted: false, unitPrice: '19,99 €', lineAmount: '19,99 €' });
+  await expect(page.locator('[data-purchase-modal]')).toBeVisible();
+  await expect(page.locator('[data-purchase-product]')).toHaveText('E2E Produkt Aktiv');
+  await expect(page.locator('[data-purchase-effective]')).toHaveText('1');
+  await page.getByRole('button', { name: 'Weiter einkaufen' }).click();
+  await expect(page.locator('[data-purchase-modal]')).toBeHidden();
+
+  await action.locator('[data-purchase-quantity]').fill('3');
+  const repeatResponse = page.waitForResponse(response => response.url().includes('task=cart.add'));
+  await action.locator('[data-purchase-submit]').click();
+  const repeat = await (await repeatResponse).json();
+  expect(repeat.data.purchase).toMatchObject({ effectiveQuantity: 3, resultingCartQuantity: 4, adjusted: false });
+  await page.getByRole('button', { name: 'Weiter einkaufen' }).click();
+
+  await action.locator('[data-purchase-quantity]').fill('10');
+  const limitedResponse = page.waitForResponse(response => response.url().includes('task=cart.add'));
+  await action.locator('[data-purchase-submit]').click();
+  const limited = await (await limitedResponse).json();
+  expect(limited.data.purchase).toMatchObject({ requestedQuantity: 10, effectiveQuantity: 6, resultingCartQuantity: 10, adjusted: true });
+  await expect(page.locator('[data-purchase-title]')).toHaveText('Menge angepasst');
+  await expect(page.locator('[data-purchase-message]')).toContainText('maximal verfügbare Menge von 6');
+  const cartHref = await page.locator('[data-purchase-cart]').getAttribute('href');
+  expect(cartHref).toMatch(/(?:view=cart|\/fdshop\/cart)/);
+  await page.locator('[data-purchase-cart]').click();
+  await expect(page.locator('[data-fdshop-cart] [data-cart-item]')).toHaveCount(1);
+  await expect(page.locator('[data-cart-quantity]')).toHaveValue('10');
+  diagnostics.expectClean();
+});
+
+test('purchase validates zero, minimum and step and uses the server discount price', async ({ page, baseURL }) => {
+  const diagnostics = await installDiagnostics(page, baseURL);
+  await openCategory(page);
+  const action = page.locator('[data-product-id="900105"] [data-fdshop-purchase]');
+  await expect(action.locator('[data-purchase-quantity]')).toHaveAttribute('min', '2');
+  await expect(action.locator('[data-purchase-quantity]')).toHaveAttribute('step', '2');
+  await expect(action.locator('[data-purchase-quantity]')).toHaveAttribute('max', '8');
+  await action.hover();
+
+  for (const [quantity, message] of [['0', 'größer als 0'], ['1', 'Mindestbestellmenge'], ['3', 'Bestellschrittweite']]) {
+    await action.locator('[data-purchase-quantity]').fill(quantity);
+    await action.locator('[data-purchase-submit]').click();
+    await expect(action.locator('[data-purchase-error]')).toContainText(message);
+    await expect(page.locator('[data-purchase-modal]')).not.toBeVisible();
+  }
+
+  await action.locator('[data-purchase-quantity]').fill('8');
+  await action.locator('[data-purchase-submit]').click();
+  await expect(page.locator('[data-purchase-modal]')).toBeVisible();
+  await expect(page.locator('[data-purchase-price]')).toHaveText('39,99 €');
+  await expect(page.locator('[data-purchase-amount]')).toHaveText('319,92 €');
+  diagnostics.expectClean();
+});
+
+test('touch opens first and adds on second tap; detail and authenticated purchase use the same component', async ({ browser, baseURL }) => {
+  const context = await browser.newContext({ baseURL, hasTouch: true, viewport: { width: 480, height: 900 } });
+  const page = await context.newPage();
+  const diagnostics = await installDiagnostics(page, baseURL);
+  await page.route('https://i.ytimg.com/**', route => route.fulfill({ status: 200, contentType: 'image/svg+xml', body: '<svg xmlns="http://www.w3.org/2000/svg"/>' }));
+  await openCategory(page);
+  const action = page.locator('[data-product-id="900100"] [data-fdshop-purchase]');
+  let addRequests = 0;
+  page.on('request', request => { if (request.url().includes('task=cart.add')) addRequests += 1; });
+  await action.locator('[data-purchase-submit]').tap();
+  await expect(action).toHaveClass(/is-open/);
+  expect(addRequests).toBe(0);
+  await action.locator('[data-purchase-submit]').tap();
+  await expect(page.locator('[data-purchase-modal]')).toBeVisible();
+  expect(addRequests).toBe(1);
+  await page.getByRole('button', { name: 'Weiter einkaufen' }).click();
+
+  await page.goto('/index.php?option=com_fdshop&view=product&id=900100&catid=900010');
+  await expect(page.locator('.fdshop-purchase--detail [data-purchase-quantity]')).toBeVisible();
+  await authenticateSiteUser(page);
+  await page.goto('/batterien');
+  await page.locator('[data-product-id="900100"] [data-purchase-submit]').tap();
+  await page.locator('[data-product-id="900100"] [data-purchase-submit]').tap();
+  await expect(page.locator('[data-purchase-modal]')).toBeVisible();
+  await page.locator('[data-purchase-cart]').click();
+  await expect(page.locator('[data-fdshop-cart] [data-cart-item]')).toHaveCount(1);
+  diagnostics.expectClean();
+  await context.close();
+});

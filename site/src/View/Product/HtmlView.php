@@ -10,6 +10,7 @@ namespace FDShop\Component\FDShop\Site\View\Product;
 defined('_JEXEC') or die;
 
 use FDShop\Component\FDShop\Site\Helper\RouteHelper;
+use FDShop\Component\FDShop\Site\Helper\PurchaseHelper;
 use Joomla\CMS\Factory;
 use Joomla\CMS\MVC\View\HtmlView as BaseHtmlView;
 use Joomla\CMS\Uri\Uri;
@@ -20,6 +21,7 @@ final class HtmlView extends BaseHtmlView
     public string $categoryUrl;
     public array $images = [];
     public string $placeholderImage;
+    public bool $purchaseEnabled = false;
 
     public function display($tpl = null): void
     {
@@ -30,6 +32,7 @@ final class HtmlView extends BaseHtmlView
         }
 
         $this->item = $item;
+        $this->purchaseEnabled = PurchaseHelper::isShopEnabled();
         $categoryId = max(0, Factory::getApplication()->getInput()->getInt('catid'));
         $this->categoryUrl = $categoryId > 0 ? RouteHelper::getCategoryRoute($categoryId) : '';
         $root = rtrim(Uri::root(true), '/');
@@ -61,7 +64,7 @@ final class HtmlView extends BaseHtmlView
             $document->setMetaData('keywords', (string) $item->meta_keywords);
         }
 
-        $document->getWebAssetManager()->useStyle('com_fdshop.site')->useScript('com_fdshop.site');
+        $document->getWebAssetManager()->useStyle('com_fdshop.site')->useScript('com_fdshop.site')->useScript('com_fdshop.purchase');
         parent::display($tpl);
     }
 

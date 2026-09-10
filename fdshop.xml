@@ -12,6 +12,7 @@
 	<files folder="site">
 		<folder>src</folder>
 		<folder>tmpl</folder>
+		<folder>layouts</folder>
 	</files>
 	
 	<media destination="com_fdshop" folder="media">
