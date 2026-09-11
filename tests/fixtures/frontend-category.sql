@@ -22,6 +22,8 @@ UPDATE `__PREFIX__fdshop_products_details`
 SET `is_in_stock` = CASE WHEN `product_id` = 900100 THEN 1 ELSE 0 END
 WHERE `product_id` IN (900100,900104,900106);
 
+DELETE FROM `__PREFIX__fdshop_products_details` WHERE `product_id` = 900108;
+
 UPDATE `__PREFIX__fdshop_products`
 SET `nem` = 125.500, `shot_count` = 25.000, `caliber` = '20 mm', `burn_time` = '35 s', `rise_height` = '30 m',
     `ribbon_new` = 1, `ribbon_hot` = 1, `ribbon_bundle` = 1

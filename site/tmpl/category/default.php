@@ -105,7 +105,7 @@ $resultsText = sprintf('%d–%d von %d', $first, $last, $total);
                                 <?php if ($item->has_discount) : ?><span class="fdshop-card__regular-price"><?php echo $this->escape($item->regular_price_formatted); ?></span><?php endif; ?>
                                 <strong><?php echo $this->escape($item->price_formatted); ?></strong>
                                 <small>inkl. MwSt.</small>
-                            </div><?php if ($this->purchaseEnabled) : ?><?php echo LayoutHelper::render('purchase.action', PurchaseHelper::data($item, 'card'), JPATH_COMPONENT_SITE . '/layouts'); ?><?php endif; ?></div>
+                            </div><?php if ($this->purchaseEnabled) : ?><?php echo LayoutHelper::render('purchase.action', PurchaseHelper::data($item), JPATH_COMPONENT_SITE . '/layouts'); ?><?php endif; ?></div>
                         </div>
                     </div>
                 </article>

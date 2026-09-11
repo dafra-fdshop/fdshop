@@ -40,7 +40,7 @@
     const error = action.querySelector('[data-purchase-error]');
 
     button.addEventListener('click', async event => {
-      if (touchCapable && action.classList.contains('fdshop-purchase--card') && !action.classList.contains('is-open')) {
+      if (touchCapable && !action.classList.contains('is-open')) {
         event.preventDefault();
         action.classList.add('is-open');
         quantity.focus();

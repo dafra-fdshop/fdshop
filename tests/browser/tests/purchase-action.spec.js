@@ -13,8 +13,15 @@ test('guest purchase uses the central action, adds quantities and reports a stoc
   const action = card.locator('[data-fdshop-purchase]');
   await expect(action).toBeVisible();
   await expect(action.locator('[data-purchase-quantity]')).toHaveValue('1');
+  await expect(action).not.toHaveClass(/fdshop-purchase--/);
+  await expect(action.locator('[data-purchase-submit]')).toHaveCSS('border-radius', '50%');
   await action.hover();
   await expect(action.locator('[data-purchase-quantity]')).toHaveCSS('opacity', '1');
+  expect(await action.evaluate(element => {
+    const button = element.querySelector('[data-purchase-submit]').getBoundingClientRect();
+    const quantity = element.querySelector('[data-purchase-quantity]').getBoundingClientRect();
+    return quantity.left >= button.right - 1;
+  })).toBe(true);
 
   const addResponse = page.waitForResponse(response => response.url().includes('task=cart.add'));
   await action.locator('[data-purchase-submit]').click();
@@ -73,6 +80,21 @@ test('purchase validates zero, minimum and step and uses the server discount pri
   diagnostics.expectClean();
 });
 
+test('category remains independent of product details and request validation stays server-side', async ({ page, baseURL }) => {
+  const diagnostics = await installDiagnostics(page, baseURL);
+  await page.goto('/batterien?limit=48');
+  const card = page.locator('[data-product-id="900108"]');
+  await expect(card).toBeVisible();
+  await expect(card.locator('[data-fdshop-purchase]')).toBeVisible();
+  const response = page.waitForResponse(candidate => candidate.url().includes('task=cart.add'));
+  await card.locator('[data-purchase-submit]').click();
+  const payload = await (await response).json();
+  expect(payload.success).toBe(false);
+  expect(payload.message).toContain('nicht verfügbar');
+  await expect(card.locator('[data-purchase-error]')).toContainText('nicht verfügbar');
+  diagnostics.expectClean();
+});
+
 test('touch opens first and adds on second tap; detail and authenticated purchase use the same component', async ({ browser, baseURL }) => {
   const context = await browser.newContext({ baseURL, hasTouch: true, viewport: { width: 480, height: 900 } });
   const page = await context.newPage();
@@ -91,7 +113,11 @@ test('touch opens first and adds on second tap; detail and authenticated purchas
   await page.getByRole('button', { name: 'Weiter einkaufen' }).click();
 
   await page.goto('/index.php?option=com_fdshop&view=product&id=900100&catid=900010');
-  await expect(page.locator('.fdshop-purchase--detail [data-purchase-quantity]')).toBeVisible();
+  const detailAction = page.locator('.fdshop-product [data-fdshop-purchase]');
+  await expect(detailAction.locator('[data-purchase-quantity]')).toHaveCSS('opacity', '0');
+  await detailAction.hover();
+  await expect(detailAction.locator('[data-purchase-quantity]')).toHaveCSS('opacity', '1');
+  await expect(detailAction.locator('[data-purchase-submit]')).toHaveCSS('border-radius', '50%');
   await authenticateSiteUser(page);
   await page.goto('/batterien');
   await page.locator('[data-product-id="900100"] [data-purchase-submit]').tap();

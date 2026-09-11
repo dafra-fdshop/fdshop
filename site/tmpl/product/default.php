@@ -54,7 +54,7 @@ $factIcons = ['NEM' => 'icon_nem.svg', 'Schusszahl' => 'icon_anzahl.svg', 'Kalib
                 <div class="fdshop-product__stock-copy"><strong>LAGERBESTAND:</strong><span><?php echo $this->escape($item->physical_stock_text); ?></span></div>
                 <p class="fdshop-stock <?php echo $this->escape($item->stock_class); ?>"><strong><?php echo $this->escape((string) $item->in_stock); ?></strong></p>
                 <div class="fdshop-product__price" data-effective-price="<?php echo $this->escape((string) $item->current_price); ?>"><?php if ($item->has_discount) : ?><span class="fdshop-product__regular-price"><?php echo $this->escape($item->regular_price_formatted); ?></span><?php endif; ?><strong><?php echo $this->escape($item->price_formatted); ?></strong><small>inkl. MwSt.</small></div>
-                <?php if ($this->purchaseEnabled) : ?><?php echo LayoutHelper::render('purchase.action', PurchaseHelper::data($item, 'detail'), JPATH_COMPONENT_SITE . '/layouts'); ?><?php endif; ?>
+                <?php if ($this->purchaseEnabled) : ?><?php echo LayoutHelper::render('purchase.action', PurchaseHelper::data($item), JPATH_COMPONENT_SITE . '/layouts'); ?><?php endif; ?>
             </div>
         </section>
     </div>

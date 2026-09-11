@@ -112,8 +112,6 @@ final class CategoryModel extends ListModel
                 $db->quoteName('p.min_order_qty'),
                 $db->quoteName('p.max_order_qty'),
                 $db->quoteName('p.step_order_qty'),
-                $db->quoteName('d.stock_quantity'),
-                $db->quoteName('d.reserved_quantity'),
                 $db->quoteName('p.nem'),
                 $db->quoteName('p.shot_count'),
                 $db->quoteName('p.caliber'),
@@ -129,7 +127,6 @@ final class CategoryModel extends ListModel
                 $db->quoteName('#__fdshop_product_category_map', 'pcm')
                 . ' ON ' . $db->quoteName('pcm.product_id') . ' = ' . $db->quoteName('p.id')
             )
-            ->innerJoin($db->quoteName('#__fdshop_products_details', 'd') . ' ON ' . $db->quoteName('d.product_id') . ' = ' . $db->quoteName('p.id'))
             ->where($db->quoteName('pcm.category_id') . ' = :categoryId')
             ->where($db->quoteName('p.is_active') . ' = 1')
             ->where($db->quoteName('p.is_deleted') . ' = 0')

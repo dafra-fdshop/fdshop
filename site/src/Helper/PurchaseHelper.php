@@ -18,13 +18,12 @@ final class PurchaseHelper
         return (int) $db->loadResult() !== 1;
     }
 
-    public static function data(object $item, string $variant): array
+    public static function data(object $item): array
     {
         $minimum = (float) $item->min_order_qty > 0 ? (float) $item->min_order_qty : 1.0;
         $step = (float) $item->step_order_qty > 0 ? (float) $item->step_order_qty : 1.0;
         $maximum = (float) $item->max_order_qty > 0 ? (float) $item->max_order_qty : 0.0;
-        $available = max(0.0, (float) $item->stock_quantity - (float) $item->reserved_quantity);
 
-        return compact('item', 'variant', 'minimum', 'step', 'maximum', 'available');
+        return compact('item', 'minimum', 'step', 'maximum');
     }
 }
