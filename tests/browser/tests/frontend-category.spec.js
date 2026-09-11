@@ -55,8 +55,12 @@ test('menu category renders mapped visible products and complete cards', async (
 
   const discount = page.locator('[data-product-id="900105"]');
   await expect(discount.locator('[data-effective-price] strong')).toHaveText('39,99 EUR');
+  await expect(discount.locator('[data-effective-price] strong')).toHaveCSS('color', 'rgb(224, 167, 33)');
   await expect(discount.locator('.fdshop-card__regular-price')).toHaveText('50,00 EUR');
+  await expect(discount.locator('.fdshop-card__regular-price')).toHaveCSS('color', 'rgb(220, 53, 69)');
+  await expect(discount.locator('.fdshop-card__regular-price')).toHaveCSS('text-decoration-line', 'line-through');
   await expect(page.locator('[data-product-id="900100"] [data-effective-price] strong')).toHaveText('19,99 EUR');
+  await expect(page.locator('[data-product-id="900100"] [data-effective-price] strong')).toHaveCSS('color', 'rgb(224, 167, 33)');
   await expect(page.locator('[data-product-id="900100"] [data-effective-price] small')).toHaveText('inkl. MwSt.');
 
   await expect(page.locator('iframe')).toHaveCount(0);
