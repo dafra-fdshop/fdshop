@@ -112,7 +112,6 @@ class ProductsModel extends ListModel
             $db->quoteName('a.in_stock'),
             $db->quoteName('a.available_from'),
             $db->quoteName('a.unit_type'),
-            $db->quoteName('a.unit_quantity'),
             $db->quoteName('a.nem'),
             $db->quoteName('a.shot_count'),
             $db->quoteName('a.caliber'),

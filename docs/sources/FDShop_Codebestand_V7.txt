@@ -528,6 +528,17 @@ c970bca1d92673b0cdc4ee841acf0d2c583a88ee
 
 Sie ersetzt FDShop_Codebestand_V6 vollständig.
 
+Nachtrag Verpackungseinheiten / Display V1 (Schema 0.0.20):
+- unit_type bleibt als Kategorie-Schnellfeld in #__fdshop_products.
+- unit_quantity, unit_discount_type und unit_discount_value liegen in
+  #__fdshop_products_details.
+- PackagingService ist die zentrale serverseitige Normalisierungs-,
+  Validierungs- und Bruttopreisquelle.
+- #__fdshop_cart hält unit_variant sowie Typ-/Mengensnapshots; Stück und
+  Verpackung sind getrennte Positionen bei gemeinsamem physischen Bestand.
+- Produktdetail, Purchase Action und Warenkorb unterstützen Stück/Display/
+  Schinken/VE. Die Kategorie greift dafür nicht auf products_details zu.
+
 =====================================================================
 ENDE DER QUELLE FDShop_Codebestand_V7
 =====================================================================

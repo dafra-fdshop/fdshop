@@ -512,6 +512,14 @@ c970bca1d92673b0cdc4ee841acf0d2c583a88ee
 
 Sie ersetzt FDShop_Implementierungsstand_V6 vollständig.
 
+Nachtrag Verpackungseinheiten / Display V1 (Schema 0.0.20):
+- Admin-Erfassung und serverseitige Validierung: umgesetzt.
+- Stückverkauf plus optionale Verpackung Display/Schinken/VE: umgesetzt.
+- Paketpreise ohne Rabatt, prozentual und als fester Bruttopreis: umgesetzt.
+- Detailseiten-Auswahl ohne Reload, expliziter Kategorie-Stückkauf und
+  getrennte Warenkorbsnapshots mit gemeinsamer Bestandsprüfung: umgesetzt.
+- Checkout-/Bestellübernahme der Verpackungssnapshots: bewusst Folgepaket.
+
 =====================================================================
 ENDE DER QUELLE FDShop_Implementierungsstand_V7
 =====================================================================

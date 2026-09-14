@@ -59,32 +59,34 @@ VALUES
 (900022,'E2E Händler','e2e-dealer',1,30,'2026-01-01 00:00:00',0);
 
 INSERT INTO `__PREFIX__fdshop_products`
-(id,manufacturer_id,product_name,alias,short_description,description,buyer_group_id,sale_price,discount_price,discount_active,currency,min_order_qty,max_order_qty,step_order_qty,is_active,is_deleted,meta_title,in_stock,unit_type,unit_quantity)
+(id,manufacturer_id,product_name,alias,short_description,description,buyer_group_id,sale_price,discount_price,discount_active,currency,min_order_qty,max_order_qty,step_order_qty,is_active,is_deleted,meta_title,in_stock,unit_type)
 VALUES
-(900100,900001,'E2E Produkt Aktiv','e2e-prod-active','Künstlich','Aktiv mit Bestand',900020,19.9900,0,0,'EUR',1,10,1,1,0,'E2E Aktiv','available','Stück',1),
-(900101,900002,'E2E Produkt Inaktiv','e2e-prod-inactive','Künstlich','Inaktiv',900020,21.0000,0,0,'EUR',1,10,1,0,0,'E2E Inaktiv','available','Stück',1),
-(900102,900001,'E2E Produkt Papierkorb','e2e-prod-deleted','Künstlich','Papierkorb',900020,22.0000,0,0,'EUR',1,10,1,0,1,'E2E Papierkorb','available','Stück',1),
-(900103,900001,'E2E Produkt Bild','e2e-prod-image','Künstlich','Mit synthetischem Bild',900020,23.0000,0,0,'EUR',1,10,1,1,0,'E2E Bild','available','Stück',1),
-(900104,900001,'E2E Produkt Ohne Bild','e2e-prod-noimage','Künstlich','Ohne Bild',900020,24.0000,0,0,'EUR',1,10,1,1,0,'E2E Ohne Bild','available','Stück',1),
-(900105,900001,'E2E Produkt Aktionspreis','e2e-prod-discount','Künstlich','Aktiver Aktionspreis',900020,50.0000,39.9900,1,'EUR',1,10,1,1,0,'E2E Aktionspreis','available','Stück',1),
-(900106,900001,'E2E Produkt Ausverkauft','e2e-prod-soldout','Künstlich','Ausverkauft',900020,26.0000,0,0,'EUR',1,10,1,1,0,'E2E Ausverkauft','sold_out','Stück',1),
-(900107,900001,'E2E Produkt Niedrigbestand','e2e-prod-low','Künstlich','Niedriger Bestand',900020,27.0000,0,0,'EUR',1,10,1,1,0,'E2E Niedrigbestand','low_stock','Stück',1),
-(900108,900001,'E2E Produkt Mehrfachkategorie','e2e-prod-multicat','Künstlich','Mehrere Kategorien',900020,28.0000,0,0,'EUR',1,10,1,1,0,'E2E Mehrfachkategorie','available','Stück',1),
-(900109,900001,'E2E Produkt Käufergruppen','e2e-prod-buyergroup','Künstlich','Mehrere Käufergruppen',900021,29.0000,0,0,'EUR',1,10,1,1,0,'E2E Käufergruppen','available','Stück',1);
+(900100,900001,'E2E Produkt Aktiv','e2e-prod-active','Künstlich','Aktiv mit Bestand',900020,19.9900,0,0,'EUR',1,10,1,1,0,'E2E Aktiv','available','Stück'),
+(900101,900002,'E2E Produkt Inaktiv','e2e-prod-inactive','Künstlich','Inaktiv',900020,21.0000,0,0,'EUR',1,10,1,0,0,'E2E Inaktiv','available','Stück'),
+(900102,900001,'E2E Produkt Papierkorb','e2e-prod-deleted','Künstlich','Papierkorb',900020,22.0000,0,0,'EUR',1,10,1,0,1,'E2E Papierkorb','available','Stück'),
+(900103,900001,'E2E Produkt Bild','e2e-prod-image','Künstlich','Mit synthetischem Bild',900020,23.0000,0,0,'EUR',1,10,1,1,0,'E2E Bild','available','Display'),
+(900104,900001,'E2E Produkt Ohne Bild','e2e-prod-noimage','Künstlich','Ohne Bild',900020,24.0000,0,0,'EUR',1,10,1,1,0,'E2E Ohne Bild','available','Display'),
+(900105,900001,'E2E Produkt Aktionspreis','e2e-prod-discount','Künstlich','Aktiver Aktionspreis',900020,50.0000,39.9900,1,'EUR',1,10,1,1,0,'E2E Aktionspreis','available','Display'),
+(900106,900001,'E2E Produkt Ausverkauft','e2e-prod-soldout','Künstlich','Ausverkauft',900020,26.0000,0,0,'EUR',1,10,1,1,0,'E2E Ausverkauft','sold_out','Stück'),
+(900107,900001,'E2E Produkt Niedrigbestand','e2e-prod-low','Künstlich','Niedriger Bestand',900020,27.0000,0,0,'EUR',1,10,1,1,0,'E2E Niedrigbestand','low_stock','Stück'),
+(900108,900001,'E2E Produkt Mehrfachkategorie','e2e-prod-multicat','Künstlich','Mehrere Kategorien',900020,28.0000,0,0,'EUR',1,10,1,1,0,'E2E Mehrfachkategorie','available','Schinken'),
+(900109,900001,'E2E Produkt Käufergruppen','e2e-prod-buyergroup','Künstlich','Mehrere Käufergruppen',900021,29.0000,0,0,'EUR',1,10,1,1,0,'E2E Käufergruppen','available','VE');
+
+UPDATE `__PREFIX__fdshop_products` SET `nem`=4.000, `shot_count`=6.000 WHERE `id`=900103;
 
 INSERT INTO `__PREFIX__fdshop_products_details`
-(id,product_id,sku,gtin,stock_quantity,low_stock,reserved_quantity,sold_quantity,is_in_stock,created,created_by,weight,length,width,height)
+(id,product_id,sku,gtin,stock_quantity,low_stock,reserved_quantity,sold_quantity,is_in_stock,created,created_by,weight,length,width,height,unit_quantity,unit_discount_type,unit_discount_value)
 VALUES
-(900200,900100,'E2E-PROD-ACTIVE','9900000000001',20,5,0,0,1,'2026-01-01 00:00:00',0,1,10,10,10),
-(900201,900101,'E2E-PROD-INACTIVE','9900000000002',20,5,0,0,1,'2026-01-01 00:00:00',0,1,10,10,10),
-(900202,900102,'E2E-PROD-DELETED','9900000000003',20,5,0,0,1,'2026-01-01 00:00:00',0,1,10,10,10),
-(900203,900103,'E2E-PROD-IMAGE','9900000000004',20,5,0,0,1,'2026-01-01 00:00:00',0,1,10,10,10),
-(900204,900104,'E2E-PROD-NOIMAGE','9900000000005',20,5,0,0,1,'2026-01-01 00:00:00',0,1,10,10,10),
-(900205,900105,'E2E-PROD-DISCOUNT','9900000000006',20,5,0,0,1,'2026-01-01 00:00:00',0,1,10,10,10),
-(900206,900106,'E2E-PROD-SOLDOUT','9900000000007',0,5,0,0,0,'2026-01-01 00:00:00',0,1,10,10,10),
-(900207,900107,'E2E-PROD-LOW','9900000000008',2,5,0,0,1,'2026-01-01 00:00:00',0,1,10,10,10),
-(900208,900108,'E2E-PROD-MULTICAT','9900000000009',20,5,0,0,1,'2026-01-01 00:00:00',0,1,10,10,10),
-(900209,900109,'E2E-PROD-BUYERGROUP','9900000000010',20,5,0,0,1,'2026-01-01 00:00:00',0,1,10,10,10);
+(900200,900100,'E2E-PROD-ACTIVE','9900000000001',20,5,0,0,1,'2026-01-01 00:00:00',0,1,10,10,10,1,'none',0),
+(900201,900101,'E2E-PROD-INACTIVE','9900000000002',20,5,0,0,1,'2026-01-01 00:00:00',0,1,10,10,10,1,'none',0),
+(900202,900102,'E2E-PROD-DELETED','9900000000003',20,5,0,0,1,'2026-01-01 00:00:00',0,1,10,10,10,1,'none',0),
+(900203,900103,'E2E-PROD-IMAGE','9900000000004',40,5,0,0,1,'2026-01-01 00:00:00',0,1,10,10,10,6,'none',0),
+(900204,900104,'E2E-PROD-NOIMAGE','9900000000005',40,5,0,0,1,'2026-01-01 00:00:00',0,1,10,10,10,6,'percent',5),
+(900205,900105,'E2E-PROD-DISCOUNT','9900000000006',40,5,0,0,1,'2026-01-01 00:00:00',0,1,10,10,10,6,'amount',199.95),
+(900206,900106,'E2E-PROD-SOLDOUT','9900000000007',0,5,0,0,0,'2026-01-01 00:00:00',0,1,10,10,10,1,'none',0),
+(900207,900107,'E2E-PROD-LOW','9900000000008',2,5,0,0,1,'2026-01-01 00:00:00',0,1,10,10,10,1,'none',0),
+(900208,900108,'E2E-PROD-MULTICAT','9900000000009',40,5,0,0,1,'2026-01-01 00:00:00',0,1,10,10,10,10,'percent',7.5),
+(900209,900109,'E2E-PROD-BUYERGROUP','9900000000010',40,5,0,0,1,'2026-01-01 00:00:00',0,1,10,10,10,12,'none',0);
 
 INSERT INTO `__PREFIX__fdshop_product_category_map` (id,product_id,category_id,is_primary) VALUES
 (900300,900100,900010,1),(900301,900101,900010,1),(900302,900102,900010,1),(900303,900103,900011,1),(900304,900104,900011,1),(900305,900105,900012,1),(900306,900106,900012,1),(900307,900107,900012,1),(900308,900108,900010,1),(900309,900108,900012,0),(900310,900109,900011,1);

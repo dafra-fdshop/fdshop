@@ -33,6 +33,12 @@
       }
     },
     {
+      "name": "com_fdshop.admin-product",
+      "type": "script",
+      "uri": "com_fdshop/admin-product.js",
+      "attributes": { "defer": true }
+    },
+    {
       "name": "com_fdshop.admin-bundle",
       "type": "script",
       "uri": "com_fdshop/admin-bundle.js",

@@ -55,6 +55,7 @@
       body.append(token.name, '1');
       body.append('product_id', action.dataset.purchaseProductId);
       body.append('quantity', quantity.value);
+      body.append('unit_variant', action.dataset.unitVariant || 'piece');
 
       try {
         const response = await fetch('index.php?option=com_fdshop&format=json&task=cart.add', {

@@ -42,7 +42,6 @@ class ProductTable extends Table
             'step_order_qty',
             'is_active',
             'is_deleted',
-            'unit_quantity',
 			'in_stock',
             'nem',
             'shot_count',
@@ -143,10 +142,6 @@ class ProductTable extends Table
 
         if (!isset($this->unit_type) || trim((string) $this->unit_type) === '') {
             $this->unit_type = 'Stück';
-        }
-
-        if (!isset($this->unit_quantity) || $this->unit_quantity === '') {
-            $this->unit_quantity = 1;
         }
 
         if (!isset($this->meta_title) || $this->meta_title === null) {

@@ -79,6 +79,7 @@ $resultsText = sprintf('%d–%d von %d', $first, $last, $total);
                             <?php if ((int) $item->ribbon_new === 1) : ?><span class="fdshop-ribbon fdshop-ribbon--new">Neu</span><?php endif; ?>
                             <?php if ((int) $item->ribbon_hot === 1) : ?><span class="fdshop-ribbon fdshop-ribbon--hot">Hot</span><?php endif; ?>
                             <?php if ((int) $item->ribbon_bundle === 1) : ?><span class="fdshop-ribbon fdshop-ribbon--bundle">Bundle</span><?php endif; ?>
+                            <?php if (in_array((string) $item->unit_type, ['Display', 'Schinken', 'VE'], true)) : ?><span class="fdshop-ribbon fdshop-ribbon--package"><?php echo $this->escape(strtoupper((string) $item->unit_type)); ?></span><?php endif; ?>
                         </div>
                     </div>
                     <div class="fdshop-card__body">
@@ -105,7 +106,7 @@ $resultsText = sprintf('%d–%d von %d', $first, $last, $total);
                                 <?php if ($item->has_discount) : ?><span class="fdshop-card__regular-price"><?php echo $this->escape($item->regular_price_formatted); ?></span><?php endif; ?>
                                 <strong><?php echo $this->escape($item->price_formatted); ?></strong>
                                 <small>inkl. MwSt.</small>
-                            </div><?php if ($this->purchaseEnabled) : ?><?php echo LayoutHelper::render('purchase.action', PurchaseHelper::data($item), JPATH_COMPONENT_SITE . '/layouts'); ?><?php endif; ?></div>
+                            </div><?php if ($this->purchaseEnabled) : ?><?php echo LayoutHelper::render('purchase.action', PurchaseHelper::data($item, 'piece'), JPATH_COMPONENT_SITE . '/layouts'); ?><?php endif; ?></div>
                         </div>
                     </div>
                 </article>

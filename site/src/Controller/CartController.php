@@ -17,7 +17,7 @@ final class CartController extends BaseController
     {
         $this->mutate(function (CartServiceInterface $service, int $userId, string $sessionId): array {
             $input = Factory::getApplication()->getInput();
-            return $service->addItem($userId, $sessionId, $input->post->getInt('product_id'), $input->post->getFloat('quantity', 1));
+            return $service->addItem($userId, $sessionId, $input->post->getInt('product_id'), $input->post->getFloat('quantity', 1), $input->post->getCmd('unit_variant', 'piece'));
         });
     }
 
@@ -136,7 +136,7 @@ final class CartController extends BaseController
         $format = static fn (float $value, string $currency): string => number_format($value, 2, ',', '.') . ' ' . (strtoupper($currency) === 'EUR' ? '€' : strtoupper($currency));
         $currency = (string) ($cart['currency'] ?? 'EUR');
         $state = [
-            'items' => array_map(static fn ($item): array => ['id' => (int) $item->id, 'quantity' => (float) $item->quantity, 'unitPrice' => $format((float) $item->unit_price, (string) $item->currency), 'lineTotal' => $format((float) $item->line_total, (string) $item->currency)], $cart['items']),
+            'items' => array_map(static fn ($item): array => ['id' => (int) $item->id, 'quantity' => (float) $item->quantity, 'unitVariant' => (string) $item->unit_variant, 'unitPrice' => $format((float) $item->unit_price, (string) $item->currency), 'lineTotal' => $format((float) $item->line_total, (string) $item->currency)], $cart['items']),
             'subtotal' => $format((float) $cart['subtotal'], $currency),
             'shipmentFee' => $format((float) $cart['shipment_fee'], $currency),
             'paymentFee' => $format((float) $cart['payment_fee'], $currency),
@@ -154,6 +154,8 @@ final class CartController extends BaseController
             $state['purchase'] = [
                 'productId' => (int) $purchase['product_id'],
                 'productName' => (string) $purchase['product_name'],
+                'unitVariant' => (string) $purchase['unit_variant'],
+                'unitType' => (string) $purchase['unit_type'],
                 'requestedQuantity' => (float) $purchase['requested_quantity'],
                 'effectiveQuantity' => (float) $purchase['effective_quantity'],
                 'resultingCartQuantity' => (float) $purchase['resulting_cart_quantity'],

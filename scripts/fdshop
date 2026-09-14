@@ -302,7 +302,7 @@ run_browser_purchase() {
   load_frontend_category_fixtures
   compose build browser
 
-  if ! compose run --rm --no-deps --env "PLAYWRIGHT_OUTPUT_DIR=$container_output" browser npx playwright test tests/purchase-action.spec.js; then
+  if ! compose run --rm --no-deps --env "PLAYWRIGHT_OUTPUT_DIR=$container_output" browser npx playwright test tests/purchase-action.spec.js tests/packaging-units.spec.js; then
     printf 'Purchase artifacts: %s\nFDShop purchase suite: FAIL; restoring base fixtures.\n' "$host_output" >&2
     load_fixtures || true
     return 1
@@ -352,6 +352,24 @@ run_browser_frontend_cart() {
     load_fixtures || true
     return 1
   fi
+}
+
+test_packaging_migration() {
+  verify_installed >/dev/null
+  verify_fixtures >/dev/null
+  local id
+  id="$(extension_id)"
+  sql "ALTER TABLE ${JOOMLA_DB_PREFIX}fdshop_cart DROP INDEX idx_fdshop_cart_variant, DROP COLUMN unit_quantity_snapshot, DROP COLUMN unit_type_snapshot, DROP COLUMN unit_variant;"
+  sql "ALTER TABLE ${JOOMLA_DB_PREFIX}fdshop_products ADD COLUMN unit_quantity INT UNSIGNED NOT NULL DEFAULT 1 AFTER unit_type;"
+  sql "ALTER TABLE ${JOOMLA_DB_PREFIX}fdshop_products_details DROP COLUMN unit_discount_value, DROP COLUMN unit_discount_type, DROP COLUMN unit_quantity;"
+  sql "UPDATE ${JOOMLA_DB_PREFIX}fdshop_products SET unit_type='Stück', unit_quantity=99 WHERE id=900100; UPDATE ${JOOMLA_DB_PREFIX}fdshop_products SET unit_type='Display', unit_quantity=6 WHERE id=900103; UPDATE ${JOOMLA_DB_PREFIX}fdshop_products SET unit_type='Display', unit_quantity=1 WHERE id=900104; UPDATE ${JOOMLA_DB_PREFIX}schemas SET version_id='0.0.19' WHERE extension_id=${id};"
+  install_fdshop >/dev/null
+  [[ "$(sql "SELECT CONCAT(p.unit_type,'|',d.unit_quantity,'|',d.unit_discount_type,'|',d.unit_discount_value) FROM ${JOOMLA_DB_PREFIX}fdshop_products p JOIN ${JOOMLA_DB_PREFIX}fdshop_products_details d ON d.product_id=p.id WHERE p.id=900103;")" == "Display|6|none|0.0000" ]]
+  [[ "$(sql "SELECT CONCAT(p.unit_type,'|',d.unit_quantity) FROM ${JOOMLA_DB_PREFIX}fdshop_products p JOIN ${JOOMLA_DB_PREFIX}fdshop_products_details d ON d.product_id=p.id WHERE p.id=900104;")" == "Stück|1" ]]
+  [[ "$(sql "SELECT CONCAT(p.unit_type,'|',d.unit_quantity) FROM ${JOOMLA_DB_PREFIX}fdshop_products p JOIN ${JOOMLA_DB_PREFIX}fdshop_products_details d ON d.product_id=p.id WHERE p.id=900100;")" == "Stück|1" ]]
+  [[ "$(sql "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema='${MARIADB_DATABASE}' AND table_name='${JOOMLA_DB_PREFIX}fdshop_products' AND column_name='unit_quantity';")" == "0" ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_cart WHERE unit_variant<>'piece' OR unit_type_snapshot<>'Stück' OR unit_quantity_snapshot<>1;")" == "0" ]]
+  printf 'FDShop packaging migration 0.0.19 -> 0.0.20: PASS\n'
 }
 
 run_browser_crud_manufacturers() {
@@ -427,7 +445,7 @@ run_browser_crud_products() {
   fi
 
   [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_products WHERE product_name='E2E-CRUD-PRODUCT-REFERENCE';")" == "1" ]]
-  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_products p JOIN ${JOOMLA_DB_PREFIX}fdshop_products_details d ON d.product_id=p.id WHERE p.product_name='E2E-CRUD-PRODUCT-REFERENCE' AND p.manufacturer_id=900001 AND p.sale_price=32.5000 AND p.discount_price=27.5000 AND p.discount_active=1 AND p.in_stock='Verfügbar' AND p.meta_title='CRUD meta title after save-close' AND d.sku='E2E-CRUD-PRODUCT-REFERENCE' AND d.stock_quantity=3 AND d.low_stock=4 AND d.reserved_quantity=2;")" == "1" ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_products p JOIN ${JOOMLA_DB_PREFIX}fdshop_products_details d ON d.product_id=p.id WHERE p.product_name='E2E-CRUD-PRODUCT-REFERENCE' AND p.manufacturer_id=900001 AND p.sale_price=32.5000 AND p.discount_price=27.5000 AND p.discount_active=1 AND p.in_stock='Verfügbar' AND p.unit_type='Display' AND p.meta_title='CRUD meta title after save-close' AND d.sku='E2E-CRUD-PRODUCT-REFERENCE' AND d.stock_quantity=3 AND d.low_stock=4 AND d.reserved_quantity=2 AND d.unit_quantity=6 AND d.unit_discount_type='percent' AND d.unit_discount_value=5.0000;")" == "1" ]]
   [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_product_category_map pcm JOIN ${JOOMLA_DB_PREFIX}fdshop_products p ON p.id=pcm.product_id WHERE p.product_name='E2E-CRUD-PRODUCT-REFERENCE';")" == "2" ]]
   [[ "$(sql "SELECT COUNT(DISTINCT pcm.category_id) FROM ${JOOMLA_DB_PREFIX}fdshop_product_category_map pcm JOIN ${JOOMLA_DB_PREFIX}fdshop_products p ON p.id=pcm.product_id WHERE p.product_name='E2E-CRUD-PRODUCT-REFERENCE';")" == "2" ]]
   [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_product_buyer_group_map pbgm JOIN ${JOOMLA_DB_PREFIX}fdshop_products p ON p.id=pbgm.product_id WHERE p.product_name='E2E-CRUD-PRODUCT-REFERENCE';")" == "2" ]]
@@ -764,6 +782,7 @@ Usage: scripts/fdshop COMMAND
   test-full         Run the complete Phase-2 regression and lifecycle suite
   browser-crud-configuration  Run configuration, shipment, payment and order-status CRUD tests
   lifecycle         Reset and test fresh install -> uninstall -> fresh install
+  test-packaging-migration  Rehearse the real 0.0.19 -> 0.0.20 data migration
   status            Show Compose service state
   versions          Show actual Joomla, PHP, Apache and MariaDB versions
 USAGE
@@ -813,6 +832,7 @@ main() {
         test-standard) test_standard "${2:-}" ;;
         test-full) test_full ;;
         lifecycle) lifecycle ;;
+        test-packaging-migration) test_packaging_migration ;;
         status) compose ps ;;
         versions)
           compose exec -T joomla php cli/joomla.php --version

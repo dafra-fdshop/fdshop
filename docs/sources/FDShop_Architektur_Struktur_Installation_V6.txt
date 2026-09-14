@@ -526,6 +526,18 @@ Technischer Referenzstand: c970bca1d92673b0cdc4ee841acf0d2c583a88ee
 
 Neue Versionen ersetzen ältere Versionen vollständig.
 
+Architekturnachtrag Schema 0.0.20:
+Die Verpackungsdefinition gehört zu products_details; nur unit_type verbleibt
+für die joinfreie Kategorieausgabe am Produkt. PackagingService ist die
+gemeinsame serverseitige Fachlogik. Warenkorbzeilen speichern immutable
+Typ-/Mengensnapshots und rechnen Mengen weiterhin generisch, während
+Bestandsprüfungen alle Varianten in physischen Stückzahlen zusammenführen.
+Ein späterer Warenkorb-zu-Bestellung-Schritt muss vor Abschluss erneut prüfen
+und mindestens unit_variant, unit_type/unit_quantity, Verkaufs-SKU/-Name,
+Bestellmenge, physische Stückmenge, Netto-/Bruttopreis und Zeilensumme als
+historische Bestellsnapshots persistieren. Dafür wurden in V1 bewusst keine
+spekulativen Order-Spalten ergänzt.
+
 =====================================================================
 ENDE DER QUELLE FDShop_Architektur_Struktur_Installation_V6
 =====================================================================

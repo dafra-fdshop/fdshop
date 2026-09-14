@@ -279,18 +279,31 @@
         <fieldset name="special" label="Besondere Felder">
             <field
                 name="unit_type"
-                type="text"
+                type="list"
                 label="Einheitstyp"
-                size="40"
-            />
+                default="Stück"
+            >
+                <option value="Stück">Stück</option>
+                <option value="Display">Display</option>
+                <option value="Schinken">Schinken</option>
+                <option value="VE">VE</option>
+            </field>
 
             <field
                 name="unit_quantity"
                 type="number"
                 label="Einheitsmenge"
                 step="1"
-                min="0"
+                min="1"
             />
+
+            <field name="unit_discount_type" type="list" label="Verpackungsrabatt" default="none">
+                <option value="none">Kein Rabatt</option>
+                <option value="percent">Prozent</option>
+                <option value="amount">Fester Bruttopreis</option>
+            </field>
+
+            <field name="unit_discount_value" type="number" label="Rabattwert / Paketpreis" step="0.01" min="0" />
 
             <field
                 name="nem"

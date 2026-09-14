@@ -91,3 +91,33 @@
         }
     });
 }());
+
+(function () {
+    'use strict';
+    var root = document.querySelector('[data-fdshop-package-root]');
+    var select = root ? root.querySelector('[data-fdshop-package-select]') : null;
+    if (!root || !select) return;
+    var name = root.querySelector('[data-fdshop-package-name]');
+    var price = root.querySelector('[data-fdshop-package-price]');
+    var regular = root.querySelector('[data-fdshop-package-regular]');
+    var purchase = root.querySelector('[data-fdshop-purchase]');
+    var quantity = purchase ? purchase.querySelector('[data-purchase-quantity]') : null;
+    var formatPrice = function (value) { return Number(value).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' EUR'; };
+    var formatFact = function (value, suffix) { var number = Number(value); return number > 0 ? number.toLocaleString('de-DE', { maximumFractionDigits: 3 }) + suffix : '-'; };
+    select.addEventListener('change', function () {
+        var packaged = select.value === 'package';
+        name.textContent = packaged ? root.dataset.packageName : root.dataset.pieceName;
+        price.textContent = formatPrice(packaged ? root.dataset.packagePrice : root.dataset.piecePrice);
+        var regularValue = Number(packaged ? root.dataset.packageRegularPrice : root.dataset.pieceRegularPrice);
+        var currentValue = Number(packaged ? root.dataset.packagePrice : root.dataset.piecePrice);
+        regular.textContent = formatPrice(regularValue);
+        regular.hidden = regularValue <= currentValue;
+        if (purchase) purchase.dataset.unitVariant = packaged ? 'package' : 'piece';
+        var multiplier = packaged ? Number(root.dataset.packageQuantity) : 1;
+        var nem = root.querySelector('[data-fdshop-package-fact="nem"]');
+        var shots = root.querySelector('[data-fdshop-package-fact="shots"]');
+        if (nem) nem.textContent = formatFact(Number(root.dataset.pieceNem) * multiplier, ' g');
+        if (shots) shots.textContent = formatFact(Number(root.dataset.pieceShots) * multiplier, '');
+        if (quantity) { quantity.value = '1'; quantity.min = '1'; quantity.step = '1'; }
+    });
+}());

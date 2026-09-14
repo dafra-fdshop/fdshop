@@ -29,7 +29,8 @@ class ProductService implements ProductServiceInterface
 
     public function __construct(
         private readonly MVCFactoryInterface $mvcFactory,
-        private readonly DatabaseInterface $db
+        private readonly DatabaseInterface $db,
+        private readonly PackagingService $packagingService
     ) {
     }
 
@@ -48,6 +49,7 @@ class ProductService implements ProductServiceInterface
         }
 
         $youtubeUrls = $this->extractYoutubeMediaUrls($data);
+        $data = $this->packagingService->normalize($data);
 
         if ($categoryIds === [] && array_key_exists('category_ids', $data)) {
             $categoryIds = $this->normalizeIds($data['category_ids']);
@@ -621,7 +623,6 @@ class ProductService implements ProductServiceInterface
             'in_stock',
             'available_from',
             'unit_type',
-            'unit_quantity',
             'nem',
             'shot_count',
             'caliber',
@@ -650,6 +651,9 @@ class ProductService implements ProductServiceInterface
             'length',
             'width',
             'height',
+            'unit_quantity',
+            'unit_discount_type',
+            'unit_discount_value',
         ];
 
         $productData = [];

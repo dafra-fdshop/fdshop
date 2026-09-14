@@ -9,6 +9,8 @@ defined('_JEXEC') or die;
 use Joomla\CMS\HTML\HTMLHelper;
 use Joomla\CMS\Router\Route;
 use Joomla\CMS\Uri\Uri;
+
+$this->getDocument()->getWebAssetManager()->useScript('com_fdshop.admin-product');
 ?>
 
 <form action="<?php echo Route::_('index.php?option=com_fdshop&view=product&layout=edit&id=' . (int) ($this->item->id ?? 0)); ?>" method="post" name="adminForm" id="adminForm" enctype="multipart/form-data">
@@ -165,6 +167,9 @@ use Joomla\CMS\Uri\Uri;
                     <div class="card-body">
                         <?php echo $this->form->renderField('unit_type'); ?>
                         <?php echo $this->form->renderField('unit_quantity'); ?>
+                        <?php echo $this->form->renderField('unit_discount_type'); ?>
+                        <?php echo $this->form->renderField('unit_discount_value'); ?>
+                        <div class="alert alert-info" data-fdshop-package-preview>Verpackungspreis: –</div>
                     </div>
                 </div>
             </div>

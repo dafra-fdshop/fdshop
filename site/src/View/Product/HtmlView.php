@@ -43,6 +43,8 @@ final class HtmlView extends BaseHtmlView
             : '';
         $item->price_formatted = $this->formatPrice((float) $item->current_price, (string) $item->currency);
         $item->regular_price_formatted = $this->formatPrice((float) $item->sale_price, (string) $item->currency);
+        $item->package['price_formatted'] = $this->formatPrice((float) $item->package['price'], (string) $item->currency);
+        $item->package['regular_price_formatted'] = $this->formatPrice((float) $item->package['regular_price'], (string) $item->currency);
         $item->stock_class = match ((string) $item->in_stock) {
             'Verfügbar', 'Bestellbar' => 'fdshop-stock--normal',
             'wenige Verfügbar', 'wenige Bestellbar' => 'fdshop-stock--low',

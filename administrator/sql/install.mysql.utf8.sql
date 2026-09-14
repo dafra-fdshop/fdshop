@@ -34,7 +34,6 @@ CREATE TABLE IF NOT EXISTS `#__fdshop_products` (
   `in_stock` VARCHAR(50) NOT NULL,
   `available_from` DATETIME NULL DEFAULT NULL,
   `unit_type` VARCHAR(100) NOT NULL DEFAULT 'Stück',
-  `unit_quantity` INT UNSIGNED NOT NULL DEFAULT 1,
 
   `nem` DECIMAL(12,3) NOT NULL DEFAULT 0.000,
   `shot_count` DECIMAL(12,3) NOT NULL DEFAULT 0.000,
@@ -75,6 +74,9 @@ CREATE TABLE IF NOT EXISTS `#__fdshop_products_details` (
   `length` DECIMAL(12,3) NOT NULL DEFAULT 0.000,
   `width` DECIMAL(12,3) NOT NULL DEFAULT 0.000,
   `height` DECIMAL(12,3) NOT NULL DEFAULT 0.000,
+  `unit_quantity` INT UNSIGNED NOT NULL DEFAULT 1,
+  `unit_discount_type` VARCHAR(20) NOT NULL DEFAULT 'none',
+  `unit_discount_value` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
   PRIMARY KEY (`id`),
   KEY `idx_fdshop_products_details_product_id` (`product_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -1000,6 +1002,9 @@ CREATE TABLE IF NOT EXISTS `#__fdshop_cart` (
   `unit_price_net` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
   `unit_price_gross` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
   `currency` CHAR(3) NOT NULL DEFAULT 'EUR',
+  `unit_variant` VARCHAR(20) NOT NULL DEFAULT 'piece',
+  `unit_type_snapshot` VARCHAR(100) NOT NULL DEFAULT 'Stück',
+  `unit_quantity_snapshot` INT UNSIGNED NOT NULL DEFAULT 1,
   `created` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `modified` DATETIME NULL DEFAULT NULL,
 
@@ -1007,6 +1012,7 @@ CREATE TABLE IF NOT EXISTS `#__fdshop_cart` (
   KEY `idx_fdshop_cart_user_id` (`user_id`),
   KEY `idx_fdshop_cart_session_id` (`session_id`),
   KEY `idx_fdshop_cart_product_id` (`product_id`),
+  KEY `idx_fdshop_cart_variant` (`product_id`, `unit_variant`, `unit_type_snapshot`, `unit_quantity_snapshot`),
   KEY `idx_fdshop_cart_buyer_group_id` (`buyer_group_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

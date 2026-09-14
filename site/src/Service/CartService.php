@@ -7,10 +7,11 @@ defined('_JEXEC') or die;
 use Joomla\CMS\Factory;
 use Joomla\Database\DatabaseInterface;
 use Joomla\Database\ParameterType;
+use FDShop\Component\FDShop\Administrator\Service\PackagingService;
 
 final class CartService implements CartServiceInterface
 {
-    public function __construct(private readonly DatabaseInterface $db)
+    public function __construct(private readonly DatabaseInterface $db, private readonly PackagingService $packagingService)
     {
     }
 
@@ -30,10 +31,16 @@ final class CartService implements CartServiceInterface
             $item->min_order_qty = (float) $item->min_order_qty > 0 ? (float) $item->min_order_qty : 1.0;
             $item->max_order_qty = (float) $item->max_order_qty > 0 ? (float) $item->max_order_qty : 0.0;
             $item->step_order_qty = (float) $item->step_order_qty > 0 ? (float) $item->step_order_qty : 1.0;
-            $item->sale_price = (float) $item->sale_price;
-            $item->discount_price = (float) $item->discount_price;
-            $item->has_discount = (int) $item->discount_active === 1 && $item->discount_price > 0;
-            $item->unit_price = $item->has_discount ? $item->discount_price : $item->sale_price;
+            $item->unit_price = (float) $item->unit_price_gross;
+            $item->has_discount = (string) $item->unit_variant === 'piece' && (float) $item->sale_price > $item->unit_price;
+            if ((string) $item->unit_variant === 'package') {
+                $item->min_order_qty = 1.0;
+                $item->step_order_qty = 1.0;
+                $item->max_order_qty = floor(max(0, (float) $item->stock_quantity - (float) $item->reserved_quantity) / max(1, (int) $item->unit_quantity_snapshot));
+            }
+            $item->sales_name = (string) $item->product_name . ((string) $item->unit_variant === 'package' ? ' ' . (string) $item->unit_type_snapshot : '');
+            $item->sales_sku = (string) $item->sku . ((string) $item->unit_variant === 'package' ? '-' . $this->skuSuffix((string) $item->unit_type_snapshot) : '');
+            $item->physical_quantity = $item->quantity * max(1, (int) $item->unit_quantity_snapshot);
             $item->line_total = $this->money($item->unit_price * $item->quantity);
             $subtotal += $item->line_total;
         }
@@ -68,23 +75,36 @@ final class CartService implements CartServiceInterface
         ];
     }
 
-    public function addItem(int $userId, string $sessionId, int $productId, float $quantity): array
+    public function addItem(int $userId, string $sessionId, int $productId, float $quantity, string $unitVariant = 'piece'): array
     {
         $this->assertOwner($userId, $sessionId);
         $this->assertPurchasingEnabled();
         $product = $this->loadProduct($productId);
+        if (!in_array($unitVariant, ['piece', 'package'], true)) {
+            throw new \DomainException('Die gewählte Verkaufseinheit ist ungültig.');
+        }
+        $package = $this->packagingService->calculate($product);
+        if ($unitVariant === 'package' && !$package['valid']) {
+            throw new \DomainException('Für dieses Produkt ist keine gültige Verpackungseinheit verfügbar.');
+        }
+        $unitType = $unitVariant === 'package' ? $package['unit_type'] : 'Stück';
+        $unitQuantity = $unitVariant === 'package' ? $package['unit_quantity'] : 1;
         $requested = $quantity;
-        $this->validatePurchaseIncrement($product, $requested);
-        $existing = $this->findCartItem($userId, $sessionId, $productId);
+        if ($unitVariant === 'package') {
+            $this->validatePackageQuantity($requested);
+        } else {
+            $this->validatePurchaseIncrement($product, $requested);
+        }
+        $existing = $this->findCartItem($userId, $sessionId, $productId, $unitVariant, $unitType, $unitQuantity);
         $existingQuantity = (float) ($existing->quantity ?? 0);
-        [$quantity, $adjusted] = $this->limitPurchaseQuantity($product, $existingQuantity + $requested);
-        $this->validateQuantity($product, $quantity);
+        [$quantity, $adjusted] = $this->limitVariantQuantity($userId, $sessionId, $product, $existingQuantity + $requested, $unitVariant, $unitQuantity, (int) ($existing->id ?? 0));
+        $this->validateVariantQuantity($userId, $sessionId, $product, $quantity, $unitVariant, $unitQuantity, (int) ($existing->id ?? 0));
         $effectiveAdded = round($quantity - $existingQuantity, 3);
         if ($effectiveAdded <= 0) {
             throw new \DomainException('Die maximal verfügbare Menge dieses Produkts befindet sich bereits im Warenkorb.');
         }
         $now = Factory::getDate()->toSql();
-        $gross = $this->currentPrice($product);
+        $gross = $unitVariant === 'package' ? $package['price'] : $package['piece_price'];
         $net = $this->netPrice($gross);
 
         if ($existing) {
@@ -108,6 +128,9 @@ final class CartService implements CartServiceInterface
                 'unit_price_net' => $net,
                 'unit_price_gross' => $gross,
                 'currency' => (string) $product->currency,
+                'unit_variant' => $unitVariant,
+                'unit_type_snapshot' => $unitType,
+                'unit_quantity_snapshot' => $unitQuantity,
                 'created' => $now,
             ];
             $this->db->insertObject('#__fdshop_cart', $row);
@@ -116,7 +139,9 @@ final class CartService implements CartServiceInterface
         $cart = $this->getCart($userId, $sessionId);
         $cart['purchase'] = [
             'product_id' => (int) $product->id,
-            'product_name' => (string) $product->product_name,
+            'product_name' => (string) $product->product_name . ($unitVariant === 'package' ? ' ' . $unitType : ''),
+            'unit_variant' => $unitVariant,
+            'unit_type' => $unitType,
             'requested_quantity' => $requested,
             'effective_quantity' => $effectiveAdded,
             'resulting_cart_quantity' => $quantity,
@@ -125,7 +150,7 @@ final class CartService implements CartServiceInterface
             'line_amount' => $this->money($effectiveAdded * $gross),
             'message' => $adjusted
                 ? 'Die gewünschte Menge von ' . $this->formatQuantity($requested) . ' ist aktuell nicht verfügbar. Wir haben Ihnen die maximal verfügbare Menge von ' . $this->formatQuantity($effectiveAdded) . ' in den Warenkorb gelegt.'
-                : 'Das Produkt ' . (string) $product->product_name . ' wurde zum Warenkorb hinzugefügt.',
+                : 'Das Produkt ' . (string) $product->product_name . ($unitVariant === 'package' ? ' als ' . $unitType : '') . ' wurde zum Warenkorb hinzugefügt.',
         ];
         return $cart;
     }
@@ -135,14 +160,11 @@ final class CartService implements CartServiceInterface
         $this->assertOwner($userId, $sessionId);
         $item = $this->loadOwnedCartItem($userId, $sessionId, $cartId);
         $product = $this->loadProduct((int) $item->product_id);
-        $this->validateQuantity($product, $quantity);
-        $gross = $this->currentPrice($product);
+        $this->validateVariantQuantity($userId, $sessionId, $product, $quantity, (string) $item->unit_variant, (int) $item->unit_quantity_snapshot, $cartId);
+        $gross = (float) $item->unit_price_gross;
         $query = $this->db->getQuery(true)
             ->update($this->db->quoteName('#__fdshop_cart'))
             ->set($this->db->quoteName('quantity') . ' = ' . $this->db->quote($quantity))
-            ->set($this->db->quoteName('unit_price_net') . ' = ' . $this->db->quote($this->netPrice($gross)))
-            ->set($this->db->quoteName('unit_price_gross') . ' = ' . $this->db->quote($gross))
-            ->set($this->db->quoteName('currency') . ' = ' . $this->db->quote((string) $product->currency))
             ->set($this->db->quoteName('modified') . ' = ' . $this->db->quote(Factory::getDate()->toSql()))
             ->where($this->db->quoteName('id') . ' = ' . $cartId)
             ->where($this->ownerWhere($userId, $sessionId));
@@ -197,10 +219,12 @@ final class CartService implements CartServiceInterface
         $query = $this->db->getQuery(true)
             ->select([
                 $this->db->quoteName('c.id'), $this->db->quoteName('c.product_id'), $this->db->quoteName('c.buyer_group_id'), $this->db->quoteName('c.quantity'),
+                $this->db->quoteName('c.unit_price_net'), $this->db->quoteName('c.unit_price_gross'), $this->db->quoteName('c.unit_variant'), $this->db->quoteName('c.unit_type_snapshot'), $this->db->quoteName('c.unit_quantity_snapshot'),
                 $this->db->quoteName('p.product_name'), $this->db->quoteName('p.alias'), $this->db->quoteName('p.sale_price'),
                 $this->db->quoteName('p.discount_price'), $this->db->quoteName('p.discount_active'), $this->db->quoteName('p.currency'),
                 $this->db->quoteName('p.min_order_qty'), $this->db->quoteName('p.max_order_qty'), $this->db->quoteName('p.step_order_qty'),
                 $this->db->quoteName('d.sku'), $currentPrice . ' AS ' . $this->db->quoteName('current_price'),
+                $this->db->quoteName('d.stock_quantity'), $this->db->quoteName('d.reserved_quantity'),
                 '(SELECT MIN(' . $this->db->quoteName('pcm.category_id') . ') FROM ' . $this->db->quoteName('#__fdshop_product_category_map', 'pcm')
                     . ' WHERE ' . $this->db->quoteName('pcm.product_id') . ' = ' . $this->db->quoteName('p.id') . ') AS ' . $this->db->quoteName('category_id'),
             ])
@@ -245,7 +269,7 @@ final class CartService implements CartServiceInterface
     {
         $now = Factory::getDate()->toSql();
         $query = $this->db->getQuery(true)
-            ->select([$this->db->quoteName('p.id'), $this->db->quoteName('p.product_name'), $this->db->quoteName('p.buyer_group_id'), $this->db->quoteName('p.sale_price'), $this->db->quoteName('p.discount_price'), $this->db->quoteName('p.discount_active'), $this->db->quoteName('p.currency'), $this->db->quoteName('p.min_order_qty'), $this->db->quoteName('p.max_order_qty'), $this->db->quoteName('p.step_order_qty'), $this->db->quoteName('d.stock_quantity'), $this->db->quoteName('d.reserved_quantity')])
+            ->select([$this->db->quoteName('p.id'), $this->db->quoteName('p.product_name'), $this->db->quoteName('p.buyer_group_id'), $this->db->quoteName('p.sale_price'), $this->db->quoteName('p.discount_price'), $this->db->quoteName('p.discount_active'), $this->db->quoteName('p.currency'), $this->db->quoteName('p.min_order_qty'), $this->db->quoteName('p.max_order_qty'), $this->db->quoteName('p.step_order_qty'), $this->db->quoteName('p.unit_type'), $this->db->quoteName('d.unit_quantity'), $this->db->quoteName('d.unit_discount_type'), $this->db->quoteName('d.unit_discount_value'), $this->db->quoteName('d.stock_quantity'), $this->db->quoteName('d.reserved_quantity')])
             ->from($this->db->quoteName('#__fdshop_products', 'p'))
             ->innerJoin($this->db->quoteName('#__fdshop_products_details', 'd') . ' ON ' . $this->db->quoteName('d.product_id') . ' = ' . $this->db->quoteName('p.id'))
             ->where($this->db->quoteName('p.id') . ' = :productId')
@@ -318,6 +342,66 @@ final class CartService implements CartServiceInterface
         return [$resultUnits / 1000, $resultUnits !== $desiredUnits];
     }
 
+    private function validatePackageQuantity(float $quantity): void
+    {
+        if (!is_finite($quantity) || $quantity < 1 || abs($quantity - round($quantity)) > 0.0001) {
+            throw new \DomainException('Verpackungseinheiten können nur in ganzen Mengen ab 1 bestellt werden.');
+        }
+    }
+
+    private function validateVariantQuantity(int $userId, string $sessionId, object $product, float $quantity, string $variant, int $unitQuantity, int $excludeCartId = 0): void
+    {
+        if ($variant === 'package') {
+            $this->validatePackageQuantity($quantity);
+        } else {
+            $this->validateQuantity($product, $quantity);
+        }
+        $otherDemand = $this->physicalCartDemand($userId, $sessionId, (int) $product->id, $excludeCartId);
+        $demand = $otherDemand + ($quantity * ($variant === 'package' ? $unitQuantity : 1));
+        $available = max(0, (float) $product->stock_quantity - (float) $product->reserved_quantity);
+        if ($demand > $available + 0.0001) {
+            throw new \DomainException('Gewünschte Menge nicht verfügbar. Der Warenkorb berücksichtigt den gemeinsamen physischen Stückbestand.');
+        }
+    }
+
+    private function limitVariantQuantity(int $userId, string $sessionId, object $product, float $desired, string $variant, int $unitQuantity, int $excludeCartId = 0): array
+    {
+        if ($variant === 'piece') {
+            $other = $this->physicalCartDemand($userId, $sessionId, (int) $product->id, $excludeCartId);
+            $copy = clone $product;
+            $copy->stock_quantity = max(0, (float) $product->stock_quantity - $other);
+            return $this->limitPurchaseQuantity($copy, $desired);
+        }
+        $this->validatePackageQuantity($desired);
+        $available = max(0, (float) $product->stock_quantity - (float) $product->reserved_quantity
+            - $this->physicalCartDemand($userId, $sessionId, (int) $product->id, $excludeCartId));
+        $maximum = (int) floor($available / max(1, $unitQuantity));
+        if ($maximum < 1) {
+            throw new \DomainException('Keine vollständige Verpackungseinheit mehr verfügbar.');
+        }
+        $result = min((int) round($desired), $maximum);
+        return [(float) $result, $result !== (int) round($desired)];
+    }
+
+    private function physicalCartDemand(int $userId, string $sessionId, int $productId, int $excludeCartId = 0): float
+    {
+        $query = $this->db->getQuery(true)
+            ->select('COALESCE(SUM(' . $this->db->quoteName('quantity') . ' * ' . $this->db->quoteName('unit_quantity_snapshot') . '), 0)')
+            ->from($this->db->quoteName('#__fdshop_cart'))
+            ->where($this->ownerWhere($userId, $sessionId))
+            ->where($this->db->quoteName('product_id') . ' = ' . $productId);
+        if ($excludeCartId > 0) {
+            $query->where($this->db->quoteName('id') . ' <> ' . $excludeCartId);
+        }
+        $this->db->setQuery($query);
+        return (float) $this->db->loadResult();
+    }
+
+    private function skuSuffix(string $type): string
+    {
+        return match ($type) { 'Display' => 'DISPLAY', 'Schinken' => 'SCHINKEN', 'VE' => 'VE', default => 'STUECK' };
+    }
+
     private function assertPurchasingEnabled(): void
     {
         $query = $this->db->getQuery(true)->select($this->db->quoteName('katalog_active'))
@@ -330,7 +414,7 @@ final class CartService implements CartServiceInterface
 
     private function loadOwnedCartItem(int $userId, string $sessionId, int $cartId): object
     {
-        $query = $this->db->getQuery(true)->select(['id', 'product_id', 'quantity'])
+        $query = $this->db->getQuery(true)->select(['id', 'product_id', 'quantity', 'unit_price_gross', 'unit_variant', 'unit_type_snapshot', 'unit_quantity_snapshot'])
             ->from($this->db->quoteName('#__fdshop_cart'))
             ->where($this->db->quoteName('id') . ' = ' . $cartId)
             ->where($this->ownerWhere($userId, $sessionId));
@@ -343,12 +427,15 @@ final class CartService implements CartServiceInterface
         return $item;
     }
 
-    private function findCartItem(int $userId, string $sessionId, int $productId): ?object
+    private function findCartItem(int $userId, string $sessionId, int $productId, string $variant, string $type, int $unitQuantity): ?object
     {
         $query = $this->db->getQuery(true)->select(['id', 'quantity'])
             ->from($this->db->quoteName('#__fdshop_cart'))
             ->where($this->ownerWhere($userId, $sessionId))
-            ->where($this->db->quoteName('product_id') . ' = ' . $productId);
+            ->where($this->db->quoteName('product_id') . ' = ' . $productId)
+            ->where($this->db->quoteName('unit_variant') . ' = ' . $this->db->quote($variant))
+            ->where($this->db->quoteName('unit_type_snapshot') . ' = ' . $this->db->quote($type))
+            ->where($this->db->quoteName('unit_quantity_snapshot') . ' = ' . $unitQuantity);
         $this->db->setQuery($query);
         return $this->db->loadObject() ?: null;
     }

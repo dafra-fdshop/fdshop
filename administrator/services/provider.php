@@ -17,6 +17,7 @@ use FDShop\Component\FDShop\Administrator\Service\BundleService;
 use FDShop\Component\FDShop\Administrator\Service\BundleServiceInterface;
 use FDShop\Component\FDShop\Administrator\Service\ProductService;
 use FDShop\Component\FDShop\Administrator\Service\ProductServiceInterface;
+use FDShop\Component\FDShop\Administrator\Service\PackagingService;
 use FDShop\Component\FDShop\Administrator\Service\OrderService;
 use FDShop\Component\FDShop\Administrator\Service\OrderServiceInterface;
 use FDShop\Component\FDShop\Site\Service\CartService;
@@ -100,11 +101,17 @@ return new class () implements ServiceProviderInterface {
         );
 
         $container->set(
+            PackagingService::class,
+            static fn (): PackagingService => new PackagingService()
+        );
+
+        $container->set(
             ProductServiceInterface::class,
             function (Container $container): ProductServiceInterface {
                 return new ProductService(
                     $container->get(MVCFactoryInterface::class),
-                    $container->get(DatabaseInterface::class)
+                    $container->get(DatabaseInterface::class),
+                    $container->get(PackagingService::class)
                 );
             }
         );
@@ -152,7 +159,7 @@ return new class () implements ServiceProviderInterface {
         $container->set(
             CartServiceInterface::class,
             function (Container $container): CartServiceInterface {
-                return new CartService($container->get(DatabaseInterface::class));
+                return new CartService($container->get(DatabaseInterface::class), $container->get(PackagingService::class));
             }
         );
 

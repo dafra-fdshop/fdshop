@@ -13,7 +13,7 @@ INSERT INTO `__PREFIX__fdshop_cart` (`id`,`user_id`,`session_id`,`product_id`,`b
 (910002,__JOOMLA_USER_ID__,'',900107,900020,1,22.6891,27.0000,'EUR','2026-01-10 10:02:00'),
 (910003,__JOOMLA_USER_ID__+1000,'',900103,900020,1,19.3277,23.0000,'EUR','2026-01-10 10:03:00');
 
-DELETE FROM `__PREFIX__menu` WHERE `alias`='warenkorb' AND `link` LIKE 'index.php?option=com_fdshop&view=cart%';
+DELETE FROM `__PREFIX__menu` WHERE `id`=900901 OR (`alias`='warenkorb' AND `link` LIKE 'index.php?option=com_fdshop&view=cart%');
 INSERT INTO `__PREFIX__menu`
 (`id`,`menutype`,`title`,`alias`,`note`,`path`,`link`,`type`,`published`,`parent_id`,`level`,`component_id`,`checked_out`,`checked_out_time`,`browserNav`,`access`,`img`,`template_style_id`,`params`,`lft`,`rgt`,`home`,`language`,`client_id`,`publish_up`,`publish_down`)
 VALUES

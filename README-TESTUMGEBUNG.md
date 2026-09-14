@@ -84,7 +84,12 @@ Neue Businessregeln, Architektur-, Datenmodell- und Governance-Entscheidungen bl
 - Bundle-Unterpositionen im Bestelldetail
 - Bundle-Item-Editing in Bestellungen
 - Bestell Trash/Restore (mit zwei benötigten Snapshots nicht sicher isoliert)
-- Frontend, Warenkorb, Checkout und operative Bestellungserzeugung
+- Checkout und operative Bestellungserzeugung
+
+Verpackungseinheiten werden in Schema 0.0.20 durch die Purchase-Suite mit
+geprüft (`scripts/fdshop browser-purchase`): serverseitige Paketpreise,
+Detailseiten-Umschaltung, expliziter Stückkauf der Kategorie sowie getrennte
+Stück-/Paketpositionen im Warenkorb.
 
 Im Gutscheinmodell fehlen weiterhin `maximum_discount_amount`, `coupon_type` und ein Allow/Exclude-Zuordnungsmodus. Technisch implementiert sind unter anderem `valid_to`, `usage_limit_per_user` sowie `percent` und `fixed`; abweichende Fachquellenbegriffe werden nicht automatisch gleichgesetzt.
 

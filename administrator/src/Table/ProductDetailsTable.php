@@ -32,6 +32,8 @@ class ProductDetailsTable extends Table
             'length',
             'width',
             'height',
+            'unit_quantity',
+            'unit_discount_value',
         ];
 
         foreach ($numericFields as $field) {
@@ -69,6 +71,10 @@ class ProductDetailsTable extends Table
         if (!isset($this->is_in_stock) || $this->is_in_stock === '') {
             $this->is_in_stock = 0;
         }
+
+        $this->unit_quantity = max(1, (int) ($this->unit_quantity ?? 1));
+        $discountType = trim((string) ($this->unit_discount_type ?? 'none'));
+        $this->unit_discount_type = in_array($discountType, ['none', 'percent', 'amount'], true) ? $discountType : 'none';
 
         if (!isset($this->created) || $this->created === '') {
             $this->created = Factory::getDate()->toSql();

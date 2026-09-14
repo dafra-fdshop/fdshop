@@ -100,6 +100,13 @@ test('product invalid save, create, apply, save-close, mappings, stock, status a
   await page.locator('#jform_description').fill('CRUD initial product description');
   await page.locator('#jform_meta_title').fill('CRUD initial meta title');
 
+  await page.getByRole('tab', { name: 'Besondere Felder' }).click();
+  await page.locator('#jform_unit_type').selectOption('Display');
+  await page.locator('#jform_unit_quantity').fill('6');
+  await page.locator('#jform_unit_discount_type').selectOption('percent');
+  await page.locator('#jform_unit_discount_value').fill('5');
+  await expect(page.locator('[data-fdshop-package-preview]')).toContainText('Verpackungspreis');
+
   const imagePath = testInfo.outputPath('e2e-crud-product.png');
   await page.screenshot({ path: imagePath });
   await page.getByRole('tab', { name: 'Medien' }).click();
@@ -135,6 +142,11 @@ test('product invalid save, create, apply, save-close, mappings, stock, status a
   await page.getByRole('tab', { name: 'Lager' }).click();
   await expect(page.locator('#jform_stock_quantity')).toHaveValue('3');
   await expect(page.locator('#jform_in_stock')).toHaveValue('Verfügbar');
+  await page.getByRole('tab', { name: 'Besondere Felder' }).click();
+  await expect(page.locator('#jform_unit_type')).toHaveValue('Display');
+  await expect(page.locator('#jform_unit_quantity')).toHaveValue('6');
+  await expect(page.locator('#jform_unit_discount_type')).toHaveValue('percent');
+  await expect(page.locator('#jform_unit_discount_value')).toHaveValue('5');
 
   await page.getByRole('tab', { name: 'Beschreibung' }).click();
   await page.locator('#jform_meta_title').fill('CRUD meta title after save-close');

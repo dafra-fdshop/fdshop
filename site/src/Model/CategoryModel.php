@@ -109,6 +109,7 @@ final class CategoryModel extends ListModel
                 $db->quoteName('p.discount_active'),
                 $db->quoteName('p.currency'),
                 $db->quoteName('p.in_stock'),
+                $db->quoteName('p.unit_type'),
                 $db->quoteName('p.min_order_qty'),
                 $db->quoteName('p.max_order_qty'),
                 $db->quoteName('p.step_order_qty'),

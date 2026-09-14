@@ -12,6 +12,7 @@ defined('_JEXEC') or die;
 use Joomla\CMS\Factory;
 use Joomla\CMS\MVC\Model\BaseDatabaseModel;
 use Joomla\Database\ParameterType;
+use FDShop\Component\FDShop\Administrator\Service\PackagingService;
 
 final class ProductModel extends BaseDatabaseModel
 {
@@ -41,6 +42,7 @@ final class ProductModel extends BaseDatabaseModel
                 $db->quoteName('p.max_order_qty'),
                 $db->quoteName('p.step_order_qty'),
                 $db->quoteName('p.available_from'),
+                $db->quoteName('p.unit_type'),
                 $db->quoteName('p.nem'),
                 $db->quoteName('p.shot_count'),
                 $db->quoteName('p.caliber'),
@@ -58,6 +60,9 @@ final class ProductModel extends BaseDatabaseModel
                 $db->quoteName('d.is_in_stock', 'physically_in_stock'),
                 $db->quoteName('d.stock_quantity'),
                 $db->quoteName('d.reserved_quantity'),
+                $db->quoteName('d.unit_quantity'),
+                $db->quoteName('d.unit_discount_type'),
+                $db->quoteName('d.unit_discount_value'),
             ])
             ->from($db->quoteName('#__fdshop_products', 'p'))
             ->leftJoin($db->quoteName('#__fdshop_products_details', 'd') . ' ON ' . $db->quoteName('d.product_id') . ' = ' . $db->quoteName('p.id'))
@@ -80,6 +85,7 @@ final class ProductModel extends BaseDatabaseModel
 
         $item->has_discount = (int) $item->discount_active === 1 && (float) $item->discount_price > 0;
         $item->current_price = $item->has_discount ? (float) $item->discount_price : (float) $item->sale_price;
+        $item->package = Factory::getApplication()->bootComponent('com_fdshop')->getContainer()->get(PackagingService::class)->calculate($item);
         $item->media = $this->getMedia($productId);
 
         return $item;
