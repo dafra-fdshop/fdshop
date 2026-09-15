@@ -11,7 +11,7 @@ use FDShop\Component\FDShop\Administrator\Service\PackagingService;
 
 final class CartService implements CartServiceInterface
 {
-    public function __construct(private readonly DatabaseInterface $db, private readonly PackagingService $packagingService)
+    public function __construct(private readonly DatabaseInterface $db, private readonly PackagingService $packagingService, private readonly BundleServiceInterface $bundleService)
     {
     }
 
@@ -19,6 +19,7 @@ final class CartService implements CartServiceInterface
     {
         $this->assertOwner($userId, $sessionId);
         $items = $this->loadItems($userId, $sessionId);
+        $bundles = $this->bundleService->loadCartBundles($userId, $sessionId);
         $this->attachImages($items);
         $shipments = $this->loadChoices('shipments');
         $payments = $this->loadChoices('payment_methods');
@@ -44,6 +45,12 @@ final class CartService implements CartServiceInterface
             $item->line_total = $this->money($item->unit_price * $item->quantity);
             $subtotal += $item->line_total;
         }
+        foreach ($bundles as $bundle) {
+            $bundle->total_gross = (float) $bundle->total_gross;
+            $bundle->subtotal_gross = (float) $bundle->subtotal_gross;
+            $bundle->discount_amount_gross = (float) $bundle->discount_amount_gross;
+            $subtotal += $bundle->total_gross;
+        }
 
         $shipmentFee = $shipment ? (float) $shipment->fee : 0.0;
         $paymentFee = $payment ? (float) $payment->fee : 0.0;
@@ -59,6 +66,7 @@ final class CartService implements CartServiceInterface
 
         return [
             'items' => $items,
+            'bundles' => $bundles,
             'shipments' => $shipments,
             'payments' => $payments,
             'shipment' => $shipment,
@@ -394,7 +402,7 @@ final class CartService implements CartServiceInterface
             $query->where($this->db->quoteName('id') . ' <> ' . $excludeCartId);
         }
         $this->db->setQuery($query);
-        return (float) $this->db->loadResult();
+        return (float) $this->db->loadResult() + $this->bundleService->cartDemand($userId, $sessionId, $productId);
     }
 
     private function skuSuffix(string $type): string

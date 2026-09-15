@@ -12,7 +12,7 @@ coupon codes, bundle numbers, order numbers, and names instead.
 
 ## Coupon model scope
 
-Fixtures represent schema `0.0.20` and the current CouponService plus packaging-unit model:
+Fixtures represent schema `0.0.21` and the current CouponService, packaging-unit model, and configurable-bundle foundation:
 `percent`/`fixed`, minimum total, validity dates, usage limits, and simple
 user/buyer-group/product/category mappings.
 

@@ -34,6 +34,13 @@ class BundleTable extends Table
         $this->bundle_number = trim((string) ($this->bundle_number ?? ''));
         $this->bundle_name = trim((string) ($this->bundle_name ?? ''));
         $this->alias = trim((string) ($this->alias ?? ''));
+        $this->image_path = trim((string) ($this->image_path ?? ''));
+        $this->max_quantity_per_product = (int) ($this->max_quantity_per_product ?? 1);
+
+        if ($this->max_quantity_per_product < 1) {
+            $this->setError('Die maximale Anzahl je Produkt muss mindestens 1 betragen.');
+            return false;
+        }
 
         if ($this->bundle_number === '') {
             $this->setError('bundle_number darf nicht leer sein.');

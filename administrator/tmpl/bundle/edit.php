@@ -32,6 +32,8 @@ $discountRules = $this->discountRules ?? [];
                         <?php echo $this->form->renderField('bundle_name'); ?>
                         <?php echo $this->form->renderField('alias'); ?>
                         <?php echo $this->form->renderField('description'); ?>
+                        <?php echo $this->form->renderField('image_path'); ?>
+                        <?php echo $this->form->renderField('max_quantity_per_product'); ?>
                         <?php echo $this->form->renderField('is_active'); ?>
                     </div>
                 </div>
@@ -79,6 +81,7 @@ $discountRules = $this->discountRules ?? [];
                     <table class="table" id="bundle-product-table">
                         <thead>
                             <tr>
+                                <th scope="col">Bild</th>
                                 <th scope="col">Produktname</th>
                                 <th scope="col">SKU</th>
                                 <th scope="col">Einzelpreis</th>
@@ -88,6 +91,7 @@ $discountRules = $this->discountRules ?? [];
                         <tbody>
                             <?php foreach ($products as $product) : ?>
                                 <tr data-product-id="<?php echo (int) $product->product_id; ?>">
+                                    <td><?php if (!empty($product->image_path)) : ?><img src="<?php echo $this->escape((string) $product->image_path); ?>" alt="" width="56" height="56" style="object-fit:contain"><?php endif; ?></td>
                                     <td>
                                         <?php echo $this->escape((string) ($product->product_name ?? '')); ?>
                                         <input type="hidden" name="jform[product_ids][]" value="<?php echo (int) $product->product_id; ?>">
@@ -120,7 +124,7 @@ $discountRules = $this->discountRules ?? [];
                     <table class="table" id="bundle-discount-table">
                         <thead>
                             <tr>
-                                <th scope="col">Mindestanzahl Produkte</th>
+                                <th scope="col">Gesamtmenge ab</th>
                                 <th scope="col">Rabatt %</th>
                                 <th scope="col" class="w-1 text-center">Aktion</th>
                             </tr>
@@ -132,8 +136,8 @@ $discountRules = $this->discountRules ?? [];
                                         <input
                                             type="number"
                                             name="jform[discount_rules][<?php echo (int) $index; ?>][min_quantity]"
-                                            value="<?php echo $this->escape((string) ($rule->min_quantity ?? 1)); ?>"
-                                            min="1"
+                                            value="<?php echo $this->escape((string) ($rule->min_quantity ?? 2)); ?>"
+                                            min="2"
                                             step="1"
                                             class="form-control"
                                         >

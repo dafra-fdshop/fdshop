@@ -66,7 +66,7 @@ final class HtmlView extends BaseHtmlView
             $document->setMetaData('keywords', (string) $item->meta_keywords);
         }
 
-        $document->getWebAssetManager()->useStyle('com_fdshop.site')->useScript('com_fdshop.site')->useScript('com_fdshop.purchase');
+        $document->getWebAssetManager()->useStyle('com_fdshop.site')->useScript('com_fdshop.site')->useScript('com_fdshop.purchase')->useScript('com_fdshop.bundle');
         parent::display($tpl);
     }
 

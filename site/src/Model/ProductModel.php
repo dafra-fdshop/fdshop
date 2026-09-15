@@ -13,6 +13,7 @@ use Joomla\CMS\Factory;
 use Joomla\CMS\MVC\Model\BaseDatabaseModel;
 use Joomla\Database\ParameterType;
 use FDShop\Component\FDShop\Administrator\Service\PackagingService;
+use FDShop\Component\FDShop\Site\Service\BundleServiceInterface;
 
 final class ProductModel extends BaseDatabaseModel
 {
@@ -87,6 +88,7 @@ final class ProductModel extends BaseDatabaseModel
         $item->current_price = $item->has_discount ? (float) $item->discount_price : (float) $item->sale_price;
         $item->package = Factory::getApplication()->bootComponent('com_fdshop')->getContainer()->get(PackagingService::class)->calculate($item);
         $item->media = $this->getMedia($productId);
+        $item->bundles = Factory::getApplication()->bootComponent('com_fdshop')->getContainer()->get(BundleServiceInterface::class)->getBundlesForProduct($productId);
 
         return $item;
     }

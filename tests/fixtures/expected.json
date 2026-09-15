@@ -1,11 +1,13 @@
 {
-  "schemaVersion": "0.0.20",
+  "schemaVersion": "0.0.21",
   "counts": {
     "manufacturers": 2, "categories": 4, "buyer_groups": 3,
     "products": 10, "products_details": 10,
     "product_category_map": 11, "product_buyer_group_map": 3,
     "user_buyer_group_map": 1,
     "media": 1, "bundles": 2, "bundle_items": 2,
+    "saved_bundles": 0, "saved_bundle_items": 0,
+    "cart_bundles": 0, "cart_bundle_items": 0,
     "bundle_discount_rules": 2, "coupons": 8,
     "coupon_user_map": 1, "coupon_buyer_group_map": 1,
     "coupon_product_map": 1, "coupon_category_map": 1,

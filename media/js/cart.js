@@ -45,9 +45,9 @@
             cart.querySelectorAll('[data-cart-item]').forEach(function (row) {
                 if (!state.items.some(function (item) { return String(item.id) === row.dataset.cartItem; })) row.remove();
             });
-            var empty = state.items.length === 0;
+            var empty = state.items.length === 0 && (!state.bundles || state.bundles.length === 0);
             cart.querySelector('[data-fdshop-cart-empty]').hidden = !empty;
-            cart.querySelector('[data-fdshop-cart-items]').hidden = empty;
+            cart.querySelector('[data-fdshop-cart-items]').hidden = state.items.length === 0;
             cart.querySelector('[data-cart-subtotal]').textContent = state.subtotal;
             cart.querySelector('[data-cart-summary-subtotal]').textContent = state.subtotal;
             cart.querySelector('[data-cart-shipment-fee]').textContent = state.shipmentFee;
@@ -74,6 +74,11 @@
             if (button.matches('[data-cart-increase]')) return quantity(row, 1);
             if (button.matches('[data-cart-update]')) request('updateQuantity', { cart_id: row.dataset.cartItem, quantity: row.querySelector('[data-cart-quantity]').value }).then(function () { notify('Menge wurde aktualisiert.', false); }).catch(function (error) { row.querySelector('[data-cart-quantity]').value = row.dataset.confirmedQuantity; notify(error.message, true); });
             if (button.matches('[data-cart-remove]')) request('remove', { cart_id: row.dataset.cartItem }).then(function () { notify('Produkt wurde entfernt.', false); }).catch(function (error) { notify(error.message, true); });
+            if (button.matches('[data-cart-bundle-remove]')) {
+                var bundle = button.closest('[data-cart-bundle]');
+                var body = new FormData(); body.append(token.name, '1'); body.append('cart_bundle_id', bundle.dataset.cartBundle);
+                fetch('index.php?option=com_fdshop&format=json&task=bundle.removeFromCart', {method: 'POST', body: body, credentials: 'same-origin', headers: {Accept: 'application/json'}}).then(function (response) { return response.json(); }).then(function (payload) { if (payload.success === false) throw new Error(payload.message); window.location.reload(); }).catch(function (error) { notify(error.message, true); });
+            }
             if (button.matches('[data-cart-open]')) cart.querySelector('[data-cart-dialog="' + button.dataset.cartOpen + '"]').showModal();
             if (button.matches('[data-cart-select-shipment]')) request('selectShipment', { shipment_id: button.dataset.cartSelectShipment }).then(function () { button.closest('dialog').close(); notify('Abholstation wurde geändert.', false); }).catch(function (error) { notify(error.message, true); });
             if (button.matches('[data-cart-select-payment]')) request('selectPayment', { payment_id: button.dataset.cartSelectPayment }).then(function () { button.closest('dialog').close(); notify('Zahlungsart wurde geändert.', false); }).catch(function (error) { notify(error.message, true); });

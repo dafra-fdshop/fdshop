@@ -38,7 +38,7 @@ class HtmlView extends BaseHtmlView
 
         if (empty($this->discountRules)) {
             $rule = new stdClass();
-            $rule->min_quantity = 1;
+            $rule->min_quantity = 2;
             $rule->discount_percent = 0;
             $rule->ordering = 1;
 

@@ -92,7 +92,7 @@ printf '%s\n' \
   'Mailpit HTTP: OK' \
   "FDShop extension: OK (extension_id=${extension_id})" \
   "Schema: ${schema_version}" \
-  "Tables: ${table_count}/32" \
+  "Tables: ${table_count}/36" \
   'Fixtures: OK' \
   'Serious new log errors: 0' \
   '' \

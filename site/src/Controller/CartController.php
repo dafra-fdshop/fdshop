@@ -137,6 +137,7 @@ final class CartController extends BaseController
         $currency = (string) ($cart['currency'] ?? 'EUR');
         $state = [
             'items' => array_map(static fn ($item): array => ['id' => (int) $item->id, 'quantity' => (float) $item->quantity, 'unitVariant' => (string) $item->unit_variant, 'unitPrice' => $format((float) $item->unit_price, (string) $item->currency), 'lineTotal' => $format((float) $item->line_total, (string) $item->currency)], $cart['items']),
+            'bundles' => array_map(static fn ($bundle): array => ['id' => (int) $bundle->id, 'total' => $format((float) $bundle->total_gross, (string) $bundle->currency)], $cart['bundles'] ?? []),
             'subtotal' => $format((float) $cart['subtotal'], $currency),
             'shipmentFee' => $format((float) $cart['shipment_fee'], $currency),
             'paymentFee' => $format((float) $cart['payment_fee'], $currency),

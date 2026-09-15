@@ -52,6 +52,10 @@ class BundleService implements BundleServiceInterface
         $bindData['bundle_name'] = $bundleName;
         $bindData['bundle_number'] = trim((string) ($bindData['bundle_number'] ?? ''));
 
+        if ((int) ($bindData['max_quantity_per_product'] ?? 1) < 1) {
+            throw new InvalidArgumentException('Die maximale Anzahl je Produkt muss mindestens 1 betragen.');
+        }
+
         $bundleId = (int) ($bindData['id'] ?? 0);
 
         if ($bundleId > 0 && !$table->load($bundleId)) {
@@ -204,18 +208,25 @@ class BundleService implements BundleServiceInterface
         }
 
         $ordering = 1;
+        $seen = [];
 
         foreach ($discountRules as $rule) {
             if (!is_array($rule)) {
                 continue;
             }
 
-            $minQuantity = (float) ($rule['min_quantity'] ?? 0);
+            $minQuantity = (int) ($rule['min_quantity'] ?? 0);
             $discountPercent = (float) ($rule['discount_percent'] ?? 0);
 
-            if ($minQuantity <= 0) {
-                continue;
+            if ($minQuantity < 2 || $discountPercent < 0 || $discountPercent >= 100) {
+                throw new InvalidArgumentException('Rabattstufen benötigen eine ganze Gesamtmenge ab 2 und einen Rabatt zwischen 0 und unter 100 Prozent.');
             }
+
+            if (isset($seen[$minQuantity])) {
+                throw new InvalidArgumentException('Eine Gesamtmenge darf nur einmal als Rabattstufe vorkommen.');
+            }
+
+            $seen[$minQuantity] = true;
 
             $table = $this->mvcFactory->createTable('BundleDiscountRule', 'Administrator');
 
@@ -249,9 +260,9 @@ class BundleService implements BundleServiceInterface
     public function generateNextBundleNumber(): string
     {
         $query = $this->db->getQuery(true)
-            ->select('MAX(CAST(SUBSTRING(' . $this->db->quoteName('bundle_number') . ', 5) AS UNSIGNED))')
+            ->select('MAX(CAST(SUBSTRING_INDEX(' . $this->db->quoteName('bundle_number') . ', ' . $this->db->quote('-') . ', -1) AS UNSIGNED))')
             ->from($this->db->quoteName('#__fdshop_bundles'))
-            ->where($this->db->quoteName('bundle_number') . ' LIKE ' . $this->db->quote('BUN-%'));
+            ->where('(' . $this->db->quoteName('bundle_number') . ' LIKE ' . $this->db->quote('BUN-%') . ' OR ' . $this->db->quoteName('bundle_number') . ' LIKE ' . $this->db->quote('BUNDLE-%') . ')');
 
         $this->db->setQuery($query);
         $maxNumber = (int) $this->db->loadResult();
@@ -260,7 +271,7 @@ class BundleService implements BundleServiceInterface
             $maxNumber = 999;
         }
 
-        return 'BUN-' . ($maxNumber + 1);
+        return 'BUNDLE-' . ($maxNumber + 1);
     }
 
     public function getBundleById(int $bundleId): ?object
@@ -304,8 +315,10 @@ class BundleService implements BundleServiceInterface
                 $this->db->quoteName('p.is_active'),
                 $this->db->quoteName('p.in_stock'),
                 $this->db->quoteName('p.currency'),
+                $this->db->quoteName('p.ribbon_bundle'),
                 $this->db->quoteName('d.sku'),
                 $this->db->quoteName('d.gtin'),
+                '(SELECT COALESCE(' . $this->db->quoteName('m.path_small') . ', ' . $this->db->quoteName('m.path_standard') . ') FROM ' . $this->db->quoteName('#__fdshop_media', 'm') . ' WHERE ' . $this->db->quoteName('m.product_id') . ' = ' . $this->db->quoteName('p.id') . ' AND ' . $this->db->quoteName('m.media_type') . ' = ' . $this->db->quote('image') . ' ORDER BY ' . $this->db->quoteName('m.is_primary') . ' DESC, ' . $this->db->quoteName('m.ordering') . ' ASC LIMIT 1) AS ' . $this->db->quoteName('image_path'),
                 $this->getCurrentSalePriceExpression('p') . ' AS ' . $this->db->quoteName('current_sale_price'),
             ])
             ->from($this->db->quoteName('#__fdshop_bundle_items', 'bi'))
@@ -320,6 +333,7 @@ class BundleService implements BundleServiceInterface
                 . ' ON ' . $this->db->quoteName('d.product_id') . ' = ' . $this->db->quoteName('p.id')
             )
             ->where($this->db->quoteName('bi.bundle_id') . ' = ' . $bundleId)
+            ->where($this->db->quoteName('p.ribbon_bundle') . ' = 1')
             ->order($this->db->quoteName('bi.ordering') . ' ASC')
             ->order($this->db->quoteName('bi.id') . ' ASC');
 
@@ -361,7 +375,9 @@ class BundleService implements BundleServiceInterface
                 'p.' . $this->db->quoteName('product_name'),
                 'p.' . $this->db->quoteName('is_active'),
                 'p.' . $this->db->quoteName('currency'),
+                'p.' . $this->db->quoteName('ribbon_bundle'),
                 'd.' . $this->db->quoteName('sku'),
+                '(SELECT COALESCE(' . $this->db->quoteName('m.path_small') . ', ' . $this->db->quoteName('m.path_standard') . ') FROM ' . $this->db->quoteName('#__fdshop_media', 'm') . ' WHERE ' . $this->db->quoteName('m.product_id') . ' = ' . $this->db->quoteName('p.id') . ' AND ' . $this->db->quoteName('m.media_type') . ' = ' . $this->db->quote('image') . ' ORDER BY ' . $this->db->quoteName('m.is_primary') . ' DESC, ' . $this->db->quoteName('m.ordering') . ' ASC LIMIT 1) AS ' . $this->db->quoteName('image_path'),
                 $this->getCurrentSalePriceExpression('p') . ' AS ' . $this->db->quoteName('current_sale_price'),
             ])
             ->from($this->db->quoteName('#__fdshop_products_details', 'd'))
@@ -372,6 +388,7 @@ class BundleService implements BundleServiceInterface
             )
             ->where('d.' . $this->db->quoteName('sku') . ' = ' . $this->db->quote($sku))
             ->where('p.' . $this->db->quoteName('is_deleted') . ' = 0');
+        $query->where('p.' . $this->db->quoteName('ribbon_bundle') . ' = 1');
 
         $this->db->setQuery($query, 0, 1);
         $product = $this->db->loadObject();
@@ -383,10 +400,6 @@ class BundleService implements BundleServiceInterface
     {
         $skuPrefix = trim($skuPrefix);
 
-        if (strlen($skuPrefix) < 2) {
-            return [];
-        }
-
         $limit = max(1, min(20, $limit));
         $escapedPrefix = $this->db->escape($skuPrefix, true);
 
@@ -396,6 +409,7 @@ class BundleService implements BundleServiceInterface
                 'p.' . $this->db->quoteName('product_name'),
                 'p.' . $this->db->quoteName('is_active'),
                 'd.' . $this->db->quoteName('sku'),
+                '(SELECT COALESCE(' . $this->db->quoteName('m.path_small') . ', ' . $this->db->quoteName('m.path_standard') . ') FROM ' . $this->db->quoteName('#__fdshop_media', 'm') . ' WHERE ' . $this->db->quoteName('m.product_id') . ' = ' . $this->db->quoteName('p.id') . ' AND ' . $this->db->quoteName('m.media_type') . ' = ' . $this->db->quote('image') . ' ORDER BY ' . $this->db->quoteName('m.is_primary') . ' DESC, ' . $this->db->quoteName('m.ordering') . ' ASC LIMIT 1) AS ' . $this->db->quoteName('image_path'),
             ])
             ->from($this->db->quoteName('#__fdshop_products_details', 'd'))
             ->join(
@@ -403,10 +417,15 @@ class BundleService implements BundleServiceInterface
                 $this->db->quoteName('#__fdshop_products', 'p')
                 . ' ON p.' . $this->db->quoteName('id') . ' = d.' . $this->db->quoteName('product_id')
             )
-            ->where('d.' . $this->db->quoteName('sku') . ' LIKE ' . $this->db->quote($escapedPrefix . '%', false))
             ->where('p.' . $this->db->quoteName('is_deleted') . ' = 0')
-            ->order('d.' . $this->db->quoteName('sku') . ' ASC')
+            ->where('p.' . $this->db->quoteName('ribbon_bundle') . ' = 1')
+            ->order('p.' . $this->db->quoteName('product_name') . ' ASC')
             ->order('p.' . $this->db->quoteName('id') . ' ASC');
+
+        if ($skuPrefix !== '') {
+            $needle = $this->db->quote('%' . $escapedPrefix . '%', false);
+            $query->where('(d.' . $this->db->quoteName('sku') . ' LIKE ' . $needle . ' OR p.' . $this->db->quoteName('product_name') . ' LIKE ' . $needle . ')');
+        }
 
         $this->db->setQuery($query, 0, $limit);
 

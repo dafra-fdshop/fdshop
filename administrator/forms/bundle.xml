@@ -41,6 +41,10 @@
                 filter="raw"
             />
 
+            <field name="image_path" type="media" label="Bundle-Bild" directory="images/fdshop/bundles" />
+
+            <field name="max_quantity_per_product" type="number" label="Maximale Anzahl je Produkt" default="1" min="1" step="1" required="true" />
+
             <field
                 name="is_active"
                 type="radio"

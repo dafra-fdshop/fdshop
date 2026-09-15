@@ -4,6 +4,8 @@ defined('_JEXEC') or die;
 
 use FDShop\Component\FDShop\Site\Helper\PurchaseHelper;
 use Joomla\CMS\Layout\LayoutHelper;
+use Joomla\CMS\HTML\HTMLHelper;
+use Joomla\CMS\Router\Route;
 
 $item = $this->item;
 $mainImage = $this->images[0] ?? $this->placeholderImage;
@@ -56,10 +58,27 @@ $factIcons = ['NEM' => 'icon_nem.svg', 'Schusszahl' => 'icon_anzahl.svg', 'Kalib
                 <?php if ($item->package['valid']) : ?><div class="fdshop-product__package"><label for="fdshop-unit-variant"><strong>als <?php echo $this->escape((string) $item->package['unit_type']); ?> bestellen <span title="Eine Verpackung enthält <?php echo (int) $item->package['unit_quantity']; ?> Stück">ⓘ</span></strong></label><select id="fdshop-unit-variant" class="form-select" data-fdshop-package-select><option value="piece"><?php echo $this->escape((string) $item->product_name); ?></option><option value="package"><?php echo $this->escape((string) $item->product_name . ' ' . $item->package['unit_type'] . ($item->package['unit_discount_type'] === 'percent' ? ' (-' . rtrim(rtrim(number_format((float) $item->package['unit_discount_value'], 2, ',', '.'), '0'), ',') . '%)' : '')); ?></option></select><small>Hier auswählen, wenn ihr eine Verpackungseinheit wollt.</small></div><?php endif; ?>
                 <div class="fdshop-product__price" data-effective-price="<?php echo $this->escape((string) $item->current_price); ?>"><?php if ($item->has_discount || $item->package['valid']) : ?><span class="fdshop-product__regular-price" data-fdshop-package-regular<?php echo $item->has_discount ? '' : ' hidden'; ?>><?php echo $this->escape($item->regular_price_formatted); ?></span><?php endif; ?><strong data-fdshop-package-price><?php echo $this->escape($item->price_formatted); ?></strong><small>inkl. MwSt.</small></div>
                 <?php if ($this->purchaseEnabled) : ?><?php echo LayoutHelper::render('purchase.action', PurchaseHelper::data($item, 'piece'), JPATH_COMPONENT_SITE . '/layouts'); ?><?php endif; ?>
+                <?php if (!empty($item->bundles)) : ?>
+                    <div class="fdshop-bundle-entry">
+                        <?php if (count($item->bundles) === 1) : ?>
+                            <button type="button" class="btn btn-outline-primary" data-fdshop-bundle-open="<?php echo (int) $item->bundles[0]->id; ?>">Bundle zusammenstellen</button>
+                        <?php else : ?>
+                            <label for="fdshop-bundle-choice">Bundle auswählen</label>
+                            <select id="fdshop-bundle-choice" class="form-select" data-fdshop-bundle-choice><option value="">Bitte wählen</option><?php foreach ($item->bundles as $bundle) : ?><option value="<?php echo (int) $bundle->id; ?>"><?php echo $this->escape((string) $bundle->bundle_name); ?></option><?php endforeach; ?></select>
+                            <button type="button" class="btn btn-outline-primary" data-fdshop-bundle-choice-open>Bundle zusammenstellen</button>
+                        <?php endif; ?>
+                    </div>
+                <?php endif; ?>
             </div>
         </section>
     </div>
     <?php if (trim((string) $item->description) !== '') : ?><section class="fdshop-product__description" aria-labelledby="fdshop-product-description-heading"><h2 id="fdshop-product-description-heading">Produktbeschreibung</h2><div><?php echo \Joomla\CMS\HTML\HTMLHelper::_('content.prepare', (string) $item->description); ?></div></section><?php endif; ?>
     <dialog class="fdshop-video" data-fdshop-detail-video-dialog aria-labelledby="fdshop-detail-video-title"><div class="fdshop-video__header"><h2 id="fdshop-detail-video-title" data-fdshop-detail-video-title>Produktvideo</h2><button type="button" class="fdshop-video__close" data-fdshop-detail-video-close aria-label="Video schließen">×</button></div><div class="fdshop-video__content" data-fdshop-detail-video-content></div></dialog>
     <?php if ($this->purchaseEnabled) : ?><?php echo LayoutHelper::render('purchase.modal', [], JPATH_COMPONENT_SITE . '/layouts'); ?><?php endif; ?>
+    <?php if (!empty($item->bundles)) : ?>
+        <dialog class="fdshop-bundle-dialog" data-fdshop-bundle-dialog data-builder-url="<?php echo $this->escape(Route::_('index.php?option=com_fdshop&task=bundle.builder&format=json', false)); ?>" data-calculate-url="<?php echo $this->escape(Route::_('index.php?option=com_fdshop&task=bundle.calculate&format=json', false)); ?>" data-save-url="<?php echo $this->escape(Route::_('index.php?option=com_fdshop&task=bundle.save&format=json', false)); ?>" data-delete-url="<?php echo $this->escape(Route::_('index.php?option=com_fdshop&task=bundle.deleteSaved&format=json', false)); ?>" data-cart-url="<?php echo $this->escape(Route::_('index.php?option=com_fdshop&task=bundle.addToCart&format=json', false)); ?>">
+            <div class="fdshop-bundle-dialog__content"><button type="button" class="fdshop-bundle-dialog__close" data-fdshop-bundle-close aria-label="Bundle-Konfigurator schließen">×</button><div data-fdshop-bundle-content></div></div>
+        </dialog>
+        <form hidden data-fdshop-bundle-token><?php echo HTMLHelper::_('form.token'); ?></form>
+    <?php endif; ?>
 </main>

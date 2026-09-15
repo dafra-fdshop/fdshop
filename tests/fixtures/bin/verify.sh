@@ -14,7 +14,7 @@ cd "$REPO_ROOT"; [[ -f .env ]] || fail '.env missing'; set -a; source .env; set 
 [[ "${MARIADB_DATABASE:-}" == fdshop ]] || fail 'unexpected database'
 [[ "$(compose exec -T joomla printenv JOOMLA_DB_HOST)" == db:3306 ]] || fail 'external database host'
 [[ "$(compose ps --format json db | grep -o '"Project":"[^"]*"' | head -1 | cut -d'"' -f4)" == fdshop ]] || fail 'unexpected Compose project'
-for table in manufacturers categories buyer_groups products products_details product_category_map product_buyer_group_map user_buyer_group_map media bundles bundle_items bundle_discount_rules coupons coupon_user_map coupon_buyer_group_map coupon_product_map coupon_category_map shipments payment_methods order_statuses orders order_items order_bundles order_bundle_items order_history order_status_history; do assert_count "$table"; done
+for table in manufacturers categories buyer_groups products products_details product_category_map product_buyer_group_map user_buyer_group_map media bundles bundle_items bundle_discount_rules saved_bundles saved_bundle_items cart_bundles cart_bundle_items coupons coupon_user_map coupon_buyer_group_map coupon_product_map coupon_category_map shipments payment_methods order_statuses orders order_items order_bundles order_bundle_items order_history order_status_history; do assert_count "$table"; done
 assert_sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_price_calc_rules;" 0 'price calculation rules not reset'
 assert_sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_product_prices;" 0 'product prices not reset'
 assert_sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_product_prices_research;" 0 'price research not reset'

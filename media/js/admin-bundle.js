@@ -40,6 +40,7 @@
     function appendProductRow(productTable, product) {
         var tbody = productTable.querySelector('tbody');
         var row = document.createElement('tr');
+        var imageCell = document.createElement('td');
         var nameCell = document.createElement('td');
         var skuCell = document.createElement('td');
         var priceCell = document.createElement('td');
@@ -48,6 +49,15 @@
         var removeButton = document.createElement('button');
 
         row.dataset.productId = String(product.product_id);
+        if (product.image_path) {
+            var image = document.createElement('img');
+            image.src = String(product.image_path).replace(/^\/+/, '/');
+            image.alt = '';
+            image.width = 56;
+            image.height = 56;
+            image.style.objectFit = 'contain';
+            imageCell.appendChild(image);
+        }
         nameCell.appendChild(document.createTextNode(String(product.product_name || '')));
 
         hiddenInput.type = 'hidden';
@@ -64,6 +74,7 @@
         removeButton.textContent = 'Entfernen';
         actionCell.appendChild(removeButton);
 
+        row.appendChild(imageCell);
         row.appendChild(nameCell);
         row.appendChild(skuCell);
         row.appendChild(priceCell);
@@ -143,7 +154,7 @@
                     searchRequest = null;
                 }
 
-                if (prefix.length < 2 || searchUrl === '') {
+                if (searchUrl === '') {
                     clearSuggestions();
                     return;
                 }
@@ -180,6 +191,12 @@
                             }
                         });
                 }, 250);
+            });
+
+            skuInput.addEventListener('focus', function () {
+                if (skuInput.value.trim() === '') {
+                    skuInput.dispatchEvent(new Event('input'));
+                }
             });
 
             document.addEventListener('click', function (event) {
@@ -263,7 +280,7 @@
 
                 row.innerHTML = ''
                     + '<td>'
-                    + '<input type="number" name="jform[discount_rules][' + index + '][min_quantity]" value="1" min="1" step="1" class="form-control">'
+                    + '<input type="number" name="jform[discount_rules][' + index + '][min_quantity]" value="2" min="2" step="1" class="form-control">'
                     + '<input type="hidden" name="jform[discount_rules][' + index + '][ordering]" value="' + (index + 1) + '">'
                     + '</td>'
                     + '<td><input type="number" name="jform[discount_rules][' + index + '][discount_percent]" value="0" min="0" step="0.01" class="form-control"></td>'

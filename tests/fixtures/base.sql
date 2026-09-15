@@ -16,6 +16,10 @@ DELETE FROM `__PREFIX__fdshop_order_bundles`;
 DELETE FROM `__PREFIX__fdshop_order_items`;
 DELETE FROM `__PREFIX__fdshop_orders`;
 DELETE FROM `__PREFIX__fdshop_order_statuses`;
+DELETE FROM `__PREFIX__fdshop_cart_bundle_items`;
+DELETE FROM `__PREFIX__fdshop_cart_bundles`;
+DELETE FROM `__PREFIX__fdshop_saved_bundle_items`;
+DELETE FROM `__PREFIX__fdshop_saved_bundles`;
 DELETE FROM `__PREFIX__fdshop_cart`;
 DELETE FROM `__PREFIX__fdshop_shipments`;
 DELETE FROM `__PREFIX__fdshop_payment_methods`;
@@ -59,18 +63,18 @@ VALUES
 (900022,'E2E Händler','e2e-dealer',1,30,'2026-01-01 00:00:00',0);
 
 INSERT INTO `__PREFIX__fdshop_products`
-(id,manufacturer_id,product_name,alias,short_description,description,buyer_group_id,sale_price,discount_price,discount_active,currency,min_order_qty,max_order_qty,step_order_qty,is_active,is_deleted,meta_title,in_stock,unit_type)
+(id,manufacturer_id,product_name,alias,short_description,description,buyer_group_id,sale_price,discount_price,discount_active,currency,min_order_qty,max_order_qty,step_order_qty,is_active,is_deleted,meta_title,in_stock,unit_type,ribbon_bundle)
 VALUES
-(900100,900001,'E2E Produkt Aktiv','e2e-prod-active','Künstlich','Aktiv mit Bestand',900020,19.9900,0,0,'EUR',1,10,1,1,0,'E2E Aktiv','available','Stück'),
-(900101,900002,'E2E Produkt Inaktiv','e2e-prod-inactive','Künstlich','Inaktiv',900020,21.0000,0,0,'EUR',1,10,1,0,0,'E2E Inaktiv','available','Stück'),
-(900102,900001,'E2E Produkt Papierkorb','e2e-prod-deleted','Künstlich','Papierkorb',900020,22.0000,0,0,'EUR',1,10,1,0,1,'E2E Papierkorb','available','Stück'),
-(900103,900001,'E2E Produkt Bild','e2e-prod-image','Künstlich','Mit synthetischem Bild',900020,23.0000,0,0,'EUR',1,10,1,1,0,'E2E Bild','available','Display'),
-(900104,900001,'E2E Produkt Ohne Bild','e2e-prod-noimage','Künstlich','Ohne Bild',900020,24.0000,0,0,'EUR',1,10,1,1,0,'E2E Ohne Bild','available','Display'),
-(900105,900001,'E2E Produkt Aktionspreis','e2e-prod-discount','Künstlich','Aktiver Aktionspreis',900020,50.0000,39.9900,1,'EUR',1,10,1,1,0,'E2E Aktionspreis','available','Display'),
-(900106,900001,'E2E Produkt Ausverkauft','e2e-prod-soldout','Künstlich','Ausverkauft',900020,26.0000,0,0,'EUR',1,10,1,1,0,'E2E Ausverkauft','sold_out','Stück'),
-(900107,900001,'E2E Produkt Niedrigbestand','e2e-prod-low','Künstlich','Niedriger Bestand',900020,27.0000,0,0,'EUR',1,10,1,1,0,'E2E Niedrigbestand','low_stock','Stück'),
-(900108,900001,'E2E Produkt Mehrfachkategorie','e2e-prod-multicat','Künstlich','Mehrere Kategorien',900020,28.0000,0,0,'EUR',1,10,1,1,0,'E2E Mehrfachkategorie','available','Schinken'),
-(900109,900001,'E2E Produkt Käufergruppen','e2e-prod-buyergroup','Künstlich','Mehrere Käufergruppen',900021,29.0000,0,0,'EUR',1,10,1,1,0,'E2E Käufergruppen','available','VE');
+(900100,900001,'E2E Produkt Aktiv','e2e-prod-active','Künstlich','Aktiv mit Bestand',900020,19.9900,0,0,'EUR',1,10,1,1,0,'E2E Aktiv','available','Stück',1),
+(900101,900002,'E2E Produkt Inaktiv','e2e-prod-inactive','Künstlich','Inaktiv',900020,21.0000,0,0,'EUR',1,10,1,0,0,'E2E Inaktiv','available','Stück',0),
+(900102,900001,'E2E Produkt Papierkorb','e2e-prod-deleted','Künstlich','Papierkorb',900020,22.0000,0,0,'EUR',1,10,1,0,1,'E2E Papierkorb','available','Stück',0),
+(900103,900001,'E2E Produkt Bild','e2e-prod-image','Künstlich','Mit synthetischem Bild',900020,23.0000,0,0,'EUR',1,10,1,1,0,'E2E Bild','available','Display',0),
+(900104,900001,'E2E Produkt Ohne Bild','e2e-prod-noimage','Künstlich','Ohne Bild',900020,24.0000,0,0,'EUR',1,10,1,1,0,'E2E Ohne Bild','available','Display',0),
+(900105,900001,'E2E Produkt Aktionspreis','e2e-prod-discount','Künstlich','Aktiver Aktionspreis',900020,50.0000,39.9900,1,'EUR',1,10,1,1,0,'E2E Aktionspreis','available','Display',1),
+(900106,900001,'E2E Produkt Ausverkauft','e2e-prod-soldout','Künstlich','Ausverkauft',900020,26.0000,0,0,'EUR',1,10,1,1,0,'E2E Ausverkauft','sold_out','Stück',0),
+(900107,900001,'E2E Produkt Niedrigbestand','e2e-prod-low','Künstlich','Niedriger Bestand',900020,27.0000,0,0,'EUR',1,10,1,1,0,'E2E Niedrigbestand','low_stock','Stück',0),
+(900108,900001,'E2E Produkt Mehrfachkategorie','e2e-prod-multicat','Künstlich','Mehrere Kategorien',900020,28.0000,0,0,'EUR',1,10,1,1,0,'E2E Mehrfachkategorie','available','Schinken',0),
+(900109,900001,'E2E Produkt Käufergruppen','e2e-prod-buyergroup','Künstlich','Mehrere Käufergruppen',900021,29.0000,0,0,'EUR',1,10,1,1,0,'E2E Käufergruppen','available','VE',0);
 
 UPDATE `__PREFIX__fdshop_products` SET `nem`=4.000, `shot_count`=6.000 WHERE `id`=900103;
 
@@ -96,8 +100,8 @@ INSERT INTO `__PREFIX__fdshop_user_buyer_group_map` (id,user_id,buyer_group_id) 
 INSERT INTO `__PREFIX__fdshop_media` (id,product_id,media_type,file_name,file_type,path_standard,path_small,path_mobile,path_invoice,is_primary,ordering,created,created_by) VALUES
 (900340,900103,'image','e2e-fixture-product.svg','image/svg+xml','images/FDShop/products/e2e-fixture-product.svg','images/FDShop/products/e2e-fixture-product.svg','images/FDShop/products/e2e-fixture-product.svg','images/FDShop/products/e2e-fixture-product.svg',1,1,'2026-01-01 00:00:00',0);
 
-INSERT INTO `__PREFIX__fdshop_bundles` (id,bundle_number,bundle_name,alias,description,is_active,created,created_by) VALUES
-(900400,'E2E-BUNDLE-ACTIVE','E2E Bundle Aktiv','e2e-bundle-active','Künstliches aktives Bundle',1,'2026-01-01 00:00:00',0),(900401,'E2E-BUNDLE-INACTIVE','E2E Bundle Inaktiv','e2e-bundle-inactive','Künstliches inaktives Bundle',0,'2026-01-01 00:00:00',0);
+INSERT INTO `__PREFIX__fdshop_bundles` (id,bundle_number,bundle_name,alias,description,image_path,max_quantity_per_product,is_active,created,created_by) VALUES
+(900400,'E2E-BUNDLE-ACTIVE','E2E Bundle Aktiv','e2e-bundle-active','Künstliches aktives Bundle','images/FDShop/products/e2e-fixture-product.svg',2,1,'2026-01-01 00:00:00',0),(900401,'E2E-BUNDLE-INACTIVE','E2E Bundle Inaktiv','e2e-bundle-inactive','Künstliches inaktives Bundle','',1,0,'2026-01-01 00:00:00',0);
 INSERT INTO `__PREFIX__fdshop_bundle_items` (id,bundle_id,product_id,ordering,created,created_by) VALUES
 (900410,900400,900100,1,'2026-01-01 00:00:00',0),(900411,900400,900105,2,'2026-01-01 00:00:00',0);
 INSERT INTO `__PREFIX__fdshop_bundle_discount_rules` (id,bundle_id,min_quantity,discount_percent,ordering,created,created_by) VALUES

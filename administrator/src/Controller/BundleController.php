@@ -118,6 +118,7 @@ class BundleController extends FormController
                 'current_sale_price' => isset($product->current_sale_price) ? (float) $product->current_sale_price : null,
                 'currency'     => (string) ($product->currency ?? 'EUR'),
                 'is_active'    => (int) ($product->is_active ?? 0),
+                'image_path'   => (string) ($product->image_path ?? ''),
             ]);
         } catch (\Throwable $e) {
             echo new JsonResponse(null, $e->getMessage(), true);
@@ -164,6 +165,7 @@ class BundleController extends FormController
                     'product_name' => (string) $match->product_name,
                     'sku'          => (string) $match->sku,
                     'is_active'    => (int) $match->is_active,
+                    'image_path'   => (string) ($match->image_path ?? ''),
                 ];
             }
 

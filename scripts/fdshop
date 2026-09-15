@@ -171,6 +171,7 @@ sync_source() {
   compose exec -T --user root joomla bash -Eeuo pipefail -c '
     test -d /var/www/html/administrator/components/com_fdshop
     rsync -a --delete /workspace/fdshop/administrator/ /var/www/html/administrator/components/com_fdshop/
+    cp /workspace/fdshop/fdshop.xml /var/www/html/administrator/components/com_fdshop/fdshop.xml
     rsync -a --delete /workspace/fdshop/site/ /var/www/html/components/com_fdshop/
     rsync -a --delete /workspace/fdshop/media/css/ /var/www/html/media/com_fdshop/css/
     rsync -a --delete /workspace/fdshop/media/js/ /var/www/html/media/com_fdshop/js/
@@ -331,7 +332,7 @@ run_browser_frontend_cart() {
 
   if compose run --rm --no-deps \
     --env "PLAYWRIGHT_OUTPUT_DIR=$container_output" \
-    browser npx playwright test tests/frontend-cart.spec.js; then
+    browser npx playwright test tests/frontend-cart.spec.js tests/bundle-builder.spec.js; then
     sql "UPDATE ${JOOMLA_DB_PREFIX}fdshop_config SET show_terms_checkbox=0 WHERE id=1;"
     if ! compose run --rm --no-deps \
       --env "PLAYWRIGHT_OUTPUT_DIR=$container_output" \

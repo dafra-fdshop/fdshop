@@ -13,7 +13,7 @@ $currency = (string) ($cart['currency'] ?? 'EUR');
         <div class="fdshop-cart__grid">
             <section class="fdshop-cart__products" aria-labelledby="fdshop-cart-products-heading">
                 <h2 id="fdshop-cart-products-heading">Produkte</h2>
-                <div class="fdshop-cart__empty" data-fdshop-cart-empty<?php echo $cart['items'] === [] ? '' : ' hidden'; ?>>Aktuell sind noch keine Produkte im Warenkorb.</div>
+                <div class="fdshop-cart__empty" data-fdshop-cart-empty<?php echo $cart['items'] === [] && $cart['bundles'] === [] ? '' : ' hidden'; ?>>Aktuell sind noch keine Produkte im Warenkorb.</div>
                 <div class="fdshop-cart__table" data-fdshop-cart-items<?php echo $cart['items'] === [] ? ' hidden' : ''; ?>>
                     <div class="fdshop-cart__table-head" aria-hidden="true"><span>Artikel-Nr.</span><span>Produkt</span><span>Einzelpreis</span><span>Menge</span><span>Betrag</span></div>
                     <?php foreach ($cart['items'] as $item) : ?>
@@ -35,6 +35,14 @@ $currency = (string) ($cart['currency'] ?? 'EUR');
                         </article>
                     <?php endforeach; ?>
                 </div>
+                <?php foreach ($cart['bundles'] as $bundle) : ?>
+                    <article class="fdshop-cart__bundle" data-cart-bundle="<?php echo (int) $bundle->id; ?>">
+                        <header><div><strong><?php echo $this->escape((string) $bundle->bundle_name); ?></strong><small> <?php echo $this->escape((string) $bundle->bundle_number); ?></small></div><strong><?php echo $this->escape($this->formatPrice((float) $bundle->total_gross, (string) $bundle->currency)); ?></strong></header>
+                        <ul><?php foreach ($bundle->items as $bundleItem) : ?><li><?php echo (int) $bundleItem->quantity; ?> × <?php echo $this->escape((string) $bundleItem->product_name); ?> <small>(<?php echo $this->escape((string) $bundleItem->sku); ?>)</small></li><?php endforeach; ?></ul>
+                        <p><?php echo (int) $bundle->total_quantity; ?> Stück · Bundle-Rabatt <?php echo $this->escape(number_format((float) $bundle->discount_percent, 2, ',', '.')); ?> %</p>
+                        <div><a class="btn btn-outline-primary btn-sm" href="index.php?option=com_fdshop&amp;view=product&amp;id=<?php echo (int) ($bundle->items[0]->product_id ?? 0); ?>&amp;bundle_id=<?php echo (int) $bundle->bundle_id; ?>&amp;cart_bundle_id=<?php echo (int) $bundle->id; ?>">Bearbeiten</a> <button type="button" class="btn btn-outline-danger btn-sm" data-cart-bundle-remove>Bundle entfernen</button></div>
+                    </article>
+                <?php endforeach; ?>
             </section>
             <aside class="fdshop-cart__checkout" aria-labelledby="fdshop-cart-summary-heading">
                 <h2 id="fdshop-cart-summary-heading">Bestellübersicht</h2>

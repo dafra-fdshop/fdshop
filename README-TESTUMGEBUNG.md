@@ -86,10 +86,19 @@ Neue Businessregeln, Architektur-, Datenmodell- und Governance-Entscheidungen bl
 - Bestell Trash/Restore (mit zwei benötigten Snapshots nicht sicher isoliert)
 - Checkout und operative Bestellungserzeugung
 
-Verpackungseinheiten werden in Schema 0.0.20 durch die Purchase-Suite mit
+Verpackungseinheiten werden seit Schema 0.0.20 durch die Purchase-Suite mit
 geprüft (`scripts/fdshop browser-purchase`): serverseitige Paketpreise,
 Detailseiten-Umschaltung, expliziter Stückkauf der Kategorie sowie getrennte
 Stück-/Paketpositionen im Warenkorb.
+
+Frei zusammenstellbare Bundles verwenden ab Schema 0.0.21 vier relationale
+Tabellen für persönliche Entwürfe und validierte Warenkorb-Snapshots. Die
+serverseitige Berechnung wählt anhand der Gesamtstückzahl die beste aktive
+Rabattstufe, verteilt Centbeträge deterministisch und rechnet je Produkt mit
+dessen Umsatzsteuersatz. Normale Stückpositionen, Verpackungseinheiten und
+Bundle-Positionen beanspruchen denselben physischen Bestand. Die
+Frontend-Warenkorb-Suite prüft Konfiguration, Preis, atomare Ablehnung sowie
+Save/Load/Delete für angemeldete Kunden.
 
 Im Gutscheinmodell fehlen weiterhin `maximum_discount_amount`, `coupon_type` und ein Allow/Exclude-Zuordnungsmodus. Technisch implementiert sind unter anderem `valid_to`, `usage_limit_per_user` sowie `percent` und `fixed`; abweichende Fachquellenbegriffe werden nicht automatisch gleichgesetzt.
 

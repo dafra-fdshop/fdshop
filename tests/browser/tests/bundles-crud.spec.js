@@ -89,6 +89,7 @@ test('bundle invalid save, automatic number, AJAX products, discounts, apply, sa
   await page.locator('#jform_bundle_name').fill(bundleName);
   await page.locator('#jform_alias').fill('e2e-crud-bundle-reference');
   await page.locator('#jform_description').fill('CRUD initial bundle description');
+  await page.locator('#jform_max_quantity_per_product').fill('3');
   await page.locator('input[name="jform[is_active]"][value="1"]').check({ force: true });
 
   await page.getByRole('tab', { name: 'Produkte' }).click();
@@ -111,7 +112,7 @@ test('bundle invalid save, automatic number, AJAX products, discounts, apply, sa
   const createdId = await page.locator('#jform_id').inputValue();
   const bundleNumber = await page.locator('#jform_bundle_number').inputValue();
   expect(Number(createdId)).toBeGreaterThan(0);
-  expect(bundleNumber).toMatch(/^BUN-\d+$/);
+  expect(bundleNumber).toMatch(/^BUNDLE-\d+$/);
   await page.getByRole('tab', { name: 'Produkte' }).click();
   await expect(page.locator('#bundle-product-table tbody tr')).toHaveCount(2);
   await page.getByRole('tab', { name: 'Rabattstufen' }).click();
