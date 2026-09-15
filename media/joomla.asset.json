@@ -1,7 +1,7 @@
 {
   "$schema": "https://developer.joomla.org/schemas/json-schema/web_assets.json",
   "name": "com_fdshop",
-  "version": "0.0.1",
+  "version": "0.0.22",
   "assets": [
     {
       "name": "com_fdshop.site",

@@ -630,7 +630,6 @@ class ProductService implements ProductServiceInterface
             'rise_height',
             'ribbon_new',
             'ribbon_hot',
-            'ribbon_bundle',
         ];
 
         $detailFields = [
@@ -638,6 +637,7 @@ class ProductService implements ProductServiceInterface
             'product_id',
             'sku',
             'gtin',
+            'bundle_eligible',
             'stock_quantity',
             'low_stock',
             'reserved_quantity',

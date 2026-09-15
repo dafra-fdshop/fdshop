@@ -28,6 +28,7 @@ class ProductDetailsTable extends Table
             'reserved_quantity',
             'sold_quantity',
             'is_in_stock',
+            'bundle_eligible',
             'weight',
             'length',
             'width',

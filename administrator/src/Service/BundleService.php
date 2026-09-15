@@ -62,6 +62,8 @@ class BundleService implements BundleServiceInterface
             throw new RuntimeException('Das zu bearbeitende Bundle konnte nicht geladen werden.');
         }
 
+        $previousProductIds = $bundleId > 0 ? $this->getBundleProductIds($bundleId) : [];
+
         if ($bindData['bundle_number'] === '') {
             $bindData['bundle_number'] = $bundleId > 0
                 ? (string) $table->bundle_number
@@ -96,6 +98,7 @@ class BundleService implements BundleServiceInterface
 
             $this->saveBundleItems($bundleId, $productIds);
             $this->saveBundleDiscountRules($bundleId, $discountRules);
+            $this->syncBundleRibbons(array_merge($previousProductIds, $productIds));
 
             $this->db->transactionCommit();
 
@@ -123,7 +126,11 @@ class BundleService implements BundleServiceInterface
         $this->db->transactionStart();
 
         try {
+            $affectedProductIds = [];
+
             foreach ($bundleIds as $bundleId) {
+                $affectedProductIds = array_merge($affectedProductIds, $this->getBundleProductIds($bundleId));
+
                 foreach (['#__fdshop_bundle_discount_rules', '#__fdshop_bundle_items'] as $tableName) {
                     $deleteQuery = $this->db->getQuery(true)
                         ->delete($this->db->quoteName($tableName))
@@ -136,6 +143,8 @@ class BundleService implements BundleServiceInterface
                     throw new RuntimeException($table->getError());
                 }
             }
+
+            $this->syncBundleRibbons($affectedProductIds);
 
             $this->db->transactionCommit();
 
@@ -333,7 +342,6 @@ class BundleService implements BundleServiceInterface
                 . ' ON ' . $this->db->quoteName('d.product_id') . ' = ' . $this->db->quoteName('p.id')
             )
             ->where($this->db->quoteName('bi.bundle_id') . ' = ' . $bundleId)
-            ->where($this->db->quoteName('p.ribbon_bundle') . ' = 1')
             ->order($this->db->quoteName('bi.ordering') . ' ASC')
             ->order($this->db->quoteName('bi.id') . ' ASC');
 
@@ -388,7 +396,7 @@ class BundleService implements BundleServiceInterface
             )
             ->where('d.' . $this->db->quoteName('sku') . ' = ' . $this->db->quote($sku))
             ->where('p.' . $this->db->quoteName('is_deleted') . ' = 0');
-        $query->where('p.' . $this->db->quoteName('ribbon_bundle') . ' = 1');
+        $query->where('d.' . $this->db->quoteName('bundle_eligible') . ' = 1');
 
         $this->db->setQuery($query, 0, 1);
         $product = $this->db->loadObject();
@@ -418,7 +426,7 @@ class BundleService implements BundleServiceInterface
                 . ' ON p.' . $this->db->quoteName('id') . ' = d.' . $this->db->quoteName('product_id')
             )
             ->where('p.' . $this->db->quoteName('is_deleted') . ' = 0')
-            ->where('p.' . $this->db->quoteName('ribbon_bundle') . ' = 1')
+            ->where('d.' . $this->db->quoteName('bundle_eligible') . ' = 1')
             ->order('p.' . $this->db->quoteName('product_name') . ' ASC')
             ->order('p.' . $this->db->quoteName('id') . ' ASC');
 
@@ -453,6 +461,24 @@ class BundleService implements BundleServiceInterface
         $this->db->setQuery($query);
 
         return array_map('intval', (array) $this->db->loadColumn());
+    }
+
+    private function syncBundleRibbons(array $productIds): void
+    {
+        foreach ($this->normalizeIds($productIds) as $productId) {
+            $countQuery = $this->db->getQuery(true)
+                ->select('COUNT(*)')
+                ->from($this->db->quoteName('#__fdshop_bundle_items'))
+                ->where($this->db->quoteName('product_id') . ' = ' . $productId);
+            $this->db->setQuery($countQuery);
+            $hasBundle = (int) $this->db->loadResult() > 0 ? 1 : 0;
+
+            $updateQuery = $this->db->getQuery(true)
+                ->update($this->db->quoteName('#__fdshop_products'))
+                ->set($this->db->quoteName('ribbon_bundle') . ' = ' . $hasBundle)
+                ->where($this->db->quoteName('id') . ' = ' . $productId);
+            $this->db->setQuery($updateQuery)->execute();
+        }
     }
 
     private function getBundleDiscountRules(int $bundleId): array

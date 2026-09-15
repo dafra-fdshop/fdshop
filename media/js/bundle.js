@@ -9,6 +9,7 @@
     var currentData = null;
     var currentSavedId = 0;
     var timer = null;
+    var renderVersion = 0;
 
     function request(url, data, method) {
         var options = {credentials: 'same-origin', headers: {'Accept': 'application/json'}};
@@ -27,18 +28,26 @@
     function selection() { var result = {}; content.querySelectorAll('[data-bundle-quantity]').forEach(function (input) { var q = Number(input.value || 0); if (q > 0) result[input.dataset.productId] = q; }); return result; }
     function message(text, error) { var node = content.querySelector('[data-bundle-message]'); if (node) { node.textContent = text || ''; node.classList.toggle('is-error', !!error); } }
     function calculate() {
+        var version = renderVersion;
         renderChosen();
         window.clearTimeout(timer);
         timer = window.setTimeout(function () {
             request(dialog.dataset.calculateUrl, {bundle_id: currentId, items: JSON.stringify(selection())}, 'POST').then(function (data) {
+                if (version !== renderVersion) return;
                 var summary = content.querySelector('[data-bundle-summary]');
+                var cartButton = content.querySelector('[data-bundle-cart]');
+                if (!summary || !cartButton) return;
                 summary.querySelector('[data-bundle-distinct]').textContent = data.distinct_product_count;
                 summary.querySelector('[data-bundle-count]').textContent = data.total_quantity;
                 summary.querySelector('[data-bundle-subtotal]').textContent = money(data.subtotal_gross, data.currency);
                 summary.querySelector('[data-bundle-discount]').textContent = '-' + money(data.discount_amount_gross, data.currency);
                 summary.querySelector('[data-bundle-total]').textContent = money(data.total_gross, data.currency);
-                message(''); content.querySelector('[data-bundle-cart]').disabled = false;
-            }).catch(function (e) { message(e.message, true); content.querySelector('[data-bundle-cart]').disabled = true; });
+                message(''); cartButton.disabled = false;
+            }).catch(function (e) {
+                if (version !== renderVersion) return;
+                var cartButton = content.querySelector('[data-bundle-cart]');
+                message(e.message, true); if (cartButton) cartButton.disabled = true;
+            });
         }, 120);
     }
 
@@ -55,6 +64,8 @@
     }
 
     function render(data) {
+        renderVersion += 1;
+        window.clearTimeout(timer);
         currentData = data; content.replaceChildren();
         var b = data.bundle; var selected = {};
         (data.selection || []).forEach(function (row) { selected[row.product_id] = row.quantity; });

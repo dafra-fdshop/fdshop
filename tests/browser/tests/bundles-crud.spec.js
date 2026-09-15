@@ -54,6 +54,17 @@ async function addProductBySuggestion(page, sku, productName) {
   await expect(page.locator(`#bundle-product-table tr[data-product-id]`).filter({ hasText: sku })).toHaveCount(1);
 }
 
+async function expectEligibleSuggestionsOnFocus(page) {
+  const searchResponse = page.waitForResponse(response =>
+    response.url().includes('task=bundle.searchProducts') && response.url().includes('q=')
+  );
+  await page.locator('#bundle-product-sku').focus();
+  expect((await searchResponse).ok()).toBe(true);
+  const suggestions = page.locator('#bundle-product-suggestions [role="option"]');
+  await expect(suggestions).toHaveCount(3);
+  await expect(suggestions.filter({ hasText: 'E2E-PROD-IMAGE - E2E Produkt Bild' })).toBeVisible();
+}
+
 async function acceptDelete(page, action) {
   await action();
   const confirmation = page.getByRole('dialog', { name: 'Warning' });
@@ -93,6 +104,7 @@ test('bundle invalid save, automatic number, AJAX products, discounts, apply, sa
   await page.locator('input[name="jform[is_active]"][value="1"]').check({ force: true });
 
   await page.getByRole('tab', { name: 'Produkte' }).click();
+  await expectEligibleSuggestionsOnFocus(page);
   await addProductBySuggestion(page, 'E2E-PROD-ACTIVE', 'E2E Produkt Aktiv');
   await addProductBySuggestion(page, 'E2E-PROD-DISCOUNT', 'E2E Produkt Aktionspreis');
   await addProductBySuggestion(page, 'E2E-PROD-ACTIVE', 'E2E Produkt Aktiv');
@@ -173,7 +185,7 @@ test('bundle invalid save, automatic number, AJAX products, discounts, apply, sa
   await page.locator('#jform_alias').fill('e2e-crud-bundle-multi');
   await page.locator('input[name="jform[is_active]"][value="1"]').check({ force: true });
   await page.getByRole('tab', { name: 'Produkte' }).click();
-  await addProductBySuggestion(page, 'E2E-PROD-ACTIVE', 'E2E Produkt Aktiv');
+  await addProductBySuggestion(page, 'E2E-PROD-IMAGE', 'E2E Produkt Bild');
   await page.getByRole('tab', { name: 'Rabattstufen' }).click();
   rules = page.locator('#bundle-discount-table tbody tr');
   await rules.nth(0).locator('input[name*="[min_quantity]"]').fill('3');
@@ -181,6 +193,10 @@ test('bundle invalid save, automatic number, AJAX products, discounts, apply, sa
   await page.getByRole('button', { name: 'Save & Close' }).click();
   await page.waitForLoadState('networkidle');
   await expect(page).toHaveURL(/view=bundles/);
+  await page.goto('/index.php?option=com_fdshop&view=product&id=900103');
+  await expect(page.locator('.fdshop-ribbon--bundle')).toHaveText('Bundle');
+  await expect(page.getByRole('button', { name: 'Bundle zusammenstellen' })).toBeVisible();
+  await openView(page, 'bundles');
 });
 
 test('bundle direct delete removes multiple selected records through the UI', async ({ page }) => {

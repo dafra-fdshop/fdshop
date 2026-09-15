@@ -74,6 +74,11 @@ test('product invalid save, create, apply, save-close, mappings, stock, status a
   await page.locator('#jform_sku').fill(productSku);
   await page.locator('#jform_gtin').fill('9900000099991');
   await page.locator('#jform_alias').fill('e2e-crud-product-reference');
+  await expect(page.locator('#jform_bundle_eligible')).toBeVisible();
+  expect(await page.locator('#jform_bundle_eligible').evaluate((field) =>
+    Boolean(field.compareDocumentPosition(document.querySelector('#jform_manufacturer_id')) & Node.DOCUMENT_POSITION_FOLLOWING)
+  )).toBe(true);
+  await setRadio(page, 'bundle_eligible', '1');
   await page.locator('#jform_manufacturer_id').selectOption('900001');
   await page.locator('#jform_category_ids').selectOption(['900010']);
   await page.locator('#jform_buyer_group_ids').selectOption(['900020']);
@@ -101,6 +106,7 @@ test('product invalid save, create, apply, save-close, mappings, stock, status a
   await page.locator('#jform_meta_title').fill('CRUD initial meta title');
 
   await page.getByRole('tab', { name: 'Besondere Felder' }).click();
+  await expect(page.locator('#jform_bundle_eligible')).toBeHidden();
   await page.locator('#jform_unit_type').selectOption('Display');
   await page.locator('#jform_unit_quantity').fill('6');
   await page.locator('#jform_unit_discount_type').selectOption('percent');

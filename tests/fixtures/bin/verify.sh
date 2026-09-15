@@ -22,6 +22,8 @@ assert_sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_coupon_usage;" 0 'cou
 assert_sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_cart;" 0 'cart not reset'
 
 assert_sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_products_details WHERE sku LIKE 'E2E-PROD-%';" 10 'stable product SKUs'
+assert_sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_products_details WHERE bundle_eligible=1;" 3 'bundle-eligible products'
+assert_sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_products WHERE ribbon_bundle=1;" 2 'bundle ribbon assignments'
 assert_sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_products WHERE is_active=0 AND is_deleted=0;" 1 'inactive product'
 assert_sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_products WHERE is_deleted=1;" 1 'trashed product'
 assert_sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_products WHERE discount_active=1 AND discount_price>0;" 1 'active discount product'

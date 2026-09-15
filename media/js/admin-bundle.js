@@ -51,7 +51,7 @@
         row.dataset.productId = String(product.product_id);
         if (product.image_path) {
             var image = document.createElement('img');
-            image.src = String(product.image_path).replace(/^\/+/, '/');
+            image.src = '/' + String(product.image_path).replace(/^\/+/, '');
             image.alt = '';
             image.width = 56;
             image.height = 56;

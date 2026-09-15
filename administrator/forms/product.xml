@@ -39,7 +39,7 @@
 				description="Leer = Wird automatisch gefüllt"
             />
 
-            <field name="ribbon_bundle" type="radio" label="Produkt Bundle-Fähig" default="0" class="btn-group btn-group-yesno">
+            <field name="bundle_eligible" type="radio" label="Produkt Bundle-Fähig" default="0" class="btn-group btn-group-yesno">
                 <option value="1">Ja</option>
                 <option value="0">Nein</option>
             </field>

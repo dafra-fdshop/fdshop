@@ -360,6 +360,9 @@ test_packaging_migration() {
   verify_fixtures >/dev/null
   local id
   id="$(extension_id)"
+  sql "ALTER TABLE ${JOOMLA_DB_PREFIX}fdshop_products_details DROP INDEX idx_fdshop_products_details_bundle_eligible, DROP COLUMN bundle_eligible;"
+  sql "DROP TABLE ${JOOMLA_DB_PREFIX}fdshop_cart_bundle_items, ${JOOMLA_DB_PREFIX}fdshop_cart_bundles, ${JOOMLA_DB_PREFIX}fdshop_saved_bundle_items, ${JOOMLA_DB_PREFIX}fdshop_saved_bundles;"
+  sql "ALTER TABLE ${JOOMLA_DB_PREFIX}fdshop_bundles DROP COLUMN max_quantity_per_product, DROP COLUMN image_path;"
   sql "ALTER TABLE ${JOOMLA_DB_PREFIX}fdshop_cart DROP INDEX idx_fdshop_cart_variant, DROP COLUMN unit_quantity_snapshot, DROP COLUMN unit_type_snapshot, DROP COLUMN unit_variant;"
   sql "ALTER TABLE ${JOOMLA_DB_PREFIX}fdshop_products ADD COLUMN unit_quantity INT UNSIGNED NOT NULL DEFAULT 1 AFTER unit_type;"
   sql "ALTER TABLE ${JOOMLA_DB_PREFIX}fdshop_products_details DROP COLUMN unit_discount_value, DROP COLUMN unit_discount_type, DROP COLUMN unit_quantity;"
@@ -370,7 +373,11 @@ test_packaging_migration() {
   [[ "$(sql "SELECT CONCAT(p.unit_type,'|',d.unit_quantity) FROM ${JOOMLA_DB_PREFIX}fdshop_products p JOIN ${JOOMLA_DB_PREFIX}fdshop_products_details d ON d.product_id=p.id WHERE p.id=900100;")" == "Stück|1" ]]
   [[ "$(sql "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema='${MARIADB_DATABASE}' AND table_name='${JOOMLA_DB_PREFIX}fdshop_products' AND column_name='unit_quantity';")" == "0" ]]
   [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_cart WHERE unit_variant<>'piece' OR unit_type_snapshot<>'Stück' OR unit_quantity_snapshot<>1;")" == "0" ]]
-  printf 'FDShop packaging migration 0.0.19 -> 0.0.20: PASS\n'
+  [[ "$(sql "SELECT version_id FROM ${JOOMLA_DB_PREFIX}schemas WHERE extension_id=${id};")" == "0.0.22" ]]
+  [[ "$(sql "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema='${MARIADB_DATABASE}' AND table_name='${JOOMLA_DB_PREFIX}fdshop_products_details' AND column_name='bundle_eligible';")" == "1" ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_products_details WHERE bundle_eligible=1;")" == "2" ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_products WHERE ribbon_bundle=1;")" == "2" ]]
+  printf 'FDShop packaging and bundle migration 0.0.19 -> 0.0.22: PASS\n'
 }
 
 run_browser_crud_manufacturers() {
@@ -541,7 +548,7 @@ run_browser_crud_bundles() {
   bundle_id="$(sql "SELECT id FROM ${JOOMLA_DB_PREFIX}fdshop_bundles WHERE bundle_name='E2E-CRUD-BUNDLE-UPDATED';")"
   bundle_number="$(sql "SELECT bundle_number FROM ${JOOMLA_DB_PREFIX}fdshop_bundles WHERE id=${bundle_id};")"
   multi_bundle_id="$(sql "SELECT id FROM ${JOOMLA_DB_PREFIX}fdshop_bundles WHERE bundle_name='E2E-CRUD-BUNDLE-MULTI';")"
-  [[ "$bundle_id" =~ ^[0-9]+$ && "$bundle_number" =~ ^BUN-[0-9]+$ ]]
+  [[ "$bundle_id" =~ ^[0-9]+$ && "$bundle_number" =~ ^BUNDLE-[0-9]+$ ]] || return 1
   [[ "$multi_bundle_id" =~ ^[0-9]+$ ]]
   [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_bundles WHERE id=${bundle_id} AND bundle_number='${bundle_number}' AND description='CRUD bundle after apply' AND is_active=1;")" == "1" ]]
   [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_bundle_items WHERE bundle_id=${bundle_id} AND product_id=900100 AND ordering=1;")" == "1" ]]
@@ -550,6 +557,7 @@ run_browser_crud_bundles() {
   rules_before="$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_bundle_discount_rules WHERE bundle_id IN (${bundle_id},${multi_bundle_id});")"
   [[ "$items_before" == "2" ]]
   [[ "$rules_before" == "2" ]]
+  [[ "$(sql "SELECT ribbon_bundle FROM ${JOOMLA_DB_PREFIX}fdshop_products WHERE id=900103;")" == "1" ]] || return 1
   printf 'Bundle CRUD delete: ids=%s,%s; child rows before delete: items=%s, rules=%s\n' \
     "$bundle_id" "$multi_bundle_id" "$items_before" "$rules_before"
 
@@ -566,6 +574,7 @@ run_browser_crud_bundles() {
   [[ "$main_after" == "0" ]]
   [[ "$items_after" == "0" ]]
   [[ "$rules_after" == "0" ]]
+  [[ "$(sql "SELECT ribbon_bundle FROM ${JOOMLA_DB_PREFIX}fdshop_products WHERE id=900103;")" == "0" ]] || return 1
   verify_fixtures >/dev/null
   printf 'Bundle CRUD artifacts: %s\nFDShop bundle CRUD suite: PASS (database and cleanup verified)\n' "$host_output"
 }

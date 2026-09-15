@@ -61,6 +61,7 @@ CREATE TABLE IF NOT EXISTS `#__fdshop_products_details` (
   `product_id` BIGINT UNSIGNED NOT NULL,
   `sku` VARCHAR(64) NOT NULL,
   `gtin` VARCHAR(32) NOT NULL,
+  `bundle_eligible` TINYINT(1) NOT NULL DEFAULT 0,
   `stock_quantity` INT UNSIGNED NOT NULL,
   `low_stock` INT UNSIGNED NOT NULL,
   `reserved_quantity` DECIMAL(12,3) NOT NULL DEFAULT 0.000,
@@ -78,7 +79,8 @@ CREATE TABLE IF NOT EXISTS `#__fdshop_products_details` (
   `unit_discount_type` VARCHAR(20) NOT NULL DEFAULT 'none',
   `unit_discount_value` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
   PRIMARY KEY (`id`),
-  KEY `idx_fdshop_products_details_product_id` (`product_id`)
+  KEY `idx_fdshop_products_details_product_id` (`product_id`),
+  KEY `idx_fdshop_products_details_bundle_eligible` (`bundle_eligible`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 

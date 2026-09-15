@@ -100,6 +100,11 @@ Bundle-Positionen beanspruchen denselben physischen Bestand. Die
 Frontend-Warenkorb-Suite prüft Konfiguration, Preis, atomare Ablehnung sowie
 Save/Load/Delete für angemeldete Kunden.
 
+Seit Schema 0.0.22 ist die administrative Bundle-Fähigkeit in
+`#__fdshop_products_details.bundle_eligible` vom automatisch aus realen
+Bundle-Zuordnungen gepflegten Frontend-Ribbon
+`#__fdshop_products.ribbon_bundle` getrennt.
+
 Im Gutscheinmodell fehlen weiterhin `maximum_discount_amount`, `coupon_type` und ein Allow/Exclude-Zuordnungsmodus. Technisch implementiert sind unter anderem `valid_to`, `usage_limit_per_user` sowie `percent` und `fixed`; abweichende Fachquellenbegriffe werden nicht automatisch gleichgesetzt.
 
 STANDARD und FULL brechen beim ersten Fehler non-zero mit dem betroffenen Abschnitt ab. Nach CRUD-Fehlern wird soweit sicher möglich der Fixturezustand wiederhergestellt; Screenshots und Traces bleiben erhalten. Es gibt keine globale Docker-Bereinigung.

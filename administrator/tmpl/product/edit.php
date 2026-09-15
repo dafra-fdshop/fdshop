@@ -26,6 +26,7 @@ $this->getDocument()->getWebAssetManager()->useScript('com_fdshop.admin-product'
                         <?php echo $this->form->renderField('sku'); ?>
                         <?php echo $this->form->renderField('gtin'); ?>
                         <?php echo $this->form->renderField('alias'); ?>
+                        <?php echo $this->form->renderField('bundle_eligible'); ?>
                         <?php echo $this->form->renderField('manufacturer_id'); ?>
                         <?php echo $this->form->renderField('category_ids'); ?>
                         <?php echo $this->form->renderField('buyer_group_ids'); ?>
@@ -185,7 +186,6 @@ $this->getDocument()->getWebAssetManager()->useScript('com_fdshop.admin-product'
                         <?php echo $this->form->renderField('rise_height'); ?>
                         <?php echo $this->form->renderField('ribbon_new'); ?>
                         <?php echo $this->form->renderField('ribbon_hot'); ?>
-                        <?php echo $this->form->renderField('ribbon_bundle'); ?>
                     </div>
                 </div>
             </div>
