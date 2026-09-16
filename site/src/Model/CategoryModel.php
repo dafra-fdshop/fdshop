@@ -13,6 +13,7 @@ use Joomla\CMS\Factory;
 use Joomla\CMS\MVC\Model\ListModel;
 use Joomla\Database\DatabaseQuery;
 use Joomla\Database\ParameterType;
+use FDShop\Component\FDShop\Site\Service\FilterService;
 
 final class CategoryModel extends ListModel
 {
@@ -24,6 +25,8 @@ final class CategoryModel extends ListModel
     private const ALLOWED_LIMITS = [12, 24, 36, 48];
 
     private ?object $category = null;
+    private ?FilterService $filterService = null;
+    private array $filterDefinitions = [];
 
     protected function populateState($ordering = 'p.product_name', $direction = 'ASC'): void
     {
@@ -44,6 +47,9 @@ final class CategoryModel extends ListModel
         $this->setState('list.start', $start);
         $this->setState('filter.sort', $sort);
         $this->setState('filter.direction', strtolower($dir));
+        $this->filterDefinitions = $this->filters()->getDefinitions();
+        $rawFilters = $input->get('fd_filter', [], 'array');
+        $this->setState('filter.fdshop', $this->filters()->normaliseState($rawFilters, $this->filterDefinitions));
     }
 
     public function getCategory(): ?object
@@ -98,7 +104,7 @@ final class CategoryModel extends ListModel
             $direction = 'ASC';
         }
 
-        return $db->getQuery(true)
+        $query = $db->getQuery(true)
             ->select([
                 $db->quoteName('p.id'),
                 $db->quoteName('p.product_name'),
@@ -138,6 +144,29 @@ final class CategoryModel extends ListModel
             ->bind(':publishDown', $now)
             ->order($ordering . ' ' . $direction)
             ->order($db->quoteName('p.id') . ' ASC');
+
+        $this->filters()->apply($query, (array) $this->getState('filter.fdshop', []), $this->filterDefinitions);
+
+        return $query;
+    }
+
+    public function getFilterFacets(): array
+    {
+        return $this->filters()->getFacets(
+            (int) $this->getState('category.id'),
+            (array) $this->getState('filter.fdshop', []),
+            $this->filterDefinitions
+        );
+    }
+
+    public function getFilterChips(): array
+    {
+        return $this->filters()->chips((array) $this->getState('filter.fdshop', []), $this->getFilterFacets());
+    }
+
+    private function filters(): FilterService
+    {
+        return $this->filterService ??= new FilterService($this->getDatabase());
     }
 
     public function getItems(): array

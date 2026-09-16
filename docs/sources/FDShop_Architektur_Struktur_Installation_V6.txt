@@ -538,6 +538,20 @@ Bestellmenge, physische Stückmenge, Netto-/Bruttopreis und Zeilensumme als
 historische Bestellsnapshots persistieren. Dafür wurden in V1 bewusst keine
 spekulativen Order-Spalten ergänzt.
 
+Architekturnachtrag Filterfunktion V1 (Schema 0.0.23):
+- com_fdshop besitzt Filterkonfiguration, Bereichsvalidierung, URL-Zustand,
+  Produktfilterung, Facetten-Counts und HTML-Darstellung.
+- mod_fdshop_filter ist ein dünner, frei positionierbarer Joomla-Renderer ohne
+  SQL oder eigene Filterfachlogik. Desktop und Mobile verwenden dieselbe
+  Komponentenwahrheit.
+- Das Installationsartefakt ist ein Joomla-Paket aus com_fdshop und
+  mod_fdshop_filter. Der Komponenten-Lifecycle bleibt für Schema und Daten
+  verantwortlich.
+- URL-Aufrufe sind serverseitig voll funktionsfähig; JavaScript beschleunigt
+  Interaktionen progressiv und hält URL, History, Produkte und Facetten synchron.
+- Facetten werden gruppenweise berechnet. Bei der Trefferzahl einer Gruppe werden
+  die anderen aktiven Gruppen angewandt, die eigene Gruppe jedoch ausgenommen.
+
 =====================================================================
 ENDE DER QUELLE FDShop_Architektur_Struktur_Installation_V6
 =====================================================================

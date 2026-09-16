@@ -37,19 +37,18 @@ build_package() {
   stage_dir="$(mktemp -d -t fdshop-package.XXXXXXXX)"
   trap '[[ -n "${stage_dir:-}" && "$stage_dir" == /tmp/fdshop-package.* ]] && rm -rf -- "$stage_dir"' RETURN
 
-  cp -a "$REPO_ROOT/administrator" "$stage_dir/administrator"
-  cp -a "$REPO_ROOT/site" "$stage_dir/site"
-  cp -a "$REPO_ROOT/media" "$stage_dir/media"
-  cp "$REPO_ROOT/fdshop.xml" "$REPO_ROOT/script.php" "$stage_dir/"
-
+  mkdir -p "$stage_dir/component" "$stage_dir/module" "$stage_dir/package"
+  cp -a "$REPO_ROOT/administrator" "$stage_dir/component/administrator"
+  cp -a "$REPO_ROOT/site" "$stage_dir/component/site"
+  cp -a "$REPO_ROOT/media" "$stage_dir/component/media"
+  cp "$REPO_ROOT/fdshop.xml" "$REPO_ROOT/script.php" "$stage_dir/component/"
+  cp -a "$REPO_ROOT/modules/mod_fdshop_filter/." "$stage_dir/module/"
   find "$stage_dir" -exec touch -h -d '2000-01-01 00:00:00 UTC' {} +
-  (
-    cd "$stage_dir"
-    find administrator site media -type f -print \
-      | LC_ALL=C sort \
-      | zip -X -q "$PACKAGE_PATH" -@
-    zip -X -q "$PACKAGE_PATH" fdshop.xml script.php
-  )
+  ( cd "$stage_dir/component"; find administrator site media -type f -print | LC_ALL=C sort | zip -X -q "$stage_dir/package/com_fdshop_component.zip" -@; zip -X -q "$stage_dir/package/com_fdshop_component.zip" fdshop.xml script.php )
+  ( cd "$stage_dir/module"; find . -type f -print | LC_ALL=C sort | zip -X -q "$stage_dir/package/mod_fdshop_filter.zip" -@ )
+  cp "$REPO_ROOT/pkg_fdshop.xml" "$stage_dir/package/"
+  touch -d '2000-01-01 00:00:00 UTC' "$stage_dir/package/"*
+  ( cd "$stage_dir/package"; zip -X -q "$PACKAGE_PATH" com_fdshop_component.zip mod_fdshop_filter.zip pkg_fdshop.xml )
 
   printf 'Built %s\n' "$PACKAGE_PATH"
   sha256sum "$PACKAGE_PATH"
@@ -98,6 +97,10 @@ extension_id() {
   sql "SELECT extension_id FROM ${JOOMLA_DB_PREFIX}extensions WHERE type='component' AND element='com_fdshop' LIMIT 1;"
 }
 
+package_extension_id() {
+  sql "SELECT extension_id FROM ${JOOMLA_DB_PREFIX}extensions WHERE type='package' AND element='pkg_fdshop' LIMIT 1;"
+}
+
 verify_installed() {
   local id actual_tables expected_tables schema_version manifest_version
   id="$(extension_id)"
@@ -121,6 +124,8 @@ verify_installed() {
   compose exec -T joomla test -d /var/www/html/components/com_fdshop
   compose exec -T joomla test -f /var/www/html/media/com_fdshop/joomla.asset.json
   compose exec -T joomla test -d /var/www/html/images/FDShop/products
+  compose exec -T joomla test -f /var/www/html/modules/mod_fdshop_filter/mod_fdshop_filter.php
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}extensions WHERE type='module' AND element='mod_fdshop_filter' AND client_id=0;")" == "1" ]]
 
   printf 'FDShop installed: extension_id=%s, schema=%s, tables=%s; installation paths present.\n' "$id" "$schema_version" "$actual_tables"
 }
@@ -134,6 +139,7 @@ verify_uninstalled() {
   compose exec -T joomla test ! -e /var/www/html/administrator/components/com_fdshop
   compose exec -T joomla test ! -e /var/www/html/components/com_fdshop
   compose exec -T joomla test ! -e /var/www/html/media/com_fdshop
+  compose exec -T joomla test ! -e /var/www/html/modules/mod_fdshop_filter
   printf 'FDShop uninstalled: extension record absent, tables=0, component paths absent.\n'
 }
 
@@ -161,7 +167,8 @@ install_fdshop() {
 
 uninstall_fdshop() {
   local id
-  id="$(extension_id)"
+  id="$(package_extension_id)"
+  [[ "$id" =~ ^[0-9]+$ ]] || id="$(extension_id)"
   [[ "$id" =~ ^[0-9]+$ ]] || { printf 'FDShop is not installed.\n' >&2; return 1; }
   compose exec -T joomla php cli/joomla.php extension:remove "$id" --no-interaction
   verify_uninstalled
@@ -177,7 +184,8 @@ sync_source() {
     rsync -a --delete /workspace/fdshop/media/js/ /var/www/html/media/com_fdshop/js/
     rsync -a --delete /workspace/fdshop/media/images/ /var/www/html/media/com_fdshop/images/
     cp /workspace/fdshop/media/joomla.asset.json /var/www/html/media/com_fdshop/joomla.asset.json
-    chown -R www-data:www-data /var/www/html/administrator/components/com_fdshop /var/www/html/components/com_fdshop /var/www/html/media/com_fdshop
+    test ! -d /var/www/html/modules/mod_fdshop_filter || rsync -a --delete /workspace/fdshop/modules/mod_fdshop_filter/ /var/www/html/modules/mod_fdshop_filter/
+    chown -R www-data:www-data /var/www/html/administrator/components/com_fdshop /var/www/html/components/com_fdshop /var/www/html/media/com_fdshop /var/www/html/modules/mod_fdshop_filter 2>/dev/null || true
   '
   printf 'FDShop source synchronized. Manifest and installer lifecycle were not bypassed.\n'
 }
@@ -282,7 +290,7 @@ run_browser_frontend_category() {
 
   if compose run --rm --no-deps \
     --env "PLAYWRIGHT_OUTPUT_DIR=$container_output" \
-    browser npx playwright test tests/frontend-category.spec.js; then
+    browser npx playwright test tests/frontend-category.spec.js tests/filter-function.spec.js tests/filter-admin.spec.js; then
     load_fixtures >/dev/null
     printf 'Frontend category artifacts: %s\nFDShop frontend category suite: PASS (targeted data and cleanup verified)\n' "$host_output"
   else
@@ -373,11 +381,13 @@ test_packaging_migration() {
   [[ "$(sql "SELECT CONCAT(p.unit_type,'|',d.unit_quantity) FROM ${JOOMLA_DB_PREFIX}fdshop_products p JOIN ${JOOMLA_DB_PREFIX}fdshop_products_details d ON d.product_id=p.id WHERE p.id=900100;")" == "Stück|1" ]]
   [[ "$(sql "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema='${MARIADB_DATABASE}' AND table_name='${JOOMLA_DB_PREFIX}fdshop_products' AND column_name='unit_quantity';")" == "0" ]]
   [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_cart WHERE unit_variant<>'piece' OR unit_type_snapshot<>'Stück' OR unit_quantity_snapshot<>1;")" == "0" ]]
-  [[ "$(sql "SELECT version_id FROM ${JOOMLA_DB_PREFIX}schemas WHERE extension_id=${id};")" == "0.0.22" ]]
+  [[ "$(sql "SELECT version_id FROM ${JOOMLA_DB_PREFIX}schemas WHERE extension_id=${id};")" == "0.0.23" ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_filters;")" == "5" ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_filter_ranges;")" == "9" ]]
   [[ "$(sql "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema='${MARIADB_DATABASE}' AND table_name='${JOOMLA_DB_PREFIX}fdshop_products_details' AND column_name='bundle_eligible';")" == "1" ]]
   [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_products_details WHERE bundle_eligible=1;")" == "2" ]]
   [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_products WHERE ribbon_bundle=1;")" == "2" ]]
-  printf 'FDShop packaging and bundle migration 0.0.19 -> 0.0.22: PASS\n'
+  printf 'FDShop packaging, bundle and filter migration 0.0.19 -> 0.0.23: PASS\n'
 }
 
 run_browser_crud_manufacturers() {

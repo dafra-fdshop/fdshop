@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extension type="package" method="upgrade">
+  <name>FDShop</name><packagename>fdshop</packagename><version>0.0.23</version><author>FDShop</author><creationDate>2026-09-16</creationDate>
+  <description>FDShop-Komponente mit dem dünnen Kategorie-Filter-Renderer-Modul.</description>
+  <files><file type="component" id="com_fdshop">com_fdshop_component.zip</file><file type="module" id="mod_fdshop_filter" client="site">mod_fdshop_filter.zip</file></files>
+</extension>

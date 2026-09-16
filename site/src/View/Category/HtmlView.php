@@ -24,6 +24,9 @@ final class HtmlView extends BaseHtmlView
     public array $sortOptions = [];
     public array $limitOptions = [12, 24, 36, 48];
     public bool $purchaseEnabled = false;
+    public array $filterFacets = [];
+    public array $activeFilters = [];
+    public array $filterChips = [];
 
     public function display($tpl = null): void
     {
@@ -39,6 +42,9 @@ final class HtmlView extends BaseHtmlView
         $this->pagination = $model->getPagination();
         $this->state = $model->getState();
         $this->purchaseEnabled = PurchaseHelper::isShopEnabled();
+        $this->filterFacets = $model->getFilterFacets();
+        $this->activeFilters = (array) $this->state->get('filter.fdshop', []);
+        $this->filterChips = $model->getFilterChips();
         $this->sortOptions = [
             'name:asc'   => 'Name aufsteigend',
             'name:desc'  => 'Name absteigend',

@@ -39,6 +39,13 @@
     const quantity = action.querySelector('[data-purchase-quantity]');
     const error = action.querySelector('[data-purchase-error]');
 
+    if (!touchCapable) {
+      action.addEventListener('mouseenter', () => action.classList.add('is-open'));
+      action.closest('.fdshop-card__commerce')?.addEventListener('mouseleave', () => {
+        if (!action.contains(document.activeElement)) action.classList.remove('is-open');
+      });
+    }
+
     button.addEventListener('click', async event => {
       if (touchCapable && !action.classList.contains('is-open')) {
         event.preventDefault();

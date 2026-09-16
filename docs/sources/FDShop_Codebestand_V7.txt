@@ -539,6 +539,17 @@ Nachtrag Verpackungseinheiten / Display V1 (Schema 0.0.20):
 - Produktdetail, Purchase Action und Warenkorb unterstützen Stück/Display/
   Schinken/VE. Die Kategorie greift dafür nicht auf products_details zu.
 
+Nachtrag Filterfunktion V1 (Schema 0.0.23):
+- Neue Tabellen: #__fdshop_filters und #__fdshop_filter_ranges; damit 34 aktive
+  FDShop-Tabellen.
+- Fünf feste Systemfilter: manufacturer, availability, duration, caliber, nem.
+- Neue Admin-Views/Models/Controller/Services für Filter und Zahlenbereiche.
+- Neue zentrale Site-FilterService-Implementierung, Filter-Layout, Desktoppanel,
+  Mobile-Offcanvas, aktive Chips und progressive AJAX-Bedienung.
+- Neues Renderer-Modul modules/mod_fdshop_filter und Paketmanifest pkg_fdshop.xml.
+- Keine Produkt-zu-Bereich-Mappingtabelle; Bereiche werden gegen die vorhandenen
+  technischen Produktwerte ausgewertet.
+
 =====================================================================
 ENDE DER QUELLE FDShop_Codebestand_V7
 =====================================================================

@@ -20,6 +20,8 @@ use FDShop\Component\FDShop\Administrator\Service\ProductServiceInterface;
 use FDShop\Component\FDShop\Administrator\Service\PackagingService;
 use FDShop\Component\FDShop\Administrator\Service\OrderService;
 use FDShop\Component\FDShop\Administrator\Service\OrderServiceInterface;
+use FDShop\Component\FDShop\Administrator\Service\FilterService;
+use FDShop\Component\FDShop\Administrator\Service\FilterServiceInterface;
 use FDShop\Component\FDShop\Site\Service\CartService;
 use FDShop\Component\FDShop\Site\Service\CartServiceInterface;
 use FDShop\Component\FDShop\Site\Service\BundleService as SiteBundleService;
@@ -106,6 +108,9 @@ return new class () implements ServiceProviderInterface {
             PackagingService::class,
             static fn (): PackagingService => new PackagingService()
         );
+
+        $container->set(FilterServiceInterface::class, fn (Container $container): FilterServiceInterface => new FilterService($container->get(DatabaseInterface::class)));
+        $container->set(FilterService::class, fn (Container $container): FilterService => $container->get(FilterServiceInterface::class));
 
         $container->set(
             ProductServiceInterface::class,

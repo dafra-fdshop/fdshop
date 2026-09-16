@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "0.0.22",
+  "schemaVersion": "0.0.23",
   "counts": {
     "manufacturers": 2, "categories": 4, "buyer_groups": 3,
     "products": 10, "products_details": 10,
@@ -14,7 +14,8 @@
     "shipments": 2, "payment_methods": 2, "order_statuses": 3,
     "orders": 2, "order_items": 2, "order_bundles": 1,
     "order_bundle_items": 2, "order_history": 2,
-    "order_status_history": 2
+    "order_status_history": 2,
+    "filters": 5, "filter_ranges": 9
   },
   "stableKeys": {
     "productSkus": [

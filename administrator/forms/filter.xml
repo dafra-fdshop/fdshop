@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<form><fields><fieldset name="basic">
+<field name="id" type="hidden" />
+<field name="filter_key" type="text" label="Technischer Schlüssel" readonly="true" />
+<field name="label" type="text" label="Frontend-Bezeichnung" required="true" />
+<field name="is_active" type="radio" label="Aktiv" class="btn-group btn-group-yesno" default="1"><option value="1">Ja</option><option value="0">Nein</option></field>
+<field name="ordering" type="number" label="Reihenfolge" default="0" />
+</fieldset></fields></form>

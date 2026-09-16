@@ -3,6 +3,56 @@
 
     document.addEventListener('DOMContentLoaded', function () {
         var category = document.querySelector('.fdshop-category');
+        var filterRequest = null;
+        var refreshFilteredCategory = function (form, pushHistory) {
+            if (!category || !form) return;
+            var url = new URL(window.location.href);
+            url.searchParams.delete('limitstart');
+            Array.from(url.searchParams.keys()).forEach(function (key) { if (key.indexOf('fd_filter[') === 0) url.searchParams.delete(key); });
+            new FormData(form).forEach(function (value, key) { if (!['option', 'view', 'id'].includes(key) && value !== '') url.searchParams.append(key, value); });
+            if (filterRequest) filterRequest.abort();
+            filterRequest = new AbortController();
+            category.setAttribute('aria-busy', 'true');
+            fetch(url.toString(), { headers: { 'X-Requested-With': 'XMLHttpRequest' }, signal: filterRequest.signal })
+                .then(function (response) { if (!response.ok) throw new Error('Filter request failed'); return response.text(); })
+                .then(function (html) {
+                    var next = new DOMParser().parseFromString(html, 'text/html').querySelector('.fdshop-category');
+                    if (!next) throw new Error('Filter response is incomplete');
+                    var currentLayout = category.querySelector('.fdshop-category__layout');
+                    var nextLayout = next.querySelector('.fdshop-category__layout');
+                    var currentMobile = category.querySelector('.fdshop-filter-offcanvas .offcanvas-body');
+                    var nextMobile = next.querySelector('.fdshop-filter-offcanvas .offcanvas-body');
+                    if (!currentLayout || !nextLayout || !currentMobile || !nextMobile) throw new Error('Filter fragments are incomplete');
+                    currentLayout.replaceWith(nextLayout);
+                    currentMobile.replaceWith(nextMobile);
+                    category.removeAttribute('aria-busy');
+                    if (pushHistory) window.history.pushState({}, '', url.toString());
+                    bindFilters();
+                })
+                .catch(function (error) { category.removeAttribute('aria-busy'); if (error.name !== 'AbortError') category.dispatchEvent(new CustomEvent('fdshop:filter-error')); });
+        };
+        var bindFilters = function () {
+            if (!category) return;
+            var moduleMount = document.querySelector('[data-fdshop-filter-module]');
+            var desktopPanel = category.querySelector('[data-fdshop-filter-panel]');
+            if (moduleMount && desktopPanel && !moduleMount.contains(desktopPanel)) moduleMount.replaceChildren(desktopPanel);
+            document.querySelectorAll('[data-fdshop-filter-form]').forEach(function (form) {
+                if (form.dataset.bound === '1') return;
+                form.dataset.bound = '1';
+                form.addEventListener('change', function () { refreshFilteredCategory(form, true); });
+                var reset = form.querySelector('[data-fdshop-filter-reset]');
+                if (reset) reset.addEventListener('click', function () { form.querySelectorAll('input[type="checkbox"]').forEach(function (box) { box.checked = false; }); refreshFilteredCategory(form, true); });
+            });
+            category.querySelectorAll('[data-fdshop-filter-remove]').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    var form = category.querySelector('[data-fdshop-filter-form]');
+                    category.querySelectorAll('input[name="fd_filter[' + button.dataset.filterKey + '][]"]').forEach(function (box) { if (box.value === button.dataset.filterValue) box.checked = false; });
+                    refreshFilteredCategory(form, true);
+                });
+            });
+        };
+        bindFilters();
+        window.addEventListener('popstate', function () { window.location.reload(); });
         var toolbar = category ? category.querySelector('.fdshop-toolbar') : null;
         var sortSelect = category ? category.querySelector('[data-fdshop-sort]') : null;
         var sortField = category ? category.querySelector('[data-fdshop-sort-field]') : null;

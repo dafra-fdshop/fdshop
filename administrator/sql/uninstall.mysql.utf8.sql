@@ -1,5 +1,8 @@
 SET FOREIGN_KEY_CHECKS = 0;
 
+DROP TABLE IF EXISTS `#__fdshop_filter_ranges`;
+DROP TABLE IF EXISTS `#__fdshop_filters`;
+
 DROP TABLE IF EXISTS `#__fdshop_coupon_usage`;
 DROP TABLE IF EXISTS `#__fdshop_coupon_category_map`;
 DROP TABLE IF EXISTS `#__fdshop_coupon_product_map`;

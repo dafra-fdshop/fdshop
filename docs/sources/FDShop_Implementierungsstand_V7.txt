@@ -520,6 +520,18 @@ Nachtrag Verpackungseinheiten / Display V1 (Schema 0.0.20):
   getrennte Warenkorbsnapshots mit gemeinsamer Bestandsprüfung: umgesetzt.
 - Checkout-/Bestellübernahme der Verpackungssnapshots: bewusst Folgepaket.
 
+Nachtrag Filterfunktion V1 (Schema 0.0.23):
+- Fünf konfigurierbare Systemfilter und numerische Bereichspflege: umgesetzt.
+- Halb offene, offene und nicht überlappende Bereiche mit Servervalidierung:
+  umgesetzt.
+- Hersteller-, Bestands-, Brenndauer-, Kaliber- und NEM-Filter mit ODER innerhalb
+  und UND zwischen Gruppen: umgesetzt.
+- Direkte/bookmarkbare URL, Pagination-/Sortiererhalt, Chips und Reset: umgesetzt.
+- Desktop-Renderer-Modul und mobiles Joomla-Offcanvas: umgesetzt.
+- Dynamische, kategoriespezifische Trefferzahlen ohne Query je Checkbox: umgesetzt.
+- Preis- und Abschussartfilter sowie frei definierbare Filtertypen: bewusst nicht
+  Bestandteil von V1.
+
 =====================================================================
 ENDE DER QUELLE FDShop_Implementierungsstand_V7
 =====================================================================
