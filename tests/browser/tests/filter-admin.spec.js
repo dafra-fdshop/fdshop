@@ -10,15 +10,17 @@ test.beforeEach(async ({ page, context, baseURL }, testInfo) => {
 });
 test.afterEach(async ({}, testInfo) => testInfo.diagnostics.expectClean());
 
-test('five immutable system filters and numeric range administration work', async ({ page }) => {
+test('seven immutable system filters and category-aware administration work', async ({ page }) => {
   await openView(page, 'filters');
   const list = page.locator('table.itemList tbody');
-  await expect(list.locator('tr')).toHaveCount(5);
+  await expect(list.locator('tr')).toHaveCount(7);
   await expect(list).toContainText('manufacturer');
   await expect(list).toContainText('availability');
   await expect(list).toContainText('duration');
   await expect(list).toContainText('caliber');
   await expect(list).toContainText('nem');
+  await expect(list).toContainText('firing_type');
+  await expect(list).toContainText('product_type');
 
   await page.getByRole('link', { name: 'NEM', exact: true }).click();
   await expect(page.locator('#jform_filter_key')).toHaveValue('nem');

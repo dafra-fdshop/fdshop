@@ -27,6 +27,10 @@ DELETE FROM `__PREFIX__fdshop_bundle_discount_rules`;
 DELETE FROM `__PREFIX__fdshop_bundle_items`;
 DELETE FROM `__PREFIX__fdshop_bundles`;
 DELETE FROM `__PREFIX__fdshop_media`;
+DELETE FROM `__PREFIX__fdshop_product_filter_option_map`;
+DELETE FROM `__PREFIX__fdshop_filter_option_category_map`;
+DELETE FROM `__PREFIX__fdshop_filter_range_category_map`;
+DELETE FROM `__PREFIX__fdshop_filter_category_map`;
 DELETE FROM `__PREFIX__fdshop_product_buyer_group_map`;
 DELETE FROM `__PREFIX__fdshop_user_buyer_group_map`;
 DELETE FROM `__PREFIX__fdshop_product_category_map`;
@@ -94,6 +98,19 @@ VALUES
 
 INSERT INTO `__PREFIX__fdshop_product_category_map` (id,product_id,category_id,is_primary) VALUES
 (900300,900100,900010,1),(900301,900101,900010,1),(900302,900102,900010,1),(900303,900103,900011,1),(900304,900104,900011,1),(900305,900105,900012,1),(900306,900106,900012,1),(900307,900107,900012,1),(900308,900108,900010,1),(900309,900108,900012,0),(900310,900109,900011,1);
+INSERT INTO `__PREFIX__fdshop_product_filter_option_map` (product_id,option_id)
+SELECT 900100,o.id FROM `__PREFIX__fdshop_filter_options` o WHERE o.option_key='straight'
+UNION ALL SELECT 900103,o.id FROM `__PREFIX__fdshop_filter_options` o WHERE o.option_key='fanned'
+UNION ALL SELECT 900104,o.id FROM `__PREFIX__fdshop_filter_options` o WHERE o.option_key='straight'
+UNION ALL SELECT 900105,o.id FROM `__PREFIX__fdshop_filter_options` o WHERE o.option_key='ground_firework'
+UNION ALL SELECT 900108,o.id FROM `__PREFIX__fdshop_filter_options` o WHERE o.option_key IN ('straight','fanned','roman_candle')
+UNION ALL SELECT 900109,o.id FROM `__PREFIX__fdshop_filter_options` o WHERE o.option_key='fountain_volcano';
+INSERT INTO `__PREFIX__fdshop_filter_category_map` (filter_id,category_id)
+SELECT id,900010 FROM `__PREFIX__fdshop_filters` WHERE filter_key='firing_type';
+INSERT INTO `__PREFIX__fdshop_filter_range_category_map` (range_id,category_id)
+SELECT r.id,900010 FROM `__PREFIX__fdshop_filter_ranges` r JOIN `__PREFIX__fdshop_filters` f ON f.id=r.filter_id WHERE f.filter_key='nem' ORDER BY r.ordering LIMIT 2;
+INSERT INTO `__PREFIX__fdshop_filter_option_category_map` (option_id,category_id)
+SELECT id,900010 FROM `__PREFIX__fdshop_filter_options` WHERE option_key='straight';
 INSERT INTO `__PREFIX__fdshop_product_buyer_group_map` (id,product_id,buyer_group_id) VALUES
 (900320,900109,900020),(900321,900109,900021),(900322,900109,900022);
 INSERT INTO `__PREFIX__fdshop_user_buyer_group_map` (id,user_id,buyer_group_id) VALUES (900330,__JOOMLA_USER_ID__,900021);

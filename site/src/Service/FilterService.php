@@ -1,237 +1,76 @@
 <?php
-
 namespace FDShop\Component\FDShop\Site\Service;
-
 defined('_JEXEC') or die;
-
-use Joomla\CMS\Factory;
 use Joomla\Database\DatabaseInterface;
 use Joomla\Database\DatabaseQuery;
-use Joomla\Database\ParameterType;
 
 final class FilterService
 {
-    private const KEYS = ['manufacturer', 'availability', 'duration', 'caliber', 'nem'];
-    private const RANGE_KEYS = ['duration', 'caliber', 'nem'];
+    private const KEYS=['manufacturer','availability','duration','caliber','nem','firing_type','product_type'];
+    private const RANGE_KEYS=['duration','caliber','nem'];
+    private const OPTION_KEYS=['firing_type','product_type'];
+    public function __construct(private readonly DatabaseInterface $db){}
 
-    public function __construct(private readonly DatabaseInterface $db)
+    public function getDefinitions(int $categoryId=0,bool $activeOnly=true):array
     {
+        $q=$this->db->getQuery(true)->select(['f.id','f.filter_key','f.label','f.is_active','f.ordering'])->from($this->db->quoteName('#__fdshop_filters','f'))
+            ->where('(NOT EXISTS (SELECT 1 FROM '.$this->db->quoteName('#__fdshop_filter_category_map','fcm').' WHERE fcm.filter_id=f.id) OR EXISTS (SELECT 1 FROM '.$this->db->quoteName('#__fdshop_filter_category_map','fcm2').' WHERE fcm2.filter_id=f.id AND fcm2.category_id='.(int)$categoryId.'))')->order('f.ordering ASC,f.id ASC');
+        if($activeOnly)$q->where('f.is_active=1');$this->db->setQuery($q);$defs=[];
+        foreach($this->db->loadObjectList()?:[] as$f){if(!in_array($f->filter_key,self::KEYS,true))continue;$f->ranges=[];$f->options=[];$defs[$f->filter_key]=$f;}
+        if(!$defs)return[];
+        $ids=array_map(static fn($f)=>(int)$f->id,$defs);$byId=[];foreach($defs as$key=>$f)$byId[(int)$f->id]=$key;
+        $q=$this->db->getQuery(true)->select(['r.id','r.filter_id','r.label','r.value_from','r.value_to','r.is_active','r.ordering'])->from($this->db->quoteName('#__fdshop_filter_ranges','r'))->whereIn('r.filter_id',$ids)
+            ->where('(NOT EXISTS (SELECT 1 FROM '.$this->db->quoteName('#__fdshop_filter_range_category_map','rcm').' WHERE rcm.range_id=r.id) OR EXISTS (SELECT 1 FROM '.$this->db->quoteName('#__fdshop_filter_range_category_map','rcm2').' WHERE rcm2.range_id=r.id AND rcm2.category_id='.(int)$categoryId.'))')->order('r.ordering ASC,r.id ASC');
+        if($activeOnly)$q->where('r.is_active=1');$this->db->setQuery($q);foreach($this->db->loadObjectList()?:[] as$r)if(isset($byId[(int)$r->filter_id]))$defs[$byId[(int)$r->filter_id]]->ranges[]=$r;
+        $q=$this->db->getQuery(true)->select(['o.id','o.filter_id','o.option_key','o.label','o.is_active','o.ordering'])->from($this->db->quoteName('#__fdshop_filter_options','o'))->whereIn('o.filter_id',$ids)
+            ->where('(NOT EXISTS (SELECT 1 FROM '.$this->db->quoteName('#__fdshop_filter_option_category_map','ocm').' WHERE ocm.option_id=o.id) OR EXISTS (SELECT 1 FROM '.$this->db->quoteName('#__fdshop_filter_option_category_map','ocm2').' WHERE ocm2.option_id=o.id AND ocm2.category_id='.(int)$categoryId.'))')->order('o.ordering ASC,o.id ASC');
+        if($activeOnly)$q->where('o.is_active=1');$this->db->setQuery($q);foreach($this->db->loadObjectList()?:[] as$o)if(isset($byId[(int)$o->filter_id]))$defs[$byId[(int)$o->filter_id]]->options[]=$o;
+        return$defs;
     }
 
-    public function getDefinitions(bool $activeOnly = true): array
+    public function normaliseState(array $raw,?array $defs=null):array
     {
-        $query = $this->db->getQuery(true)
-            ->select(['f.id', 'f.filter_key', 'f.label', 'f.is_active', 'f.ordering'])
-            ->from($this->db->quoteName('#__fdshop_filters', 'f'))
-            ->order('f.ordering ASC, f.id ASC');
-        if ($activeOnly) {
-            $query->where('f.is_active = 1');
-        }
-        $this->db->setQuery($query);
-        $definitions = [];
-        foreach ($this->db->loadObjectList() ?: [] as $filter) {
-            if (!in_array($filter->filter_key, self::KEYS, true)) {
-                continue;
-            }
-            $filter->ranges = [];
-            $definitions[$filter->filter_key] = $filter;
-        }
-        if ($definitions === []) {
-            return [];
-        }
-        $ids = array_map(static fn ($filter): int => (int) $filter->id, $definitions);
-        $query = $this->db->getQuery(true)
-            ->select(['r.id', 'r.filter_id', 'r.label', 'r.value_from', 'r.value_to', 'r.is_active', 'r.ordering'])
-            ->from($this->db->quoteName('#__fdshop_filter_ranges', 'r'))
-            ->whereIn('r.filter_id', $ids)
-            ->order('r.ordering ASC, r.id ASC');
-        if ($activeOnly) {
-            $query->where('r.is_active = 1');
-        }
-        $this->db->setQuery($query);
-        $byId = [];
-        foreach ($definitions as $key => $filter) {
-            $byId[(int) $filter->id] = $key;
-        }
-        foreach ($this->db->loadObjectList() ?: [] as $range) {
-            if (isset($byId[(int) $range->filter_id])) {
-                $definitions[$byId[(int) $range->filter_id]]->ranges[] = $range;
-            }
-        }
-        return $definitions;
+        $defs??=$this->getDefinitions();$state=[];
+        foreach(self::KEYS as$key){if(!isset($defs[$key]))continue;$v=$raw[$key]??[];$v=is_array($v)?$v:[$v];$v=array_values(array_unique(array_filter(array_map('strval',$v),fn($x)=>$x!=='')));
+            if($key==='manufacturer'){$v=array_values(array_filter(array_map('intval',$v),fn($x)=>$x>0));}
+            elseif($key==='availability')$v=array_values(array_intersect($v,['available','unavailable']));
+            elseif(in_array($key,self::RANGE_KEYS,true))$v=array_values(array_intersect(array_map('intval',$v),array_map(fn($r)=>(int)$r->id,$defs[$key]->ranges)));
+            else $v=array_values(array_intersect(array_map('intval',$v),array_map(fn($o)=>(int)$o->id,$defs[$key]->options)));
+            if($v)$state[$key]=$v;
+        }return$state;
     }
 
-    public function normaliseState(array $raw, ?array $definitions = null): array
+    public function apply(DatabaseQuery $q,array $state,array $defs):void
     {
-        $definitions ??= $this->getDefinitions();
-        $state = [];
-        foreach (self::KEYS as $key) {
-            if (!isset($definitions[$key])) {
-                continue;
-            }
-            $values = $raw[$key] ?? [];
-            $values = is_array($values) ? $values : [$values];
-            $values = array_values(array_unique(array_filter(array_map('strval', $values), static fn ($v) => $v !== '')));
-            if ($key === 'manufacturer') {
-                $values = array_values(array_unique(array_filter(array_map('intval', $values), static fn ($v) => $v > 0)));
-                if ($values !== []) {
-                    $query = $this->db->getQuery(true)->select('id')->from($this->db->quoteName('#__fdshop_manufacturers'))->where('is_active = 1')->whereIn('id', $values);
-                    $this->db->setQuery($query);
-                    $values = array_map('intval', $this->db->loadColumn() ?: []);
-                }
-            } elseif ($key === 'availability') {
-                $values = array_values(array_intersect($values, ['available', 'unavailable']));
-            } else {
-                $valid = array_map(static fn ($range): int => (int) $range->id, $definitions[$key]->ranges);
-                $values = array_values(array_intersect(array_map('intval', $values), $valid));
-            }
-            if ($values !== []) {
-                $state[$key] = $values;
-            }
-        }
-        return $state;
+        if(!empty($state['manufacturer']))$q->whereIn('p.manufacturer_id',array_map('intval',$state['manufacturer']));
+        if(!empty($state['availability'])){$q->leftJoin($this->db->quoteName('#__fdshop_products_details','pfd').' ON pfd.product_id=p.id');if(count($state['availability'])===1)$q->where('COALESCE(pfd.is_in_stock,0)='.($state['availability'][0]==='available'?1:0));}
+        $express=['duration'=>"CAST(REPLACE(p.burn_time, ',', '.') AS DECIMAL(12,3))",'caliber'=>"CAST(REPLACE(p.caliber, ',', '.') AS DECIMAL(12,3))",'nem'=>'p.nem'];$valid=['duration'=>"TRIM(p.burn_time) REGEXP '^[0-9]+([.,][0-9]+)?'",'caliber'=>"TRIM(p.caliber) REGEXP '^[0-9]+([.,][0-9]+)?'",'nem'=>'p.nem>0'];
+        foreach(self::RANGE_KEYS as$key){if(empty($state[$key])||empty($defs[$key]))continue;$selected=array_flip(array_map('intval',$state[$key]));$parts=[];foreach($defs[$key]->ranges as$r){if(!isset($selected[(int)$r->id]))continue;$b=[$valid[$key]];if($r->value_from!==null)$b[]=$express[$key].'>='.(float)$r->value_from;if($r->value_to!==null)$b[]=$express[$key].'<'.(float)$r->value_to;$parts[]='('.implode(' AND ',$b).')';}if($parts)$q->where('('.implode(' OR ',$parts).')');}
+        foreach(self::OPTION_KEYS as$key){if(empty($state[$key]))continue;$ids=array_map('intval',$state[$key]);$filterId=(int)$defs[$key]->id;$q->where('EXISTS (SELECT 1 FROM '.$this->db->quoteName('#__fdshop_product_filter_option_map','pfom_'.$key).' INNER JOIN '.$this->db->quoteName('#__fdshop_filter_options','fo_'.$key).' ON fo_'.$key.'.id=pfom_'.$key.'.option_id WHERE pfom_'.$key.'.product_id=p.id AND fo_'.$key.'.filter_id='.$filterId.' AND pfom_'.$key.'.option_id IN ('.implode(',',$ids).'))');}
     }
 
-    public function apply(DatabaseQuery $query, array $state, array $definitions): void
+    public function getFacets(int $categoryId,array $state,array $defs):array{$out=[];foreach($defs as$key=>$def){$options=$key==='manufacturer'?$this->manufacturerOptions($categoryId,$state,$defs):($key==='availability'?$this->availabilityOptions($categoryId,$state,$defs):(in_array($key,self::RANGE_KEYS,true)?$this->rangeOptions($key,$categoryId,$state,$defs):$this->discreteOptions($key,$categoryId,$state,$defs)));$out[$key]=['definition'=>$def,'options'=>$options];}return$out;}
+    public function chips(array $state,array $facets):array{$out=[];foreach($state as$key=>$values)foreach($facets[$key]['options']??[]as$o)if(in_array((string)$o['value'],array_map('strval',$values),true))$out[]=['key'=>$key,'value'=>(string)$o['value'],'label'=>(string)$o['label']];return$out;}
+    private function base(int $cat,array $state,array $defs,string $excluded):DatabaseQuery{unset($state[$excluded]);$q=$this->db->getQuery(true)->from($this->db->quoteName('#__fdshop_products','p'))->innerJoin($this->db->quoteName('#__fdshop_product_category_map','pcm').' ON pcm.product_id=p.id')->where('pcm.category_id='.(int)$cat)->where('p.is_active=1')->where('p.is_deleted=0');$this->apply($q,$state,$defs);return$q;}
+    private function manufacturerOptions(int$c,array$s,array$d):array
     {
-        if (!empty($state['manufacturer'])) {
-            $query->whereIn('p.manufacturer_id', array_map('intval', $state['manufacturer']));
-        }
-        if (!empty($state['availability'])) {
-            $query->leftJoin($this->db->quoteName('#__fdshop_products_details', 'pfd') . ' ON pfd.product_id = p.id');
-            $availability = array_map('strval', $state['availability']);
-            if (count($availability) === 1) {
-                $query->where('COALESCE(pfd.is_in_stock, 0) = ' . ($availability[0] === 'available' ? '1' : '0'));
-            }
-        }
-        $expressions = [
-            'duration' => "CAST(REPLACE(p.burn_time, ',', '.') AS DECIMAL(12,3))",
-            'caliber' => "CAST(REPLACE(p.caliber, ',', '.') AS DECIMAL(12,3))",
-            'nem' => 'p.nem',
-        ];
-        $validExpressions = [
-            'duration' => "TRIM(p.burn_time) REGEXP '^[0-9]+([.,][0-9]+)?'",
-            'caliber' => "TRIM(p.caliber) REGEXP '^[0-9]+([.,][0-9]+)?'",
-            'nem' => 'p.nem > 0',
-        ];
-        foreach (self::RANGE_KEYS as $key) {
-            if (empty($state[$key]) || empty($definitions[$key])) {
-                continue;
-            }
-            $selected = array_flip(array_map('intval', $state[$key]));
-            $parts = [];
-            foreach ($definitions[$key]->ranges as $range) {
-                if (!isset($selected[(int) $range->id])) {
-                    continue;
-                }
-                $bounds = [$validExpressions[$key]];
-                if ($range->value_from !== null) {
-                    $bounds[] = $expressions[$key] . ' >= ' . (float) $range->value_from;
-                }
-                if ($range->value_to !== null) {
-                    $bounds[] = $expressions[$key] . ' < ' . (float) $range->value_to;
-                }
-                if ($bounds !== []) {
-                    $parts[] = '(' . implode(' AND ', $bounds) . ')';
-                }
-            }
-            if ($parts !== []) {
-                $query->where('(' . implode(' OR ', $parts) . ')');
-            }
-        }
+        $counts=$this->base($c,$s,$d,'manufacturer')->select(['p.manufacturer_id','COUNT(DISTINCT p.id) hits'])->group('p.manufacturer_id');
+        $q=$this->db->getQuery(true)->select(['m.id value','m.manufacturer_name label','COALESCE(fc.hits,0) hits'])
+            ->from($this->db->quoteName('#__fdshop_manufacturers','m'))
+            ->innerJoin($this->db->quoteName('#__fdshop_products','bp').' ON bp.manufacturer_id=m.id AND bp.is_active=1 AND bp.is_deleted=0')
+            ->innerJoin($this->db->quoteName('#__fdshop_product_category_map','bpcm').' ON bpcm.product_id=bp.id AND bpcm.category_id='.(int)$c)
+            ->leftJoin('('.(string)$counts.') fc ON fc.manufacturer_id=m.id')
+            ->where('m.is_active=1')->group(['m.id','m.manufacturer_name','fc.hits'])->order('m.manufacturer_name');
+        $this->db->setQuery($q);return array_map(fn($r)=>['value'=>(int)$r->value,'label'=>$r->label,'count'=>(int)$r->hits],$this->db->loadObjectList()?:[]);
     }
-
-    public function getFacets(int $categoryId, array $state, array $definitions): array
+    private function availabilityOptions(int$c,array$s,array$d):array{$q=$this->base($c,$s,$d,'availability')->select(['COALESCE(pd.is_in_stock,0) available','COUNT(DISTINCT p.id) hits'])->leftJoin($this->db->quoteName('#__fdshop_products_details','pd').' ON pd.product_id=p.id')->group('COALESCE(pd.is_in_stock,0)');$this->db->setQuery($q);$x=[0=>0,1=>0];foreach($this->db->loadObjectList()?:[]as$r)$x[(int)$r->available]=(int)$r->hits;return[['value'=>'available','label'=>'Auf Lager','count'=>$x[1]],['value'=>'unavailable','label'=>'Nicht auf Lager','count'=>$x[0]]];}
+    private function rangeOptions(string$key,int$c,array$s,array$d):array{$e=['duration'=>"CAST(REPLACE(p.burn_time, ',', '.') AS DECIMAL(12,3))",'caliber'=>"CAST(REPLACE(p.caliber, ',', '.') AS DECIMAL(12,3))",'nem'=>'p.nem'][$key];$v=['duration'=>"TRIM(p.burn_time) REGEXP '^[0-9]+([.,][0-9]+)?'",'caliber'=>"TRIM(p.caliber) REGEXP '^[0-9]+([.,][0-9]+)?'",'nem'=>'p.nem>0'][$key];$q=$this->base($c,$s,$d,$key);$aliases=[];foreach($d[$key]->ranges as$r){$b=[$v];if($r->value_from!==null)$b[]=$e.'>='.(float)$r->value_from;if($r->value_to!==null)$b[]=$e.'<'.(float)$r->value_to;$a='r_'.(int)$r->id;$aliases[(int)$r->id]=$a;$q->select('COUNT(DISTINCT CASE WHEN '.implode(' AND ',$b).' THEN p.id END) '.$this->db->quoteName($a));}if(!$aliases)return[];$this->db->setQuery($q);$counts=$this->db->loadAssoc()?:[];$out=[];foreach($d[$key]->ranges as$r)$out[]=['value'=>(int)$r->id,'label'=>(string)$r->label,'count'=>(int)($counts[$aliases[(int)$r->id]]??0)];return$out;}
+    private function discreteOptions(string$key,int$c,array$s,array$d):array
     {
-        $facets = [];
-        foreach ($definitions as $key => $definition) {
-            $options = $key === 'manufacturer'
-                ? $this->manufacturerOptions($categoryId, $state, $definitions)
-                : ($key === 'availability'
-                    ? $this->availabilityOptions($categoryId, $state, $definitions)
-                    : $this->rangeOptions($key, $categoryId, $state, $definitions));
-            $facets[$key] = ['definition' => $definition, 'options' => $options];
-        }
-        return $facets;
-    }
-
-    public function chips(array $state, array $facets): array
-    {
-        $chips = [];
-        foreach ($state as $key => $values) {
-            foreach ($facets[$key]['options'] ?? [] as $option) {
-                if (in_array((string) $option['value'], array_map('strval', $values), true)) {
-                    $chips[] = ['key' => $key, 'value' => (string) $option['value'], 'label' => (string) $option['label']];
-                }
-            }
-        }
-        return $chips;
-    }
-
-    private function baseCountQuery(int $categoryId, array $state, array $definitions, string $excluded): DatabaseQuery
-    {
-        unset($state[$excluded]);
-        $query = $this->db->getQuery(true)
-            ->from($this->db->quoteName('#__fdshop_products', 'p'))
-            ->innerJoin($this->db->quoteName('#__fdshop_product_category_map', 'pcm') . ' ON pcm.product_id = p.id')
-            ->where('pcm.category_id = ' . $categoryId)
-            ->where('p.is_active = 1')->where('p.is_deleted = 0');
-        $this->apply($query, $state, $definitions);
-        return $query;
-    }
-
-    private function manufacturerOptions(int $categoryId, array $state, array $definitions): array
-    {
-        $query = $this->baseCountQuery($categoryId, $state, $definitions, 'manufacturer')
-            ->select(['m.id AS value', 'm.manufacturer_name AS label', 'COUNT(DISTINCT p.id) AS hits'])
-            ->innerJoin($this->db->quoteName('#__fdshop_manufacturers', 'm') . ' ON m.id = p.manufacturer_id')
-            ->where('m.is_active = 1')->group(['m.id', 'm.manufacturer_name'])->order('m.manufacturer_name ASC');
-        $this->db->setQuery($query);
-        return array_map(static fn ($row): array => ['value' => (int) $row->value, 'label' => $row->label, 'count' => (int) $row->hits], $this->db->loadObjectList() ?: []);
-    }
-
-    private function availabilityOptions(int $categoryId, array $state, array $definitions): array
-    {
-        $query = $this->baseCountQuery($categoryId, $state, $definitions, 'availability')
-            ->select(['COALESCE(pfd_count.is_in_stock, 0) AS available', 'COUNT(DISTINCT p.id) AS hits'])
-            ->leftJoin($this->db->quoteName('#__fdshop_products_details', 'pfd_count') . ' ON pfd_count.product_id = p.id')
-            ->group('COALESCE(pfd_count.is_in_stock, 0)');
-        $this->db->setQuery($query);
-        $counts = [0 => 0, 1 => 0];
-        foreach ($this->db->loadObjectList() ?: [] as $row) {
-            $counts[(int) $row->available] = (int) $row->hits;
-        }
-        return [
-            ['value' => 'available', 'label' => 'Auf Lager', 'count' => $counts[1]],
-            ['value' => 'unavailable', 'label' => 'Nicht auf Lager', 'count' => $counts[0]],
-        ];
-    }
-
-    private function rangeOptions(string $key, int $categoryId, array $state, array $definitions): array
-    {
-        $expression = ['duration' => "CAST(REPLACE(p.burn_time, ',', '.') AS DECIMAL(12,3))", 'caliber' => "CAST(REPLACE(p.caliber, ',', '.') AS DECIMAL(12,3))", 'nem' => 'p.nem'][$key];
-        $valid = ['duration' => "TRIM(p.burn_time) REGEXP '^[0-9]+([.,][0-9]+)?'", 'caliber' => "TRIM(p.caliber) REGEXP '^[0-9]+([.,][0-9]+)?'", 'nem' => 'p.nem > 0'][$key];
-        $query = $this->baseCountQuery($categoryId, $state, $definitions, $key);
-        $aliases = [];
-        foreach ($definitions[$key]->ranges as $range) {
-            $conditions = [$valid];
-            if ($range->value_from !== null) {
-                $conditions[] = $expression . ' >= ' . (float) $range->value_from;
-            }
-            if ($range->value_to !== null) {
-                $conditions[] = $expression . ' < ' . (float) $range->value_to;
-            }
-            $alias = 'range_' . (int) $range->id;
-            $aliases[(int) $range->id] = $alias;
-            $query->select('COUNT(DISTINCT CASE WHEN ' . implode(' AND ', $conditions) . ' THEN p.id END) AS ' . $this->db->quoteName($alias));
-        }
-        if ($aliases === []) return [];
-        $this->db->setQuery($query);
-        $counts = (array) ($this->db->loadAssoc() ?: []);
-        $options = [];
-        foreach ($definitions[$key]->ranges as $range) {
-            $options[] = ['value' => (int) $range->id, 'label' => (string) $range->label, 'count' => (int) ($counts[$aliases[(int) $range->id]] ?? 0)];
-        }
-        return $options;
+        $q=$this->base($c,$s,$d,$key);$aliases=[];
+        foreach($d[$key]->options as$o){$alias='o_'.(int)$o->id;$aliases[(int)$o->id]=$alias;$q->select('COUNT(DISTINCT CASE WHEN EXISTS (SELECT 1 FROM '.$this->db->quoteName('#__fdshop_product_filter_option_map','x_'.$o->id).' WHERE x_'.$o->id.'.product_id=p.id AND x_'.$o->id.'.option_id='.(int)$o->id.') THEN p.id END) '.$this->db->quoteName($alias));}
+        if(!$aliases)return[];$this->db->setQuery($q);$counts=$this->db->loadAssoc()?:[];$out=[];
+        foreach($d[$key]->options as$o)$out[]=['value'=>(int)$o->id,'label'=>(string)$o->label,'count'=>(int)($counts[$aliases[(int)$o->id]]??0)];
+        return$out;
     }
 }

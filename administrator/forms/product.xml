@@ -282,6 +282,7 @@
         </fieldset>
 
         <fieldset name="special" label="Besondere Felder">
+            <field name="filter_option_ids" type="list" multiple="true" filter="array" label="Zusätzliche Filteroptionen" />
             <field
                 name="unit_type"
                 type="list"

@@ -116,6 +116,7 @@ class ProductService implements ProductServiceInterface
 
             $this->saveProductCategoryAssignments($productId, $categoryIds, $primaryCategoryId);
             $this->saveProductBuyerGroupAssignments($productId, $buyerGroupIds);
+            $this->saveProductFilterOptions($productId, (array) ($data['filter_option_ids'] ?? []));
             $this->processUploadedProductImage($productId, $productImage, $userId);
             $this->synchronizeYoutubeMedia($productId, $youtubeUrls, $userId);
 
@@ -303,6 +304,14 @@ class ProductService implements ProductServiceInterface
 
         $item->category_ids = $this->getAssignedCategoryIds($productId);
         $item->buyer_group_ids = $this->getAssignedBuyerGroupIds($productId);
+        $item->filter_option_ids = [];
+        foreach ($this->getFilterOptionGroups($productId) as $group) {
+            foreach ($group['options'] as $option) {
+                if ($option->selected) {
+                    $item->filter_option_ids[] = (int) $option->id;
+                }
+            }
+        }
 
         $youtubeUrls = $this->getYoutubeMediaUrls($productId);
 
@@ -311,6 +320,49 @@ class ProductService implements ProductServiceInterface
         }
 
         return $item;
+    }
+
+    public function getFilterOptionGroups(int $productId = 0): array
+    {
+        $query = $this->db->getQuery(true)
+            ->select(['f.filter_key', 'f.label AS group_label', 'o.id', 'o.option_key', 'o.label', 'o.is_active',
+                $productId > 0 ? 'CASE WHEN pom.product_id IS NULL THEN 0 ELSE 1 END AS selected' : '0 AS selected'])
+            ->from($this->db->quoteName('#__fdshop_filters', 'f'))
+            ->innerJoin($this->db->quoteName('#__fdshop_filter_options', 'o') . ' ON o.filter_id=f.id');
+        if ($productId > 0) {
+            $query->leftJoin($this->db->quoteName('#__fdshop_product_filter_option_map', 'pom') . ' ON pom.option_id=o.id AND pom.product_id=' . $productId);
+        }
+        $query->whereIn('f.filter_key', ['firing_type', 'product_type'])
+            ->where($productId > 0 ? '(o.is_active=1 OR pom.product_id IS NOT NULL)' : 'o.is_active=1')
+            ->order('f.ordering ASC,o.ordering ASC,o.id ASC');
+        $this->db->setQuery($query);
+        $groups = [];
+        foreach ($this->db->loadObjectList() ?: [] as $option) {
+            $key = (string) $option->filter_key;
+            $option->selected = (bool) $option->selected;
+            $groups[$key] ??= ['key' => $key, 'label' => (string) $option->group_label, 'options' => []];
+            $groups[$key]['options'][] = $option;
+        }
+        return array_values($groups);
+    }
+
+    private function saveProductFilterOptions(int $productId, array $ids): void
+    {
+        $ids = $this->normalizeIds($ids);
+        $query = $this->db->getQuery(true)->select('o.id')
+            ->from($this->db->quoteName('#__fdshop_filter_options', 'o'))
+            ->innerJoin($this->db->quoteName('#__fdshop_filters', 'f') . ' ON f.id=o.filter_id')
+            ->whereIn('f.filter_key', ['firing_type', 'product_type'])
+            ->where($ids === [] ? '1=0' : 'o.id IN (' . implode(',', $ids) . ')');
+        $this->db->setQuery($query);
+        $valid = array_map('intval', $this->db->loadColumn() ?: []);
+        $query = $this->db->getQuery(true)->delete($this->db->quoteName('#__fdshop_product_filter_option_map'))->where('product_id=' . $productId);
+        $this->db->setQuery($query)->execute();
+        foreach ($valid as $optionId) {
+            $query = $this->db->getQuery(true)->insert($this->db->quoteName('#__fdshop_product_filter_option_map'))
+                ->columns([$this->db->quoteName('product_id'), $this->db->quoteName('option_id')])->values($productId . ',' . $optionId);
+            $this->db->setQuery($query)->execute();
+        }
     }
 
     public function trashProducts(array $productIds): bool

@@ -153,6 +153,13 @@ class ProductModel extends AdminModel
         return $path ? (string) $path : null;
     }
 
+    public function getFilterOptionGroups(): array
+    {
+        return $this->getProductService()->getFilterOptionGroups(
+            (int) Factory::getApplication()->getInput()->getInt('id')
+        );
+    }
+
     private function runDeleteAction(callable $action, array $pks): bool
     {
         if (!$this->getCurrentUser()->authorise('core.delete', 'com_fdshop')) {

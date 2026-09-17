@@ -6,7 +6,9 @@ use FDShop\Component\FDShop\Site\Helper\PurchaseHelper;
 use Joomla\CMS\Layout\LayoutHelper;
 use Joomla\CMS\HTML\HTMLHelper;
 
-HTMLHelper::_('bootstrap.offcanvas', '#fdshop-filter-offcanvas');
+if ($this->filterUiEnabled) {
+    HTMLHelper::_('bootstrap.offcanvas', '#fdshop-filter-offcanvas');
+}
 
 $sort = (string) $this->state->get('filter.sort', 'name');
 $direction = (string) $this->state->get('filter.direction', 'asc');
@@ -27,11 +29,13 @@ $filterData = ['facets' => $this->filterFacets, 'active' => $this->activeFilters
         <?php endif; ?>
     </header>
 
+    <?php if ($this->filterUiEnabled) : ?>
     <button class="btn btn-primary fdshop-filter-open" type="button" data-bs-toggle="offcanvas" data-bs-target="#fdshop-filter-offcanvas" aria-controls="fdshop-filter-offcanvas">Produkte filtern</button>
     <div class="offcanvas offcanvas-end fdshop-filter-offcanvas" tabindex="-1" id="fdshop-filter-offcanvas" aria-labelledby="fdshop-filter-offcanvas-title">
         <div class="offcanvas-header"><h2 class="offcanvas-title" id="fdshop-filter-offcanvas-title">Produkte filtern</h2><button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Filter schließen"></button></div>
         <div class="offcanvas-body"><?php echo LayoutHelper::render('filter.panel', $filterData + ['suffix' => 'mobile'], JPATH_COMPONENT_SITE . '/layouts'); ?></div>
     </div>
+    <?php endif; ?>
 
     <section class="fdshop-category__results" data-fdshop-filter-results aria-live="polite">
 

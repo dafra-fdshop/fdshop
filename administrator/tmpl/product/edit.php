@@ -201,6 +201,25 @@ $this->getDocument()->getWebAssetManager()->useScript('com_fdshop.admin-product'
                     </div>
                 </div>
             </div>
+
+            <div class="col-12 col-xl-4">
+                <div class="card mb-3">
+                    <div class="card-header">zus. Filter-Felder</div>
+                    <div class="card-body">
+                        <?php foreach ($this->filterOptionGroups as $group) : ?>
+                            <fieldset class="mb-3">
+                                <legend class="h6"><?php echo htmlspecialchars($group['label'], ENT_QUOTES, 'UTF-8'); ?></legend>
+                                <?php foreach ($group['options'] as $option) : ?>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="jform[filter_option_ids][]" id="fdshop-filter-option-<?php echo (int) $option->id; ?>" value="<?php echo (int) $option->id; ?>"<?php echo $option->selected ? ' checked' : ''; ?>>
+                                        <label class="form-check-label" for="fdshop-filter-option-<?php echo (int) $option->id; ?>"><?php echo htmlspecialchars((string) $option->label, ENT_QUOTES, 'UTF-8'); ?><?php echo (int) $option->is_active === 0 ? ' (inaktiv)' : ''; ?></label>
+                                    </div>
+                                <?php endforeach; ?>
+                            </fieldset>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
         </div>
     <?php echo HTMLHelper::_('uitab.endTab'); ?>
 

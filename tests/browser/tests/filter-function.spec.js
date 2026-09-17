@@ -3,7 +3,7 @@ const { installDiagnostics } = require('../support/browser');
 
 test.describe.configure({ mode: 'serial' });
 
-test('filter panel exposes exactly the five V1 system filters', async ({ page, baseURL }) => {
+test('filter panel exposes the category-allowed V1.1 system filters', async ({ page, baseURL }) => {
   const diagnostics = await installDiagnostics(page, baseURL);
   await page.setViewportSize({ width: 1400, height: 1000 });
   await page.goto('/batterien');
@@ -12,9 +12,9 @@ test('filter panel exposes exactly the five V1 system filters', async ({ page, b
   await expect(page.locator('.container-sidebar-left [data-fdshop-filter-module]')).toBeVisible();
   await expect(page.locator('.fdshop-category [data-fdshop-filter-module]')).toHaveCount(0);
   await expect(page.locator('[data-fdshop-filter-panel]')).toHaveCount(0);
-  await expect(panel.locator('summary')).toHaveText(['Hersteller', 'Verfügbarkeit', 'Brenndauer', 'Kaliber', 'NEM']);
+  await expect(panel.locator('summary')).toHaveText(['Hersteller', 'Verfügbarkeit', 'Brenndauer', 'Kaliber', 'NEM', 'Abschuss', 'Art']);
   await expect(panel).not.toContainText('Preisspanne');
-  await expect(panel).not.toContainText('Abschuss');
+  await expect(panel).toContainText('Abschuss');
   diagnostics.expectClean();
 });
 
@@ -80,6 +80,22 @@ test('AJAX range filtering updates cards, URL, counts, chips and reset', async (
   await expect(page.locator('.fdshop-card')).toHaveCount(24);
   await expect(page.locator('.fdshop-filter-chip')).toHaveCount(0);
   await expect(page).not.toHaveURL(/fd_filter/);
+  diagnostics.expectClean();
+});
+
+test('discrete options use OR inside a group and AND across groups', async ({ page, baseURL }) => {
+  const diagnostics = await installDiagnostics(page, baseURL);
+  await page.setViewportSize({ width: 1400, height: 1000 });
+  await page.goto('/batterien');
+  const panel = page.locator('[data-fdshop-filter-module] .fdshop-filter');
+  await panel.getByText('Gerade', { exact: true }).click();
+  await expect(page.locator('.fdshop-card')).toHaveCount(3);
+  await panel.getByText('Gefächert', { exact: true }).click();
+  await expect(page.locator('.fdshop-card')).toHaveCount(4);
+  await panel.getByText('Römische Lichter', { exact: true }).click();
+  await expect(page.locator('.fdshop-card')).toHaveCount(1);
+  await expect(page.locator('.fdshop-card')).toHaveAttribute('data-product-id', '900108');
+  await expect(page.locator('.fdshop-filter-chip')).toHaveCount(3);
   diagnostics.expectClean();
 });
 

@@ -5,4 +5,5 @@
 <field name="label" type="text" label="Frontend-Bezeichnung" required="true" />
 <field name="is_active" type="radio" label="Aktiv" class="btn-group btn-group-yesno" default="1"><option value="1">Ja</option><option value="0">Nein</option></field>
 <field name="ordering" type="number" label="Reihenfolge" default="0" />
+<field name="category_ids" type="sql" label="Kategorien" description="Leer = global in allen Kategorien." query="SELECT id AS value, category_name AS text FROM #__fdshop_categories WHERE is_active=1 ORDER BY category_name" key_field="value" value_field="text" multiple="true" size="10" />
 </fieldset></fields></form>

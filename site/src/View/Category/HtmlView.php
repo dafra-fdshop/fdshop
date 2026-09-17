@@ -27,6 +27,7 @@ final class HtmlView extends BaseHtmlView
     public array $filterFacets = [];
     public array $activeFilters = [];
     public array $filterChips = [];
+    public bool $filterUiEnabled = false;
 
     public function display($tpl = null): void
     {
@@ -45,6 +46,7 @@ final class HtmlView extends BaseHtmlView
         $this->filterFacets = $model->getFilterFacets();
         $this->activeFilters = (array) $this->state->get('filter.fdshop', []);
         $this->filterChips = $model->getFilterChips();
+        $this->filterUiEnabled = $model->hasAssignedFilterModule();
         $this->sortOptions = [
             'name:asc'   => 'Name aufsteigend',
             'name:desc'  => 'Name absteigend',

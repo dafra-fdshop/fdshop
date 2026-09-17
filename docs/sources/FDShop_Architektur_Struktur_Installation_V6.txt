@@ -552,6 +552,19 @@ Architekturnachtrag Filterfunktion V1 (Schema 0.0.23):
 - Facetten werden gruppenweise berechnet. Bei der Trefferzahl einer Gruppe werden
   die anderen aktiven Gruppen angewandt, die eigene Gruppe jedoch ausgenommen.
 
+Nachtrag Filterfunktion V1.1 (Schema 0.0.24):
+- Kategoriezuordnungen liegen relational in filter_category_map,
+  filter_range_category_map und filter_option_category_map.
+- Diskrete Definitionen liegen in filter_options; Produktmerkmale liegen in
+  product_filter_option_map. products und products_details wurden dafür nicht
+  erweitert.
+- FilterService lädt Definitionen, Bereiche und Optionen gebündelt und setzt
+  diskrete Gruppen als getrennte EXISTS-Prädikate um.
+- Die Komponentenansicht entscheidet serverseitig anhand der aktuellen
+  Joomla-Modulzuordnung, ob Mobile-Button und Offcanvas gerendert werden.
+- Installation, Update und Uninstall besitzen die vollständige FK-gerechte
+  Tabellenreihenfolge; das Paket- und Komponentenschema ist 0.0.24.
+
 =====================================================================
 ENDE DER QUELLE FDShop_Architektur_Struktur_Installation_V6
 =====================================================================

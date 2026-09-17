@@ -2697,6 +2697,30 @@ Eine beschlossene Fachregel darf niemals allein aufgrund ihrer
 Dokumentation als bereits implementierte Funktion behandelt werden.
 
 =====================================================================
+NACHTRAG FILTERFUNKTION V1.1
+=====================================================================
+
+Die Systemfilter, numerischen Bereiche und diskreten Optionen sind jeweils
+global, wenn keine Kategorie zugeordnet ist. Ab einer Zuordnung gilt eine
+explizite Kategorien-Whitelist ohne Vererbung. Bei Bereichen und Optionen gilt
+zusätzlich die Schnittmenge mit der Whitelist ihres übergeordneten Filters.
+
+Abschuss (firing_type) und Art (product_type) sind diskrete Mehrfachmerkmale.
+Innerhalb einer Gruppe gilt ODER, zwischen Filtergruppen UND. Verbindliche
+Produktwahrheit ist ausschließlich die relationale
+Produkt-zu-Filteroption-Zuordnung. Numerische Werte, Hersteller und Bestand
+behalten ihre bisherigen technischen Wahrheiten.
+
+Hersteller werden in einer Kategorie nur angeboten, wenn dort mindestens ein
+normal sichtbares Produkt dieses Herstellers existiert. Weitere aktive Filter
+dürfen dessen dynamische Trefferzahl auf null reduzieren; aktive Nulltreffer
+bleiben entfernbar.
+
+Die mobile Filterbedienung existiert nur, wenn auf der aktuellen Seite eine
+veröffentlichte und zugewiesene Instanz von mod_fdshop_filter wirksam ist.
+Gültige direkte Filter-URLs funktionieren unabhängig von der sichtbaren UI.
+
+=====================================================================
 ENDE DER QUELLE
 
 FDShop_Fachregeln_Daten_und_Formulare_V10

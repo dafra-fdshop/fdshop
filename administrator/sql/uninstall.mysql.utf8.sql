@@ -1,5 +1,10 @@
 SET FOREIGN_KEY_CHECKS = 0;
 
+DROP TABLE IF EXISTS `#__fdshop_product_filter_option_map`;
+DROP TABLE IF EXISTS `#__fdshop_filter_option_category_map`;
+DROP TABLE IF EXISTS `#__fdshop_filter_options`;
+DROP TABLE IF EXISTS `#__fdshop_filter_range_category_map`;
+DROP TABLE IF EXISTS `#__fdshop_filter_category_map`;
 DROP TABLE IF EXISTS `#__fdshop_filter_ranges`;
 DROP TABLE IF EXISTS `#__fdshop_filters`;
 

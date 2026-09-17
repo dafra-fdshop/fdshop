@@ -34,6 +34,8 @@ interface ProductServiceInterface
 
     public function getAssignedBuyerGroupIds(int $productId): array;
 
+    public function getFilterOptionGroups(int $productId = 0): array;
+
     public function getProductById(int $productId): ?object;
 
     public function trashProducts(array $productIds): bool;

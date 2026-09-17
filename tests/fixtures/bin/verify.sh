@@ -14,7 +14,7 @@ cd "$REPO_ROOT"; [[ -f .env ]] || fail '.env missing'; set -a; source .env; set 
 [[ "${MARIADB_DATABASE:-}" == fdshop ]] || fail 'unexpected database'
 [[ "$(compose exec -T joomla printenv JOOMLA_DB_HOST)" == db:3306 ]] || fail 'external database host'
 [[ "$(compose ps --format json db | grep -o '"Project":"[^"]*"' | head -1 | cut -d'"' -f4)" == fdshop ]] || fail 'unexpected Compose project'
-for table in manufacturers categories buyer_groups products products_details product_category_map product_buyer_group_map user_buyer_group_map media bundles bundle_items bundle_discount_rules saved_bundles saved_bundle_items cart_bundles cart_bundle_items coupons coupon_user_map coupon_buyer_group_map coupon_product_map coupon_category_map shipments payment_methods order_statuses orders order_items order_bundles order_bundle_items order_history order_status_history filters filter_ranges; do assert_count "$table"; done
+for table in manufacturers categories buyer_groups products products_details product_category_map product_buyer_group_map user_buyer_group_map media bundles bundle_items bundle_discount_rules saved_bundles saved_bundle_items cart_bundles cart_bundle_items coupons coupon_user_map coupon_buyer_group_map coupon_product_map coupon_category_map shipments payment_methods order_statuses orders order_items order_bundles order_bundle_items order_history order_status_history filters filter_ranges filter_category_map filter_range_category_map filter_options filter_option_category_map product_filter_option_map; do assert_count "$table"; done
 assert_sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_price_calc_rules;" 0 'price calculation rules not reset'
 assert_sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_product_prices;" 0 'product prices not reset'
 assert_sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_product_prices_research;" 0 'price research not reset'
@@ -31,6 +31,8 @@ assert_sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_products_details WHER
 assert_sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_products_details WHERE stock_quantity>0 AND stock_quantity<=low_stock;" 1 'low-stock product'
 assert_sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_product_category_map WHERE product_id=900108;" 2 'multi-category relation'
 assert_sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_product_buyer_group_map WHERE product_id=900109;" 3 'buyer-group relations'
+assert_sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_product_filter_option_map WHERE product_id=900100;" 1 'straight product option'
+assert_sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_product_filter_option_map WHERE product_id=900108;" 3 'multi-valued product options'
 assert_sql "SELECT CONCAT(parent_id,':',level) FROM ${JOOMLA_DB_PREFIX}fdshop_categories WHERE alias='e2e-child';" '900010:2' 'category hierarchy'
 assert_sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_media WHERE product_id=900103 AND is_primary=1;" 1 'media relation'
 assert_sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_bundle_items WHERE bundle_id=900400;" 2 'bundle positions'

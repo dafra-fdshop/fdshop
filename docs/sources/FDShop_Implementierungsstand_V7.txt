@@ -532,6 +532,20 @@ Nachtrag Filterfunktion V1 (Schema 0.0.23):
 - Preis- und Abschussartfilter sowie frei definierbare Filtertypen: bewusst nicht
   Bestandteil von V1.
 
+Nachtrag Filterfunktion V1.1 (Schema 0.0.24):
+- Kategorie-Whitelists für Filter, numerische Bereiche und diskrete Optionen:
+  umgesetzt.
+- Abschuss und Art mit stabilen zentralen Optionen sowie Produkt-
+  Mehrfachzuordnung: umgesetzt.
+- ODER innerhalb diskreter Gruppen und UND zwischen allen Gruppen: umgesetzt.
+- Kategoriebezogene Herstellerbasis, dynamische Nulltreffer und entfernbarer
+  aktiver Nulltreffer: umgesetzt.
+- Serverseitige Kopplung der mobilen UI an Veröffentlichung und aktuelle
+  Menüzuordnung des Renderer-Moduls: umgesetzt.
+- Direkte gültige Filter-URLs ohne sichtbare Modulinstanz: umgesetzt.
+- Preisfilter, freie Filtertypen, Kategorievererbung, Presets und automatische
+  Produktklassifikation: weiterhin ausdrücklich nicht Bestandteil.
+
 =====================================================================
 ENDE DER QUELLE FDShop_Implementierungsstand_V7
 =====================================================================

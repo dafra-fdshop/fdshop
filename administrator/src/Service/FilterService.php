@@ -5,80 +5,18 @@ use Joomla\Database\DatabaseInterface;
 
 final class FilterService implements FilterServiceInterface
 {
-    private const KEYS = ['manufacturer', 'availability', 'duration', 'caliber', 'nem'];
-    private const RANGE_KEYS = ['duration', 'caliber', 'nem'];
-    public function __construct(private readonly DatabaseInterface $db) {}
-
-    public function getFilters(): array
-    {
-        $query = $this->db->getQuery(true)->select(['f.*', 'COUNT(r.id) AS range_count'])
-            ->from($this->db->quoteName('#__fdshop_filters', 'f'))
-            ->leftJoin($this->db->quoteName('#__fdshop_filter_ranges', 'r') . ' ON r.filter_id=f.id')
-            ->group('f.id')->order('f.ordering ASC, f.id ASC');
-        $this->db->setQuery($query);
-        return $this->db->loadObjectList() ?: [];
-    }
-
-    public function getFilter(int $id): ?object
-    {
-        $query = $this->db->getQuery(true)->select('*')->from($this->db->quoteName('#__fdshop_filters'))->where('id=' . $id);
-        $this->db->setQuery($query);
-        $filter = $this->db->loadObject();
-        if (!$filter || !in_array($filter->filter_key, self::KEYS, true)) return null;
-        $filter->ranges = [];
-        if (in_array($filter->filter_key, self::RANGE_KEYS, true)) {
-            $query = $this->db->getQuery(true)->select('*')->from($this->db->quoteName('#__fdshop_filter_ranges'))->where('filter_id=' . $id)->order('ordering ASC, id ASC');
-            $this->db->setQuery($query);
-            $filter->ranges = $this->db->loadObjectList() ?: [];
-        }
-        return $filter;
-    }
-
-    public function save(array $data): int
-    {
-        $id = (int) ($data['id'] ?? 0);
-        $current = $this->getFilter($id);
-        if (!$current) throw new \RuntimeException('Unbekannter Systemfilter.');
-        $label = trim((string) ($data['label'] ?? ''));
-        if ($label === '') throw new \RuntimeException('Die sichtbare Bezeichnung ist erforderlich.');
-        $filter = (object) ['id' => $id, 'label' => $label, 'is_active' => empty($data['is_active']) ? 0 : 1, 'ordering' => (int) ($data['ordering'] ?? 0)];
-        $this->db->updateObject('#__fdshop_filters', $filter, 'id');
-        if (!in_array($current->filter_key, self::RANGE_KEYS, true)) return $id;
-        $ranges = is_array($data['ranges'] ?? null) ? $data['ranges'] : [];
-        $normalised = [];
-        foreach ($ranges as $range) {
-            if (!empty($range['delete'])) continue;
-            $label = trim((string) ($range['label'] ?? ''));
-            $from = trim((string) ($range['value_from'] ?? ''));
-            $to = trim((string) ($range['value_to'] ?? ''));
-            $active = empty($range['is_active']) ? 0 : 1;
-            if ($label === '' && $from === '' && $to === '') continue;
-            if ($label === '') throw new \RuntimeException('Jeder Bereich benötigt eine Bezeichnung.');
-            if ($from === '' && $to === '') throw new \RuntimeException('Ein Bereich benötigt mindestens eine Grenze.');
-            $from = $from === '' ? null : (float) str_replace(',', '.', $from);
-            $to = $to === '' ? null : (float) str_replace(',', '.', $to);
-            if ($from !== null && $to !== null && $from >= $to) throw new \RuntimeException('Die Untergrenze muss kleiner als die Obergrenze sein.');
-            $normalised[] = ['id' => (int) ($range['id'] ?? 0), 'label' => $label, 'value_from' => $from, 'value_to' => $to, 'is_active' => $active, 'ordering' => (int) ($range['ordering'] ?? 0)];
-        }
-        $activeRanges = array_values(array_filter($normalised, static fn ($r) => $r['is_active'] === 1));
-        for ($i = 0; $i < count($activeRanges); $i++) for ($j = $i + 1; $j < count($activeRanges); $j++) {
-            $a = $activeRanges[$i]; $b = $activeRanges[$j];
-            $aFrom = $a['value_from'] ?? -INF; $aTo = $a['value_to'] ?? INF; $bFrom = $b['value_from'] ?? -INF; $bTo = $b['value_to'] ?? INF;
-            if ($aFrom < $bTo && $bFrom < $aTo) throw new \RuntimeException('Die aktiven Bereiche „' . $a['label'] . '“ und „' . $b['label'] . '“ überschneiden sich.');
-        }
-        $this->db->transactionStart();
-        try {
-            $kept = [];
-            foreach ($normalised as $range) {
-                $row = (object) ($range + ['filter_id' => $id]);
-                if ($row->id > 0) { $this->db->updateObject('#__fdshop_filter_ranges', $row, 'id'); $kept[] = $row->id; }
-                else { unset($row->id); $this->db->insertObject('#__fdshop_filter_ranges', $row, 'id'); $kept[] = (int) $row->id; }
-            }
-            $query = $this->db->getQuery(true)->delete($this->db->quoteName('#__fdshop_filter_ranges'))->where('filter_id=' . $id);
-            if ($kept !== []) $query->whereNotIn('id', $kept);
-            $this->db->setQuery($query)->execute();
-            $this->db->transactionCommit();
-        } catch (\Throwable $e) { $this->db->transactionRollback(); throw $e; }
-        return $id;
-    }
+    private const KEYS=['manufacturer','availability','duration','caliber','nem','firing_type','product_type'];
+    private const RANGE_KEYS=['duration','caliber','nem'];
+    private const OPTION_KEYS=['firing_type','product_type'];
+    public function __construct(private readonly DatabaseInterface $db){}
+    public function getFilters():array{$q=$this->db->getQuery(true)->select(['f.*','COUNT(DISTINCT r.id) range_count','COUNT(DISTINCT o.id) option_count'])->from($this->db->quoteName('#__fdshop_filters','f'))->leftJoin($this->db->quoteName('#__fdshop_filter_ranges','r').' ON r.filter_id=f.id')->leftJoin($this->db->quoteName('#__fdshop_filter_options','o').' ON o.filter_id=f.id')->group('f.id')->order('f.ordering ASC,f.id ASC');$this->db->setQuery($q);return $this->db->loadObjectList()?:[];}
+    public function getFilter(int $id):?object{$q=$this->db->getQuery(true)->select('*')->from($this->db->quoteName('#__fdshop_filters'))->where('id='.(int)$id);$this->db->setQuery($q);$f=$this->db->loadObject();if(!$f||!in_array($f->filter_key,self::KEYS,true))return null;$f->category_ids=$this->mappedIds('#__fdshop_filter_category_map','filter_id',$id);$f->categories=$this->categories();$f->ranges=[];$f->options=[];if(in_array($f->filter_key,self::RANGE_KEYS,true)){$q=$this->db->getQuery(true)->select('*')->from($this->db->quoteName('#__fdshop_filter_ranges'))->where('filter_id='.$id)->order('ordering ASC,id ASC');$this->db->setQuery($q);$f->ranges=$this->db->loadObjectList()?:[];foreach($f->ranges as $r)$r->category_ids=$this->mappedIds('#__fdshop_filter_range_category_map','range_id',(int)$r->id);}if(in_array($f->filter_key,self::OPTION_KEYS,true)){$q=$this->db->getQuery(true)->select('*')->from($this->db->quoteName('#__fdshop_filter_options'))->where('filter_id='.$id)->order('ordering ASC,id ASC');$this->db->setQuery($q);$f->options=$this->db->loadObjectList()?:[];foreach($f->options as $o)$o->category_ids=$this->mappedIds('#__fdshop_filter_option_category_map','option_id',(int)$o->id);}return $f;}
+    public function save(array $data):int{$id=(int)($data['id']??0);$current=$this->getFilter($id);if(!$current)throw new \RuntimeException('Unbekannter Systemfilter.');$label=trim((string)($data['label']??''));if($label==='')throw new \RuntimeException('Die sichtbare Bezeichnung ist erforderlich.');$this->db->transactionStart();try{$filterRow=(object)['id'=>$id,'label'=>$label,'is_active'=>empty($data['is_active'])?0:1,'ordering'=>(int)($data['ordering']??0)];$this->db->updateObject('#__fdshop_filters',$filterRow,'id');$this->replaceMap('#__fdshop_filter_category_map','filter_id',$id,$this->validCategories($data['category_ids']??[]));if(in_array($current->filter_key,self::RANGE_KEYS,true))$this->saveRanges($id,(array)($data['ranges']??[]));if(in_array($current->filter_key,self::OPTION_KEYS,true))$this->saveOptions($id,(array)($data['options']??[]));$this->db->transactionCommit();return $id;}catch(\Throwable $e){$this->db->transactionRollback();throw $e;}}
+    private function saveRanges(int $filterId,array $rows):void{$normal=[];foreach($rows as $row){if(!empty($row['delete']))continue;$label=trim((string)($row['label']??''));$from=trim((string)($row['value_from']??''));$to=trim((string)($row['value_to']??''));if($label===''&&$from===''&&$to==='')continue;if($label===''||($from===''&&$to===''))throw new \RuntimeException('Jeder Bereich benötigt eine Bezeichnung und mindestens eine Grenze.');$from=$from===''?null:(float)str_replace(',','.',$from);$to=$to===''?null:(float)str_replace(',','.',$to);if($from!==null&&$to!==null&&$from>=$to)throw new \RuntimeException('Die Untergrenze muss kleiner als die Obergrenze sein.');$normal[]=['id'=>(int)($row['id']??0),'label'=>$label,'value_from'=>$from,'value_to'=>$to,'is_active'=>empty($row['is_active'])?0:1,'ordering'=>(int)($row['ordering']??0),'category_ids'=>$this->validCategories($row['category_ids']??[])];}foreach($normal as $i=>$a)foreach(array_slice($normal,$i+1)as$b){if(!$a['is_active']||!$b['is_active']||!$this->scopesOverlap($a['category_ids'],$b['category_ids']))continue;if(($a['value_from']??-INF)<($b['value_to']??INF)&&($b['value_from']??-INF)<($a['value_to']??INF))throw new \RuntimeException('Die aktiven Bereiche „'.$a['label'].'“ und „'.$b['label'].'“ überschneiden sich in mindestens einer gemeinsamen Kategorie.');}$kept=[];foreach($normal as$row){$cats=$row['category_ids'];unset($row['category_ids']);$obj=(object)($row+['filter_id'=>$filterId]);if($obj->id)$this->db->updateObject('#__fdshop_filter_ranges',$obj,'id');else{unset($obj->id);$this->db->insertObject('#__fdshop_filter_ranges',$obj,'id');}$kept[]=(int)$obj->id;$this->replaceMap('#__fdshop_filter_range_category_map','range_id',(int)$obj->id,$cats);}$q=$this->db->getQuery(true)->delete($this->db->quoteName('#__fdshop_filter_ranges'))->where('filter_id='.$filterId);if($kept)$q->whereNotIn('id',$kept);$this->db->setQuery($q)->execute();}
+    private function saveOptions(int $filterId,array $rows):void{$q=$this->db->getQuery(true)->select('id')->from($this->db->quoteName('#__fdshop_filter_options'))->where('filter_id='.$filterId);$this->db->setQuery($q);$valid=array_flip(array_map('intval',$this->db->loadColumn()?:[]));foreach($rows as$row){$id=(int)($row['id']??0);if(!isset($valid[$id]))continue;$label=trim((string)($row['label']??''));if($label==='')throw new \RuntimeException('Jede Filteroption benötigt eine Bezeichnung.');$optionRow=(object)['id'=>$id,'label'=>$label,'is_active'=>empty($row['is_active'])?0:1,'ordering'=>(int)($row['ordering']??0)];$this->db->updateObject('#__fdshop_filter_options',$optionRow,'id');$this->replaceMap('#__fdshop_filter_option_category_map','option_id',$id,$this->validCategories($row['category_ids']??[]));}}
+    private function categories():array{$q=$this->db->getQuery(true)->select(['id','category_name'])->from($this->db->quoteName('#__fdshop_categories'))->where('is_active=1')->order('category_name ASC');$this->db->setQuery($q);return $this->db->loadObjectList()?:[];}
+    private function validCategories(mixed $ids):array{$ids=array_values(array_unique(array_filter(array_map('intval',(array)$ids))));if(!$ids)return[];$q=$this->db->getQuery(true)->select('id')->from($this->db->quoteName('#__fdshop_categories'))->whereIn('id',$ids);$this->db->setQuery($q);return array_map('intval',$this->db->loadColumn()?:[]);}
+    private function mappedIds(string $table,string $owner,int $id):array{$q=$this->db->getQuery(true)->select('category_id')->from($this->db->quoteName($table))->where($this->db->quoteName($owner).'='.$id)->order('category_id');$this->db->setQuery($q);return array_map('intval',$this->db->loadColumn()?:[]);}
+    private function replaceMap(string $table,string $owner,int $ownerId,array $ids):void{$q=$this->db->getQuery(true)->delete($this->db->quoteName($table))->where($this->db->quoteName($owner).'='.$ownerId);$this->db->setQuery($q)->execute();foreach($ids as$id){$q=$this->db->getQuery(true)->insert($this->db->quoteName($table))->columns([$this->db->quoteName($owner),$this->db->quoteName('category_id')])->values($ownerId.','.(int)$id);$this->db->setQuery($q)->execute();}}
+    private function scopesOverlap(array $a,array $b):bool{return !$a||!$b||array_intersect($a,$b)!==[];}
 }

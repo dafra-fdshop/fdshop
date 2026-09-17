@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "0.0.23",
+  "schemaVersion": "0.0.24",
   "counts": {
     "manufacturers": 2, "categories": 4, "buyer_groups": 3,
     "products": 10, "products_details": 10,
@@ -15,7 +15,10 @@
     "orders": 2, "order_items": 2, "order_bundles": 1,
     "order_bundle_items": 2, "order_history": 2,
     "order_status_history": 2,
-    "filters": 5, "filter_ranges": 9
+    "filters": 7, "filter_ranges": 9,
+    "filter_category_map": 1, "filter_range_category_map": 2,
+    "filter_options": 6, "filter_option_category_map": 1,
+    "product_filter_option_map": 8
   },
   "stableKeys": {
     "productSkus": [

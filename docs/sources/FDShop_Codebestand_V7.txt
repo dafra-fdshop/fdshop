@@ -550,6 +550,20 @@ Nachtrag Filterfunktion V1 (Schema 0.0.23):
 - Keine Produkt-zu-Bereich-Mappingtabelle; Bereiche werden gegen die vorhandenen
   technischen Produktwerte ausgewertet.
 
+Nachtrag Filterfunktion V1.1 (Schema 0.0.24):
+- Sieben Systemfilter: manufacturer, availability, duration, caliber, nem,
+  firing_type und product_type.
+- Neue Tabellen: #__fdshop_filter_category_map,
+  #__fdshop_filter_range_category_map, #__fdshop_filter_options,
+  #__fdshop_filter_option_category_map und
+  #__fdshop_product_filter_option_map; insgesamt 43 FDShop-Tabellen.
+- Der Filtereditor pflegt Filter-, Bereichs- und Options-Whitelists. Stabile
+  option_key-Werte bleiben readonly; Optionen werden deaktiviert.
+- Der Produkteditor bietet die vierte Spalte „zus. Filter-Felder“ und speichert
+  Mehrfachzuordnungen innerhalb der ProductService-Transaktion.
+- Site-FilterService validiert URL-Werte gegen die kategorieeffektiven
+  Definitionen und berechnet diskrete Facetten ohne Produktlisten-Duplikate.
+
 =====================================================================
 ENDE DER QUELLE FDShop_Codebestand_V7
 =====================================================================

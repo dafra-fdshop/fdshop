@@ -40,14 +40,15 @@ final class CategoryModel extends ListModel
         $start = max(0, $input->getInt('limitstart', 0));
         $start = (int) floor($start / $limit) * $limit;
 
-        $this->setState('category.id', max(0, $input->getInt('id')));
+        $categoryId = max(0, $input->getInt('id'));
+        $this->setState('category.id', $categoryId);
         $this->setState('list.ordering', self::ORDER_FIELDS[$sort]);
         $this->setState('list.direction', $dir);
         $this->setState('list.limit', $limit);
         $this->setState('list.start', $start);
         $this->setState('filter.sort', $sort);
         $this->setState('filter.direction', strtolower($dir));
-        $this->filterDefinitions = $this->filters()->getDefinitions();
+        $this->filterDefinitions = $this->filters()->getDefinitions($categoryId);
         $rawFilters = $input->get('fd_filter', [], 'array');
         $this->setState('filter.fdshop', $this->filters()->normaliseState($rawFilters, $this->filterDefinitions));
     }
@@ -180,6 +181,20 @@ final class CategoryModel extends ListModel
             'direction' => (string) $this->getState('filter.direction', 'asc'),
             'limit' => (int) $this->getState('list.limit', 24),
         ];
+    }
+
+    public function hasAssignedFilterModule(): bool
+    {
+        $itemId = Factory::getApplication()->getInput()->getInt('Itemid');
+        $db = $this->getDatabase();
+        $query = $db->getQuery(true)->select('COUNT(DISTINCT m.id)')
+            ->from($db->quoteName('#__modules', 'm'))
+            ->leftJoin($db->quoteName('#__modules_menu', 'mm') . ' ON mm.moduleid=m.id')
+            ->where('m.module=' . $db->quote('mod_fdshop_filter'))
+            ->where('m.published=1')->where('m.client_id=0')
+            ->where('(mm.menuid=0' . ($itemId > 0 ? ' OR mm.menuid=' . $itemId : '') . ')');
+        $db->setQuery($query);
+        return (int) $db->loadResult() > 0;
     }
 
     private function filters(): FilterService
