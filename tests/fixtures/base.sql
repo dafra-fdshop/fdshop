@@ -43,6 +43,8 @@ DELETE FROM `__PREFIX__fdshop_categories`;
 DELETE FROM `__PREFIX__fdshop_manufacturers`;
 DELETE FROM `__PREFIX__fdshop_buyer_groups`;
 
+UPDATE `__PREFIX__fdshop_filter_options` SET `is_active` = 1;
+
 UPDATE `__PREFIX__fdshop_config` SET general_vat_rate=19.0000,general_currency='EUR',image_size_default=400,image_size_small=250,image_size_mobile=100,image_size_manufacturer=400,show_terms_checkbox=0,require_terms_checkbox=0,katalog_active=0 WHERE id=1;
 
 INSERT INTO `__PREFIX__fdshop_manufacturers`

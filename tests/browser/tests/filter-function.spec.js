@@ -15,6 +15,17 @@ test('filter panel exposes the category-allowed V1.1 system filters', async ({ p
   await expect(panel.locator('summary')).toHaveText(['Hersteller', 'Verfügbarkeit', 'Brenndauer', 'Kaliber', 'NEM', 'Abschuss', 'Art']);
   await expect(panel).not.toContainText('Preisspanne');
   await expect(panel).toContainText('Abschuss');
+  await expect(panel).not.toContainText('E2E Hersteller Zukunft');
+  diagnostics.expectClean();
+});
+
+test('mobile availability follows the Joomla module context', async ({ page, baseURL }) => {
+  const diagnostics = await installDiagnostics(page, baseURL);
+  await page.setViewportSize({ width: 480, height: 900 });
+  await page.goto('/batterien');
+  await expect(page.locator('[data-fdshop-filter-module]')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Produkte filtern' })).toHaveCount(0);
+  await expect(page.locator('#fdshop-filter-offcanvas')).toHaveCount(0);
   diagnostics.expectClean();
 });
 

@@ -7,6 +7,19 @@ VALUES
 (900003,'Argento','argento','Hersteller für den isolierten Filtertest','Argento',1,30,'2026-01-01 00:00:00',0),
 (900004,'Funke','funke','Hersteller für den isolierten Filtertest','Funke',1,40,'2026-01-01 00:00:00',0);
 
+INSERT INTO `__PREFIX__fdshop_manufacturers`
+(`id`,`manufacturer_name`,`alias`,`description`,`meta_title`,`is_active`,`ordering`,`created`,`created_by`)
+VALUES
+(900005,'E2E Hersteller Zukunft','e2e-future-manufacturer','Nur mit künftig veröffentlichtem Kategorieprodukt','E2E Hersteller Zukunft',1,50,'2026-01-01 00:00:00',0);
+
+INSERT INTO `__PREFIX__fdshop_products`
+(`id`,`manufacturer_id`,`product_name`,`alias`,`short_description`,`description`,`buyer_group_id`,`sale_price`,`discount_price`,`discount_active`,`currency`,`min_order_qty`,`max_order_qty`,`step_order_qty`,`is_active`,`is_deleted`,`publish_up`,`meta_title`,`in_stock`,`unit_type`)
+VALUES
+(901026,900005,'E2E Produkt Zukunft','e2e-prod-future','Künstlich','Noch nicht veröffentlicht',900020,199.0000,0,0,'EUR',1,10,1,1,0,'2035-01-01 00:00:00','E2E Produkt Zukunft','Verfügbar','Stück');
+
+INSERT INTO `__PREFIX__fdshop_product_category_map` (`id`,`product_id`,`category_id`,`is_primary`)
+VALUES (904026,901026,900010,1);
+
 UPDATE `__PREFIX__fdshop_products`
 SET `manufacturer_id` = CASE
     WHEN `id` = 900103 THEN 900003

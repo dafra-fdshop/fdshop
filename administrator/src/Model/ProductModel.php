@@ -75,6 +75,8 @@ class ProductModel extends AdminModel
     public function save($data): bool
     {
         try {
+            $submitted = Factory::getApplication()->getInput()->post->get('jform', [], 'array');
+            $data['filter_option_ids'] = $this->normalizeIds($submitted['filter_option_ids'] ?? []);
             $categoryIds = $this->normalizeIds($data['category_ids'] ?? []);
             $buyerGroupIds = $this->normalizeIds($data['buyer_group_ids'] ?? []);
             $primaryCategoryId = !empty($data['primary_category_id'])

@@ -290,7 +290,35 @@ run_browser_frontend_category() {
 
   if compose run --rm --no-deps \
     --env "PLAYWRIGHT_OUTPUT_DIR=$container_output" \
-    browser npx playwright test tests/frontend-category.spec.js tests/filter-function.spec.js tests/filter-admin.spec.js; then
+    browser npx playwright test tests/frontend-category.spec.js tests/filter-function.spec.js tests/filter-admin.spec.js \
+      --grep-invert 'mobile availability follows the Joomla module context'; then
+    local module_id straight_id fanned_id roman_candle_id
+    module_id="$(sql "SELECT id FROM ${JOOMLA_DB_PREFIX}modules WHERE client_id=0 AND module='mod_fdshop_filter' ORDER BY id LIMIT 1;")"
+    straight_id="$(sql "SELECT id FROM ${JOOMLA_DB_PREFIX}fdshop_filter_options WHERE option_key='straight';")"
+    fanned_id="$(sql "SELECT id FROM ${JOOMLA_DB_PREFIX}fdshop_filter_options WHERE option_key='fanned';")"
+    roman_candle_id="$(sql "SELECT id FROM ${JOOMLA_DB_PREFIX}fdshop_filter_options WHERE option_key='roman_candle';")"
+
+    sql "UPDATE ${JOOMLA_DB_PREFIX}modules SET publish_down='2000-01-01 00:00:00' WHERE id=${module_id};"
+    if ! compose run --rm --no-deps --env "PLAYWRIGHT_OUTPUT_DIR=$container_output-module-expired" browser npx playwright test tests/filter-function.spec.js --grep 'mobile availability follows the Joomla module context'; then
+      printf 'Expired module context check failed.\n' >&2; load_fixtures || true; return 1
+    fi
+    sql "UPDATE ${JOOMLA_DB_PREFIX}modules SET publish_down=NULL WHERE id=${module_id}; UPDATE ${JOOMLA_DB_PREFIX}modules_menu SET menuid=-900900 WHERE moduleid=${module_id};"
+    if ! compose run --rm --no-deps --env "PLAYWRIGHT_OUTPUT_DIR=$container_output-module-excluded" browser npx playwright test tests/filter-function.spec.js --grep 'mobile availability follows the Joomla module context'; then
+      printf 'Excluded menu context check failed.\n' >&2; load_fixtures || true; return 1
+    fi
+    sql "UPDATE ${JOOMLA_DB_PREFIX}modules_menu SET menuid=900900 WHERE moduleid=${module_id}; UPDATE ${JOOMLA_DB_PREFIX}modules SET published=0 WHERE id=${module_id};"
+    if ! compose run --rm --no-deps --env "PLAYWRIGHT_OUTPUT_DIR=$container_output-module-hidden" browser npx playwright test tests/filter-function.spec.js --grep 'mobile availability follows the Joomla module context'; then
+      printf 'Hidden module context check failed.\n' >&2; load_fixtures || true; return 1
+    fi
+    sql "UPDATE ${JOOMLA_DB_PREFIX}modules SET published=1 WHERE id=${module_id}; UPDATE ${JOOMLA_DB_PREFIX}fdshop_filter_options SET is_active=0 WHERE id IN (${straight_id},${fanned_id});"
+    if ! compose run --rm --no-deps \
+      --env "PLAYWRIGHT_OUTPUT_DIR=$container_output-option-persistence" \
+      --env "FDSHOP_FILTER_STRAIGHT_ID=$straight_id" \
+      --env "FDSHOP_FILTER_FANNED_ID=$fanned_id" \
+      --env "FDSHOP_FILTER_ROMAN_CANDLE_ID=$roman_candle_id" \
+      browser npx playwright test tests/filter-option-persistence.spec.js; then
+      printf 'Inactive filter option persistence check failed.\n' >&2; load_fixtures || true; return 1
+    fi
     load_fixtures >/dev/null
     printf 'Frontend category artifacts: %s\nFDShop frontend category suite: PASS (targeted data and cleanup verified)\n' "$host_output"
   else

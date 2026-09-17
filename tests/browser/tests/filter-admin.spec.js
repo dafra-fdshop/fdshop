@@ -22,6 +22,21 @@ test('seven immutable system filters and category-aware administration work', as
   await expect(list).toContainText('firing_type');
   await expect(list).toContainText('product_type');
 
+  const expectedCounts = new Map([
+    ['Hersteller', '0'],
+    ['Verfügbarkeit', '0'],
+    ['Brenndauer', '3'],
+    ['Kaliber', '3'],
+    ['NEM', '3'],
+    ['Abschuss', '2'],
+    ['Art', '4'],
+  ]);
+  for (const [label, count] of expectedCounts) {
+    const row = list.locator('tr').filter({ has: page.getByRole('link', { name: label, exact: true }) });
+    await expect(row).toHaveCount(1);
+    await expect(row.locator('td').last()).toHaveText(count);
+  }
+
   await page.getByRole('link', { name: 'NEM', exact: true }).click();
   await expect(page.locator('#jform_filter_key')).toHaveValue('nem');
   await expect(page.locator('#jform_filter_key')).toHaveAttribute('readonly');

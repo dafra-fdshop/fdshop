@@ -10,6 +10,7 @@ namespace FDShop\Component\FDShop\Site\Model;
 defined('_JEXEC') or die;
 
 use Joomla\CMS\Factory;
+use Joomla\CMS\Helper\ModuleHelper;
 use Joomla\CMS\MVC\Model\ListModel;
 use Joomla\Database\DatabaseQuery;
 use Joomla\Database\ParameterType;
@@ -185,16 +186,7 @@ final class CategoryModel extends ListModel
 
     public function hasAssignedFilterModule(): bool
     {
-        $itemId = Factory::getApplication()->getInput()->getInt('Itemid');
-        $db = $this->getDatabase();
-        $query = $db->getQuery(true)->select('COUNT(DISTINCT m.id)')
-            ->from($db->quoteName('#__modules', 'm'))
-            ->leftJoin($db->quoteName('#__modules_menu', 'mm') . ' ON mm.moduleid=m.id')
-            ->where('m.module=' . $db->quote('mod_fdshop_filter'))
-            ->where('m.published=1')->where('m.client_id=0')
-            ->where('(mm.menuid=0' . ($itemId > 0 ? ' OR mm.menuid=' . $itemId : '') . ')');
-        $db->setQuery($query);
-        return (int) $db->loadResult() > 0;
+        return ModuleHelper::isEnabled('mod_fdshop_filter');
     }
 
     private function filters(): FilterService

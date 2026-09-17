@@ -349,10 +349,23 @@ class ProductService implements ProductServiceInterface
     private function saveProductFilterOptions(int $productId, array $ids): void
     {
         $ids = $this->normalizeIds($ids);
+        $query = $this->db->getQuery(true)
+            ->select($this->db->quoteName('option_id'))
+            ->from($this->db->quoteName('#__fdshop_product_filter_option_map'))
+            ->where($this->db->quoteName('product_id') . ' = ' . $productId);
+        $this->db->setQuery($query);
+        $existingIds = array_map('intval', $this->db->loadColumn() ?: []);
+
         $query = $this->db->getQuery(true)->select('o.id')
             ->from($this->db->quoteName('#__fdshop_filter_options', 'o'))
             ->innerJoin($this->db->quoteName('#__fdshop_filters', 'f') . ' ON f.id=o.filter_id')
             ->whereIn('f.filter_key', ['firing_type', 'product_type'])
+            ->where(
+                '('
+                . $this->db->quoteName('o.is_active') . ' = 1'
+                . ($existingIds === [] ? '' : ' OR ' . $this->db->quoteName('o.id') . ' IN (' . implode(',', $existingIds) . ')')
+                . ')'
+            )
             ->where($ids === [] ? '1=0' : 'o.id IN (' . implode(',', $ids) . ')');
         $this->db->setQuery($query);
         $valid = array_map('intval', $this->db->loadColumn() ?: []);

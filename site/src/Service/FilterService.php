@@ -1,6 +1,7 @@
 <?php
 namespace FDShop\Component\FDShop\Site\Service;
 defined('_JEXEC') or die;
+use Joomla\CMS\Factory;
 use Joomla\Database\DatabaseInterface;
 use Joomla\Database\DatabaseQuery;
 
@@ -51,18 +52,19 @@ final class FilterService
 
     public function getFacets(int $categoryId,array $state,array $defs):array{$out=[];foreach($defs as$key=>$def){$options=$key==='manufacturer'?$this->manufacturerOptions($categoryId,$state,$defs):($key==='availability'?$this->availabilityOptions($categoryId,$state,$defs):(in_array($key,self::RANGE_KEYS,true)?$this->rangeOptions($key,$categoryId,$state,$defs):$this->discreteOptions($key,$categoryId,$state,$defs)));$out[$key]=['definition'=>$def,'options'=>$options];}return$out;}
     public function chips(array $state,array $facets):array{$out=[];foreach($state as$key=>$values)foreach($facets[$key]['options']??[]as$o)if(in_array((string)$o['value'],array_map('strval',$values),true))$out[]=['key'=>$key,'value'=>(string)$o['value'],'label'=>(string)$o['label']];return$out;}
-    private function base(int $cat,array $state,array $defs,string $excluded):DatabaseQuery{unset($state[$excluded]);$q=$this->db->getQuery(true)->from($this->db->quoteName('#__fdshop_products','p'))->innerJoin($this->db->quoteName('#__fdshop_product_category_map','pcm').' ON pcm.product_id=p.id')->where('pcm.category_id='.(int)$cat)->where('p.is_active=1')->where('p.is_deleted=0');$this->apply($q,$state,$defs);return$q;}
+    private function base(int $cat,array $state,array $defs,string $excluded):DatabaseQuery{unset($state[$excluded]);$q=$this->db->getQuery(true)->from($this->db->quoteName('#__fdshop_products','p'))->innerJoin($this->db->quoteName('#__fdshop_product_category_map','pcm').' ON pcm.product_id=p.id')->where('pcm.category_id='.(int)$cat)->where('p.is_active=1')->where('p.is_deleted=0')->where($this->publishedNow('p'));$this->apply($q,$state,$defs);return$q;}
     private function manufacturerOptions(int$c,array$s,array$d):array
     {
         $counts=$this->base($c,$s,$d,'manufacturer')->select(['p.manufacturer_id','COUNT(DISTINCT p.id) hits'])->group('p.manufacturer_id');
         $q=$this->db->getQuery(true)->select(['m.id value','m.manufacturer_name label','COALESCE(fc.hits,0) hits'])
             ->from($this->db->quoteName('#__fdshop_manufacturers','m'))
-            ->innerJoin($this->db->quoteName('#__fdshop_products','bp').' ON bp.manufacturer_id=m.id AND bp.is_active=1 AND bp.is_deleted=0')
+            ->innerJoin($this->db->quoteName('#__fdshop_products','bp').' ON bp.manufacturer_id=m.id AND bp.is_active=1 AND bp.is_deleted=0 AND '.$this->publishedNow('bp'))
             ->innerJoin($this->db->quoteName('#__fdshop_product_category_map','bpcm').' ON bpcm.product_id=bp.id AND bpcm.category_id='.(int)$c)
             ->leftJoin('('.(string)$counts.') fc ON fc.manufacturer_id=m.id')
             ->where('m.is_active=1')->group(['m.id','m.manufacturer_name','fc.hits'])->order('m.manufacturer_name');
         $this->db->setQuery($q);return array_map(fn($r)=>['value'=>(int)$r->value,'label'=>$r->label,'count'=>(int)$r->hits],$this->db->loadObjectList()?:[]);
     }
+    private function publishedNow(string $alias):string{$now=$this->db->quote(Factory::getDate()->toSql());return '(('.$alias.'.publish_up IS NULL OR '.$alias.'.publish_up<='.$now.') AND ('.$alias.'.publish_down IS NULL OR '.$alias.'.publish_down>='.$now.'))';}
     private function availabilityOptions(int$c,array$s,array$d):array{$q=$this->base($c,$s,$d,'availability')->select(['COALESCE(pd.is_in_stock,0) available','COUNT(DISTINCT p.id) hits'])->leftJoin($this->db->quoteName('#__fdshop_products_details','pd').' ON pd.product_id=p.id')->group('COALESCE(pd.is_in_stock,0)');$this->db->setQuery($q);$x=[0=>0,1=>0];foreach($this->db->loadObjectList()?:[]as$r)$x[(int)$r->available]=(int)$r->hits;return[['value'=>'available','label'=>'Auf Lager','count'=>$x[1]],['value'=>'unavailable','label'=>'Nicht auf Lager','count'=>$x[0]]];}
     private function rangeOptions(string$key,int$c,array$s,array$d):array{$e=['duration'=>"CAST(REPLACE(p.burn_time, ',', '.') AS DECIMAL(12,3))",'caliber'=>"CAST(REPLACE(p.caliber, ',', '.') AS DECIMAL(12,3))",'nem'=>'p.nem'][$key];$v=['duration'=>"TRIM(p.burn_time) REGEXP '^[0-9]+([.,][0-9]+)?'",'caliber'=>"TRIM(p.caliber) REGEXP '^[0-9]+([.,][0-9]+)?'",'nem'=>'p.nem>0'][$key];$q=$this->base($c,$s,$d,$key);$aliases=[];foreach($d[$key]->ranges as$r){$b=[$v];if($r->value_from!==null)$b[]=$e.'>='.(float)$r->value_from;if($r->value_to!==null)$b[]=$e.'<'.(float)$r->value_to;$a='r_'.(int)$r->id;$aliases[(int)$r->id]=$a;$q->select('COUNT(DISTINCT CASE WHEN '.implode(' AND ',$b).' THEN p.id END) '.$this->db->quoteName($a));}if(!$aliases)return[];$this->db->setQuery($q);$counts=$this->db->loadAssoc()?:[];$out=[];foreach($d[$key]->ranges as$r)$out[]=['value'=>(int)$r->id,'label'=>(string)$r->label,'count'=>(int)($counts[$aliases[(int)$r->id]]??0)];return$out;}
     private function discreteOptions(string$key,int$c,array$s,array$d):array
