@@ -16,26 +16,28 @@
             fetch(url.toString(), { headers: { 'X-Requested-With': 'XMLHttpRequest' }, signal: filterRequest.signal })
                 .then(function (response) { if (!response.ok) throw new Error('Filter request failed'); return response.text(); })
                 .then(function (html) {
-                    var next = new DOMParser().parseFromString(html, 'text/html').querySelector('.fdshop-category');
+                    var nextDocument = new DOMParser().parseFromString(html, 'text/html');
+                    var next = nextDocument.querySelector('.fdshop-category');
                     if (!next) throw new Error('Filter response is incomplete');
-                    var currentLayout = category.querySelector('.fdshop-category__layout');
-                    var nextLayout = next.querySelector('.fdshop-category__layout');
+                    var currentResults = category.querySelector('[data-fdshop-filter-results]');
+                    var nextResults = next.querySelector('[data-fdshop-filter-results]');
                     var currentMobile = category.querySelector('.fdshop-filter-offcanvas .offcanvas-body');
                     var nextMobile = next.querySelector('.fdshop-filter-offcanvas .offcanvas-body');
-                    if (!currentLayout || !nextLayout || !currentMobile || !nextMobile) throw new Error('Filter fragments are incomplete');
-                    currentLayout.replaceWith(nextLayout);
+                    var currentModule = document.querySelector('[data-fdshop-filter-module]');
+                    var nextModule = nextDocument.querySelector('[data-fdshop-filter-module]');
+                    if (!currentResults || !nextResults || !currentMobile || !nextMobile || (currentModule && !nextModule)) throw new Error('Filter fragments are incomplete');
+                    currentResults.replaceWith(nextResults);
                     currentMobile.replaceWith(nextMobile);
+                    if (currentModule && nextModule) currentModule.replaceWith(nextModule);
                     category.removeAttribute('aria-busy');
                     if (pushHistory) window.history.pushState({}, '', url.toString());
                     bindFilters();
+                    bindCategoryControls();
                 })
                 .catch(function (error) { category.removeAttribute('aria-busy'); if (error.name !== 'AbortError') category.dispatchEvent(new CustomEvent('fdshop:filter-error')); });
         };
         var bindFilters = function () {
             if (!category) return;
-            var moduleMount = document.querySelector('[data-fdshop-filter-module]');
-            var desktopPanel = category.querySelector('[data-fdshop-filter-panel]');
-            if (moduleMount && desktopPanel && !moduleMount.contains(desktopPanel)) moduleMount.replaceChildren(desktopPanel);
             document.querySelectorAll('[data-fdshop-filter-form]').forEach(function (form) {
                 if (form.dataset.bound === '1') return;
                 form.dataset.bound = '1';
@@ -44,30 +46,36 @@
                 if (reset) reset.addEventListener('click', function () { form.querySelectorAll('input[type="checkbox"]').forEach(function (box) { box.checked = false; }); refreshFilteredCategory(form, true); });
             });
             category.querySelectorAll('[data-fdshop-filter-remove]').forEach(function (button) {
+                if (button.dataset.bound === '1') return;
+                button.dataset.bound = '1';
                 button.addEventListener('click', function () {
-                    var form = category.querySelector('[data-fdshop-filter-form]');
-                    category.querySelectorAll('input[name="fd_filter[' + button.dataset.filterKey + '][]"]').forEach(function (box) { if (box.value === button.dataset.filterValue) box.checked = false; });
+                    var form = document.querySelector('[data-fdshop-filter-module] [data-fdshop-filter-form]') || category.querySelector('[data-fdshop-filter-form]');
+                    document.querySelectorAll('input[name="fd_filter[' + button.dataset.filterKey + '][]"]').forEach(function (box) { if (box.value === button.dataset.filterValue) box.checked = false; });
                     refreshFilteredCategory(form, true);
                 });
             });
         };
+        var bindCategoryControls = function () {
+            var toolbar = category ? category.querySelector('.fdshop-toolbar') : null;
+            var sortSelect = category ? category.querySelector('[data-fdshop-sort]') : null;
+            var sortField = category ? category.querySelector('[data-fdshop-sort-field]') : null;
+            var sortDirection = category ? category.querySelector('[data-fdshop-sort-direction]') : null;
+            if (toolbar && sortSelect && sortField && sortDirection && toolbar.dataset.bound !== '1') {
+                toolbar.dataset.bound = '1';
+                sortSelect.addEventListener('change', function () {
+                    var value = sortSelect.value.split(':');
+                    sortField.value = value[0] || 'name';
+                    sortDirection.value = value[1] || 'asc';
+                    toolbar.submit();
+                });
+                category.querySelectorAll('[data-fdshop-submit]').forEach(function (field) {
+                    field.addEventListener('change', function () { toolbar.submit(); });
+                });
+            }
+        };
         bindFilters();
+        bindCategoryControls();
         window.addEventListener('popstate', function () { window.location.reload(); });
-        var toolbar = category ? category.querySelector('.fdshop-toolbar') : null;
-        var sortSelect = category ? category.querySelector('[data-fdshop-sort]') : null;
-        var sortField = category ? category.querySelector('[data-fdshop-sort-field]') : null;
-        var sortDirection = category ? category.querySelector('[data-fdshop-sort-direction]') : null;
-        if (toolbar && sortSelect && sortField && sortDirection) {
-            sortSelect.addEventListener('change', function () {
-                var value = sortSelect.value.split(':');
-                sortField.value = value[0] || 'name';
-                sortDirection.value = value[1] || 'asc';
-                toolbar.submit();
-            });
-            category.querySelectorAll('[data-fdshop-submit]').forEach(function (field) {
-                field.addEventListener('change', function () { toolbar.submit(); });
-            });
-        }
 
         var dialog = category ? category.querySelector('[data-fdshop-video-dialog]') : null;
         var content = category ? category.querySelector('[data-fdshop-video-content]') : null;

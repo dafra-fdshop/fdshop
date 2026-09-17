@@ -33,9 +33,7 @@ $filterData = ['facets' => $this->filterFacets, 'active' => $this->activeFilters
         <div class="offcanvas-body"><?php echo LayoutHelper::render('filter.panel', $filterData + ['suffix' => 'mobile'], JPATH_COMPONENT_SITE . '/layouts'); ?></div>
     </div>
 
-    <div class="fdshop-category__layout">
-        <aside class="fdshop-category__filters" data-fdshop-filter-panel><?php echo LayoutHelper::render('filter.panel', $filterData + ['suffix' => 'desktop'], JPATH_COMPONENT_SITE . '/layouts'); ?></aside>
-        <section class="fdshop-category__results" data-fdshop-filter-results aria-live="polite">
+    <section class="fdshop-category__results" data-fdshop-filter-results aria-live="polite">
 
     <?php if ($this->filterChips !== []) : ?>
         <div class="fdshop-filter-chips" aria-label="Aktive Filter">
@@ -136,8 +134,7 @@ $filterData = ['facets' => $this->filterFacets, 'active' => $this->activeFilters
     <?php endif; ?>
 
     <?php if ($total > $limit) : ?><nav class="fdshop-pagination fdshop-pagination--bottom" aria-label="Seitennavigation unten"><?php echo $this->pagination->getPagesLinks(); ?></nav><?php endif; ?>
-        </section>
-    </div>
+    </section>
     <dialog class="fdshop-video" data-fdshop-video-dialog aria-labelledby="fdshop-video-title">
         <div class="fdshop-video__header"><h2 id="fdshop-video-title" data-fdshop-video-title>Produktvideo</h2><button type="button" class="fdshop-video__close" data-fdshop-video-close aria-label="Video schließen">×</button></div>
         <div class="fdshop-video__content" data-fdshop-video-content></div>

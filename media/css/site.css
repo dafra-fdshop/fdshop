@@ -2,7 +2,6 @@
 .fdshop-category__header { margin-bottom: 1.5rem; }
 .fdshop-category__header h1 { margin-bottom: .5rem; }
 .fdshop-category__description, .fdshop-card__description { color: var(--fdshop-muted); }
-.fdshop-category__layout { display: grid; grid-template-columns: minmax(13rem, 16rem) minmax(0, 1fr); gap: 1.25rem; align-items: start; }
 .fdshop-category__results { min-width: 0; }
 .fdshop-filter { border: 1px solid var(--fdshop-border); background: #fff; }
 .fdshop-filter__title { margin: 0; padding: .65rem .75rem; background: #dee0e2; font-size: 1rem; }
@@ -103,7 +102,7 @@
 .fdshop-product__description, .fdshop-manufacturer__content { margin-top: 1.5rem; padding: 1.25rem; border: 1px solid #adb5bd; background: #fff; }
 .fdshop-product__description h2 { margin-top: 0; }
 @media (max-width: 1100px) { .fdshop-products { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-@media (max-width: 800px) { .fdshop-products { grid-template-columns: repeat(2, minmax(0, 1fr)); } .fdshop-category__layout { display: block; } .fdshop-category__filters { display: none; } .fdshop-filter-open { display: inline-flex; } }
+@media (max-width: 800px) { .fdshop-products { grid-template-columns: repeat(2, minmax(0, 1fr)); } .fdshop-filter-module { display: none; } .fdshop-filter-open { display: inline-flex; } }
 @media (max-width: 800px) { .fdshop-product__overview { grid-template-columns: 1fr; } }
 @media (max-width: 520px) { .fdshop-products { grid-template-columns: 1fr; } .fdshop-card__media { height: 18rem; } .fdshop-toolbar { align-items: stretch; } .fdshop-toolbar label, .fdshop-toolbar select { width: 100%; } .fdshop-toolbar__results { margin-left: 0; } .fdshop-product__heading { grid-template-columns: 1fr; } .fdshop-product__manufacturer { text-align: left; } }
 .fdshop-cart { --fdshop-border: var(--border-color, #dfe3e7); max-width: 1440px; margin-inline: auto; }
@@ -154,8 +153,8 @@
 .fdshop-purchase__quantity { box-sizing: border-box; width: 0; min-width: 0; height: 2.75rem; padding: 0; border: 0; border-radius: 0 1.375rem 1.375rem 0; background: var(--btnbg); color: #212529; text-align: center; opacity: 0; pointer-events: none; transition: width .2s ease, padding .2s ease, opacity .15s ease; }
 .fdshop-purchase:hover, .fdshop-purchase:focus-within, .fdshop-purchase.is-open { min-width: 7.25rem; }
 .fdshop-purchase:hover .fdshop-purchase__quantity, .fdshop-purchase:focus-within .fdshop-purchase__quantity, .fdshop-purchase.is-open .fdshop-purchase__quantity { width: 4.5rem; padding: 0 1.25rem 0 .25rem; opacity: 1; pointer-events: auto; }
-.fdshop-category__layout .fdshop-purchase:hover, .fdshop-category__layout .fdshop-purchase:focus-within, .fdshop-category__layout .fdshop-purchase.is-open { min-width: 5.75rem; }
-.fdshop-category__layout .fdshop-purchase:hover .fdshop-purchase__quantity, .fdshop-category__layout .fdshop-purchase:focus-within .fdshop-purchase__quantity, .fdshop-category__layout .fdshop-purchase.is-open .fdshop-purchase__quantity { width: 3rem; padding-inline: .2rem .75rem; }
+.fdshop-category .fdshop-purchase:hover, .fdshop-category .fdshop-purchase:focus-within, .fdshop-category .fdshop-purchase.is-open { min-width: 5.75rem; }
+.fdshop-category .fdshop-purchase:hover .fdshop-purchase__quantity, .fdshop-category .fdshop-purchase:focus-within .fdshop-purchase__quantity, .fdshop-category .fdshop-purchase.is-open .fdshop-purchase__quantity { width: 3rem; padding-inline: .2rem .75rem; }
 .fdshop-card__commerce:has(.fdshop-purchase:hover) .fdshop-card__price, .fdshop-card__commerce:has(.fdshop-purchase:focus-within) .fdshop-card__price, .fdshop-card__commerce:has(.fdshop-purchase.is-open) .fdshop-card__price { align-self: end; gap: .1rem .25rem; font-size: .72rem; transform: translateY(.15rem); }
 .fdshop-card__commerce:has(.fdshop-purchase:hover) .fdshop-card__regular-price, .fdshop-card__commerce:has(.fdshop-purchase:focus-within) .fdshop-card__regular-price, .fdshop-card__commerce:has(.fdshop-purchase.is-open) .fdshop-card__regular-price { font-size: .62rem; }
 .fdshop-product .fdshop-purchase { min-width: 3.25rem; border-radius: 1.625rem; }

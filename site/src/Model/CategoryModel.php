@@ -164,6 +164,24 @@ final class CategoryModel extends ListModel
         return $this->filters()->chips((array) $this->getState('filter.fdshop', []), $this->getFilterFacets());
     }
 
+    public function getFilterRenderData(): ?array
+    {
+        $category = $this->getCategory();
+
+        if ($category === null) {
+            return null;
+        }
+
+        return [
+            'facets' => $this->getFilterFacets(),
+            'active' => (array) $this->getState('filter.fdshop', []),
+            'category_id' => (int) $category->id,
+            'sort' => (string) $this->getState('filter.sort', 'name'),
+            'direction' => (string) $this->getState('filter.direction', 'asc'),
+            'limit' => (int) $this->getState('list.limit', 24),
+        ];
+    }
+
     private function filters(): FilterService
     {
         return $this->filterService ??= new FilterService($this->getDatabase());

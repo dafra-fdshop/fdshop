@@ -1,6 +1,20 @@
 SET NAMES utf8mb4;
 START TRANSACTION;
 
+INSERT INTO `__PREFIX__fdshop_manufacturers`
+(`id`,`manufacturer_name`,`alias`,`description`,`meta_title`,`is_active`,`ordering`,`created`,`created_by`)
+VALUES
+(900003,'Argento','argento','Hersteller für den isolierten Filtertest','Argento',1,30,'2026-01-01 00:00:00',0),
+(900004,'Funke','funke','Hersteller für den isolierten Filtertest','Funke',1,40,'2026-01-01 00:00:00',0);
+
+UPDATE `__PREFIX__fdshop_products`
+SET `manufacturer_id` = CASE
+    WHEN `id` = 900103 THEN 900003
+    WHEN `id` IN (900104,900105) THEN 900004
+    ELSE `manufacturer_id`
+END
+WHERE `id` IN (900103,900104,900105);
+
 UPDATE `__PREFIX__fdshop_products`
 SET `in_stock` = CASE `id`
     WHEN 900100 THEN 'Verfügbar'
@@ -75,5 +89,19 @@ INSERT INTO `__PREFIX__menu`
 (`id`,`menutype`,`title`,`alias`,`note`,`path`,`link`,`type`,`published`,`parent_id`,`level`,`component_id`,`checked_out`,`checked_out_time`,`browserNav`,`access`,`img`,`template_style_id`,`params`,`lft`,`rgt`,`home`,`language`,`client_id`,`publish_up`,`publish_down`)
 VALUES
 (900900,'mainmenu','Batterien','batterien','','batterien','index.php?option=com_fdshop&view=category&id=900010','component',1,1,1,__COMPONENT_ID__,0,NULL,0,1,'',0,'{}',__MENU_LFT__,__MENU_RGT__,0,'*',0,NULL,NULL);
+
+UPDATE `__PREFIX__modules`
+SET `title` = 'FDShop Filter', `position` = 'sidebar-left', `published` = 1, `showtitle` = 0,
+    `access` = 1, `language` = '*', `params` = '{"layout":"_:default","moduleclass_sfx":""}'
+WHERE `client_id` = 0 AND `module` = 'mod_fdshop_filter';
+
+DELETE `mm`
+FROM `__PREFIX__modules_menu` AS `mm`
+INNER JOIN `__PREFIX__modules` AS `m` ON `m`.`id` = `mm`.`moduleid`
+WHERE `m`.`client_id` = 0 AND `m`.`module` = 'mod_fdshop_filter';
+
+INSERT INTO `__PREFIX__modules_menu` (`moduleid`, `menuid`)
+SELECT `id`, 900900 FROM `__PREFIX__modules`
+WHERE `client_id` = 0 AND `module` = 'mod_fdshop_filter';
 
 COMMIT;
