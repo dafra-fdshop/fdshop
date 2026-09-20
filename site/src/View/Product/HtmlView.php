@@ -11,6 +11,7 @@ defined('_JEXEC') or die;
 
 use FDShop\Component\FDShop\Site\Helper\RouteHelper;
 use FDShop\Component\FDShop\Site\Helper\PurchaseHelper;
+use FDShop\Component\FDShop\Site\Helper\ProductVisualHelper;
 use Joomla\CMS\Factory;
 use Joomla\CMS\MVC\View\HtmlView as BaseHtmlView;
 use Joomla\CMS\Uri\Uri;
@@ -50,6 +51,7 @@ final class HtmlView extends BaseHtmlView
             'wenige Verfügbar', 'wenige Bestellbar' => 'fdshop-stock--low',
             default => 'fdshop-stock--none',
         };
+        $item->visual_state = ProductVisualHelper::backgroundState($item);
         $item->physical_stock_text = 'Noch nicht im Lager';
         if ((int) $item->physically_in_stock === 1) {
             $item->physical_stock_text = 'Im Lager';

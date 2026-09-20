@@ -32,6 +32,13 @@ test('menu category renders mapped visible products and complete cards', async (
     .toEqual(['NEM', 'Schusszahl', 'Kaliber', 'Brenndauer', 'Steighöhe']);
   await expect(page.locator('[data-product-id="901001"] .fdshop-card__fact dd')).toHaveText(['-', '-', '-', '-', '-']);
   await expect(product.locator('.fdshop-ribbon')).toHaveCount(3);
+  await expect(product).toHaveAttribute('data-visual-state', 'new');
+  await expect(product.locator('.fdshop-card__visual')).toHaveClass(/fdshop-product-visual--new/);
+  await expect(product.locator('.fdshop-card__visual')).toHaveCSS('background-color', 'rgb(0, 0, 0)');
+  await expect(product.locator('.fdshop-card__visual')).toHaveCSS('background-repeat', 'no-repeat');
+  expect(await product.locator('.fdshop-card__visual').evaluate(element => getComputedStyle(element).backgroundImage)).toContain('category-new.webp');
+  await expect(page.locator('[data-product-id="900104"]')).toHaveAttribute('data-visual-state', 'standard');
+  await expect(page.locator('[data-product-id="900105"]')).toHaveAttribute('data-visual-state', 'action');
   await expect(product).toHaveCSS('border-top-width', '4px');
   await expect(product).toHaveCSS('border-top-color', 'rgb(173, 181, 189)');
   await expect(product).toHaveCSS('background-color', 'rgb(255, 255, 255)');
@@ -89,7 +96,7 @@ test('product detail is reachable and card grid responds with four to one column
   await expect(page.locator('.fdshop-product h1')).toHaveText('E2E Produkt Aktiv');
 
   await page.goto('/batterien');
-  for (const [width, columns] of [[1400, 4], [1000, 3], [700, 2], [480, 1]]) {
+  for (const [width, columns] of [[1440, 4], [1000, 3], [768, 2], [390, 1]]) {
     await page.setViewportSize({ width, height: 900 });
     const template = await page.locator('.fdshop-products').evaluate(element => getComputedStyle(element).gridTemplateColumns);
     expect(template.trim().split(/\s+/)).toHaveLength(columns);
@@ -113,8 +120,14 @@ test('product detail renders gallery, video, manufacturer and public product inf
   await expect(product.getByRole('heading', { level: 1 })).toHaveText('E2E Produkt Aktiv');
   await expect(product.locator('[data-fdshop-main-image]')).toHaveAttribute('src', /e2e-fixture-product\.svg$/);
   await expect(product.locator('[data-fdshop-thumbnail]')).toHaveCount(2);
+  await expect(product.locator('[data-fdshop-main-stage]')).toHaveClass(/fdshop-product-visual--new/);
+  await expect(product.locator('[data-fdshop-main-stage]')).toHaveClass(/is-primary/);
+  expect(await product.locator('[data-fdshop-main-stage]').evaluate(element => getComputedStyle(element).backgroundImage)).toContain('product-new.webp');
   await product.getByRole('button', { name: 'Produktbild 2 anzeigen' }).click();
   await expect(product.locator('[data-fdshop-main-image]')).toHaveAttribute('src', /product-placeholder\.svg$/);
+  await expect(product.locator('[data-fdshop-main-stage]')).not.toHaveClass(/is-primary/);
+  await product.getByRole('button', { name: 'Produktbild 1 anzeigen' }).click();
+  await expect(product.locator('[data-fdshop-main-stage]')).toHaveClass(/is-primary/);
 
   const manufacturer = product.getByRole('link', { name: 'E2E Hersteller Aktiv' });
   await expect(product.locator('.fdshop-product__manufacturer')).not.toContainText('Hersteller:');

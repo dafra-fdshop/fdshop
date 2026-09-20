@@ -21,7 +21,7 @@ $factIcons = ['NEM' => 'icon_nem.svg', 'Schusszahl' => 'icon_anzahl.svg', 'Kalib
 <main class="fdshop-product" data-product-id="<?php echo (int) $item->id; ?>" data-fdshop-package-root data-piece-name="<?php echo $this->escape((string) $item->product_name); ?>" data-piece-price="<?php echo $this->escape((string) $item->current_price); ?>" data-piece-regular-price="<?php echo $this->escape((string) $item->sale_price); ?>" data-piece-nem="<?php echo $this->escape((string) $item->nem); ?>" data-piece-shots="<?php echo $this->escape((string) $item->shot_count); ?>"<?php if ($item->package['valid']) : ?> data-package-name="<?php echo $this->escape((string) $item->product_name . ' ' . $item->package['unit_type']); ?>" data-package-price="<?php echo $this->escape((string) $item->package['price']); ?>" data-package-regular-price="<?php echo $this->escape((string) $item->package['regular_price']); ?>" data-package-quantity="<?php echo (int) $item->package['unit_quantity']; ?>"<?php endif; ?>>
     <div class="fdshop-product__overview">
         <section class="fdshop-product__gallery" aria-label="Produktbilder">
-            <div class="fdshop-product__main-image">
+            <div class="fdshop-product__main-image fdshop-product-visual--<?php echo $this->escape($item->visual_state); ?> is-primary" data-fdshop-main-stage data-visual-state="<?php echo $this->escape($item->visual_state); ?>">
                 <img src="<?php echo $this->escape($mainImage); ?>" alt="<?php echo $this->escape((string) $item->product_name); ?>" width="700" height="700" data-fdshop-main-image>
                 <div class="fdshop-card__ribbons" aria-label="Produktkennzeichnungen">
                     <?php if ((int) $item->ribbon_new === 1) : ?><span class="fdshop-ribbon fdshop-ribbon--new">Neu</span><?php endif; ?>
@@ -32,7 +32,7 @@ $factIcons = ['NEM' => 'icon_nem.svg', 'Schusszahl' => 'icon_anzahl.svg', 'Kalib
             <?php if (count($this->images) > 1) : ?>
                 <div class="fdshop-product__thumbnails" aria-label="Weitere Produktbilder">
                     <?php foreach ($this->images as $index => $image) : ?>
-                        <button type="button" class="fdshop-product__thumbnail<?php echo $index === 0 ? ' is-active' : ''; ?>" data-fdshop-thumbnail="<?php echo $this->escape($image); ?>" aria-label="Produktbild <?php echo $index + 1; ?> anzeigen" aria-pressed="<?php echo $index === 0 ? 'true' : 'false'; ?>"><img src="<?php echo $this->escape($image); ?>" alt="" width="90" height="90" loading="lazy"></button>
+                        <button type="button" class="fdshop-product__thumbnail<?php echo $index === 0 ? ' is-active' : ''; ?>" data-fdshop-thumbnail="<?php echo $this->escape($image); ?>" data-fdshop-primary="<?php echo $index === 0 ? '1' : '0'; ?>" aria-label="Produktbild <?php echo $index + 1; ?> anzeigen" aria-pressed="<?php echo $index === 0 ? 'true' : 'false'; ?>"><img src="<?php echo $this->escape($image); ?>" alt="" width="90" height="90" loading="lazy"></button>
                     <?php endforeach; ?>
                 </div>
             <?php endif; ?>

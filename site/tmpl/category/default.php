@@ -93,7 +93,8 @@ $filterData = ['facets' => $this->filterFacets, 'active' => $this->activeFilters
                     'Steighöhe' => 'icon_hoehe.svg',
                 ];
                 ?>
-                <article class="fdshop-card" data-product-id="<?php echo (int) $item->id; ?>" data-price="<?php echo $this->escape((string) $item->current_price); ?>">
+                <article class="fdshop-card" data-product-id="<?php echo (int) $item->id; ?>" data-price="<?php echo $this->escape((string) $item->current_price); ?>" data-visual-state="<?php echo $this->escape($item->visual_state); ?>">
+                    <div class="fdshop-card__visual fdshop-product-visual--<?php echo $this->escape($item->visual_state); ?>">
                     <div class="fdshop-card__media">
                         <a class="fdshop-card__image-link" href="<?php echo $this->escape($item->detail_url); ?>" aria-label="Details zu <?php echo $this->escape((string) $item->product_name); ?>">
                             <img src="<?php echo $this->escape($item->image_url); ?>" alt="<?php echo $this->escape((string) $item->product_name); ?>" loading="lazy" width="400" height="400">
@@ -113,7 +114,9 @@ $filterData = ['facets' => $this->filterFacets, 'active' => $this->activeFilters
                             <?php if ($item->media['video'] !== null) : ?><button class="btn btn-dark btn-sm" type="button" data-fdshop-video="<?php echo $this->escape($item->media['video']); ?>" data-product-name="<?php echo $this->escape((string) $item->product_name); ?>" aria-label="Produktvideo zu <?php echo $this->escape((string) $item->product_name); ?> ansehen" title="Produktvideo ansehen"><i class="fa-solid fa-video" aria-hidden="true"></i></button><?php endif; ?>
                             <p class="fdshop-stock <?php echo $this->escape($item->stock_class); ?>"><strong><?php echo $this->escape((string) $item->in_stock); ?></strong></p>
                         </div>
-                        <div class="fdshop-card__info">
+                    </div>
+                    </div>
+                    <div class="fdshop-card__info">
                             <dl class="fdshop-card__facts" aria-label="Technische Produktdaten">
                                 <?php foreach ($factValues as $factLabel => $factValue) : ?>
                                     <div class="fdshop-card__fact" title="<?php echo $this->escape($factLabel); ?>">
@@ -130,7 +133,6 @@ $filterData = ['facets' => $this->filterFacets, 'active' => $this->activeFilters
                                 <strong><?php echo $this->escape($item->price_formatted); ?></strong>
                                 <small>inkl. MwSt.</small>
                             </div><?php if ($this->purchaseEnabled) : ?><?php echo LayoutHelper::render('purchase.action', PurchaseHelper::data($item, 'piece'), JPATH_COMPONENT_SITE . '/layouts'); ?><?php endif; ?></div>
-                        </div>
                     </div>
                 </article>
             <?php endforeach; ?>

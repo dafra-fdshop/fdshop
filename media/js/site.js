@@ -104,10 +104,12 @@
         if (!product) return;
 
         var mainImage = product.querySelector('[data-fdshop-main-image]');
+        var mainStage = product.querySelector('[data-fdshop-main-stage]');
         product.querySelectorAll('[data-fdshop-thumbnail]').forEach(function (button) {
             button.addEventListener('click', function () {
                 if (!mainImage) return;
                 mainImage.src = button.dataset.fdshopThumbnail;
+                if (mainStage) mainStage.classList.toggle('is-primary', button.dataset.fdshopPrimary === '1');
                 product.querySelectorAll('[data-fdshop-thumbnail]').forEach(function (thumbnail) {
                     var active = thumbnail === button;
                     thumbnail.classList.toggle('is-active', active);

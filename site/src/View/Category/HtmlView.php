@@ -11,6 +11,7 @@ defined('_JEXEC') or die;
 
 use FDShop\Component\FDShop\Site\Helper\RouteHelper;
 use FDShop\Component\FDShop\Site\Helper\PurchaseHelper;
+use FDShop\Component\FDShop\Site\Helper\ProductVisualHelper;
 use Joomla\CMS\Factory;
 use Joomla\CMS\MVC\View\HtmlView as BaseHtmlView;
 use Joomla\CMS\Uri\Uri;
@@ -72,6 +73,7 @@ final class HtmlView extends BaseHtmlView
             $item->price_formatted = $this->formatPrice((float) $item->current_price, (string) $item->currency);
             $item->regular_price_formatted = $this->formatPrice((float) $item->sale_price, (string) $item->currency);
             $item->stock_class = $stockClasses[(string) $item->in_stock] ?? 'fdshop-stock--none';
+            $item->visual_state = ProductVisualHelper::backgroundState($item);
         }
 
         Factory::getApplication()->getDocument()->getWebAssetManager()
