@@ -56,7 +56,7 @@ final class HtmlView extends BaseHtmlView
         ];
 
         $root = rtrim(Uri::root(true), '/');
-        $placeholder = $root . '/media/com_fdshop/images/product-placeholder.svg';
+        $placeholder = ProductVisualHelper::placeholderImage();
         $stockClasses = [
             'Verfügbar'          => 'fdshop-stock--normal',
             'Bestellbar'         => 'fdshop-stock--normal',
@@ -70,6 +70,7 @@ final class HtmlView extends BaseHtmlView
             $item->image_url = $item->media['image']
                 ? $root . '/' . ltrim((string) $item->media['image'], '/')
                 : $placeholder;
+            $item->image_is_placeholder = $item->media['image'] === null;
             $item->price_formatted = $this->formatPrice((float) $item->current_price, (string) $item->currency);
             $item->regular_price_formatted = $this->formatPrice((float) $item->sale_price, (string) $item->currency);
             $item->stock_class = $stockClasses[(string) $item->in_stock] ?? 'fdshop-stock--none';

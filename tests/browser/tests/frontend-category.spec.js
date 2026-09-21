@@ -49,7 +49,22 @@ test('menu category renders mapped visible products and complete cards', async (
   await expect(product.locator('.fdshop-card__title a')).toHaveAttribute('href', detailHref);
 
   await expect(page.locator('[data-product-id="900103"] .fdshop-card__media img')).toHaveAttribute('src', /e2e-fixture-product\.svg$/);
+  await expect(page.locator('[data-product-id="900103"] .fdshop-card__product-image')).toHaveCount(1);
   await expect(page.locator('[data-product-id="900104"] .fdshop-card__media img')).toHaveAttribute('src', /product-placeholder\.svg$/);
+  const placeholderLayout = await page.locator('[data-product-id="900104"] .fdshop-card__media').evaluate(element => {
+    const stage = element.getBoundingClientRect();
+    const image = element.querySelector('.fdshop-card__placeholder').getBoundingClientRect();
+    return {
+      widthRatio: image.width / stage.width,
+      heightRatio: image.height / stage.height,
+      centeredX: Math.abs((image.left + image.width / 2) - (stage.left + stage.width / 2)) < 2,
+      centeredY: Math.abs((image.top + image.height / 2) - (stage.top + stage.height / 2)) < 2,
+    };
+  });
+  expect(placeholderLayout.widthRatio).toBeLessThan(0.5);
+  expect(placeholderLayout.heightRatio).toBeLessThan(0.5);
+  expect(placeholderLayout.centeredX).toBe(true);
+  expect(placeholderLayout.centeredY).toBe(true);
   for (const status of ['Verfügbar', 'wenige Verfügbar', 'Bestellbar', 'wenige Bestellbar', 'Ausverkauft']) {
     await expect(page.locator('.fdshop-stock', { hasText: status }).first()).toBeVisible();
   }
@@ -76,9 +91,18 @@ test('menu category renders mapped visible products and complete cards', async (
   await expect(videoButton).toHaveText('');
   await expect(videoButton.locator('.fa-solid.fa-video')).toHaveCount(1);
   await expect(product.locator('.fdshop-card__actions > .fdshop-stock')).toHaveCount(1);
-  expect(await product.locator('.fdshop-card__actions').evaluate(element =>
-    new Set([...element.children].map(child => Math.round(child.getBoundingClientRect().top))).size
-  )).toBe(1);
+  const defaultActionLayout = await product.locator('.fdshop-card__actions').evaluate(element => {
+    const children = [...element.children].map(child => child.getBoundingClientRect());
+    const actions = element.getBoundingClientRect();
+    return {
+      rows: new Set(children.map(child => Math.round(child.top))).size,
+      statusRight: Math.abs(children.at(-1).right - actions.right) < 2,
+      noOverflow: element.scrollWidth <= element.clientWidth,
+    };
+  });
+  expect(defaultActionLayout.rows).toBeLessThanOrEqual(2);
+  expect(defaultActionLayout.statusRight).toBe(true);
+  expect(defaultActionLayout.noOverflow).toBe(true);
   const productWithoutVideo = page.locator('[data-product-id="900104"]');
   await expect(productWithoutVideo.locator('.fdshop-card__actions button')).toHaveCount(0);
   await expect(productWithoutVideo.locator('.fdshop-card__actions')).toHaveCount(1);
@@ -96,7 +120,7 @@ test('product detail is reachable and card grid responds with four to one column
   await expect(page.locator('.fdshop-product h1')).toHaveText('E2E Produkt Aktiv');
 
   await page.goto('/batterien');
-  for (const [width, columns] of [[1440, 4], [1000, 3], [768, 2], [390, 1]]) {
+  for (const [width, columns] of [[1920, 4], [1440, 4], [1000, 3], [768, 2], [390, 1]]) {
     await page.setViewportSize({ width, height: 900 });
     const template = await page.locator('.fdshop-products').evaluate(element => getComputedStyle(element).gridTemplateColumns);
     expect(template.trim().split(/\s+/)).toHaveLength(columns);
@@ -105,6 +129,18 @@ test('product detail is reachable and card grid responds with four to one column
       rows: new Set([...element.children].map(item => Math.round(item.getBoundingClientRect().top))).size,
     }));
     expect(factLayout).toEqual({ columns: 5, rows: 1 });
+    const actionLayout = await page.locator('[data-product-id="900100"] .fdshop-card__actions').evaluate(element => {
+      const children = [...element.children].map(child => child.getBoundingClientRect());
+      const actions = element.getBoundingClientRect();
+      return {
+        rows: new Set(children.map(child => Math.round(child.top))).size,
+        statusRight: Math.abs(children.at(-1).right - actions.right) < 2,
+        noOverflow: element.scrollWidth <= element.clientWidth,
+      };
+    });
+    expect(actionLayout.rows).toBeLessThanOrEqual(2);
+    expect(actionLayout.statusRight).toBe(true);
+    expect(actionLayout.noOverflow).toBe(true);
   }
   diagnostics.expectClean();
 });

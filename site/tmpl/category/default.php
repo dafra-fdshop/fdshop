@@ -97,7 +97,7 @@ $filterData = ['facets' => $this->filterFacets, 'active' => $this->activeFilters
                     <div class="fdshop-card__visual fdshop-product-visual--<?php echo $this->escape($item->visual_state); ?>">
                     <div class="fdshop-card__media">
                         <a class="fdshop-card__image-link" href="<?php echo $this->escape($item->detail_url); ?>" aria-label="Details zu <?php echo $this->escape((string) $item->product_name); ?>">
-                            <img src="<?php echo $this->escape($item->image_url); ?>" alt="<?php echo $this->escape((string) $item->product_name); ?>" loading="lazy" width="400" height="400">
+                            <img class="<?php echo $item->image_is_placeholder ? 'fdshop-card__placeholder' : 'fdshop-card__product-image'; ?>" src="<?php echo $this->escape($item->image_url); ?>" alt="<?php echo $this->escape((string) $item->product_name); ?>" loading="lazy" width="400" height="400">
                         </a>
                         <div class="fdshop-card__ribbons" aria-label="Produktkennzeichnungen">
                             <?php if ((int) $item->ribbon_new === 1) : ?><span class="fdshop-ribbon fdshop-ribbon--new">Neu</span><?php endif; ?>

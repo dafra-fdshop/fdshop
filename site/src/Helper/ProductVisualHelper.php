@@ -9,8 +9,15 @@ namespace FDShop\Component\FDShop\Site\Helper;
 
 defined('_JEXEC') or die;
 
+use Joomla\CMS\Uri\Uri;
+
 final class ProductVisualHelper
 {
+    public static function placeholderImage(): string
+    {
+        return rtrim(Uri::root(true), '/') . '/media/com_fdshop/images/product-placeholder.svg';
+    }
+
     public static function backgroundState(object $product): string
     {
         if ((int) ($product->discount_active ?? 0) === 1 && (float) ($product->discount_price ?? 0) > 0) {

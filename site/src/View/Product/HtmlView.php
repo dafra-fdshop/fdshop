@@ -37,7 +37,7 @@ final class HtmlView extends BaseHtmlView
         $categoryId = max(0, Factory::getApplication()->getInput()->getInt('catid'));
         $this->categoryUrl = $categoryId > 0 ? RouteHelper::getCategoryRoute($categoryId) : '';
         $root = rtrim(Uri::root(true), '/');
-        $this->placeholderImage = $root . '/media/com_fdshop/images/product-placeholder.svg';
+        $this->placeholderImage = ProductVisualHelper::placeholderImage();
         $this->images = array_map(static fn (string $path): string => $root . '/' . ltrim($path, '/'), $item->media['images']);
         $item->manufacturer_url = $item->manufacturer_id
             ? RouteHelper::getManufacturerRoute((int) $item->manufacturer_id, (string) $item->manufacturer_alias)
