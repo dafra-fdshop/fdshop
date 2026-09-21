@@ -31,8 +31,8 @@
 .fdshop-product-visual--new { --fdshop-category-background: url('../images/product-backgrounds/category-new.webp'); --fdshop-product-background: url('../images/product-backgrounds/product-new.webp'); }
 .fdshop-product-visual--bundle { --fdshop-category-background: url('../images/product-backgrounds/category-bundle.webp'); --fdshop-product-background: url('../images/product-backgrounds/product-bundle.webp'); }
 .fdshop-card__visual { background-image: var(--fdshop-category-background); }
-.fdshop-card__media { position: relative; height: 15.5rem; background: transparent; }
-.fdshop-card__image-link { display: grid; width: 100%; height: 100%; place-items: center; }
+.fdshop-card__media { position: relative; height: 10.5rem; background: transparent; }
+.fdshop-card__image-link { display: grid; width: 100%; height: 100%; place-items: center; align-items: end; }
 .fdshop-card__media img { display: block; width: 100%; height: 100%; padding: .6rem; object-fit: contain; }
 .fdshop-card__media .fdshop-card__placeholder { width: 42%; height: 42%; padding: 0; }
 .fdshop-card__ribbons { position: absolute; inset: .65rem auto auto .65rem; display: flex; flex-wrap: wrap; gap: .35rem; }
@@ -40,10 +40,10 @@
 .fdshop-ribbon--new { background: var(--success, #198754); } .fdshop-ribbon--hot { background: var(--danger, #dc3545); } .fdshop-ribbon--bundle { background: var(--info, #0dcaf0); color: var(--dark, #212529); }
 .fdshop-ribbon--package { background: #e0a721; }
 .fdshop-card__body { display: flex; flex-direction: column; gap: .5rem; padding: .7rem .5rem; background: transparent; }
-.fdshop-card__title { margin: 0; font-size: 1rem; line-height: 1.2; }
+.fdshop-card__title { margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 1rem; line-height: 1.2; }
 .fdshop-card__title a { color: #e0a721; text-decoration: underline; }
 .fdshop-card__title a:hover, .fdshop-card__title a:focus { color: #f2c75c; }
-.fdshop-card__description { min-height: 2.7em; margin: 0; color: #fff; line-height: 1.35; overflow-wrap: anywhere; }
+.fdshop-card__description { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;  min-height: 2.7em; margin: 0; color: #fff; line-height: 1.35; overflow-wrap: anywhere; }
 .fdshop-card__actions { display: flex; flex-wrap: wrap; align-items: center; gap: .2rem; }
 .fdshop-card__actions > .fdshop-stock { margin-left: auto; }
 .fdshop-card__actions .btn { padding: .2rem .35rem; border-radius: 0; font-size: .7rem; font-weight: 700; }

@@ -58,13 +58,13 @@ test('menu category renders mapped visible products and complete cards', async (
       widthRatio: image.width / stage.width,
       heightRatio: image.height / stage.height,
       centeredX: Math.abs((image.left + image.width / 2) - (stage.left + stage.width / 2)) < 2,
-      centeredY: Math.abs((image.top + image.height / 2) - (stage.top + stage.height / 2)) < 2,
+      bottomAligned: Math.abs(image.bottom - stage.bottom) < 2,
     };
   });
   expect(placeholderLayout.widthRatio).toBeLessThan(0.5);
   expect(placeholderLayout.heightRatio).toBeLessThan(0.5);
   expect(placeholderLayout.centeredX).toBe(true);
-  expect(placeholderLayout.centeredY).toBe(true);
+  expect(placeholderLayout.bottomAligned).toBe(true);
   for (const status of ['Verfügbar', 'wenige Verfügbar', 'Bestellbar', 'wenige Bestellbar', 'Ausverkauft']) {
     await expect(page.locator('.fdshop-stock', { hasText: status }).first()).toBeVisible();
   }
@@ -107,6 +107,55 @@ test('menu category renders mapped visible products and complete cards', async (
   await expect(productWithoutVideo.locator('.fdshop-card__actions button')).toHaveCount(0);
   await expect(productWithoutVideo.locator('.fdshop-card__actions')).toHaveCount(1);
   await expect(productWithoutVideo.locator('.fdshop-card__actions > *')).toHaveCount(2);
+  diagnostics.expectClean();
+});
+
+test('manual category card CSS refinements remain responsive', async ({ page, baseURL }) => {
+  const diagnostics = await installDiagnostics(page, baseURL);
+
+  for (const [width, expectedHeight] of [[1440, '168px'], [768, '168px'], [390, '288px']]) {
+    await page.setViewportSize({ width, height: 900 });
+    await openCategory(page);
+    const card = page.locator('[data-product-id="900100"]');
+    await card.locator('.fdshop-card__title a').evaluate(element => {
+      element.textContent = 'Ein außergewöhnlich langer Produkttitel zur sicheren Ellipsis-Prüfung';
+    });
+    await card.locator('.fdshop-card__description').evaluate(element => {
+      element.textContent = 'Eine bewusst sehr lange Kurzbeschreibung, die auch bei schmaleren Karten deutlich mehr als zwei sichtbare Textzeilen beanspruchen würde.';
+    });
+    const layout = await card.evaluate(element => {
+      const media = element.querySelector('.fdshop-card__media');
+      const link = element.querySelector('.fdshop-card__image-link');
+      const title = element.querySelector('.fdshop-card__title');
+      const description = element.querySelector('.fdshop-card__description');
+      const lineHeight = Number.parseFloat(getComputedStyle(description).lineHeight);
+      return {
+        mediaHeight: getComputedStyle(media).height,
+        imageAlignment: getComputedStyle(link).alignItems,
+        titleWhiteSpace: getComputedStyle(title).whiteSpace,
+        titleOverflow: getComputedStyle(title).overflow,
+        titleEllipsis: getComputedStyle(title).textOverflow,
+        titleClipped: title.scrollWidth > title.clientWidth,
+        descriptionClamp: getComputedStyle(description).webkitLineClamp,
+        descriptionOrient: getComputedStyle(description).webkitBoxOrient,
+        descriptionOverflow: getComputedStyle(description).overflow,
+        descriptionLines: description.getBoundingClientRect().height / lineHeight,
+        noOverflow: element.scrollWidth <= element.clientWidth,
+      };
+    });
+    expect(layout.mediaHeight).toBe(expectedHeight);
+    expect(layout.imageAlignment).toBe('end');
+    expect(layout.titleWhiteSpace).toBe('nowrap');
+    expect(layout.titleOverflow).toBe('hidden');
+    expect(layout.titleEllipsis).toBe('ellipsis');
+    expect(layout.titleClipped).toBe(true);
+    expect(layout.descriptionClamp).toBe('2');
+    expect(layout.descriptionOrient).toBe('vertical');
+    expect(layout.descriptionOverflow).toBe('hidden');
+    expect(layout.descriptionLines).toBeLessThanOrEqual(2.1);
+    expect(layout.noOverflow).toBe(true);
+  }
+
   diagnostics.expectClean();
 });
 
