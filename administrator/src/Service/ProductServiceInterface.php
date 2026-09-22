@@ -43,4 +43,10 @@ interface ProductServiceInterface
     public function restoreProducts(array $productIds): bool;
 
     public function permanentlyDeleteProducts(array $productIds): bool;
+
+    public function setPrimaryImage(int $productId, int $mediaId): void;
+
+    public function updateImageOrdering(int $productId, int $mediaId, int $ordering): void;
+
+    public function deleteProductImage(int $productId, int $mediaId): void;
 }

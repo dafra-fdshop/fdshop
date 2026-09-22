@@ -130,29 +130,52 @@ class ProductModel extends AdminModel
         );
     }
 
-    public function getProductImagePath(int $productId): ?string
+    public function getProductImages(int $productId): array
     {
         if ($productId <= 0) {
-            return null;
+            return [];
         }
 
         $db = $this->getDatabase();
         $query = $db->getQuery(true)
-            ->select($db->quoteName('path_small'))
+            ->select([
+                $db->quoteName('id'), $db->quoteName('path_standard'),
+                $db->quoteName('path_small'), $db->quoteName('path_mobile'),
+                $db->quoteName('is_primary'), $db->quoteName('ordering'),
+            ])
             ->from($db->quoteName('#__fdshop_media'))
             ->where($db->quoteName('product_id') . ' = ' . (int) $productId)
             ->where($db->quoteName('media_type') . ' = ' . $db->quote('image'))
-            ->where($db->quoteName('path_small') . ' <> ' . $db->quote(''))
             ->order(
                 $db->quoteName('is_primary') . ' DESC, '
                 . $db->quoteName('ordering') . ' ASC, '
                 . $db->quoteName('id') . ' ASC'
             );
 
-        $db->setQuery($query, 0, 1);
-        $path = $db->loadResult();
+        $db->setQuery($query);
+        return (array) $db->loadObjectList();
+    }
 
-        return $path ? (string) $path : null;
+    public function runImageAction(string $action, int $productId, int $mediaId, int $ordering = 0): bool
+    {
+        $permission = $action === 'delete' ? 'core.delete' : 'core.edit';
+        if (!$this->getCurrentUser()->authorise($permission, 'com_fdshop')) {
+            $this->setError('Sie sind nicht berechtigt, Produktbilder zu bearbeiten.');
+            return false;
+        }
+        try {
+            $service = $this->getProductService();
+            match ($action) {
+                'primary' => $service->setPrimaryImage($productId, $mediaId),
+                'ordering' => $service->updateImageOrdering($productId, $mediaId, $ordering),
+                'delete' => $service->deleteProductImage($productId, $mediaId),
+                default => throw new \InvalidArgumentException('Unbekannte Bildaktion.'),
+            };
+            return true;
+        } catch (\Throwable $e) {
+            $this->setError($e->getMessage());
+            return false;
+        }
     }
 
     public function getFilterOptionGroups(): array

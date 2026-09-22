@@ -65,18 +65,23 @@ test('configuration general and image values persist and are restored', async ({
   await vat.fill(testVat);
   await page.getByRole('tab', { name: 'Bilder', exact: true }).click();
   const imageDefault = page.locator('#jform_image_size_default');
+  const imageQualityDefault = page.locator('#jform_image_quality_default');
   const originalImageDefault = await imageDefault.inputValue();
+  const originalImageQualityDefault = await imageQualityDefault.inputValue();
   const testImageDefault = String(Number(originalImageDefault) + 1);
 
   await imageDefault.fill(testImageDefault);
+  await imageQualityDefault.fill('79');
   await page.getByRole('button', { name: 'Save', exact: true }).click();
   await page.waitForLoadState('domcontentloaded');
   await expect(page).toHaveURL(/view=configuration/);
   await expect(vat).toHaveValue(testVat);
   await page.getByRole('tab', { name: 'Bilder', exact: true }).click();
   await expect(imageDefault).toHaveValue(testImageDefault);
+  await expect(imageQualityDefault).toHaveValue('79');
 
   await imageDefault.fill(originalImageDefault);
+  await imageQualityDefault.fill(originalImageQualityDefault);
   await page.getByRole('tab', { name: 'Allgemein', exact: true }).click();
   await vat.fill(originalVat);
   await currency.fill(originalCurrency);
@@ -87,6 +92,7 @@ test('configuration general and image values persist and are restored', async ({
   await expect(page.locator('#jform_general_currency')).toHaveValue(originalCurrency);
   await page.getByRole('tab', { name: 'Bilder', exact: true }).click();
   await expect(page.locator('#jform_image_size_default')).toHaveValue(originalImageDefault);
+  await expect(page.locator('#jform_image_quality_default')).toHaveValue(originalImageQualityDefault);
 });
 
 test('shipment validation, CRUD, status actions and filters', async ({ page }) => {

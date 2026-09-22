@@ -70,7 +70,7 @@ VALUES (900341,900100,'youtube','https://www.youtube.com/embed/aqz-KE-bpKQ',NULL
 INSERT INTO `__PREFIX__fdshop_media`
 (`id`,`product_id`,`media_type`,`external_url`,`file_name`,`file_type`,`path_standard`,`path_small`,`path_mobile`,`path_invoice`,`is_primary`,`ordering`,`created`,`created_by`)
 VALUES
-(900342,900100,'image',NULL,'e2e-fixture-product.svg','image/svg+xml','images/FDShop/products/e2e-fixture-product.svg',NULL,NULL,NULL,1,1,'2026-01-01 00:00:00',0),
+(900342,900100,'image',NULL,'e2e-media-standard.svg','image/svg+xml','images/FDShop/products/e2e-media-standard.svg','images/FDShop/products/e2e-media-small.svg','images/FDShop/products/e2e-media-mobile.svg',NULL,1,1,'2026-01-01 00:00:00',0),
 (900343,900100,'image',NULL,'product-placeholder.svg','image/svg+xml','media/com_fdshop/images/product-placeholder.svg',NULL,NULL,NULL,0,2,'2026-01-01 00:00:00',0);
 
 INSERT INTO `__PREFIX__fdshop_media`

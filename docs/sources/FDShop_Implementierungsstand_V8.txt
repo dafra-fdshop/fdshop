@@ -1,9 +1,9 @@
 =====================================================================
-FDShop_Implementierungsstand_V7
+FDShop_Implementierungsstand_V8
 =====================================================================
 
-Status: VERBINDLICHE PROJEKTQUELLE Version: V7 Ersetzt:
-FDShop_Implementierungsstand_V6 Prüfdatum: 04.09.2026
+Status: VERBINDLICHE PROJEKTQUELLE Version: V8 Ersetzt:
+FDShop_Implementierungsstand_V7 Prüfdatum: 22.09.2026
 
 Technische Grundlage: Git-Repository dafra-fdshop/fdshop Branch: feature
 Technischer Referenzcommit: c970bca1d92673b0cdc4ee841acf0d2c583a88ee
@@ -546,6 +546,18 @@ Nachtrag Filterfunktion V1.1 (Schema 0.0.24):
 - Preisfilter, freie Filtertypen, Kategorievererbung, Presets und automatische
   Produktklassifikation: weiterhin ausdrücklich nicht Bestandteil.
 
+Nachtrag Produkt-Media V1 (Schema 0.0.25):
+- Proportionale, nicht hochskalierende Ableitung für breite, hohe, quadratische
+  und kleine Quellen: umgesetzt und real geprüft.
+- Konfigurierbare Größen und WebP-Qualitäten mit Fresh-/Updatepfad: umgesetzt.
+- Admin-Galerie für mehrere Bilder, primär/reihenfolge/einzeln löschen:
+  umgesetzt und real geprüft.
+- Responsive Kategorieauswahl mit real unterschiedlichen Dateien und
+  browserseitigem currentSrc: umgesetzt und real geprüft.
+- Produktdetail-Standardgalerie, Fallback, Video- und Hintergrundwechsel:
+  umgesetzt; bestehende Regressionen bleiben Bestandteil der Abnahme.
+- Rückwirkende Regeneration vorhandener Medien: bewusst nicht Bestandteil.
+
 =====================================================================
-ENDE DER QUELLE FDShop_Implementierungsstand_V7
+ENDE DER QUELLE FDShop_Implementierungsstand_V8
 =====================================================================

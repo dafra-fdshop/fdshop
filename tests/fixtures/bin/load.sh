@@ -45,6 +45,9 @@ compose exec -T --env "MYSQL_PWD=${MARIADB_PASSWORD}" db mariadb --user="$MARIAD
 compose exec -T --user root joomla install -d -o www-data -g www-data -m 0755 /var/www/html/images/FDShop/products
 compose exec -T --user root joomla find /var/www/html/images/FDShop/products -maxdepth 1 -type f -name 'e2e-fixture-*' -delete
 compose exec -T --user root joomla install -o www-data -g www-data -m 0644 /workspace/fdshop/tests/fixtures/files/e2e-fixture-product.svg /var/www/html/images/FDShop/products/e2e-fixture-product.svg
+compose exec -T --user root joomla install -o www-data -g www-data -m 0644 /workspace/fdshop/tests/fixtures/files/e2e-media-standard.svg /var/www/html/images/FDShop/products/e2e-media-standard.svg
+compose exec -T --user root joomla install -o www-data -g www-data -m 0644 /workspace/fdshop/tests/fixtures/files/e2e-media-small.svg /var/www/html/images/FDShop/products/e2e-media-small.svg
+compose exec -T --user root joomla install -o www-data -g www-data -m 0644 /workspace/fdshop/tests/fixtures/files/e2e-media-mobile.svg /var/www/html/images/FDShop/products/e2e-media-mobile.svg
 
 bash "$FIXTURE_DIR/bin/verify.sh"
 printf 'FDShop fixtures loaded and verified.\n'

@@ -1,5 +1,17 @@
 (() => {
   'use strict';
+  document.querySelectorAll('[data-fdshop-media-action]').forEach(button => {
+    button.addEventListener('click', () => {
+      const item = button.closest('[data-fdshop-media-item]');
+      const action = button.dataset.fdshopMediaAction;
+      if (!item || !action) return;
+      if (action === 'delete' && !window.confirm('Dieses Produktbild wirklich löschen?')) return;
+      document.querySelector('input[name="media_id"]').value = item.dataset.fdshopMediaItem;
+      document.querySelector('input[name="media_ordering"]').value = item.querySelector('[data-fdshop-media-ordering]')?.value || '0';
+      const tasks = {primary: 'product.setPrimaryImage', ordering: 'product.updateImageOrdering', delete: 'product.deleteImage'};
+      Joomla.submitbutton(tasks[action]);
+    });
+  });
   const type = document.querySelector('#jform_unit_type');
   const quantity = document.querySelector('#jform_unit_quantity');
   const discountType = document.querySelector('#jform_unit_discount_type');

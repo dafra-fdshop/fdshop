@@ -388,6 +388,131 @@ class ProductService implements ProductServiceInterface
         return $this->setDeletedState($productIds, 0, 1);
     }
 
+    public function setPrimaryImage(int $productId, int $mediaId): void
+    {
+        $this->assertImageBelongsToProduct($productId, $mediaId);
+        $this->db->transactionStart();
+
+        try {
+            $query = $this->db->getQuery(true)
+                ->update($this->db->quoteName('#__fdshop_media'))
+                ->set($this->db->quoteName('is_primary') . ' = 0')
+                ->where($this->db->quoteName('product_id') . ' = ' . $productId)
+                ->where($this->db->quoteName('media_type') . ' = ' . $this->db->quote('image'));
+            $this->db->setQuery($query)->execute();
+
+            $query = $this->db->getQuery(true)
+                ->update($this->db->quoteName('#__fdshop_media'))
+                ->set($this->db->quoteName('is_primary') . ' = 1')
+                ->where($this->db->quoteName('id') . ' = ' . $mediaId)
+                ->where($this->db->quoteName('product_id') . ' = ' . $productId)
+                ->where($this->db->quoteName('media_type') . ' = ' . $this->db->quote('image'));
+            $this->db->setQuery($query)->execute();
+            $this->db->transactionCommit();
+        } catch (\Throwable $e) {
+            $this->db->transactionRollback();
+            throw $e;
+        }
+    }
+
+    public function updateImageOrdering(int $productId, int $mediaId, int $ordering): void
+    {
+        $this->assertImageBelongsToProduct($productId, $mediaId);
+        $query = $this->db->getQuery(true)
+            ->update($this->db->quoteName('#__fdshop_media'))
+            ->set($this->db->quoteName('ordering') . ' = ' . max(0, $ordering))
+            ->where($this->db->quoteName('id') . ' = ' . $mediaId)
+            ->where($this->db->quoteName('product_id') . ' = ' . $productId)
+            ->where($this->db->quoteName('media_type') . ' = ' . $this->db->quote('image'));
+        $this->db->setQuery($query)->execute();
+    }
+
+    public function deleteProductImage(int $productId, int $mediaId): void
+    {
+        $medium = $this->assertImageBelongsToProduct($productId, $mediaId);
+        $paths = $this->getUnsharedMediaPaths($medium, $mediaId);
+        $stagedFiles = [];
+        $this->db->transactionStart();
+
+        try {
+            $stagedFiles = $this->stageLocalMediaFiles($paths);
+            $query = $this->db->getQuery(true)->delete($this->db->quoteName('#__fdshop_media'))
+                ->where($this->db->quoteName('id') . ' = ' . $mediaId)
+                ->where($this->db->quoteName('product_id') . ' = ' . $productId)
+                ->where($this->db->quoteName('media_type') . ' = ' . $this->db->quote('image'));
+            $this->db->setQuery($query)->execute();
+
+            if ($this->db->getAffectedRows() !== 1) {
+                throw new RuntimeException('Das Produktbild konnte nicht gelöscht werden.');
+            }
+
+            if ((int) $medium->is_primary === 1) {
+                $query = $this->db->getQuery(true)->select($this->db->quoteName('id'))
+                    ->from($this->db->quoteName('#__fdshop_media'))
+                    ->where($this->db->quoteName('product_id') . ' = ' . $productId)
+                    ->where($this->db->quoteName('media_type') . ' = ' . $this->db->quote('image'))
+                    ->order($this->db->quoteName('ordering') . ' ASC, ' . $this->db->quoteName('id') . ' ASC');
+                $this->db->setQuery($query, 0, 1);
+                $replacementId = (int) $this->db->loadResult();
+                if ($replacementId > 0) {
+                    $query = $this->db->getQuery(true)->update($this->db->quoteName('#__fdshop_media'))
+                        ->set($this->db->quoteName('is_primary') . ' = 1')
+                        ->where($this->db->quoteName('id') . ' = ' . $replacementId);
+                    $this->db->setQuery($query)->execute();
+                }
+            }
+
+            $this->db->transactionCommit();
+        } catch (\Throwable $e) {
+            $this->db->transactionRollback();
+            $this->restoreStagedMediaFiles($stagedFiles);
+            throw $e;
+        }
+
+        $this->removeStagedMediaFiles($stagedFiles);
+    }
+
+    private function assertImageBelongsToProduct(int $productId, int $mediaId): object
+    {
+        if ($productId < 1 || $mediaId < 1) {
+            throw new InvalidArgumentException('Produkt- oder Medien-ID ist ungültig.');
+        }
+        $query = $this->db->getQuery(true)->select('*')
+            ->from($this->db->quoteName('#__fdshop_media'))
+            ->where($this->db->quoteName('id') . ' = ' . $mediaId)
+            ->where($this->db->quoteName('product_id') . ' = ' . $productId)
+            ->where($this->db->quoteName('media_type') . ' = ' . $this->db->quote('image'));
+        $this->db->setQuery($query);
+        $medium = $this->db->loadObject();
+        if (!$medium) {
+            throw new RuntimeException('Das gewählte Bild gehört nicht zu diesem Produkt.');
+        }
+        return $medium;
+    }
+
+    private function getUnsharedMediaPaths(object $medium, int $mediaId): array
+    {
+        $paths = [];
+        foreach (['path_standard', 'path_small', 'path_mobile', 'path_invoice'] as $field) {
+            $path = trim((string) ($medium->$field ?? ''));
+            if ($path === '') {
+                continue;
+            }
+            $query = $this->db->getQuery(true)->select('COUNT(*)')
+                ->from($this->db->quoteName('#__fdshop_media'))
+                ->where($this->db->quoteName('id') . ' <> ' . $mediaId)
+                ->where('(' . implode(' OR ', array_map(
+                    fn (string $column): string => $this->db->quoteName($column) . ' = ' . $this->db->quote($path),
+                    ['path_standard', 'path_small', 'path_mobile', 'path_invoice']
+                )) . ')');
+            $this->db->setQuery($query);
+            if ((int) $this->db->loadResult() === 0) {
+                $paths[] = $path;
+            }
+        }
+        return array_values(array_unique($paths));
+    }
+
     public function permanentlyDeleteProducts(array $productIds): bool
     {
         $productIds = $this->normalizeIds($productIds);
@@ -620,6 +745,12 @@ class ProductService implements ProductServiceInterface
                     continue;
                 }
 
+                $allowedRoot = realpath(JPATH_ROOT . DIRECTORY_SEPARATOR . 'images' . DIRECTORY_SEPARATOR . 'FDShop' . DIRECTORY_SEPARATOR . 'products');
+                $realSource = realpath($source);
+                if ($allowedRoot === false || $realSource === false || !str_starts_with($realSource, $allowedRoot . DIRECTORY_SEPARATOR)) {
+                    throw new RuntimeException('Ein lokaler Medienpfad verlässt den freigegebenen Produktbildbereich: ' . $path);
+                }
+
                 $temporary = $source . '.fdshop-delete-' . bin2hex(random_bytes(6));
 
                 if (!@rename($source, $temporary)) {
@@ -826,8 +957,6 @@ class ProductService implements ProductServiceInterface
         }
 
         $sourceMime = (string) $imageInfo['mime'];
-        $sourceExtension = $this->getExtensionForMime($sourceMime);
-
         $config = $this->loadImageConfiguration();
         $baseName = $this->generateMediaBaseName($productId);
 
@@ -852,9 +981,9 @@ class ProductService implements ProductServiceInterface
                 throw new RuntimeException('Das Bild konnte mit GD nicht geladen werden.');
             }
 
-            $standardFileName = $baseName . '.' . $sourceExtension;
-            $smallFileName = $baseName . '.' . $sourceExtension;
-            $mobileFileName = $baseName . '.' . $sourceExtension;
+            $standardFileName = $baseName . '.webp';
+            $smallFileName = $baseName . '.webp';
+            $mobileFileName = $baseName . '.webp';
             $invoiceFileName = $baseName . '.png';
 
             $standardRelativePath = $paths['standard'] . $standardFileName;
@@ -862,33 +991,37 @@ class ProductService implements ProductServiceInterface
             $mobileRelativePath = $paths['mobile'] . $mobileFileName;
             $invoiceRelativePath = $paths['invoice'] . $invoiceFileName;
 
-            $this->createSquareVariant(
+            $this->createScaledVariant(
                 $sourceImage,
                 (int) $config['image_size_default'],
-                $sourceMime,
+                (int) $config['image_quality_default'],
+                'image/webp',
                 JPATH_ROOT . $standardRelativePath
             );
             $createdFiles[] = JPATH_ROOT . $standardRelativePath;
 
-            $this->createSquareVariant(
+            $this->createScaledVariant(
                 $sourceImage,
                 (int) $config['image_size_small'],
-                $sourceMime,
+                (int) $config['image_quality_small'],
+                'image/webp',
                 JPATH_ROOT . $smallRelativePath
             );
             $createdFiles[] = JPATH_ROOT . $smallRelativePath;
 
-            $this->createSquareVariant(
+            $this->createScaledVariant(
                 $sourceImage,
                 (int) $config['image_size_mobile'],
-                $sourceMime,
+                (int) $config['image_quality_mobile'],
+                'image/webp',
                 JPATH_ROOT . $mobileRelativePath
             );
             $createdFiles[] = JPATH_ROOT . $mobileRelativePath;
 
-            $this->createSquareVariant(
+            $this->createScaledVariant(
                 $sourceImage,
-                (int) $config['image_size_mobile'],
+                (int) $config['image_size_small'],
+                0,
                 'image/png',
                 JPATH_ROOT . $invoiceRelativePath
             );
@@ -899,7 +1032,7 @@ class ProductService implements ProductServiceInterface
             $this->insertMediaRecord(
                 $productId,
                 $standardFileName,
-                $sourceMime,
+                'image/webp',
                 $standardRelativePath,
                 $smallRelativePath,
                 $mobileRelativePath,
@@ -948,8 +1081,11 @@ class ProductService implements ProductServiceInterface
         $query = $this->db->getQuery(true)
             ->select([
                 $this->db->quoteName('image_size_default'),
+                $this->db->quoteName('image_quality_default'),
                 $this->db->quoteName('image_size_small'),
+                $this->db->quoteName('image_quality_small'),
                 $this->db->quoteName('image_size_mobile'),
+                $this->db->quoteName('image_quality_mobile'),
             ])
             ->from($this->db->quoteName('#__fdshop_config'))
             ->where($this->db->quoteName('id') . ' = 1');
@@ -958,9 +1094,12 @@ class ProductService implements ProductServiceInterface
         $config = (array) $this->db->loadAssoc();
 
         return [
-            'image_size_default' => max(1, (int) ($config['image_size_default'] ?? 400)),
-            'image_size_small'   => max(1, (int) ($config['image_size_small'] ?? 250)),
-            'image_size_mobile'  => max(1, (int) ($config['image_size_mobile'] ?? 100)),
+            'image_size_default'    => max(1, (int) ($config['image_size_default'] ?? 550)),
+            'image_quality_default' => min(100, max(1, (int) ($config['image_quality_default'] ?? 80))),
+            'image_size_small'      => max(1, (int) ($config['image_size_small'] ?? 200)),
+            'image_quality_small'   => min(100, max(1, (int) ($config['image_quality_small'] ?? 60))),
+            'image_size_mobile'     => max(1, (int) ($config['image_size_mobile'] ?? 250)),
+            'image_quality_mobile'  => min(100, max(1, (int) ($config['image_quality_mobile'] ?? 70))),
         ];
     }
 
@@ -999,7 +1138,7 @@ class ProductService implements ProductServiceInterface
         return $image;
     }
 
-    private function createSquareVariant($sourceImage, int $targetSize, string $outputMime, string $targetPath): void
+    private function createScaledVariant($sourceImage, int $targetSize, int $quality, string $outputMime, string $targetPath): void
     {
         $sourceWidth = imagesx($sourceImage);
         $sourceHeight = imagesy($sourceImage);
@@ -1008,11 +1147,19 @@ class ProductService implements ProductServiceInterface
             throw new RuntimeException('Ungültige Bildabmessungen.');
         }
 
-        $cropSize = min($sourceWidth, $sourceHeight);
-        $srcX = (int) floor(($sourceWidth - $cropSize) / 2);
-        $srcY = (int) floor(($sourceHeight - $cropSize) / 2);
+        $maxWidth = (float) $targetSize;
+        $maxHeight = $targetSize * (485 / 550);
+        $maxArea = ($targetSize * $targetSize) * (170000 / (550 * 550));
+        $scale = min(
+            1,
+            $maxWidth / $sourceWidth,
+            $maxHeight / $sourceHeight,
+            sqrt($maxArea / ($sourceWidth * $sourceHeight))
+        );
+        $targetWidth = max(1, (int) floor($sourceWidth * $scale));
+        $targetHeight = max(1, (int) floor($sourceHeight * $scale));
 
-        $targetImage = imagecreatetruecolor($targetSize, $targetSize);
+        $targetImage = imagecreatetruecolor($targetWidth, $targetHeight);
 
         if ($targetImage === false) {
             throw new RuntimeException('Die Bildvariante konnte nicht erzeugt werden.');
@@ -1025,18 +1172,18 @@ class ProductService implements ProductServiceInterface
             $sourceImage,
             0,
             0,
-            $srcX,
-            $srcY,
-            $targetSize,
-            $targetSize,
-            $cropSize,
-            $cropSize
+            0,
+            0,
+            $targetWidth,
+            $targetHeight,
+            $sourceWidth,
+            $sourceHeight
         )) {
             imagedestroy($targetImage);
             throw new RuntimeException('Die Bildskalierung ist fehlgeschlagen.');
         }
 
-        $saved = $this->saveImageResource($targetImage, $outputMime, $targetPath);
+        $saved = $this->saveImageResource($targetImage, $outputMime, $targetPath, $quality);
 
         imagedestroy($targetImage);
 
@@ -1060,14 +1207,14 @@ class ProductService implements ProductServiceInterface
         imagefilledrectangle($image, 0, 0, imagesx($image), imagesy($image), $white);
     }
 
-    private function saveImageResource($image, string $mime, string $targetPath): bool
+    private function saveImageResource($image, string $mime, string $targetPath, int $quality = 80): bool
     {
         return match ($mime) {
             'image/jpeg', 'image/pjpeg' => imagejpeg($image, $targetPath, 90),
             'image/png'                 => imagepng($image, $targetPath, 6),
             'image/gif'                 => imagegif($image, $targetPath),
             'image/webp'                => function_exists('imagewebp')
-                ? imagewebp($image, $targetPath, 90)
+                ? imagewebp($image, $targetPath, $quality)
                 : throw new RuntimeException('WEBP wird von GD auf diesem Server nicht unterstützt.'),
             default                     => throw new RuntimeException('Nicht unterstütztes Bildformat: ' . $mime),
         };

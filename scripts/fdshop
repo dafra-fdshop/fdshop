@@ -402,6 +402,7 @@ test_packaging_migration() {
   sql "ALTER TABLE ${JOOMLA_DB_PREFIX}fdshop_cart DROP INDEX idx_fdshop_cart_variant, DROP COLUMN unit_quantity_snapshot, DROP COLUMN unit_type_snapshot, DROP COLUMN unit_variant;"
   sql "ALTER TABLE ${JOOMLA_DB_PREFIX}fdshop_products ADD COLUMN unit_quantity INT UNSIGNED NOT NULL DEFAULT 1 AFTER unit_type;"
   sql "ALTER TABLE ${JOOMLA_DB_PREFIX}fdshop_products_details DROP COLUMN unit_discount_value, DROP COLUMN unit_discount_type, DROP COLUMN unit_quantity;"
+  sql "ALTER TABLE ${JOOMLA_DB_PREFIX}fdshop_config DROP COLUMN image_quality_default, DROP COLUMN image_quality_small, DROP COLUMN image_quality_mobile;"
   sql "UPDATE ${JOOMLA_DB_PREFIX}fdshop_products SET unit_type='Stück', unit_quantity=99 WHERE id=900100; UPDATE ${JOOMLA_DB_PREFIX}fdshop_products SET unit_type='Display', unit_quantity=6 WHERE id=900103; UPDATE ${JOOMLA_DB_PREFIX}fdshop_products SET unit_type='Display', unit_quantity=1 WHERE id=900104; UPDATE ${JOOMLA_DB_PREFIX}schemas SET version_id='0.0.19' WHERE extension_id=${id};"
   install_fdshop >/dev/null
   [[ "$(sql "SELECT CONCAT(p.unit_type,'|',d.unit_quantity,'|',d.unit_discount_type,'|',d.unit_discount_value) FROM ${JOOMLA_DB_PREFIX}fdshop_products p JOIN ${JOOMLA_DB_PREFIX}fdshop_products_details d ON d.product_id=p.id WHERE p.id=900103;")" == "Display|6|none|0.0000" ]]
@@ -409,14 +410,15 @@ test_packaging_migration() {
   [[ "$(sql "SELECT CONCAT(p.unit_type,'|',d.unit_quantity) FROM ${JOOMLA_DB_PREFIX}fdshop_products p JOIN ${JOOMLA_DB_PREFIX}fdshop_products_details d ON d.product_id=p.id WHERE p.id=900100;")" == "Stück|1" ]]
   [[ "$(sql "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema='${MARIADB_DATABASE}' AND table_name='${JOOMLA_DB_PREFIX}fdshop_products' AND column_name='unit_quantity';")" == "0" ]]
   [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_cart WHERE unit_variant<>'piece' OR unit_type_snapshot<>'Stück' OR unit_quantity_snapshot<>1;")" == "0" ]]
-  [[ "$(sql "SELECT version_id FROM ${JOOMLA_DB_PREFIX}schemas WHERE extension_id=${id};")" == "0.0.24" ]]
+  [[ "$(sql "SELECT version_id FROM ${JOOMLA_DB_PREFIX}schemas WHERE extension_id=${id};")" == "0.0.25" ]]
   [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_filters;")" == "7" ]]
   [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_filter_ranges;")" == "9" ]]
   [[ "$(sql "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema='${MARIADB_DATABASE}' AND table_name='${JOOMLA_DB_PREFIX}fdshop_products_details' AND column_name='bundle_eligible';")" == "1" ]]
   [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_products_details WHERE bundle_eligible=1;")" == "2" ]]
   [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_products WHERE ribbon_bundle=1;")" == "2" ]]
   [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_filter_options;")" == "6" ]]
-  printf 'FDShop packaging, bundle and filter migration 0.0.19 -> 0.0.24: PASS\n'
+  [[ "$(sql "SELECT CONCAT(image_quality_default,'|',image_quality_small,'|',image_quality_mobile) FROM ${JOOMLA_DB_PREFIX}fdshop_config WHERE id=1;")" == "80|60|70" ]]
+  printf 'FDShop packaging, bundle, filter and media migration 0.0.19 -> 0.0.25: PASS\n'
 }
 
 run_browser_crud_manufacturers() {
@@ -498,6 +500,23 @@ run_browser_crud_products() {
   [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_product_buyer_group_map pbgm JOIN ${JOOMLA_DB_PREFIX}fdshop_products p ON p.id=pbgm.product_id WHERE p.product_name='E2E-CRUD-PRODUCT-REFERENCE';")" == "2" ]]
   [[ "$(sql "SELECT COUNT(DISTINCT pbgm.buyer_group_id) FROM ${JOOMLA_DB_PREFIX}fdshop_product_buyer_group_map pbgm JOIN ${JOOMLA_DB_PREFIX}fdshop_products p ON p.id=pbgm.product_id WHERE p.product_name='E2E-CRUD-PRODUCT-REFERENCE';")" == "2" ]]
   [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_media m JOIN ${JOOMLA_DB_PREFIX}fdshop_products p ON p.id=m.product_id WHERE p.product_name='E2E-CRUD-PRODUCT-REFERENCE' AND m.media_type='image';")" == "1" ]]
+  local media_paths standard_meta small_meta mobile_meta invoice_meta
+  media_paths="$(sql "SELECT CONCAT_WS('|',m.path_standard,m.path_small,m.path_mobile,m.path_invoice) FROM ${JOOMLA_DB_PREFIX}fdshop_media m JOIN ${JOOMLA_DB_PREFIX}fdshop_products p ON p.id=m.product_id WHERE p.product_name='E2E-CRUD-PRODUCT-REFERENCE' AND m.media_type='image' LIMIT 1;")"
+  IFS='|' read -r standard_path small_path mobile_path invoice_path <<<"$media_paths"
+  [[ "$standard_path" == *.webp && "$small_path" == *.webp && "$mobile_path" == *.webp && "$invoice_path" == *.png ]]
+  standard_meta="$(compose exec -T joomla php -r '$i=getimagesize("/var/www/html/'"$standard_path"'"); echo $i[0]."|".$i[1]."|".$i["mime"];')"
+  small_meta="$(compose exec -T joomla php -r '$i=getimagesize("/var/www/html/'"$small_path"'"); echo $i[0]."|".$i[1]."|".$i["mime"];')"
+  mobile_meta="$(compose exec -T joomla php -r '$i=getimagesize("/var/www/html/'"$mobile_path"'"); echo $i[0]."|".$i[1]."|".$i["mime"];')"
+  invoice_meta="$(compose exec -T joomla php -r '$i=getimagesize("/var/www/html/'"$invoice_path"'"); echo $i[0]."|".$i[1]."|".$i["mime"];')"
+  IFS='|' read -r standard_width standard_height standard_mime <<<"$standard_meta"
+  IFS='|' read -r small_width small_height small_mime <<<"$small_meta"
+  IFS='|' read -r mobile_width mobile_height mobile_mime <<<"$mobile_meta"
+  IFS='|' read -r invoice_width invoice_height invoice_mime <<<"$invoice_meta"
+  [[ "$standard_mime" == image/webp && "$small_mime" == image/webp && "$mobile_mime" == image/webp && "$invoice_mime" == image/png ]]
+  (( standard_width <= 550 && standard_height <= 485 && standard_width * standard_height <= 170000 ))
+  (( small_width <= 200 && small_height <= 176 && small_width * small_height <= 22480 ))
+  (( mobile_width <= 250 && mobile_height <= 220 && mobile_width * mobile_height <= 35124 ))
+  [[ "$invoice_width|$invoice_height" == "$small_width|$small_height" ]]
 
   if ! compose run --rm --no-deps --env "PLAYWRIGHT_OUTPUT_DIR=$container_output" browser \
     npx playwright test tests/products-crud.spec.js --grep 'fixture image survives'; then

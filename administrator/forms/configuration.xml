@@ -47,6 +47,8 @@
                 required="true"
             />
 
+            <field name="image_quality_default" type="number" label="Bildqualität Standard (WebP)" step="1" min="1" max="100" required="true" />
+
             <field
                 name="image_size_small"
                 type="number"
@@ -56,6 +58,8 @@
                 required="true"
             />
 
+            <field name="image_quality_small" type="number" label="Bildqualität Klein (WebP)" step="1" min="1" max="100" required="true" />
+
             <field
                 name="image_size_mobile"
                 type="number"
@@ -64,6 +68,8 @@
                 min="1"
                 required="true"
             />
+
+            <field name="image_quality_mobile" type="number" label="Bildqualität Mobile (WebP)" step="1" min="1" max="100" required="true" />
 
             <field
                 name="image_size_manufacturer"

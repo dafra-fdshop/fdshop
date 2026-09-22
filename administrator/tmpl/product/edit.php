@@ -123,16 +123,28 @@ $this->getDocument()->getWebAssetManager()->useScript('com_fdshop.admin-product'
 
     <?php echo HTMLHelper::_('uitab.addTab', 'fdshopProductTabs', 'media', 'Medien'); ?>
         <div class="row">
-            <?php if (!empty($this->productImage)) : ?>
-                <div class="col-12 col-xl-4">
+            <?php if ($this->productImages !== []) : ?>
+                <div class="col-12">
                     <div class="card mb-3">
-                        <div class="card-header">Aktuelles Bild</div>
-                        <div class="card-body">
-                            <img
-                                src="<?php echo htmlspecialchars(Uri::root() . ltrim((string) $this->productImage, '/'), ENT_QUOTES, 'UTF-8'); ?>"
-                                alt=""
-                                class="img-fluid"
-                            >
+                        <div class="card-header">Produktbilder</div>
+                        <div class="card-body row g-3">
+                            <?php foreach ($this->productImages as $medium) : ?>
+                                <?php $preview = (string) ($medium->path_small ?: $medium->path_standard ?: $medium->path_mobile); ?>
+                                <div class="col-12 col-md-6 col-xl-4" data-fdshop-media-item="<?php echo (int) $medium->id; ?>">
+                                    <div class="card h-100<?php echo (int) $medium->is_primary === 1 ? ' border-primary' : ''; ?>">
+                                        <div class="card-body d-grid gap-2">
+                                            <img src="<?php echo htmlspecialchars(Uri::root() . ltrim($preview, '/'), ENT_QUOTES, 'UTF-8'); ?>" alt="" class="img-fluid" style="max-height:180px;object-fit:contain">
+                                            <strong><?php echo (int) $medium->is_primary === 1 ? 'Hauptbild' : 'Weiteres Bild'; ?></strong>
+                                            <label>Reihenfolge <input class="form-control" type="number" min="0" value="<?php echo (int) $medium->ordering; ?>" data-fdshop-media-ordering></label>
+                                            <div class="d-flex flex-wrap gap-2">
+                                                <?php if ((int) $medium->is_primary !== 1) : ?><button type="button" class="btn btn-outline-primary btn-sm" data-fdshop-media-action="primary">Als Hauptbild</button><?php endif; ?>
+                                                <button type="button" class="btn btn-outline-secondary btn-sm" data-fdshop-media-action="ordering">Reihenfolge speichern</button>
+                                                <button type="button" class="btn btn-outline-danger btn-sm" data-fdshop-media-action="delete">Bild löschen</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
                         </div>
                     </div>
                 </div>
@@ -226,6 +238,9 @@ $this->getDocument()->getWebAssetManager()->useScript('com_fdshop.admin-product'
     <?php echo HTMLHelper::_('uitab.endTabSet'); ?>
 
     <?php echo $this->form->renderField('id'); ?>
+    <input type="hidden" name="id" value="<?php echo (int) ($this->item->id ?? 0); ?>">
+    <input type="hidden" name="media_id" value="">
+    <input type="hidden" name="media_ordering" value="">
     <input type="hidden" name="task" value="">
     <?php echo HTMLHelper::_('form.token'); ?>
 </form>

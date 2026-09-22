@@ -99,8 +99,11 @@ $orderStatusSearchView = (object) [
 					<div class="card-header">Bilder</div>
 					<div class="card-body">
 						<?php echo $configurationField($this->form->renderField('image_size_default')); ?>
+						<?php echo $configurationField($this->form->renderField('image_quality_default')); ?>
 						<?php echo $configurationField($this->form->renderField('image_size_small')); ?>
+						<?php echo $configurationField($this->form->renderField('image_quality_small')); ?>
 						<?php echo $configurationField($this->form->renderField('image_size_mobile')); ?>
+						<?php echo $configurationField($this->form->renderField('image_quality_mobile')); ?>
 						<?php echo $configurationField($this->form->renderField('image_size_manufacturer')); ?>
 					</div>
 				</div>

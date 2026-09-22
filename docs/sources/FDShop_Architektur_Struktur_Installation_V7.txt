@@ -1,9 +1,9 @@
 =====================================================================
-FDShop_Architektur_Struktur_Installation_V6
+FDShop_Architektur_Struktur_Installation_V7
 =====================================================================
 
-Status: VERBINDLICHE PROJEKTQUELLE Version: V6 Ersetzt:
-FDShop_Architektur_Struktur_Installation_V5 Stand: 04.09.2026
+Status: VERBINDLICHE PROJEKTQUELLE Version: V7 Ersetzt:
+FDShop_Architektur_Struktur_Installation_V6 Stand: 22.09.2026
 
 ===================================================================== 1.
 ZWECK UND ZIELPLATTFORM
@@ -565,6 +565,22 @@ Nachtrag Filterfunktion V1.1 (Schema 0.0.24):
 - Installation, Update und Uninstall besitzen die vollständige FK-gerechte
   Tabellenreihenfolge; das Paket- und Komponentenschema ist 0.0.24.
 
+Architekturnachtrag Produkt-Media V1 (Schema 0.0.25):
+- Produktbilder bleiben relationale Datensätze in #__fdshop_media. Standard,
+  Small, Mobile und Invoice werden bei neuem Upload direkt aus derselben
+  validierten Quelle erzeugt; bestehende Medien werden nicht rückwirkend
+  regeneriert.
+- ProductService besitzt Bildverarbeitung, transaktionale Hauptbildwahl,
+  Reihenfolge und sichere Einzellöschung. Controller orchestrieren nur; Models
+  liefern Daten; Views/Templates enthalten keine SQL-Fachlogik.
+- Webvarianten sind WebP, Invoice ist PNG. Die Skalierung bewahrt Seitenverhältnis
+  und Transparenz, berücksichtigt Breite, Höhe und Fläche und skaliert nie hoch.
+- Die Kategorie lädt alle drei Pfade gebündelt ohne N+1 und wählt per picture
+  Mobile bis 520 px, darüber Small. Das Produktdetail nutzt Standard mit
+  nachgewiesener Fallbackkette.
+- Physische Löschung ist auf images/FDShop/products begrenzt, prüft Realpfade
+  und lässt gemeinsam referenzierte Dateien bestehen.
+
 =====================================================================
-ENDE DER QUELLE FDShop_Architektur_Struktur_Installation_V6
+ENDE DER QUELLE FDShop_Architektur_Struktur_Installation_V7
 =====================================================================

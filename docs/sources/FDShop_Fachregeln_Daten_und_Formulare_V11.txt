@@ -1,12 +1,12 @@
 =====================================================================
-FDShop_Fachregeln_Daten_und_Formulare_V10
+FDShop_Fachregeln_Daten_und_Formulare_V11
 =====================================================================
 
-Status: VERBINDLICHE PROJEKTQUELLE Priorität: SEHR HOCH Version: V10
+Status: VERBINDLICHE PROJEKTQUELLE Priorität: SEHR HOCH Version: V11
 
 Diese Quelle ersetzt vollständig:
 
-FDShop_Fachregeln_Daten_und_Formulare_V9
+FDShop_Fachregeln_Daten_und_Formulare_V10
 
 ===================================================================== 1.
 ZWECK
@@ -2721,8 +2721,31 @@ veröffentlichte und zugewiesene Instanz von mod_fdshop_filter wirksam ist.
 Gültige direkte Filter-URLs funktionieren unabhängig von der sichtbaren UI.
 
 =====================================================================
+NACHTRAG PRODUKT-MEDIA V1
+=====================================================================
+
+Ein Produkt kann null bis beliebig viele Bildmedien besitzen. Genau ein Bild
+ist Hauptbild, sofern mindestens ein Bild vorhanden ist. Das erste hochgeladene
+Bild wird Hauptbild; weitere werden hinten angefügt. Nach Löschung des
+Hauptbilds wird das Bild mit der kleinsten Reihenfolge, danach kleinsten ID,
+zum neuen Hauptbild. Ohne Bild gilt der vorhandene Placeholder.
+
+Neu hochgeladene Produktbilder werden ohne Beschnitt und ohne Hochskalierung
+proportional abgeleitet. Standard, Small und Mobile werden als WebP mit den
+zentral konfigurierten Qualitätswerten gespeichert; Invoice wird als PNG mit
+derselben Geometrie wie Small gespeichert. Transparenz bleibt erhalten.
+Vorhandene Medien werden durch Konfigurationsänderungen nicht rückwirkend
+regeneriert.
+
+In der Kategorie gilt bis einschließlich 520 px die Mobile-Variante, darüber
+die Small-Variante. Fehlende Varianten fallen innerhalb desselben Mediums auf
+die jeweils vorhandenen Pfade zurück. Im Produktdetail wird Standard bevorzugt,
+danach Small und Mobile. Gemeinsam referenzierte Dateien dürfen bei Löschung
+eines einzelnen Media-Datensatzes physisch nicht entfernt werden.
+
+=====================================================================
 ENDE DER QUELLE
 
-FDShop_Fachregeln_Daten_und_Formulare_V10
+FDShop_Fachregeln_Daten_und_Formulare_V11
 
-Status: VERBINDLICHE PROJEKTQUELLE Version: V10
+Status: VERBINDLICHE PROJEKTQUELLE Version: V11

@@ -18,7 +18,7 @@ class HtmlView extends BaseHtmlView
 
     protected $item;
 
-    protected $productImage = null;
+    protected array $productImages = [];
 
     protected array $filterOptionGroups = [];
 
@@ -33,7 +33,7 @@ class HtmlView extends BaseHtmlView
             $this->item = new stdClass();
         }
 
-        $this->productImage = $model->getProductImagePath((int) ($this->item->id ?? 0));
+        $this->productImages = $model->getProductImages((int) ($this->item->id ?? 0));
         $this->filterOptionGroups = $model->getFilterOptionGroups();
 
         ToolbarHelper::title('FDShop - Produkt');

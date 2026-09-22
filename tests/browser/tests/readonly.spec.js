@@ -71,7 +71,7 @@ test('Products: fixtures, filters and forms are readable', async ({ page }) => {
   await expect(page.locator('#jform_product_name')).toHaveValue('E2E Produkt Bild');
   await expect(page.locator('#jform_sku')).toHaveValue('E2E-PROD-IMAGE');
   await page.getByRole('tab', { name: 'Medien' }).click();
-  await expect(page.getByText('Aktuelles Bild', { exact: true })).toBeVisible();
+  await expect(page.getByText('Produktbilder', { exact: true })).toBeVisible();
   await expect(page.locator('img[src*="e2e-fixture-product.svg"]')).toBeVisible();
   await openView(page, 'products');
   await clearFilters(page);

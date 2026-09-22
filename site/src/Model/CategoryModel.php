@@ -207,7 +207,7 @@ final class CategoryModel extends ListModel
         foreach ($items as $item) {
             $item->current_price = (float) $item->current_price;
             $item->has_discount = (int) $item->discount_active === 1 && (float) $item->discount_price > 0;
-            $item->media = $media[(int) $item->id] ?? ['image' => null, 'video' => null];
+            $item->media = $media[(int) $item->id] ?? ['standard' => null, 'small' => null, 'mobile' => null, 'video' => null];
         }
 
         return $items;
@@ -246,11 +246,15 @@ final class CategoryModel extends ListModel
 
         foreach ($db->loadObjectList() as $medium) {
             $productId = (int) $medium->product_id;
-            $grouped[$productId] ??= ['image' => null, 'video' => null];
+            $grouped[$productId] ??= ['standard' => null, 'small' => null, 'mobile' => null, 'video' => null];
 
-            if ($medium->media_type === 'image' && $grouped[$productId]['image'] === null) {
-                $path = trim((string) ($medium->path_standard ?: $medium->path_small ?: $medium->path_mobile));
-                $grouped[$productId]['image'] = $path !== '' ? $path : null;
+            if ($medium->media_type === 'image' && $grouped[$productId]['standard'] === null) {
+                $standard = trim((string) ($medium->path_standard ?: $medium->path_small ?: $medium->path_mobile));
+                $small = trim((string) ($medium->path_small ?: $medium->path_standard ?: $medium->path_mobile));
+                $mobile = trim((string) ($medium->path_mobile ?: $medium->path_small ?: $medium->path_standard));
+                $grouped[$productId]['standard'] = $standard !== '' ? $standard : null;
+                $grouped[$productId]['small'] = $small !== '' ? $small : null;
+                $grouped[$productId]['mobile'] = $mobile !== '' ? $mobile : null;
             }
 
             if ($medium->media_type === 'youtube' && $grouped[$productId]['video'] === null) {

@@ -1,4 +1,5 @@
 const { test, expect } = require('@playwright/test');
+const fs = require('node:fs');
 const { authenticateAdministrator, installDiagnostics, openView } = require('../support/browser');
 
 const productName = 'E2E-CRUD-PRODUCT-REFERENCE';
@@ -116,6 +117,18 @@ test('product invalid save, create, apply, save-close, mappings, stock, status a
   const imagePath = testInfo.outputPath('e2e-crud-product.png');
   await page.screenshot({ path: imagePath });
   await page.getByRole('tab', { name: 'Medien' }).click();
+  const alphaPath = testInfo.outputPath('e2e-alpha.png');
+  const alphaData = await page.evaluate(() => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 40;
+    canvas.height = 20;
+    const context = canvas.getContext('2d');
+    context.clearRect(0, 0, 40, 20);
+    context.fillStyle = 'rgba(255, 0, 0, .5)';
+    context.fillRect(10, 5, 20, 10);
+    return canvas.toDataURL('image/png').split(',')[1];
+  });
+  fs.writeFileSync(alphaPath, Buffer.from(alphaData, 'base64'));
   await page.locator('#jform_product_image').setInputFiles(imagePath);
   await page.getByRole('button', { name: 'Save', exact: true }).click();
   await page.waitForLoadState('networkidle');
@@ -123,8 +136,43 @@ test('product invalid save, create, apply, save-close, mappings, stock, status a
   const createdId = await page.locator('#jform_id').inputValue();
   expect(Number(createdId)).toBeGreaterThan(0);
   await page.getByRole('tab', { name: 'Medien' }).click();
-  await expect(page.getByText('Aktuelles Bild', { exact: true })).toBeVisible();
-  await expect(page.locator('img[src*="/images/FDShop/products/"]')).toBeVisible();
+  await expect(page.getByText('Produktbilder', { exact: true })).toBeVisible();
+  const initialImage = page.locator('[data-fdshop-media-item] img');
+  await expect(initialImage).toBeVisible();
+  await expect(initialImage).toHaveAttribute('src', /\/images\/FDShop\/products\/small\/.*\.webp$/);
+  const processedSize = await initialImage.evaluate(image => ({ width: image.naturalWidth, height: image.naturalHeight }));
+  expect(processedSize.width).toBeGreaterThan(190);
+  expect(processedSize.width).toBeLessThanOrEqual(200);
+  expect(processedSize.height).toBeGreaterThan(100);
+  expect(processedSize.height).toBeLessThanOrEqual(176);
+
+  await page.locator('#jform_product_image').setInputFiles(alphaPath);
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await page.waitForLoadState('networkidle');
+  await page.getByRole('tab', { name: 'Medien' }).click();
+  await expect(page.locator('[data-fdshop-media-item]')).toHaveCount(2);
+  await page.locator('[data-fdshop-media-item]').nth(1).getByRole('button', { name: 'Als Hauptbild' }).click();
+  await page.waitForLoadState('networkidle');
+  await page.getByRole('tab', { name: 'Medien' }).click();
+  await expect(page.locator('[data-fdshop-media-item]').nth(0).getByText('Hauptbild', { exact: true })).toBeVisible();
+  const alphaImage = page.locator('[data-fdshop-media-item]').nth(0).locator('img');
+  expect(await alphaImage.evaluate(async image => {
+    if (!image.complete) await new Promise(resolve => image.addEventListener('load', resolve, { once: true }));
+    const canvas = document.createElement('canvas');
+    canvas.width = image.naturalWidth;
+    canvas.height = image.naturalHeight;
+    canvas.getContext('2d').drawImage(image, 0, 0);
+    return { width: image.naturalWidth, height: image.naturalHeight, cornerAlpha: canvas.getContext('2d').getImageData(0, 0, 1, 1).data[3] };
+  })).toEqual({ width: 40, height: 20, cornerAlpha: 0 });
+  await page.locator('[data-fdshop-media-item]').nth(1).locator('[data-fdshop-media-ordering]').fill('0');
+  await page.locator('[data-fdshop-media-item]').nth(1).getByRole('button', { name: 'Reihenfolge speichern' }).click();
+  await page.waitForLoadState('networkidle');
+  await page.getByRole('tab', { name: 'Medien' }).click();
+  page.once('dialog', dialog => dialog.accept());
+  await page.locator('[data-fdshop-media-item]').nth(1).getByRole('button', { name: 'Bild löschen' }).click();
+  await page.waitForLoadState('networkidle');
+  await page.getByRole('tab', { name: 'Medien' }).click();
+  await expect(page.locator('[data-fdshop-media-item]')).toHaveCount(1);
 
   await page.getByRole('tab', { name: 'Allgemein' }).click();
   await expect(page.locator('#jform_manufacturer_id option:checked')).toHaveText('E2E Hersteller Aktiv');
@@ -167,7 +215,7 @@ test('product invalid save, create, apply, save-close, mappings, stock, status a
   await expect(page.locator('#jform_sale_price')).toHaveValue('32.5');
   await expect(page.locator('#jform_discount_price')).toHaveValue('27.5');
   await page.getByRole('tab', { name: 'Medien' }).click();
-  await expect(page.getByText('Aktuelles Bild', { exact: true })).toBeVisible();
+  await expect(page.getByText('Produktbilder', { exact: true })).toBeVisible();
 
   await searchProduct(page, productSku);
   let row = matchingRow(page, productName);

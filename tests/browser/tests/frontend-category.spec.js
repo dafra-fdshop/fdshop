@@ -159,6 +159,36 @@ test('manual category card CSS refinements remain responsive', async ({ page, ba
   diagnostics.expectClean();
 });
 
+test('category selects real responsive derivatives while detail keeps standard media', async ({ page, baseURL }) => {
+  const diagnostics = await installDiagnostics(page, baseURL);
+  await page.route('https://i.ytimg.com/**', route => route.fulfill({ status: 200, contentType: 'image/svg+xml', body: '<svg xmlns="http://www.w3.org/2000/svg"/>' }));
+  const requested = [];
+  page.on('request', request => {
+    if (request.url().includes('e2e-media-')) requested.push(request.url());
+  });
+
+  await page.setViewportSize({ width: 390, height: 900 });
+  await openCategory(page);
+  const image = page.locator('[data-product-id="900100"] .fdshop-card__product-image');
+  await image.scrollIntoViewIfNeeded();
+  await expect.poll(() => image.evaluate(element => element.currentSrc)).toContain('e2e-media-mobile.svg');
+  expect(requested.some(url => url.includes('e2e-media-mobile.svg'))).toBe(true);
+  expect(requested.some(url => url.includes('e2e-media-small.svg'))).toBe(false);
+  expect(requested.some(url => url.includes('e2e-media-standard.svg'))).toBe(false);
+
+  requested.length = 0;
+  await page.setViewportSize({ width: 768, height: 900 });
+  await page.reload();
+  await expect.poll(() => image.evaluate(element => element.currentSrc)).toContain('e2e-media-small.svg');
+  expect(requested.some(url => url.includes('e2e-media-small.svg'))).toBe(true);
+  expect(requested.some(url => url.includes('e2e-media-mobile.svg'))).toBe(false);
+
+  const detailUrl = await page.locator('[data-product-id="900100"] a', { hasText: 'Details' }).getAttribute('href');
+  await page.goto(detailUrl);
+  await expect(page.locator('[data-fdshop-main-image]')).toHaveAttribute('src', /e2e-media-standard\.svg$/);
+  diagnostics.expectClean();
+});
+
 test('product detail is reachable and card grid responds with four to one columns', async ({ page, baseURL }) => {
   const diagnostics = await installDiagnostics(page, baseURL);
   await page.route('https://i.ytimg.com/**', route => route.fulfill({ status: 200, contentType: 'image/svg+xml', body: '<svg xmlns="http://www.w3.org/2000/svg"/>' }));
@@ -203,7 +233,7 @@ test('product detail renders gallery, video, manufacturer and public product inf
   const product = page.locator('.fdshop-product[data-product-id="900100"]');
 
   await expect(product.getByRole('heading', { level: 1 })).toHaveText('E2E Produkt Aktiv');
-  await expect(product.locator('[data-fdshop-main-image]')).toHaveAttribute('src', /e2e-fixture-product\.svg$/);
+  await expect(product.locator('[data-fdshop-main-image]')).toHaveAttribute('src', /e2e-media-standard\.svg$/);
   await expect(product.locator('[data-fdshop-thumbnail]')).toHaveCount(2);
   await expect(product.locator('[data-fdshop-main-stage]')).toHaveClass(/fdshop-product-visual--new/);
   await expect(product.locator('[data-fdshop-main-stage]')).toHaveClass(/is-primary/);

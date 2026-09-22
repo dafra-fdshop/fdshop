@@ -67,10 +67,12 @@ final class HtmlView extends BaseHtmlView
 
         foreach ($this->items as $item) {
             $item->detail_url = RouteHelper::getProductRoute((int) $item->id, (int) $category->id);
-            $item->image_url = $item->media['image']
-                ? $root . '/' . ltrim((string) $item->media['image'], '/')
+            $item->image_url = $item->media['standard']
+                ? $root . '/' . ltrim((string) $item->media['standard'], '/')
                 : $placeholder;
-            $item->image_is_placeholder = $item->media['image'] === null;
+            $item->image_small_url = $item->media['small'] ? $root . '/' . ltrim((string) $item->media['small'], '/') : null;
+            $item->image_mobile_url = $item->media['mobile'] ? $root . '/' . ltrim((string) $item->media['mobile'], '/') : null;
+            $item->image_is_placeholder = $item->media['standard'] === null;
             $item->price_formatted = $this->formatPrice((float) $item->current_price, (string) $item->currency);
             $item->regular_price_formatted = $this->formatPrice((float) $item->sale_price, (string) $item->currency);
             $item->stock_class = $stockClasses[(string) $item->in_stock] ?? 'fdshop-stock--none';
