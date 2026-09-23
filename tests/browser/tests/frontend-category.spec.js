@@ -144,7 +144,7 @@ test('manual category card CSS refinements remain responsive', async ({ page, ba
       };
     });
     expect(layout.mediaHeight).toBe(expectedHeight);
-    expect(layout.imageAlignment).toBe('end');
+    expect(layout.imageAlignment).toBe('flex-end');
     expect(layout.titleWhiteSpace).toBe('nowrap');
     expect(layout.titleOverflow).toBe('hidden');
     expect(layout.titleEllipsis).toBe('ellipsis');
