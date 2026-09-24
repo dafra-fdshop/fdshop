@@ -108,6 +108,7 @@ $filterData = ['facets' => $this->filterFacets, 'active' => $this->activeFilters
                             <?php endif; ?>
                         </a>
                         <div class="fdshop-card__ribbons" aria-label="Produktkennzeichnungen">
+                            <?php if ($item->visual_state === 'action') : ?><span class="fdshop-ribbon fdshop-ribbon--action">% Angebot</span><?php endif; ?>
                             <?php if ((int) $item->ribbon_new === 1) : ?><span class="fdshop-ribbon fdshop-ribbon--new">Neu</span><?php endif; ?>
                             <?php if ((int) $item->ribbon_hot === 1) : ?><span class="fdshop-ribbon fdshop-ribbon--hot">Hot</span><?php endif; ?>
                             <?php if ((int) $item->ribbon_bundle === 1) : ?><span class="fdshop-ribbon fdshop-ribbon--bundle">Bundle</span><?php endif; ?>

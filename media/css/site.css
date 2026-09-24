@@ -38,6 +38,7 @@
 .fdshop-card__media .fdshop-card__placeholder { width: 42%; height: 42%; padding: 0; transform: none; }
 .fdshop-card__ribbons { position: absolute; inset: .65rem auto auto .65rem; display: flex; flex-wrap: wrap; gap: .35rem; }
 .fdshop-ribbon { padding: .15rem .4rem; border-radius: 0; color: #fff; background: var(--secondary, #6c757d); font-size: .68rem; font-weight: 700; line-height: 1.25; text-transform: uppercase; }
+.fdshop-ribbon--action { z-index: 1; margin-right: .1rem; transform: rotate(-4deg); transform-origin: left center; color: #fff; background: #e30613; }
 .fdshop-ribbon--new { background: var(--success, #198754); } .fdshop-ribbon--hot { background: var(--danger, #dc3545); } .fdshop-ribbon--bundle { background: var(--info, #0dcaf0); color: var(--dark, #212529); }
 .fdshop-ribbon--package { background: #e0a721; }
 .fdshop-card__body { display: flex; flex-direction: column; gap: .5rem; padding: .7rem .5rem; background: transparent; }
@@ -63,8 +64,9 @@
 .fdshop-card__commerce { display: flex; min-width: 0; align-items: end; justify-content: space-between; gap: .5rem; margin-top: auto; }
 .fdshop-card__commerce .fdshop-card__price { min-width: 0; margin-top: 0; transition: font-size .2s ease, transform .2s ease; }
 .fdshop-card__price > strong { color: #e0a721; }
+.fdshop-card[data-visual-state="action"] .fdshop-card__price > strong { color: #dc0d1b; }
 .fdshop-card__price small { flex-basis: 100%; color: var(--fdshop-muted); font-size: .7rem; font-weight: 400; }
-.fdshop-card__regular-price { color: #dc3545; font-size: .85rem; text-decoration: line-through; transition: font-size .2s ease; }
+.fdshop-card__regular-price { color: #111; font-size: .85rem; text-decoration-line: line-through; text-decoration-color: #dc0d1b; transition: font-size .2s ease; }
 .fdshop-pagination { margin-block: 1.25rem; overflow-x: auto; } .fdshop-pagination .pagination { justify-content: center; margin: 0; }
 .fdshop-video { width: min(900px, calc(100vw - 2rem)); padding: 0; border: 0; }
 .fdshop-video::backdrop { background: rgb(0 0 0 / 70%); } .fdshop-video__header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .75rem 1rem; }
