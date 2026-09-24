@@ -1,8 +1,8 @@
 =====================================================================
-FDShop_Architektur_Struktur_Installation_V8
+FDShop_Architektur_Struktur_Installation_V9
 =====================================================================
 
-Status: VERBINDLICHE PROJEKTQUELLE Version: V8 Ersetzt:
+Status: VERBINDLICHE PROJEKTQUELLE Version: V9 Ersetzt:
 FDShop_Architektur_Struktur_Installation_V7 Stand: 24.09.2026
 
 ===================================================================== 1.
@@ -592,6 +592,16 @@ Architekturnachtrag Master-Media-Migration (Schema 0.0.26):
   nicht paketierten Docker-Artefaktverzeichnis.
 - Die Ausführung erzeugt keine zweite Bild-, Pfad- oder Media-Datenlogik.
 
+Architekturnachtrag FDShop Tools / Master-Bildimport (Schema 0.0.27):
+- Der geschützte Administratorbereich Tools stellt Upload, ZIP und direkten
+  SFTP-Stagingzugang für Masterbilder bereit. Der tatsächlich verwendete,
+  nicht öffentliche Stagingpfad wird transparent angezeigt.
+- CLI und Administrator verwenden MasterImageImportService als gemeinsamen
+  Analyse-, Status-, Idempotenz- und Importkern; ProductService bleibt die
+  einzige Bildverarbeitungs- und Media-Schreibpipeline.
+- Schreibende Browserläufe sind CSRF-/ACL-geschützt, POST-only und werden in
+  serverseitig gespeicherten, gesperrten Fünfer-Batches verarbeitet.
+
 =====================================================================
-ENDE DER QUELLE FDShop_Architektur_Struktur_Installation_V8
+ENDE DER QUELLE FDShop_Architektur_Struktur_Installation_V9
 =====================================================================

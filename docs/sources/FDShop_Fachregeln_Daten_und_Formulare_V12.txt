@@ -1,8 +1,8 @@
 =====================================================================
-FDShop_Fachregeln_Daten_und_Formulare_V11
+FDShop_Fachregeln_Daten_und_Formulare_V12
 =====================================================================
 
-Status: VERBINDLICHE PROJEKTQUELLE Priorität: SEHR HOCH Version: V11
+Status: VERBINDLICHE PROJEKTQUELLE Priorität: SEHR HOCH Version: V12
 
 Diese Quelle ersetzt vollständig:
 
@@ -2743,9 +2743,17 @@ die jeweils vorhandenen Pfade zurück. Im Produktdetail wird Standard bevorzugt,
 danach Small und Mobile. Gemeinsam referenzierte Dateien dürfen bei Löschung
 eines einzelnen Media-Datensatzes physisch nicht entfernt werden.
 
+Master-Bildimport:
+- Zulässige Masterdateien sind lesbare PNG-Dateien mit dem exakten, ohne
+  Groß-/Kleinschreibung ausgewerteten Namen fdXXXX.png; daraus folgt SKU FDXXXX.
+- Nur READY darf importiert werden. Vorhandene Medien, mehrdeutige SKUs,
+  geänderte Masterinhalte und State-Abweichungen werden nicht überschrieben.
+- Analyse/Dry-Run ist Standard; Browserimporte benötigen eine ausdrückliche
+  Auswahl. Staging-Cleanup berührt Produktmedien und Import-State nicht.
+
 =====================================================================
 ENDE DER QUELLE
 
-FDShop_Fachregeln_Daten_und_Formulare_V11
+FDShop_Fachregeln_Daten_und_Formulare_V12
 
-Status: VERBINDLICHE PROJEKTQUELLE Version: V11
+Status: VERBINDLICHE PROJEKTQUELLE Version: V12

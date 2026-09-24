@@ -194,3 +194,23 @@ test('Configuration: settings and fixture-backed lists are readable', async ({ p
   await page.getByRole('tab', { name: 'Bestellstatus' }).click();
   await expect(page.locator('#orderstatusList')).toContainText('E2E Bestellt');
 });
+
+test('Tools: Master-Bildimport is protected and opens in dry-run mode', async ({ page }) => {
+  await openView(page, 'tools');
+  await expect(page.getByRole('heading', { name: 'Master-Bildimport' })).toBeVisible();
+  await page.getByRole('link', { name: 'Master-Bildimport öffnen' }).click();
+  await expect(page).toHaveURL(/view=masterimageimport/);
+  await expect(page.getByText('Stagingpfad für SFTP:')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Ausgewählte Bilder importieren' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Staging vollständig leeren' })).toBeVisible();
+
+  const getWrite = await page.request.get('/administrator/index.php?option=com_fdshop&task=masterimageimport.cleanup');
+  expect(getWrite.status()).toBeGreaterThanOrEqual(400);
+
+  const missingToken = await page.request.post('/administrator/index.php?option=com_fdshop&task=masterimageimport.startBatch&format=json', {
+    form: { 'skus[0]': 'FD1300' },
+  });
+  const rejected = await missingToken.json();
+  expect(rejected.success).toBe(false);
+  expect(rejected.message).toMatch(/Token|Berechtigung/);
+});

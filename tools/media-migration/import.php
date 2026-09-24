@@ -147,7 +147,11 @@ function bootstrapJoomla(): array
     $app = $container->get(Joomla\Console\Application::class);
     Joomla\CMS\Factory::$application = $app;
     $component = $app->bootComponent('com_fdshop');
-    return [$container->get(Joomla\Database\DatabaseInterface::class), $component->getContainer()->get(FDShop\Component\FDShop\Administrator\Service\ProductServiceInterface::class)];
+    return [
+        $container->get(Joomla\Database\DatabaseInterface::class),
+        $component->getContainer()->get(FDShop\Component\FDShop\Administrator\Service\ProductServiceInterface::class),
+        $component->getContainer()->get(FDShop\Component\FDShop\Administrator\Service\MasterImageImportService::class),
+    ];
 }
 
 function mediaExistsAndMatches(object $db, array $entry): bool
@@ -190,58 +194,20 @@ function main(array $argv): int
     if (!is_dir($reportDir) && !mkdir($reportDir, 0775, true)) { throw new RuntimeException('Cannot create report directory.'); }
 
     $started = microtime(true); $inventory = inventoryMasters($masterDir); $fingerprint = masterFingerprint($inventory);
-    [$db, $service] = bootstrapJoomla();
-    $productQuery = $db->getQuery(true)->select(['p.id','d.sku'])->from($db->quoteName('#__fdshop_products','p'))
-        ->innerJoin($db->quoteName('#__fdshop_products_details','d') . ' ON d.product_id=p.id')->where($db->quoteName('d.sku') . " <> ''");
-    $db->setQuery($productQuery); $products = [];
-    foreach ($db->loadAssocList() ?: [] as $product) { $products[(string) $product['sku']][] = (int) $product['id']; }
-    $db->setQuery($db->getQuery(true)->select('*')->from($db->quoteName('#__fdshop_media'))->where($db->quoteName('media_type') . ' = ' . $db->quote('image')));
-    $mediaByProduct = []; foreach ($db->loadAssocList() ?: [] as $media) { $mediaByProduct[(int) $media['product_id']][] = $media; }
+    [$db, $productService, $importService] = bootstrapJoomla();
     $db->setQuery($db->getQuery(true)->select(['image_size_default','image_quality_default','image_size_small','image_quality_small','image_size_mobile','image_quality_mobile'])->from($db->quoteName('#__fdshop_config'))->where('id=1'));
     $config = $db->loadAssoc() ?: [];
-    $statePath = $reportDir . '/master_media_import_state.json'; $state = loadState($statePath); $rows = [];
-    foreach ($inventory as $item) {
-        $sku = $item['normalized_sku'];
-        if ($filters !== [] && ($sku === '' || !isset($filters[$sku]))) { continue; }
-        $status = STATUS_READY; $note = ''; $productId = 0; $existing = 0; $media = null;
-        if ($item['filename_valid'] !== '1') { $status = STATUS_INVALID_MASTER_FILENAME; }
-        elseif ($item['duplicate_sku'] === '1') { $status = STATUS_DUPLICATE_MASTER_SKU; }
-        elseif ($item['readable'] !== '1') { $status = STATUS_UNREADABLE_MASTER; }
-        elseif (!isset($products[$sku])) { $status = STATUS_PRODUCT_NOT_FOUND; }
-        elseif (count($products[$sku]) !== 1) { $status = STATUS_DUPLICATE_PRODUCT_SKU; }
-        else {
-            $productId = $products[$sku][0]; $existing = count($mediaByProduct[$productId] ?? []); $entry = $state['imports'][$sku] ?? null;
-            if (is_array($entry)) {
-                if (($entry['master_sha256'] ?? '') !== $item['sha256']) { $status = STATUS_MASTER_CHANGED_REVIEW; }
-                elseif (!mediaExistsAndMatches($db, $entry)) { $status = STATUS_IMPORT_STATE_MISMATCH; }
-                else { $status = STATUS_ALREADY_IMPORTED; $media = $entry; }
-            } elseif ($existing > 0) { $status = STATUS_EXISTING_MEDIA_REVIEW; }
-        }
-        if ($execute && $status === STATUS_READY) {
-            $createdMediaId = 0;
-            try {
-                $mediaId = $service->importProductImageFromLocalFile($productId, $item['source_path'], 0);
-                $createdMediaId = $mediaId;
-                $db->setQuery($db->getQuery(true)->select('*')->from($db->quoteName('#__fdshop_media'))->where('id=' . $mediaId));
-                $record = $db->loadAssoc();
-                if (!$record) { throw new RuntimeException('Created media record was not found.'); }
-                foreach (['path_standard','path_small','path_mobile','path_invoice'] as $field) { if (!is_file(JPATH_ROOT . $record[$field])) { throw new RuntimeException('Missing derivative: ' . $field); } }
-                $media = ['sku'=>$sku,'product_id'=>$productId,'master_filename'=>$item['master_filename'],'master_sha256'=>$item['sha256'],'media_id'=>$mediaId,
-                    'path_standard'=>$record['path_standard'],'path_small'=>$record['path_small'],'path_mobile'=>$record['path_mobile'],'path_invoice'=>$record['path_invoice'],
-                    'configuration'=>$config,'tool_version'=>TOOL_VERSION];
-                $state['imports'][$sku] = $media; writeStateAtomic($statePath, $state); $status = STATUS_IMPORTED;
-            } catch (Throwable $e) {
-                if ($createdMediaId > 0) {
-                    try { $service->deleteProductImage($productId, $createdMediaId); } catch (Throwable) { /* Report original failure; logs retain cleanup failure. */ }
-                }
-                $status = STATUS_PROCESSING_ERROR; $note = $e::class . ': ' . $e->getMessage();
-            }
-        }
-        $rows[] = $item + ['product_id'=>(string)$productId,'product_found'=>$productId > 0 ? '1':'0','existing_media_count'=>(string)$existing,
-            'planned_action'=>$status === STATUS_READY ? 'IMPORT' : 'SKIP','status'=>$status,'media_id'=>(string)($media['media_id'] ?? ''),
-            'standard_path'=>(string)($media['path_standard'] ?? ''),'small_path'=>(string)($media['path_small'] ?? ''),
-            'mobile_path'=>(string)($media['path_mobile'] ?? ''),'invoice_path'=>(string)($media['path_invoice'] ?? ''),'result_note'=>$note ?: $item['note']];
-        printf("%-8s %s\n", $sku ?: $item['master_filename'], $status);
+    $statePath = $reportDir . '/master_media_import_state.json';
+    $analysis = $importService->analyse($masterDir, $statePath); $rows = [];
+    $inventoryByName=[]; foreach($inventory as $item){$inventoryByName[$item['master_filename']]=$item;}
+    foreach ($analysis['items'] as $common) {
+        $sku=$common['sku']; if($filters!==[]&&($sku===''||!isset($filters[$sku])))continue;
+        $status=$common['status']; $result=[];
+        if($execute&&$status===STATUS_READY){$result=$importService->importOne($sku,$common['sha256'],0,$masterDir,$statePath);$status=$result['status'];}
+        $item=$inventoryByName[$common['filename']]??['master_filename'=>$common['filename'],'sha256'=>$common['sha256'],'note'=>$common['note']];
+        $media=[]; if(isset($result['media_id'])){$db->setQuery($db->getQuery(true)->select('*')->from($db->quoteName('#__fdshop_media'))->where('id='.(int)$result['media_id']));$media=$db->loadAssoc()?:[];}
+        $rows[]=$item+['product_id'=>(string)$common['product_id'],'product_found'=>$common['product_id']>0?'1':'0','existing_media_count'=>(string)$common['existing_media_count'],'planned_action'=>$common['status']===STATUS_READY?'IMPORT':'SKIP','status'=>$status,'media_id'=>(string)($result['media_id']??''),'standard_path'=>(string)($media['path_standard']??''),'small_path'=>(string)($media['path_small']??''),'mobile_path'=>(string)($media['path_mobile']??''),'invoice_path'=>(string)($media['path_invoice']??''),'result_note'=>(string)($result['message']??$common['message'])];
+        printf("%-8s %s\n",$sku?:$common['filename'],$status);
     }
     $inventoryFields=['master_filename','normalized_sku','file_size','width','height','has_alpha','sha256','readable','filename_valid','note'];
     $resultFields=['master_filename','master_sha256','normalized_sku','product_id','product_found','existing_media_count','planned_action','status','media_id','standard_path','small_path','mobile_path','invoice_path','result_note'];

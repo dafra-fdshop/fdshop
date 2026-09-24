@@ -1,0 +1,2 @@
+<?php defined('_JEXEC') or die; use Joomla\CMS\Router\Route; ?>
+<div class="card" style="max-width:36rem"><div class="card-body"><h2 class="card-title">Master-Bildimport</h2><p>Vorbereitete Produktbild-Master gesammelt prüfen und über die bestehende FDShop-Media-Pipeline importieren.</p><a class="btn btn-primary" href="<?php echo Route::_('index.php?option=com_fdshop&view=masterimageimport'); ?>">Master-Bildimport öffnen</a></div></div>

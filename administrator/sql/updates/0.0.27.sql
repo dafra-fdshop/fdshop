@@ -1,0 +1,2 @@
+-- FDShop 0.0.27
+-- No database structure changes are required for the Tools/Master-Bildimport integration.

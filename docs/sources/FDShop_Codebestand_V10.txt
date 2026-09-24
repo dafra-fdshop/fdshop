@@ -1,8 +1,8 @@
 =====================================================================
-FDShop_Codebestand_V9
+FDShop_Codebestand_V10
 =====================================================================
 
-Status: VERBINDLICHE PROJEKTQUELLE Version: V9 Ersetzt:
+Status: VERBINDLICHE PROJEKTQUELLE Version: V10 Ersetzt:
 FDShop_Codebestand_V8 Prüfdatum: 24.09.2026
 
 Technische Grundlage: Git-Repository dafra-fdshop/fdshop Branch: feature
@@ -589,6 +589,15 @@ Nachtrag Master-Media-Migration (Schema 0.0.26):
 - Tests decken Dateinamen-/Pfadsicherheit, reale Derivate, Admin-Galerie,
   responsive currentSrc-Auswahl, Produktdetail und Idempotenz ab.
 
+Nachtrag FDShop Tools / Master-Bildimport (Schema 0.0.27):
+- MasterImageImportService bündelt Inventar, Statusplanung, Hash-/Stateprüfung,
+  sicheren Einzelimport, Upload-/ZIP-Staging, Cleanup und Batchverarbeitung.
+- Die Administrator-Views tools und masterimageimport samt Controller, Model,
+  Template und JavaScript bilden Dry-Run, READY-Auswahl und sequenzielle
+  Fortschrittsverarbeitung ab.
+- Der CLI-Importer verwendet denselben Servicekern und behält seine
+  Maschinenreports sowie die ausdrücklichen Execute-Sicherungen bei.
+
 =====================================================================
-ENDE DER QUELLE FDShop_Codebestand_V9
+ENDE DER QUELLE FDShop_Codebestand_V10
 =====================================================================

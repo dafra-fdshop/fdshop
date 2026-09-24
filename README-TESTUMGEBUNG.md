@@ -45,6 +45,15 @@ FULL führt den gesamten Phase-2-Bestand aus. Jede CRUD-Suite erhält einen fris
 scripts/fdshop test-full
 ```
 
+## Master-Bildimport
+
+Der geschützte Administratorbereich `FDShop → Tools → Master-Bildimport` verwendet denselben Importkern wie
+`tools/media-migration/import.php`. Kleine Mengen können als PNG/ZIP hochgeladen werden. Große Bestände werden
+per SFTP in den auf der Seite angezeigten, nicht öffentlichen Stagingpfad gelegt. Die Bestandsanalyse ist stets
+ein Dry-Run; nur explizit ausgewählte `READY`-Einträge werden in serverseitig gespeicherten Fünfer-Batches über
+den bestehenden `ProductService` importiert. Bereits vorhandene Produktbilder werden nicht ersetzt. Das Leeren
+des Stagings entfernt ausschließlich bereitgestellte Masterdateien, nicht die erzeugten Medien oder den Import-State.
+
 FULL ist erforderlich bei Installer-, Schema-/Update-SQL-, breit wirkenden Service-/Businesslogik-, zentralen Model-, Paketbau- oder Testinfrastrukturänderungen, vor größeren Main-Merges und für Release-/Gesamtabnahmen. Bei isolierten CSS-, Text- oder Templatekorrekturen reichen üblicherweise QUICK plus passende STANDARD-Suite.
 
 ## Einzelbefehle

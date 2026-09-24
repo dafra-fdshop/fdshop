@@ -13,6 +13,7 @@ use FDShop\Component\FDShop\Administrator\Service\CouponService;
 use FDShop\Component\FDShop\Administrator\Service\CouponServiceInterface;
 use FDShop\Component\FDShop\Administrator\Service\ManufacturerService;
 use FDShop\Component\FDShop\Administrator\Service\ManufacturerServiceInterface;
+use FDShop\Component\FDShop\Administrator\Service\MasterImageImportService;
 use FDShop\Component\FDShop\Administrator\Service\BundleService;
 use FDShop\Component\FDShop\Administrator\Service\BundleServiceInterface;
 use FDShop\Component\FDShop\Administrator\Service\ProductService;
@@ -128,6 +129,14 @@ return new class () implements ServiceProviderInterface {
             function (Container $container): ProductService {
                 return $container->get(ProductServiceInterface::class);
             }
+        );
+
+        $container->set(
+            MasterImageImportService::class,
+            fn (Container $container): MasterImageImportService => new MasterImageImportService(
+                $container->get(DatabaseInterface::class),
+                $container->get(ProductServiceInterface::class)
+            )
         );
 
         $container->set(

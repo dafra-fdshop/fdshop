@@ -1,6 +1,6 @@
 # FDShop Master Media Migration Importer
 
-Projektinternes, serverseitiges Migrationswerkzeug für freigegebene PNG-Master. Es gehört nicht zum installierbaren Joomla-Paket und ersetzt nicht den normalen Admin-Upload.
+Projektinternes CLI für freigegebene PNG-Master. Der installierbare Administratorbereich `FDShop → Tools → Master-Bildimport` und dieses CLI verwenden denselben `MasterImageImportService`; beide ersetzen nicht den normalen Produkteditor-Upload.
 
 Der Importer leitet ausschließlich `fdXXXX.png`/`FDXXXX.png` zu `FDXXXX` ab, sucht das bestehende Produkt exakt per SKU und übergibt die lokale Quelle an `ProductService::importProductImageFromLocalFile()`. Admin-Upload und Import verwenden damit denselben Media-V1-Kern für Konfiguration, Geometrie, WebP/PNG, Pfade, DB-Zuordnung, Ordering und Primary.
 

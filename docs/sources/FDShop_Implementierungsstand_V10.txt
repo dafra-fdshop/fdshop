@@ -1,8 +1,8 @@
 =====================================================================
-FDShop_Implementierungsstand_V9
+FDShop_Implementierungsstand_V10
 =====================================================================
 
-Status: VERBINDLICHE PROJEKTQUELLE Version: V9 Ersetzt:
+Status: VERBINDLICHE PROJEKTQUELLE Version: V10 Ersetzt:
 FDShop_Implementierungsstand_V8 Prüfdatum: 24.09.2026
 
 Technische Grundlage: Git-Repository dafra-fdshop/fdshop Branch: feature
@@ -569,6 +569,14 @@ Nachtrag Master-Media-Migration (Schema 0.0.26):
 - Vollständiger Massenimport: bewusst nicht ausgeführt, da der aktuelle
   Fixture-Produktbestand für 509 der 514 Master keine Ziel-SKU enthält.
 
+Nachtrag FDShop Tools / Master-Bildimport (Schema 0.0.27):
+- Permanente, ACL-/CSRF-geschützte Adminoberfläche unter FDShop Tools:
+  umgesetzt mit Dry-Run, Statusmatrix, Mehrfachauswahl und serverseitigen
+  Fünfer-Batches.
+- PNG-/ZIP-Upload und dokumentierter direkter SFTP-Stagingpfad: umgesetzt.
+- Gemeinsamer Kern für CLI und Admin, unveränderte ProductService-Pipeline,
+  persistenter Import-State und konfliktfreies Cleanup: umgesetzt.
+
 =====================================================================
-ENDE DER QUELLE FDShop_Implementierungsstand_V9
+ENDE DER QUELLE FDShop_Implementierungsstand_V10
 =====================================================================
