@@ -68,6 +68,8 @@ services:
       - joomla_data:/var/www/html
       - ./:/workspace/fdshop:ro
       - ./.docker/artifacts:/workspace/artifacts:ro
+      - ./.docker/media-migration:/workspace/media-migration-artifacts
+      - ${FDSHOP_MEDIA_MASTERS_DIR:-/home/daniel/projects/fdshop-vm-migration-work/masters}:/workspace/fdshop-media-masters:ro
     healthcheck:
       test: ["CMD-SHELL", "curl --fail --silent --show-error http://127.0.0.1/ >/dev/null"]
       interval: 10s

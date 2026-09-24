@@ -944,13 +944,27 @@ class ProductService implements ProductServiceInterface
             return;
         }
 
-        $this->assertGdAvailable();
-
         if (!is_uploaded_file($file['tmp_name'] ?? '')) {
             throw new RuntimeException('Die hochgeladene Bilddatei ist ungültig.');
         }
 
-        $imageInfo = @getimagesize($file['tmp_name']);
+        $this->processProductImageFile($productId, (string) $file['tmp_name'], $userId);
+    }
+
+    public function importProductImageFromLocalFile(int $productId, string $sourcePath, int $userId): int
+    {
+        if ($productId < 1 || !is_file($sourcePath) || !is_readable($sourcePath)) {
+            throw new InvalidArgumentException('Die lokale Produktbildquelle ist ungültig.');
+        }
+
+        return $this->processProductImageFile($productId, $sourcePath, $userId);
+    }
+
+    private function processProductImageFile(int $productId, string $sourcePath, int $userId): int
+    {
+        $this->assertGdAvailable();
+
+        $imageInfo = @getimagesize($sourcePath);
 
         if ($imageInfo === false || empty($imageInfo['mime'])) {
             throw new RuntimeException('Die hochgeladene Datei ist kein gültiges Bild.');
@@ -975,7 +989,7 @@ class ProductService implements ProductServiceInterface
             $this->ensureDirectory(JPATH_ROOT . $paths['mobile']);
             $this->ensureDirectory(JPATH_ROOT . $paths['invoice']);
 
-            $sourceImage = $this->createImageResource($file['tmp_name'], $sourceMime);
+            $sourceImage = $this->createImageResource($sourcePath, $sourceMime);
 
             if (!$sourceImage) {
                 throw new RuntimeException('Das Bild konnte mit GD nicht geladen werden.');
@@ -1029,7 +1043,7 @@ class ProductService implements ProductServiceInterface
 
             imagedestroy($sourceImage);
 
-            $this->insertMediaRecord(
+            return $this->insertMediaRecord(
                 $productId,
                 $standardFileName,
                 'image/webp',
@@ -1229,7 +1243,7 @@ class ProductService implements ProductServiceInterface
         string $pathMobile,
         string $pathInvoice,
         int $userId
-    ): void {
+    ): int {
         $created = Factory::getDate()->toSql();
 
         $query = $this->db->getQuery(true)
@@ -1283,6 +1297,8 @@ class ProductService implements ProductServiceInterface
             );
 
         $this->db->setQuery($insertQuery)->execute();
+
+        return (int) $this->db->insertid();
     }
 
     private function getYoutubeMediaUrls(int $productId): array

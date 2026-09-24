@@ -1,9 +1,9 @@
 =====================================================================
-FDShop_Architektur_Struktur_Installation_V7
+FDShop_Architektur_Struktur_Installation_V8
 =====================================================================
 
-Status: VERBINDLICHE PROJEKTQUELLE Version: V7 Ersetzt:
-FDShop_Architektur_Struktur_Installation_V6 Stand: 22.09.2026
+Status: VERBINDLICHE PROJEKTQUELLE Version: V8 Ersetzt:
+FDShop_Architektur_Struktur_Installation_V7 Stand: 24.09.2026
 
 ===================================================================== 1.
 ZWECK UND ZIELPLATTFORM
@@ -581,6 +581,17 @@ Architekturnachtrag Produkt-Media V1 (Schema 0.0.25):
 - Physische Löschung ist auf images/FDShop/products begrenzt, prüft Realpfade
   und lässt gemeinsam referenzierte Dateien bestehen.
 
+Architekturnachtrag Master-Media-Migration (Schema 0.0.26):
+- Der Migrations-CLI liegt außerhalb des installierbaren Komponentenpakets und
+  greift serverseitig über ProductService auf die bestehende Media-Pipeline zu.
+- Admin-Upload und lokaler Migrationsimport teilen denselben privaten
+  Verarbeitungsweg; Upload-Verifikation und lokale Dateiverifikation bleiben
+  getrennte Eintrittsprüfungen.
+- Masterquellen werden ausschließlich read-only in den Entwicklungscontainer
+  eingebunden. Arbeitsreports und Zustandsdatei liegen in einem separaten,
+  nicht paketierten Docker-Artefaktverzeichnis.
+- Die Ausführung erzeugt keine zweite Bild-, Pfad- oder Media-Datenlogik.
+
 =====================================================================
-ENDE DER QUELLE FDShop_Architektur_Struktur_Installation_V7
+ENDE DER QUELLE FDShop_Architektur_Struktur_Installation_V8
 =====================================================================

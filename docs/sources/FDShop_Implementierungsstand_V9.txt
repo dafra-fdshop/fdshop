@@ -1,9 +1,9 @@
 =====================================================================
-FDShop_Implementierungsstand_V8
+FDShop_Implementierungsstand_V9
 =====================================================================
 
-Status: VERBINDLICHE PROJEKTQUELLE Version: V8 Ersetzt:
-FDShop_Implementierungsstand_V7 Prüfdatum: 22.09.2026
+Status: VERBINDLICHE PROJEKTQUELLE Version: V9 Ersetzt:
+FDShop_Implementierungsstand_V8 Prüfdatum: 24.09.2026
 
 Technische Grundlage: Git-Repository dafra-fdshop/fdshop Branch: feature
 Technischer Referenzcommit: c970bca1d92673b0cdc4ee841acf0d2c583a88ee
@@ -558,6 +558,17 @@ Nachtrag Produkt-Media V1 (Schema 0.0.25):
   umgesetzt; bestehende Regressionen bleiben Bestandteil der Abnahme.
 - Rückwirkende Regeneration vorhandener Medien: bewusst nicht Bestandteil.
 
+Nachtrag Master-Media-Migration (Schema 0.0.26):
+- Externer, standardmäßig schreibgeschützter CLI-Importer mit Inventar,
+  Plan, Ergebnis, Zusammenfassung und atomarem Zustandsnachweis: umgesetzt.
+- Strikte SKU-Zuordnung, explizite Ausführungsfreigabe, Pfad-/Symlinkschutz,
+  Review-Zustände und Hashprüfung: umgesetzt und gezielt geprüft.
+- Fünf repräsentative Masterbilder wurden über ProductService verarbeitet;
+  Derivate, Admin-Galerie, Kategorie Desktop/Mobil, Produktdetail und zweiter
+  idempotenter Lauf wurden real geprüft.
+- Vollständiger Massenimport: bewusst nicht ausgeführt, da der aktuelle
+  Fixture-Produktbestand für 509 der 514 Master keine Ziel-SKU enthält.
+
 =====================================================================
-ENDE DER QUELLE FDShop_Implementierungsstand_V8
+ENDE DER QUELLE FDShop_Implementierungsstand_V9
 =====================================================================

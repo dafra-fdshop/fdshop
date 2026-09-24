@@ -1,9 +1,9 @@
 =====================================================================
-FDShop_Codebestand_V8
+FDShop_Codebestand_V9
 =====================================================================
 
-Status: VERBINDLICHE PROJEKTQUELLE Version: V8 Ersetzt:
-FDShop_Codebestand_V7 Prüfdatum: 22.09.2026
+Status: VERBINDLICHE PROJEKTQUELLE Version: V9 Ersetzt:
+FDShop_Codebestand_V8 Prüfdatum: 24.09.2026
 
 Technische Grundlage: Git-Repository dafra-fdshop/fdshop Branch: feature
 Technischer Referenzcommit: c970bca1d92673b0cdc4ee841acf0d2c583a88ee
@@ -577,6 +577,18 @@ Nachtrag Produkt-Media V1 (Schema 0.0.25):
 - Media-CRUD- und Frontendtests prüfen Formate, Pixelgrenzen, Transparenz,
   Fallbacks, Derivatauswahl, Galeriebedienung und Bereinigung.
 
+Nachtrag Master-Media-Migration (Schema 0.0.26):
+- ProductServiceInterface bietet einen serverseitigen lokalen Import-Einstieg,
+  der nach Prüfung einer lesbaren lokalen Datei denselben zentralen
+  Bildverarbeitungskern wie der bestehende Admin-Upload verwendet.
+- tools/media-migration/import.php inventarisiert strikt benannte Masterdateien,
+  plant standardmäßig schreibgeschützt und führt nur mit --execute plus --sku
+  oder ausdrücklichem --all aus.
+- Der externe Importer prüft SKU-Eindeutigkeit, vorhandene Medien, Hashzustand,
+  Pfadgrenzen und Symlinks und erzeugt atomare CSV-/JSON-/Text-Arbeitsreports.
+- Tests decken Dateinamen-/Pfadsicherheit, reale Derivate, Admin-Galerie,
+  responsive currentSrc-Auswahl, Produktdetail und Idempotenz ab.
+
 =====================================================================
-ENDE DER QUELLE FDShop_Codebestand_V8
+ENDE DER QUELLE FDShop_Codebestand_V9
 =====================================================================

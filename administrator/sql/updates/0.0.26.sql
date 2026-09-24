@@ -1,0 +1,2 @@
+-- Schema marker for the ProductService local-file media import entry point.
+-- No database structure changes are required for 0.0.26.

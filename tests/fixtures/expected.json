@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "0.0.25",
+  "schemaVersion": "0.0.26",
   "counts": {
     "manufacturers": 2, "categories": 4, "buyer_groups": 3,
     "products": 10, "products_details": 10,

@@ -49,4 +49,6 @@ interface ProductServiceInterface
     public function updateImageOrdering(int $productId, int $mediaId, int $ordering): void;
 
     public function deleteProductImage(int $productId, int $mediaId): void;
+
+    public function importProductImageFromLocalFile(int $productId, string $sourcePath, int $userId): int;
 }
