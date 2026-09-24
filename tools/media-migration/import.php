@@ -69,7 +69,6 @@ function inventoryMasters(string $masterDir): array
                             if (((imagecolorat($image, $x, $y) >> 24) & 0x7f) > 0) { $alpha = true; break; }
                         }
                     }
-                    imagedestroy($image);
                 }
             } else {
                 $note = 'File content is not a readable PNG.';

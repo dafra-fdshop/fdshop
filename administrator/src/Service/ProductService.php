@@ -1041,8 +1041,6 @@ class ProductService implements ProductServiceInterface
             );
             $createdFiles[] = JPATH_ROOT . $invoiceRelativePath;
 
-            imagedestroy($sourceImage);
-
             return $this->insertMediaRecord(
                 $productId,
                 $standardFileName,
@@ -1193,13 +1191,10 @@ class ProductService implements ProductServiceInterface
             $sourceWidth,
             $sourceHeight
         )) {
-            imagedestroy($targetImage);
             throw new RuntimeException('Die Bildskalierung ist fehlgeschlagen.');
         }
 
         $saved = $this->saveImageResource($targetImage, $outputMime, $targetPath, $quality);
-
-        imagedestroy($targetImage);
 
         if (!$saved) {
             throw new RuntimeException('Die Bilddatei konnte nicht gespeichert werden: ' . $targetPath);
