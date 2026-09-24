@@ -14,7 +14,7 @@ cd "$REPO_ROOT"; [[ -f .env ]] || fail '.env missing'; set -a; source .env; set 
 [[ "${MARIADB_DATABASE:-}" == fdshop ]] || fail 'unexpected database'
 [[ "$(compose exec -T joomla printenv JOOMLA_DB_HOST)" == db:3306 ]] || fail 'external database host'
 [[ "$(compose ps --format json db | grep -o '"Project":"[^"]*"' | head -1 | cut -d'"' -f4)" == fdshop ]] || fail 'unexpected Compose project'
-for table in manufacturers categories buyer_groups products products_details product_category_map product_buyer_group_map user_buyer_group_map media bundles bundle_items bundle_discount_rules saved_bundles saved_bundle_items cart_bundles cart_bundle_items coupons coupon_user_map coupon_buyer_group_map coupon_product_map coupon_category_map shipments payment_methods order_statuses orders order_items order_bundles order_bundle_items order_history order_status_history filters filter_ranges filter_category_map filter_range_category_map filter_options filter_option_category_map product_filter_option_map; do assert_count "$table"; done
+for table in manufacturers categories buyer_groups products products_details product_category_map product_buyer_group_map user_buyer_group_map media bundles bundle_items bundle_discount_rules saved_bundles saved_bundle_items cart_bundles cart_bundle_items coupons coupon_user_map coupon_buyer_group_map coupon_product_map coupon_category_map shipments payment_methods order_statuses orders order_items order_bundles order_bundle_items order_history order_status_history order_stock_allocations filters filter_ranges filter_category_map filter_range_category_map filter_options filter_option_category_map product_filter_option_map; do assert_count "$table"; done
 assert_sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_price_calc_rules;" 0 'price calculation rules not reset'
 assert_sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_product_prices;" 0 'product prices not reset'
 assert_sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_product_prices_research;" 0 'price research not reset'
@@ -49,7 +49,7 @@ assert_sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_coupon_buyer_group_ma
 assert_sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_coupon_user_map WHERE coupon_id=900507;" 1 'coupon user mapping'
 assert_sql "SELECT GROUP_CONCAT(published ORDER BY ordering SEPARATOR ',') FROM ${JOOMLA_DB_PREFIX}fdshop_shipments;" '1,0' 'shipment states/order'
 assert_sql "SELECT GROUP_CONCAT(published ORDER BY ordering SEPARATOR ',') FROM ${JOOMLA_DB_PREFIX}fdshop_payment_methods;" '1,0' 'payment states/order'
-assert_sql "SELECT GROUP_CONCAT(is_active ORDER BY ordering SEPARATOR ',') FROM ${JOOMLA_DB_PREFIX}fdshop_order_statuses;" '1,1,0' 'order status states/order'
+assert_sql "SELECT GROUP_CONCAT(is_active ORDER BY ordering SEPARATOR ',') FROM ${JOOMLA_DB_PREFIX}fdshop_order_statuses;" '1,1,1,0' 'order status states/order'
 assert_sql "SELECT GROUP_CONCAT(CONCAT(order_number,':',has_bundle) ORDER BY id SEPARATOR ',') FROM ${JOOMLA_DB_PREFIX}fdshop_orders;" 'E2E-ORDER-NORMAL:0,E2E-ORDER-BUNDLE:1' 'order snapshots'
 assert_sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_order_bundle_items WHERE order_bundle_id=900820;" 2 'order bundle snapshots'
 compose exec -T joomla test -f /var/www/html/images/FDShop/products/e2e-fixture-product.svg || fail 'synthetic image missing'

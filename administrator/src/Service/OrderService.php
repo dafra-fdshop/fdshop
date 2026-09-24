@@ -9,12 +9,12 @@ use RuntimeException;
 
 final class OrderService implements OrderServiceInterface
 {
-    public function __construct(private readonly DatabaseInterface $db) {}
+    public function __construct(private readonly DatabaseInterface $db, private readonly OrderNotificationService $notifications) {}
 
     public function addItem(int $orderId, int $productId, float $quantity = 1.0): int
     {
         $this->validIds($orderId, $productId); $this->validQuantity($quantity);
-        $order = $this->order($orderId); $product = $this->product($productId);
+        $order = $this->order($orderId); $this->assertItemsEditable($order); $product = $this->product($productId);
         $regular = (float) $product->sale_price;
         $discount = (int) $product->discount_active === 1 && (float) $product->discount_price > 0 ? (float) $product->discount_price : 0.0;
         $gross = $discount > 0 ? $discount : $regular;
@@ -40,7 +40,7 @@ final class OrderService implements OrderServiceInterface
 
     public function removeItem(int $orderId, int $orderItemId): void
     {
-        $item=$this->item($orderId,$orderItemId,true); $this->db->transactionStart();
+        $this->assertItemsEditable($this->order($orderId)); $item=$this->item($orderId,$orderItemId,true); $this->db->transactionStart();
         try {
             $q=$this->db->getQuery(true)->update($this->db->quoteName('#__fdshop_order_items'))->set($this->db->quoteName('is_removed').' = 1')->where('id = '.$orderItemId)->where('order_id = '.$orderId);
             $this->db->setQuery($q)->execute(); $this->recalculateGrandTotal($orderId);
@@ -51,7 +51,7 @@ final class OrderService implements OrderServiceInterface
 
     public function changeItemQuantity(int $orderId, int $orderItemId, float $quantity): void
     {
-        $this->validQuantity($quantity); $item=$this->item($orderId,$orderItemId,true); $old=(float)$item->quantity;
+        $this->validQuantity($quantity); $this->assertItemsEditable($this->order($orderId)); $item=$this->item($orderId,$orderItemId,true); $old=(float)$item->quantity;
         $this->db->transactionStart();
         try {
             $q=$this->db->getQuery(true)->update($this->db->quoteName('#__fdshop_order_items'))
@@ -83,13 +83,18 @@ final class OrderService implements OrderServiceInterface
         $date=Factory::getDate()->toSql(); $user=(int)Factory::getApplication()->getIdentity()->id; $comment=trim((string)$comment);
         $this->db->transactionStart();
         try {
+            $this->db->setQuery('SELECT id FROM '.$this->db->quoteName('#__fdshop_orders').' WHERE id='.(int)$orderId.' FOR UPDATE')->loadResult();
+            $this->transitionStock($orderId,(string)($order->stock_state??'unknown'),(string)$status->stock_action,$date);
             $q=$this->db->getQuery(true)->update($this->db->quoteName('#__fdshop_orders'))->set('order_status_id = '.$newStatusId)->set('order_status = '.$this->db->quote($status->status_code))->set('modified = '.$this->db->quote($date))->where('id = '.$orderId);
             $this->db->setQuery($q)->execute();
             $statusHistory = (object) ['order_id'=>$orderId,'old_status_id'=>$old ?: null,'new_status_id'=>$newStatusId,'comment'=>$comment ?: null,'is_system_change'=>0,'changed_at'=>$date,'changed_by'=>$user];
             $this->db->insertObject('#__fdshop_order_status_history', $statusHistory);
             $text=sprintf('%s → %s',(string)($order->status_name ?: $order->order_status),$status->status_name).($comment !== '' ? ': '.$comment : '');
             $this->writeOrderHistory($orderId,'status_changed','Status geändert',$text,'order_status',$newStatusId,false);
-            $this->db->transactionCommit(); return true;
+            $this->db->transactionCommit();
+            $warnings=$this->notifications->sendForStatus($orderId,$newStatusId);
+            if($warnings!==[]){$q=$this->db->getQuery(true)->update($this->db->quoteName('#__fdshop_orders'))->set('mail_warning='.$this->db->quote(implode(' ',$warnings)))->where('id='.$orderId);$this->db->setQuery($q)->execute();}
+            return true;
         } catch (\Throwable $e) { $this->db->transactionRollback(); throw $e; }
     }
 
@@ -135,7 +140,28 @@ final class OrderService implements OrderServiceInterface
     }
     private function status(int $id): object
     {
-        if($id<=0) throw new InvalidArgumentException('Ungültiger Bestellstatus.'); $q=$this->db->getQuery(true)->select(['id','status_code','status_name'])->from($this->db->quoteName('#__fdshop_order_statuses'))->where('id = '.$id); $this->db->setQuery($q); $row=$this->db->loadObject(); if(!$row) throw new RuntimeException('Der Bestellstatus wurde nicht gefunden.'); return $row;
+        if($id<=0) throw new InvalidArgumentException('Ungültiger Bestellstatus.'); $q=$this->db->getQuery(true)->select(['id','status_code','status_name','stock_action','notify_seller','notify_buyer','create_invoice','seller_email_mode','seller_email_address','buyer_email_mode'])->from($this->db->quoteName('#__fdshop_order_statuses'))->where('id = '.$id)->where('is_active = 1'); $this->db->setQuery($q); $row=$this->db->loadObject(); if(!$row) throw new RuntimeException('Der aktive Bestellstatus wurde nicht gefunden.'); return $row;
+    }
+    private function assertItemsEditable(object $order): void { if(in_array((string)($order->stock_state??''),['reserved','deducted'],true)) throw new RuntimeException('Lagerrelevante Positionen einer reservierten oder abgezogenen Bestellung dürfen in V1 nicht verändert werden.'); }
+    private function transitionStock(int $orderId,string $current,string $action,string $date): void
+    {
+        if($current==='unknown') { if($action!=='none') throw new RuntimeException('Die Lagerwirkung dieser Legacy-Bestellung ist unbekannt; der Statuswechsel wurde sicher blockiert.'); return; }
+        if($action==='none') return;
+        $target=match($action){'reserve'=>'reserved','deduct'=>'deducted','available'=>'available',default=>throw new RuntimeException('Ungültige Lageraktion im Bestellstatus.')};
+        if($current===$target)return;
+        if($current==='deducted' && $target!=='deducted')throw new RuntimeException('Bereits abgezogener Bestand kann in V1 nicht automatisch zurückgebucht werden.');
+        $q=$this->db->getQuery(true)->select('*')->from($this->db->quoteName('#__fdshop_order_stock_allocations'))->where('order_id='.(int)$orderId)->order('product_id ASC');$this->db->setQuery($q);$allocations=(array)$this->db->loadObjectList();
+        if($allocations===[])throw new RuntimeException('Für diese Bestellung existiert keine sichere Lagerzuordnung.');
+        foreach($allocations as $a){$this->db->setQuery('SELECT product_id FROM '.$this->db->quoteName('#__fdshop_products_details').' WHERE product_id='.(int)$a->product_id.' FOR UPDATE')->loadResult();$qty=(float)$a->physical_quantity;
+            if($target==='reserved' && $current==='available'){$set='reserved_quantity=reserved_quantity+'.$qty;}
+            elseif($target==='available' && $current==='reserved'){$set='reserved_quantity=GREATEST(0,reserved_quantity-'.$qty.')';}
+            elseif($target==='deducted' && $current==='reserved'){$set='reserved_quantity=GREATEST(0,reserved_quantity-'.$qty.'), stock_quantity=stock_quantity-'.$qty;}
+            elseif($target==='deducted' && $current==='available'){$set='stock_quantity=stock_quantity-'.$qty;}
+            else throw new RuntimeException('Dieser Lagerzustandswechsel ist in V1 nicht sicher automatisierbar.');
+            $q=$this->db->getQuery(true)->update($this->db->quoteName('#__fdshop_products_details'))->set($set)->where('product_id='.(int)$a->product_id);$this->db->setQuery($q)->execute();
+            $q=$this->db->getQuery(true)->update($this->db->quoteName('#__fdshop_order_stock_allocations'))->set('stock_state='.$this->db->quote($target))->set('modified='.$this->db->quote($date))->where('id='.(int)$a->id);$this->db->setQuery($q)->execute();}
+        $q=$this->db->getQuery(true)->update($this->db->quoteName('#__fdshop_orders'))->set('stock_state='.$this->db->quote($target))->where('id='.(int)$orderId);$this->db->setQuery($q)->execute();
+        $this->writeOrderHistory($orderId,'stock_changed','Lagerwirkung geändert',$current.' → '.$target,'stock',null,true);
     }
     private function taxRate(): float { $q=$this->db->getQuery(true)->select('general_vat_rate')->from($this->db->quoteName('#__fdshop_config'))->where('id = 1'); $this->db->setQuery($q); return (float)$this->db->loadResult(); }
     private function validIds(int ...$ids): void { foreach($ids as $id) if($id<=0) throw new InvalidArgumentException('Ungültige Datensatz-ID.'); }

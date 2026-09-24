@@ -14,6 +14,7 @@ final class HtmlView extends BaseHtmlView
     public array $cart = [];
     public object $config;
     public string $placeholderImage;
+    public string $submissionId;
 
     public function display($tpl = null): void
     {
@@ -21,6 +22,7 @@ final class HtmlView extends BaseHtmlView
         $this->cart = $model->getCartData();
         $this->config = $model->getConfig();
         $this->placeholderImage = rtrim(Uri::root(true), '/') . '/media/com_fdshop/images/product-placeholder.svg';
+        $this->submissionId = $this->uuid();
 
         foreach ($this->cart['items'] as $item) {
                 $item->product_url = RouteHelper::getProductRoute((int) $item->product_id, (int) $item->category_id);
@@ -45,5 +47,11 @@ final class HtmlView extends BaseHtmlView
     private function formatQuantity(float $quantity): string
     {
         return rtrim(rtrim(number_format($quantity, 3, '.', ''), '0'), '.');
+    }
+
+    private function uuid(): string
+    {
+        $bytes=random_bytes(16); $bytes[6]=chr((ord($bytes[6])&0x0f)|0x40); $bytes[8]=chr((ord($bytes[8])&0x3f)|0x80); $hex=bin2hex($bytes);
+        return substr($hex,0,8).'-'.substr($hex,8,4).'-'.substr($hex,12,4).'-'.substr($hex,16,4).'-'.substr($hex,20);
     }
 }

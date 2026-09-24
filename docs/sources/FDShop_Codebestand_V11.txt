@@ -1,9 +1,9 @@
 =====================================================================
-FDShop_Codebestand_V10
+FDShop_Codebestand_V11
 =====================================================================
 
-Status: VERBINDLICHE PROJEKTQUELLE Version: V10 Ersetzt:
-FDShop_Codebestand_V8 Prüfdatum: 24.09.2026
+Status: VERBINDLICHE PROJEKTQUELLE Version: V11 Ersetzt:
+FDShop_Codebestand_V10 Prüfdatum: 24.09.2026
 
 Technische Grundlage: Git-Repository dafra-fdshop/fdshop Branch: feature
 Technischer Referenzcommit: c970bca1d92673b0cdc4ee841acf0d2c583a88ee
@@ -598,6 +598,17 @@ Nachtrag FDShop Tools / Master-Bildimport (Schema 0.0.27):
 - Der CLI-Importer verwendet denselben Servicekern und behält seine
   Maschinenreports sowie die ausdrücklichen Execute-Sicherungen bei.
 
+Nachtrag Checkout / Order Lifecycle V1 (Schema 0.0.28):
+- CheckoutService materialisiert den final serverseitig neu berechneten
+  Warenkorb transaktional in Order-, Positions- und Bundle-Snapshots.
+- UUID-Submission-ID, achtstellige JJMMXXXX-Bestellnummer, Produktlocks,
+  Couponlock/-Usage und Order-Stock-Allocations sichern Wiederholung und
+  Nebenläufigkeit.
+- OrderService führt Status-Lagerübergänge idempotent anhand des gespeicherten
+  Order-Lagerzustands aus; unsichere Legacy-Rückbuchungen werden blockiert.
+- OrderNotificationService führt konfigurierte Käufer-/Verkäufermails nach
+  Commit aus und protokolliert Erfolg, Fehler und Invoice-Pending.
+
 =====================================================================
-ENDE DER QUELLE FDShop_Codebestand_V10
+ENDE DER QUELLE FDShop_Codebestand_V11
 =====================================================================

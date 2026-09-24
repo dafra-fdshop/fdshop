@@ -1,9 +1,9 @@
 =====================================================================
-FDShop_Architektur_Struktur_Installation_V9
+FDShop_Architektur_Struktur_Installation_V10
 =====================================================================
 
-Status: VERBINDLICHE PROJEKTQUELLE Version: V9 Ersetzt:
-FDShop_Architektur_Struktur_Installation_V7 Stand: 24.09.2026
+Status: VERBINDLICHE PROJEKTQUELLE Version: V10 Ersetzt:
+FDShop_Architektur_Struktur_Installation_V9 Stand: 24.09.2026
 
 ===================================================================== 1.
 ZWECK UND ZIELPLATTFORM
@@ -602,6 +602,16 @@ Architekturnachtrag FDShop Tools / Master-Bildimport (Schema 0.0.27):
 - Schreibende Browserläufe sind CSRF-/ACL-geschützt, POST-only und werden in
   serverseitig gespeicherten, gesperrten Fünfer-Batches verarbeitet.
 
+Architekturnachtrag Checkout / Order Lifecycle V1 (Schema 0.0.28):
+- Controller orchestrieren POST/CSRF; CheckoutService besitzt atomare
+  Bestellerzeugung, OrderService den gemeinsamen Status-Lifecycle.
+- `#__fdshop_orders` bleibt der einzige Bestellkopf. Historische Snapshots
+  liegen in Orders/Items/Bundles; `#__fdshop_order_stock_allocations` speichert
+  ausschließlich den physischen Bedarf und ausgeführten Lagerzustand.
+- DB-Transaktion und Zeilensperren umfassen Order, Coupon, Produktbestand,
+  History und Cart-Consumption; Mailversand erfolgt erst nach Commit.
+- Fresh Install und Update werden gemeinsam über Schema 0.0.28 getragen.
+
 =====================================================================
-ENDE DER QUELLE FDShop_Architektur_Struktur_Installation_V9
+ENDE DER QUELLE FDShop_Architektur_Struktur_Installation_V10
 =====================================================================

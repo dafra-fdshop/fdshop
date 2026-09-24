@@ -47,11 +47,11 @@ test('order list, search, status filters and fixture snapshot details', async ({
   await expect(page.locator('main')).toContainText('66,48'); await expect(page.locator('main')).toContainText('E2E Bundle-Snapshot angelegt');
 });
 test('order status and item mutations preserve snapshots and histories', async ({ page }) => {
-  await setStatus(page, '900701'); await openNormal(page);
-  await expect(page.locator('main')).toContainText('E2E Versendet'); await expect(page.locator('main')).toContainText('E2E Bestellt → E2E Versendet');
+  await setStatus(page, '900701');
+  await expect(page.locator('body')).toContainText('Lagerwirkung dieser Legacy-Bestellung ist unbekannt');
+  await openNormal(page);
+  await expect(page.locator('main')).toContainText('E2E Bestellt');
   await expect(page.locator('main')).toContainText('E2E-PROD-ACTIVE'); await expect(page.locator('main')).toContainText('9900000000001');
-  await setStatus(page, '900700'); await openNormal(page);
-  await expect(page.locator('main')).toContainText('E2E Versendet → E2E Bestellt');
   await page.locator('#jform_product_id').selectOption('900105'); await page.locator('#jform_quantity').fill('2');
   await Promise.all([page.waitForNavigation({ waitUntil: 'load' }), page.getByRole('button', { name: 'Hinzufügen' }).click()]);
   const itemRows = page.getByText('Bestellpositionen', { exact: true }).locator('..').locator('tbody tr');

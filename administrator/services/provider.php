@@ -21,10 +21,13 @@ use FDShop\Component\FDShop\Administrator\Service\ProductServiceInterface;
 use FDShop\Component\FDShop\Administrator\Service\PackagingService;
 use FDShop\Component\FDShop\Administrator\Service\OrderService;
 use FDShop\Component\FDShop\Administrator\Service\OrderServiceInterface;
+use FDShop\Component\FDShop\Administrator\Service\OrderNotificationService;
 use FDShop\Component\FDShop\Administrator\Service\FilterService;
 use FDShop\Component\FDShop\Administrator\Service\FilterServiceInterface;
 use FDShop\Component\FDShop\Site\Service\CartService;
 use FDShop\Component\FDShop\Site\Service\CartServiceInterface;
+use FDShop\Component\FDShop\Site\Service\CheckoutService;
+use FDShop\Component\FDShop\Site\Service\CheckoutServiceInterface;
 use FDShop\Component\FDShop\Site\Service\BundleService as SiteBundleService;
 use FDShop\Component\FDShop\Site\Service\BundleServiceInterface as SiteBundleServiceInterface;
 use Joomla\CMS\Dispatcher\ComponentDispatcherFactoryInterface;
@@ -160,10 +163,13 @@ return new class () implements ServiceProviderInterface {
 			OrderServiceInterface::class,
 			function (Container $container): OrderServiceInterface {
 				return new OrderService(
-					$container->get(DatabaseInterface::class)
+					$container->get(DatabaseInterface::class),
+					$container->get(OrderNotificationService::class)
 				);
 			}
 		);
+
+        $container->set(OrderNotificationService::class, fn (Container $container): OrderNotificationService => new OrderNotificationService($container->get(DatabaseInterface::class)));
 
 		$container->set(
 			OrderService::class,
@@ -199,6 +205,9 @@ return new class () implements ServiceProviderInterface {
                 return $container->get(CartServiceInterface::class);
             }
         );
+
+        $container->set(CheckoutServiceInterface::class, fn (Container $container): CheckoutServiceInterface => new CheckoutService($container->get(DatabaseInterface::class), $container->get(CartServiceInterface::class), $container->get(OrderNotificationService::class)));
+        $container->set(CheckoutService::class, fn (Container $container): CheckoutService => $container->get(CheckoutServiceInterface::class));
 
         $container->set(
 			ComponentInterface::class,

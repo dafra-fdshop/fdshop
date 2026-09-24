@@ -72,10 +72,21 @@ if (!empty($order->user_id)) {
                     <div class="fw-bold">User-ID</div>
                     <div class="small text-muted"><?php echo (int) ($order->user_id ?? 0); ?></div>
                 </div>
+                <div class="mt-3"><div class="fw-bold">Historische E-Mail</div><div><?php echo $this->escape((string) ($order->customer_email ?? 'Historisch unbekannt')); ?></div></div>
             </div>
         </div>
     </div>
 </div>
+
+<div class="card mb-3"><div class="card-header">Checkout-Snapshot</div><div class="card-body row g-3">
+ <div class="col-md-4"><strong>Zahlungsart</strong><div><?php echo $this->escape((string)($order->payment_method_name ?? 'Historisch unbekannt')); ?> · <?php echo number_format((float)($order->payment_fee ?? 0),2,',','.'); ?></div></div>
+ <div class="col-md-4"><strong>Abholung/Versand</strong><div><?php echo $this->escape((string)($order->shipment_name ?? 'Historisch unbekannt')); ?> · <?php echo number_format((float)($order->shipment_fee ?? 0),2,',','.'); ?></div></div>
+ <div class="col-md-4"><strong>Lagerzustand</strong><div><?php echo $this->escape((string)($order->stock_state ?? 'Historisch unbekannt')); ?></div></div>
+ <div class="col-md-4"><strong>Gutschein</strong><div><?php echo $this->escape((string)($order->coupon_code ?? '–')); ?> · -<?php echo number_format((float)($order->coupon_discount ?? 0),2,',','.'); ?></div></div>
+ <div class="col-md-4"><strong>AGB</strong><div><?php echo (int)($order->terms_required ?? 0)===1?'erforderlich · ':''; ?><?php echo (int)($order->terms_accepted ?? 0)===1?'bestätigt':'nicht bestätigt'; ?></div></div>
+ <div class="col-12"><strong>Bestellbemerkung</strong><div><?php echo nl2br($this->escape((string)($order->order_note ?? ''))); ?></div></div>
+ <?php if(!empty($order->mail_warning)):?><div class="col-12 alert alert-warning"><?php echo $this->escape((string)$order->mail_warning); ?></div><?php endif; ?>
+</div></div>
 
 <div class="card mb-3">
     <div class="card-header">Bestellpositionen</div>

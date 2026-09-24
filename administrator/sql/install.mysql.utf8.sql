@@ -437,11 +437,29 @@ CREATE TABLE IF NOT EXISTS `#__fdshop_orders` (
   `grand_total` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
   `has_bundle` TINYINT(1) NOT NULL DEFAULT 0,
 
+  `customer_name` VARCHAR(255) NULL,
+  `customer_email` VARCHAR(255) NULL,
+  `payment_method_name` VARCHAR(255) NULL,
+  `payment_fee` DECIMAL(12,4) NULL,
+  `shipment_name` VARCHAR(255) NULL,
+  `shipment_fee` DECIMAL(12,4) NULL,
+  `subtotal` DECIMAL(12,4) NULL,
+  `coupon_code` VARCHAR(64) NULL,
+  `coupon_discount` DECIMAL(12,4) NULL,
+  `order_note` TEXT NULL,
+  `terms_required` TINYINT(1) NULL,
+  `terms_accepted` TINYINT(1) NULL,
+  `terms_accepted_at` DATETIME NULL,
+  `stock_state` VARCHAR(16) NULL,
+  `submission_id` CHAR(36) NULL,
+  `mail_warning` TEXT NULL,
+
   `created` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `modified` DATETIME NULL DEFAULT NULL,
 
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_fdshop_orders_order_number` (`order_number`),
+  UNIQUE KEY `uk_fdshop_orders_submission_id` (`submission_id`),
   KEY `idx_fdshop_orders_user_id` (`user_id`),
   KEY `idx_fdshop_orders_buyer_group_id` (`buyer_group_id`),
   KEY `idx_fdshop_orders_payment_method_id` (`payment_method_id`),
@@ -467,6 +485,10 @@ CREATE TABLE IF NOT EXISTS `#__fdshop_order_items` (
   `manufacturer_name` VARCHAR(255) NOT NULL DEFAULT '',
 
   `quantity` DECIMAL(12,3) NOT NULL DEFAULT 1.000,
+  `unit_variant` VARCHAR(16) NOT NULL DEFAULT 'piece',
+  `unit_type_snapshot` VARCHAR(64) NOT NULL DEFAULT 'Stück',
+  `unit_quantity_snapshot` INT UNSIGNED NOT NULL DEFAULT 1,
+  `physical_quantity` DECIMAL(12,3) NOT NULL DEFAULT 1.000,
   `regular_price_gross` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
   `discount_price_gross` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
   `unit_price_net` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
@@ -482,6 +504,23 @@ CREATE TABLE IF NOT EXISTS `#__fdshop_order_items` (
   KEY `idx_fdshop_order_items_product_id` (`product_id`),
   KEY `idx_fdshop_order_items_sku` (`sku`),
   KEY `idx_fdshop_order_items_is_removed` (`is_removed`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+-- #__fdshop_order_stock_allocations
+-- --------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `#__fdshop_order_stock_allocations` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `order_id` BIGINT UNSIGNED NOT NULL,
+  `product_id` BIGINT UNSIGNED NOT NULL,
+  `physical_quantity` DECIMAL(12,3) NOT NULL,
+  `stock_state` VARCHAR(16) NOT NULL DEFAULT 'none',
+  `created` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `modified` DATETIME NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_fdshop_order_stock_order_product` (`order_id`, `product_id`),
+  KEY `idx_fdshop_order_stock_order_id` (`order_id`),
+  KEY `idx_fdshop_order_stock_product_id` (`product_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 

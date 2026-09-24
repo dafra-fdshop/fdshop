@@ -169,18 +169,10 @@ test('authenticated cart validates mutations and keeps checkout state correctly 
 
   await expect(cart.getByLabel('Gutscheincode')).toBeEnabled();
   await expect(cart.getByRole('button', { name: 'Übernehmen' })).toBeEnabled();
+  await cart.locator('[data-cart-terms]').check();
   await cart.getByRole('button', { name: 'Zahlungspflichtig bestellen' }).click();
-  await expect(cart.locator('[data-fdshop-cart-message]')).toContainText('folgenden Paket aktiviert');
-  await expect(page).toHaveURL(/\/warenkorb/);
-
-  for (const id of ['910000', '910001', '910002']) {
-    await cart.locator(`[data-cart-item="${id}"] [data-cart-remove]`).click();
-  }
-  await expect(cart.locator('[data-cart-item]')).toHaveCount(0);
-  await expect(cart.locator('[data-fdshop-cart-empty]')).toHaveText('Aktuell sind noch keine Produkte im Warenkorb.');
-  await expect(cart.locator('[data-fdshop-cart-empty]')).toBeVisible();
-  await expect(cart.locator('[data-cart-subtotal]')).toHaveText('0,00 €');
-  await expect(cart.locator('[data-cart-total]')).toHaveText('12,49 €');
-  await expect(cart.locator('[data-cart-coupon-discount]')).toHaveText('0,00 €');
+  await expect(page).toHaveURL(/view=checkoutconfirmation&order_number=/);
+  await expect(page.getByRole('heading', { name: 'Vielen Dank für Ihre Bestellung' })).toBeVisible();
+  await expect(page.getByText('162,74 EUR')).toBeVisible();
   diagnostics.expectClean();
 });

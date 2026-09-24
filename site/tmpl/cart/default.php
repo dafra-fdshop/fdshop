@@ -60,10 +60,10 @@ $currency = (string) ($cart['currency'] ?? 'EUR');
                 <div class="fdshop-cart__remark"><label for="fdshop-cart-remark">Bemerkung zur Bestellung</label><textarea id="fdshop-cart-remark" class="form-control" rows="3" data-cart-remark></textarea></div>
                 <?php if ((int) $this->config->show_terms_checkbox === 1) : ?><div class="form-check fdshop-cart__terms"><input id="fdshop-cart-terms" class="form-check-input" type="checkbox" data-cart-terms data-required="<?php echo (int) $this->config->require_terms_checkbox; ?>"><label class="form-check-label" for="fdshop-cart-terms">Ich bestätige die AGB und die Widerrufsbelehrung.</label></div><?php endif; ?>
                 <button type="button" class="btn btn-primary btn-lg fdshop-cart__order" data-cart-order>Zahlungspflichtig bestellen</button>
-                <small>Die Bestellfunktion ist in Warenkorb V1 noch nicht aktiv.</small>
             </aside>
         </div>
         <dialog class="fdshop-cart__dialog" data-cart-dialog="shipment"><form method="dialog"><header><h2>Abholstation wählen</h2><button value="cancel" aria-label="Auswahl schließen">×</button></header><?php foreach ($cart['shipments'] as $shipment) : ?><button type="button" class="fdshop-cart__option" data-cart-select-shipment="<?php echo (int) $shipment->id; ?>"><strong><?php echo $this->escape((string) $shipment->name); ?></strong><span><?php echo $this->escape($this->formatPrice((float) $shipment->fee, $currency)); ?></span></button><?php endforeach; ?></form></dialog>
         <dialog class="fdshop-cart__dialog" data-cart-dialog="payment"><form method="dialog"><header><h2>Zahlungsart wählen</h2><button value="cancel" aria-label="Auswahl schließen">×</button></header><?php foreach ($cart['payments'] as $payment) : ?><button type="button" class="fdshop-cart__option" data-cart-select-payment="<?php echo (int) $payment->id; ?>"><strong><?php echo $this->escape((string) $payment->name); ?></strong><span><?php echo $this->escape($this->formatPrice((float) $payment->fee, $currency)); ?></span></button><?php endforeach; ?></form></dialog>
         <form hidden data-cart-token><?php echo HTMLHelper::_('form.token'); ?></form>
+        <input type="hidden" value="<?php echo $this->escape($this->submissionId); ?>" data-cart-submission>
 </main>

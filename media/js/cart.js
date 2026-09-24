@@ -25,7 +25,7 @@
                 var response = await fetch(endpoint + task, { method: 'POST', body: body, credentials: 'same-origin', headers: { Accept: 'application/json' } });
                 var payload = await response.json();
                 if (!response.ok || payload.success === false) throw new Error(payload.message || 'Der Warenkorb konnte nicht aktualisiert werden.');
-                update(payload.data);
+                if (payload.data && Array.isArray(payload.data.items)) update(payload.data);
                 if (payload.message) notify(payload.message, false);
                 return payload.data;
             } finally {
@@ -83,7 +83,12 @@
             if (button.matches('[data-cart-select-shipment]')) request('selectShipment', { shipment_id: button.dataset.cartSelectShipment }).then(function () { button.closest('dialog').close(); notify('Abholstation wurde geändert.', false); }).catch(function (error) { notify(error.message, true); });
             if (button.matches('[data-cart-select-payment]')) request('selectPayment', { payment_id: button.dataset.cartSelectPayment }).then(function () { button.closest('dialog').close(); notify('Zahlungsart wurde geändert.', false); }).catch(function (error) { notify(error.message, true); });
             if (button.matches('[data-cart-apply-coupon]')) request('applyCoupon', { coupon_code: cart.querySelector('[data-cart-coupon-code]').value }).catch(function (error) { notify(error.message, true); });
-            if (button.matches('[data-cart-order]')) request('orderUnavailable', {}).then(function () { notify('Die Bestellfunktion wird in einem folgenden Paket aktiviert.', false); }).catch(function (error) { notify(error.message, true); });
+            if (button.matches('[data-cart-order]')) {
+                var terms = cart.querySelector('[data-cart-terms]');
+                request('checkout', {order_note: cart.querySelector('[data-cart-remark]').value, terms_accepted: terms && terms.checked ? '1' : '0', submission_id: cart.querySelector('[data-cart-submission]').value})
+                    .then(function (state) { window.location.assign(state.confirmation_url); })
+                    .catch(function (error) { notify(error.message, true); });
+            }
         });
     });
 }());

@@ -5,6 +5,7 @@ namespace FDShop\Component\FDShop\Site\Controller;
 defined('_JEXEC') or die;
 
 use FDShop\Component\FDShop\Site\Service\CartServiceInterface;
+use FDShop\Component\FDShop\Site\Service\CheckoutServiceInterface;
 use FDShop\Component\FDShop\Site\Helper\RouteHelper;
 use Joomla\CMS\Factory;
 use Joomla\CMS\MVC\Controller\BaseController;
@@ -65,16 +66,17 @@ final class CartController extends BaseController
         }, 'Gutschein wurde berücksichtigt.');
     }
 
-    public function orderUnavailable(): void
+    public function checkout(): void
     {
-        $this->mutate(function (CartServiceInterface $service, int $userId, string $sessionId, int $shipmentId, int $paymentId): array {
-            if ($userId < 1) {
-                throw new \DomainException('Bitte melden Sie sich an oder registrieren Sie sich, um die Bestellung abzuschließen.');
-            }
-            $cart = $service->getCart($userId, $sessionId, $shipmentId, $paymentId);
-            $cart['order_created'] = false;
-            return $cart;
-        }, 'Die Bestellfunktion wird in einem folgenden Paket aktiviert.');
+        $app=Factory::getApplication();
+        try {
+            if(!Session::checkToken('request')) throw new \RuntimeException('Ungültiger Sicherheitstoken.');
+            $userId=(int)$app->getIdentity()->id; $session=$app->getSession(); $input=$app->getInput();
+            $result=$this->getCheckoutService()->createOrder($userId,$session->getId(),(int)$session->get($this->sessionKey($userId,'shipment_id'),0),(int)$session->get($this->sessionKey($userId,'payment_id'),0),(string)$session->get($this->sessionKey($userId,'coupon_code'),''),$input->post->getString('order_note'),$input->post->getInt('terms_accepted')===1,$input->post->getString('submission_id'));
+            foreach(['shipment_id','payment_id','coupon_code'] as $field)$session->clear($this->sessionKey($userId,$field));
+            echo new JsonResponse($result,$result['already_processed']?'Die Bestellung wurde bereits verarbeitet.':'Vielen Dank. Ihre Bestellung wurde erfolgreich angelegt.');
+        } catch(\Throwable $error){echo new JsonResponse(null,$error->getMessage(),true);}
+        $app->close();
     }
 
     private function mutate(callable $callback, string $successMessage = ''): void
@@ -124,6 +126,11 @@ final class CartController extends BaseController
     private function getCartService(): CartServiceInterface
     {
         return Factory::getApplication()->bootComponent('com_fdshop')->getContainer()->get(CartServiceInterface::class);
+    }
+
+    private function getCheckoutService(): CheckoutServiceInterface
+    {
+        return Factory::getApplication()->bootComponent('com_fdshop')->getContainer()->get(CheckoutServiceInterface::class);
     }
 
     private function sessionKey(int $userId, string $field): string

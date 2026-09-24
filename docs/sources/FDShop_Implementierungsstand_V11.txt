@@ -1,9 +1,9 @@
 =====================================================================
-FDShop_Implementierungsstand_V10
+FDShop_Implementierungsstand_V11
 =====================================================================
 
-Status: VERBINDLICHE PROJEKTQUELLE Version: V10 Ersetzt:
-FDShop_Implementierungsstand_V8 Prüfdatum: 24.09.2026
+Status: VERBINDLICHE PROJEKTQUELLE Version: V11 Ersetzt:
+FDShop_Implementierungsstand_V10 Prüfdatum: 24.09.2026
 
 Technische Grundlage: Git-Repository dafra-fdshop/fdshop Branch: feature
 Technischer Referenzcommit: c970bca1d92673b0cdc4ee841acf0d2c583a88ee
@@ -577,6 +577,17 @@ Nachtrag FDShop Tools / Master-Bildimport (Schema 0.0.27):
 - Gemeinsamer Kern für CLI und Admin, unveränderte ProductService-Pipeline,
   persistenter Import-State und konfliktfreies Cleanup: umgesetzt.
 
+Nachtrag Checkout / Order Lifecycle V1 (Schema 0.0.28):
+- Authentifizierter Checkout, historische Snapshots, Bestätigungsansicht,
+  Gutscheinverbrauch, atomare Reservierung und Warenkorbabschluss: umgesetzt.
+- Konfigurationsgetriebene Lageraktionen und Nach-Commit-Mails für Checkout
+  und Admin-Statuswechsel: umgesetzt; Rechnungserzeugung bleibt bewusst
+  als protokolliertes Pending außerhalb V1.
+- Legacyorders behalten unbekannten Lagerzustand; gefährliche Statuswirkung
+  wird ohne erfundene Bestandsrekonstruktion blockiert.
+- Gastcheckout, Paymentprovider, Rechnungsengine, Retouren, automatische
+  Couponfreigabe und Kundenbereich bleiben ausdrückliche V1-Grenzen.
+
 =====================================================================
-ENDE DER QUELLE FDShop_Implementierungsstand_V10
+ENDE DER QUELLE FDShop_Implementierungsstand_V11
 =====================================================================

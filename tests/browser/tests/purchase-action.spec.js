@@ -70,8 +70,8 @@ test('purchase validates zero, minimum and step and uses the server discount pri
   await expect(action.locator('[data-purchase-quantity]')).toHaveAttribute('min', '2');
   await expect(action.locator('[data-purchase-quantity]')).toHaveAttribute('step', '2');
   await expect(action.locator('[data-purchase-quantity]')).toHaveAttribute('max', '8');
-  await expect(price.locator('strong')).toHaveCSS('color', 'rgb(224, 167, 33)');
-  await expect(regularPrice).toHaveCSS('color', 'rgb(220, 53, 69)');
+  await expect(price.locator('strong')).toHaveCSS('color', 'rgb(220, 13, 27)');
+  await expect(regularPrice).toHaveCSS('color', 'rgb(17, 17, 17)');
   await expect(regularPrice).toHaveCSS('text-decoration-line', 'line-through');
   const closedSizes = await price.evaluate(element => ({ current: getComputedStyle(element).fontSize, regular: getComputedStyle(element.querySelector('.fdshop-card__regular-price')).fontSize }));
   await action.hover();
