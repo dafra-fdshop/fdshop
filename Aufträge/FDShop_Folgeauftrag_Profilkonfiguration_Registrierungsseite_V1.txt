@@ -1,0 +1,275 @@
+FDShop – Folgeauftrag: Profilfeld-Konfiguration und shopgerechte Registrierung V1
+Datum: 25.09.2026
+
+ZIEL
+Den mit 0.0.29 eingeführten Joomla-User-Plugin-Weg beibehalten und zwei Dinge sauber fertigstellen:
+
+1. Die FDShop-Kundendaten im Plugin sinnvoll konfigurierbar machen.
+2. Die Joomla-Frontend-Registrierung shopgerecht als kombinierte Login-/Registrierungsseite darstellen.
+
+Keine neue Kundenarchitektur und keine Migration auf Joomla Custom Fields.
+
+AUSGANGSLAGE
+- Repository: dafra-fdshop/fdshop
+- Branch: feature
+- aktuellen origin/feature-Stand vor Beginn prüfen.
+- Plugin: plugins/user/fdshopprofile
+- Kundendaten liegen unter fdshop_customer.* in #__user_profiles.
+- getrennte Vor-/Nachnamen und serverseitige Bildung des Joomla-Core-Felds name funktionieren bereits.
+- Kein eigenes JavaScript für die Namensbildung.
+- Checkout/Bestellsnapshot aus 0.0.29 darf nicht regressieren.
+
+ARCHITEKTURENTSCHEIDUNG
+Der bestehende User-Profile-Plugin-Weg bleibt bestehen.
+
+Nicht auf com_fields / Joomla Custom Fields umstellen.
+
+Begründung:
+Die FDShop-Felder sind Teil des fachlichen Shop-Datenvertrags (Registrierung, Profil, Checkout, Bestellsnapshot) und keine frei erfundenen CMS-Zusatzfelder. Joomla unterstützt das dynamische Erweitern von Formularen über Plugin-/Form-Events; User-Save-Events sind der vorgesehene serverseitige Integrationspunkt.
+
+Keine Joomla-Core-Änderung.
+
+PLUGIN-KONFIGURATION
+Die aktuell sehr leere Plugin-Konfiguration soll einen klaren Bereich "FDShop Kundendaten" erhalten.
+
+Für die fachlich konfigurierbaren Felder eine Einstellung nach Joomla-typischem Muster anbieten:
+
+- Pflicht
+- Optional
+- Deaktiviert
+
+Felder:
+- Firma
+- Straße + Hausnummer
+- PLZ
+- Ort
+- Land
+- Telefon
+
+Vorname und Nachname sind technische/fachliche Basis für das automatisch gebildete Joomla-Core-Feld name und bleiben daher immer aktiv und Pflicht. Diese beiden Felder in der Plugin-Konfiguration sichtbar dokumentieren, aber NICHT deaktivierbar machen.
+
+Defaultwerte müssen dem aktuell freigegebenen Verhalten entsprechen:
+- Vorname: Pflicht/fix
+- Nachname: Pflicht/fix
+- Firma: Optional
+- Straße + Hausnummer: Pflicht
+- PLZ: Pflicht
+- Ort: Pflicht
+- Land: Pflicht
+- Telefon: Optional
+
+Land behält Default "Deutschland".
+
+SINGLE SOURCE OF TRUTH
+Die Plugin-Konfiguration muss für die konfigurierbaren Felder konsistent gelten für:
+- Frontend-Registrierung
+- Frontend-Profilbearbeitung
+- Joomla-Administrator Benutzer bearbeiten
+- Checkout-Pflichtprüfung
+
+Bedeutung:
+Pflicht:
+- Feld anzeigen
+- serverseitig erforderlich
+- Checkout verlangt einen Wert
+
+Optional:
+- Feld anzeigen
+- leer zulässig
+- Checkout blockiert nicht wegen leerem Wert
+
+Deaktiviert:
+- Feld in den relevanten Benutzerformularen nicht anzeigen
+- Checkout verlangt es nicht
+- vorhandene historische Profildaten nicht ungefragt löschen
+
+Bestellsnapshot:
+- aktive Felder weiterhin snapshotten
+- deaktivierte Felder dürfen keinen Checkoutblocker erzeugen
+- bestehende Snapshot-Spalten bleiben bestehen; keine Schemafelder dynamisch löschen
+- alte Bestellungen bleiben unverändert
+
+FELDNAMEN / LABELS
+Interne Keys wie first_name, postal_code usw. bleiben stabil.
+
+Keine frei editierbaren internen Feldnamen.
+
+Sichtbare Bezeichnungen über Sprachstrings sauber halten. Joomla Language Overrides sollen später weiterhin möglich sein.
+
+REIHENFOLGE
+Die Reihenfolge der FDShop-Kundendaten soll im Plugin konfigurierbar sein, aber bitte bewusst einfach umsetzen.
+
+Bevorzugt Joomla-konform über Ordering-Zahlen bzw. eine kleine robuste Sortierkonfiguration.
+
+Default:
+1. Vorname
+2. Nachname
+3. Firma
+4. Straße + Hausnummer
+5. PLZ
+6. Ort
+7. Land
+8. Telefon
+
+Vor-/Nachname dürfen weiterhin umsortiert werden, aber nicht deaktiviert/optional werden.
+
+Keine Drag-and-drop-Verwaltungsanwendung bauen.
+
+REGISTRIERUNGSSEITE – ZIELBILD
+Die aktuelle nackte Joomla-Registrierung soll shopgerecht dargestellt werden.
+
+Orientierung am bewährten bisherigen Shoplayout, NICHT pixelgenaue Kopie.
+
+Desktop:
+- oberhalb bzw. sinnvoll integriert ein kurzer Bereich für Registrierungs-/Aktivierungshinweise
+- darunter zweispaltige Hauptansicht
+
+LINKS:
+Überschrift sinngemäß:
+"Ich bin bereits registriert!"
+
+Enthält normalen Joomla-Login:
+- Benutzername
+- Passwort
+- Angemeldet bleiben, sofern Joomla-Konfiguration dies vorsieht
+- Einloggen
+- Benutzername vergessen?
+- Passwort vergessen?
+
+RECHTS:
+Überschrift:
+"Registrierung"
+
+Enthält in verständlicher Reihenfolge:
+- E-Mail
+- Benutzername
+- Passwort
+- Passwort bestätigen
+- FDShop-Kundendaten gemäß Plugin-Konfiguration
+- Registrieren
+
+Das technische Joomla-Core-Feld name bleibt für den Kunden unsichtbar und wird weiterhin serverseitig aus Vorname + Nachname gebildet.
+
+Titel/Anrede ist ausdrücklich NICHT Teil dieses Auftrags.
+Der alte Screenshot enthielt ein Titelfeld nur historisch; NICHT übernehmen.
+
+MOBIL / RESPONSIVE
+Auf schmalen Displays:
+- Bereiche sauber untereinander
+- Registrierung muss vollständig bedienbar bleiben
+- keine feste Desktopbreite
+- keine horizontale Scrollpflicht
+
+Bestehende FDShop-/Template-CSS-Struktur respektieren.
+Keine große neue CSS-Architektur.
+
+JOOMLA-KONFORME UMSETZUNG
+Vor Umsetzung aktuellen Joomla-6.1.x-Code und bestehende FDShop-/Template-Struktur prüfen.
+
+Bevorzugen:
+- Joomla Form API / Plugin-Formevents für Felder
+- Joomla User Events für serverseitige Speicherung/Core-name
+- Joomla Layout-/Template-Override bzw. passende bestehende Projektstruktur für die Registrierungsdarstellung
+- bestehende Joomla Login-/Registration-Routen und Tokens
+
+Nicht:
+- Joomla-Core-Dateien ändern
+- Login/Registrierung selbst neu implementieren
+- Authentifizierung duplizieren
+- Passwörter selbst verarbeiten/speichern
+- CSRF umgehen
+- altes Legacy-JS kopieren
+
+AKTIVIERUNGS-/SYSTEMMELDUNGEN
+Joomla-eigene Meldungen nach Registrierung/Aktivierung weiterhin korrekt darstellen.
+
+Keinen hartcodierten Hinweis vortäuschen, der nicht zur tatsächlich konfigurierten Joomla-Benutzeraktivierung passt.
+
+Wenn Joomla z.B. E-Mail-Aktivierung verlangt, muss die normale Joomla-Meldung sichtbar bleiben.
+
+CHECKOUT
+Bestehenden Checkout nur soweit anpassen, dass Pflicht/Optional/Deaktiviert aus der Plugin-Konfiguration korrekt berücksichtigt wird.
+
+Vorname und Nachname bleiben immer Pflicht.
+
+Keine sonstige Checkout-Neuentwicklung.
+
+ADMIN-BENUTZERBEARBEITUNG
+Der bestehende Tab "FDShop Kundendaten" bleibt erhalten.
+
+Er muss dieselbe Feldkonfiguration respektieren.
+
+Admin darf aktive Felder sehen/bearbeiten.
+Deaktivierte Felder müssen nicht im Formular erscheinen.
+
+Keine separate Kundenverwaltung bauen.
+
+TESTS – GEZIELT
+Keine Vollabnahme nur aus Gewohnheit.
+
+Mindestens:
+1. Plugin-Konfiguration lädt und speichert.
+2. Defaultkonfiguration entspricht bisherigem Verhalten.
+3. Pflicht → Registrierung verlangt Wert.
+4. Optional → Registrierung erlaubt leer.
+5. Deaktiviert → Feld verschwindet und Checkout verlangt es nicht.
+6. Vorname/Nachname bleiben immer Pflicht und Core name wird korrekt gebildet.
+7. konfigurierbare Reihenfolge wirkt in Registrierung/Profil sinnvoll.
+8. Desktop: Login links / Registrierung rechts.
+9. Mobile: Bereiche untereinander und bedienbar.
+10. Login funktioniert über die linke Spalte.
+11. Registrierung funktioniert über die rechte Spalte.
+12. Passwort-/Benutzername-vergessen-Links funktionieren/routen korrekt.
+13. Joomla Aktivierungs-/Systemmeldung bleibt sichtbar.
+14. Frontend-Profilbearbeitung funktioniert.
+15. Admin-Benutzerbearbeitung funktioniert.
+16. vollständiger Checkout mit Defaultkonfiguration funktioniert.
+17. Checkout mit deaktiviertem vormals Pflichtfeld funktioniert.
+18. Bestellsnapshot bleibt korrekt.
+19. bestehende Bestellung/Snapshot wird durch Konfigurationsänderung nicht verändert.
+20. relevante Syntax-/Unit-/Browser-Tests + git diff --check.
+
+Kein test-full und kein kompletter Lifecycle, sofern die tatsächliche Änderung dies nicht sachlich erfordert.
+Da Plugin-Paket/Manifest ggf. geändert werden, gezielten Paket-/Update-Test durchführen.
+
+NICHT SCOPE
+- Joomla Custom Fields / com_fields Migration
+- eigener FDShop-Kundenstamm
+- Gastcheckout
+- PayPal
+- alternative Lieferadresse
+- Adressbuch
+- Titel/Anrede
+- Mail-Redesign
+- Checkout-Redesign
+- Account-Dashboard
+- Social Login
+- Captcha-Neuentwicklung
+
+VERSION / DOKUMENTATION
+Aktuellen Versionsstand selbst prüfen und nach Projektstandard nur soweit nötig erhöhen.
+Betroffene Projektquellen nur dann fortschreiben, wenn die Änderung dokumentationsrelevant ist.
+
+GIT
+- feature
+- keine fremden Änderungen verwerfen
+- Commit + Push nach origin/feature nach grüner Abnahme
+- kein Force-Push
+- kein Merge nach main
+- Windows-/Offline-Synchronisierung gemäß etabliertem Workflow
+
+ABSCHLUSSBERICHT
+Kurz berichten:
+- Plugin-Konfiguration und Defaults
+- Umgang mit Vor-/Nachname
+- Feldreihenfolge
+- gewählte Joomla-konforme Registrierungsdarstellung
+- Responsive-Verhalten
+- Checkout-Kopplung
+- ausgeführte Tests
+- Paketversion
+- geänderte Dateien/Dokumente
+- Commit/Push
+- offene Punkte
+
+ENDE DES AUFTRAGS
