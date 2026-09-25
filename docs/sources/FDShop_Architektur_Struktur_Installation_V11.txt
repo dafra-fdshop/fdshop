@@ -1,9 +1,9 @@
 =====================================================================
-FDShop_Architektur_Struktur_Installation_V10
+FDShop_Architektur_Struktur_Installation_V11
 =====================================================================
 
-Status: VERBINDLICHE PROJEKTQUELLE Version: V10 Ersetzt:
-FDShop_Architektur_Struktur_Installation_V9 Stand: 24.09.2026
+Status: VERBINDLICHE PROJEKTQUELLE Version: V11 Ersetzt:
+FDShop_Architektur_Struktur_Installation_V10 Stand: 25.09.2026
 
 ===================================================================== 1.
 ZWECK UND ZIELPLATTFORM
@@ -612,6 +612,18 @@ Architekturnachtrag Checkout / Order Lifecycle V1 (Schema 0.0.28):
   History und Cart-Consumption; Mailversand erfolgt erst nach Commit.
 - Fresh Install und Update werden gemeinsam über Schema 0.0.28 getragen.
 
+Architekturnachtrag Joomla-Kundenprofil / Bestellsnapshot V1 (Schema 0.0.29):
+- Joomla-Benutzer und `#__user_profiles` bleiben die einzige Quelle für das
+  aktuelle Kundenprofil; es entsteht kein paralleler FDShop-Kundenstamm.
+- Das paketierte User-Plugin `fdshopprofile` erweitert Registrierung und
+  Profil Joomla-konform. Es bildet `users.name` serverseitig aus Vor- und
+  Nachname und benötigt weder Core-Hack noch Browser-JavaScript.
+- CheckoutService liest und validiert Profil und Core-E-Mail ausschließlich
+  serverseitig. Der Bestellkopf enthält danach den unveränderlichen
+  Kundensnapshot; spätere Profiländerungen wirken nicht zurück.
+- Das Paket installiert und aktiviert Plugin, Komponente und Filtermodul;
+  Fresh Install und Update werden gemeinsam über Schema 0.0.29 getragen.
+
 =====================================================================
-ENDE DER QUELLE FDShop_Architektur_Struktur_Installation_V10
+ENDE DER QUELLE FDShop_Architektur_Struktur_Installation_V11
 =====================================================================

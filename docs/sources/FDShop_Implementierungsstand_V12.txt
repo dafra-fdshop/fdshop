@@ -1,9 +1,9 @@
 =====================================================================
-FDShop_Implementierungsstand_V11
+FDShop_Implementierungsstand_V12
 =====================================================================
 
-Status: VERBINDLICHE PROJEKTQUELLE Version: V11 Ersetzt:
-FDShop_Implementierungsstand_V10 Prüfdatum: 24.09.2026
+Status: VERBINDLICHE PROJEKTQUELLE Version: V12 Ersetzt:
+FDShop_Implementierungsstand_V11 Prüfdatum: 25.09.2026
 
 Technische Grundlage: Git-Repository dafra-fdshop/fdshop Branch: feature
 Technischer Referenzcommit: c970bca1d92673b0cdc4ee841acf0d2c583a88ee
@@ -588,6 +588,17 @@ Nachtrag Checkout / Order Lifecycle V1 (Schema 0.0.28):
 - Gastcheckout, Paymentprovider, Rechnungsengine, Retouren, automatische
   Couponfreigabe und Kundenbereich bleiben ausdrückliche V1-Grenzen.
 
+Nachtrag Joomla-Kundenprofil / Bestellsnapshot V1 (Schema 0.0.29):
+- Getrennte Pflichtfelder für Vor- und Nachname sowie Adresse in Joomla-
+  Registrierung und Frontendprofil: umgesetzt.
+- Serverseitige Bildung von Joomla `name`, Profilspeicherung und optionale
+  Firma/Telefon: umgesetzt.
+- Checkoutblockade für unvollständige Altprofile, serverseitiger vollständiger
+  Bestellsnapshot und unveränderte Historie nach Profiländerung: umgesetzt.
+- Anzeige im Admin-Bestelldetail und Bereitstellung in der Bestätigung:
+  umgesetzt. Gastbestellung, Adressbuch und alternative Lieferadresse bleiben
+  außerhalb dieses Stands.
+
 =====================================================================
-ENDE DER QUELLE FDShop_Implementierungsstand_V11
+ENDE DER QUELLE FDShop_Implementierungsstand_V12
 =====================================================================

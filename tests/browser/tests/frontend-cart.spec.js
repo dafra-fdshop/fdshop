@@ -172,7 +172,19 @@ test('authenticated cart validates mutations and keeps checkout state correctly 
   await cart.locator('[data-cart-terms]').check();
   await cart.getByRole('button', { name: 'Zahlungspflichtig bestellen' }).click();
   await expect(page).toHaveURL(/view=checkoutconfirmation&order_number=/);
+  const confirmationUrl = page.url();
   await expect(page.getByRole('heading', { name: 'Vielen Dank für Ihre Bestellung' })).toBeVisible();
   await expect(page.getByText('162,74 EUR')).toBeVisible();
+  await expect(page.locator('[data-customer-snapshot]')).toContainText('Erika Mustermann');
+  await expect(page.locator('[data-customer-snapshot]')).toContainText('12345 Teststadt');
+
+  await page.goto('/index.php?option=com_users&view=profile&layout=edit');
+  await expect(page.getByLabel('Vorname')).toHaveValue('Erika');
+  await expect(page.getByLabel('Nachname')).toHaveValue('Mustermann');
+  await page.getByLabel('Ort').fill('Neuhausen');
+  await page.locator('form').getByRole('button', { name: /Speichern|Save/i }).click();
+  await page.goto(confirmationUrl);
+  await expect(page.locator('[data-customer-snapshot]')).toContainText('12345 Teststadt');
+  await expect(page.locator('[data-customer-snapshot]')).not.toContainText('Neuhausen');
   diagnostics.expectClean();
 });

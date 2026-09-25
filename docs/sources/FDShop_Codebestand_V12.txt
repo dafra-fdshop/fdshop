@@ -1,9 +1,9 @@
 =====================================================================
-FDShop_Codebestand_V11
+FDShop_Codebestand_V12
 =====================================================================
 
-Status: VERBINDLICHE PROJEKTQUELLE Version: V11 Ersetzt:
-FDShop_Codebestand_V10 Prüfdatum: 24.09.2026
+Status: VERBINDLICHE PROJEKTQUELLE Version: V12 Ersetzt:
+FDShop_Codebestand_V11 Prüfdatum: 25.09.2026
 
 Technische Grundlage: Git-Repository dafra-fdshop/fdshop Branch: feature
 Technischer Referenzcommit: c970bca1d92673b0cdc4ee841acf0d2c583a88ee
@@ -609,6 +609,18 @@ Nachtrag Checkout / Order Lifecycle V1 (Schema 0.0.28):
 - OrderNotificationService führt konfigurierte Käufer-/Verkäufermails nach
   Commit aus und protokolliert Erfolg, Fehler und Invoice-Pending.
 
+Nachtrag Joomla-Kundenprofil / Bestellsnapshot V1 (Schema 0.0.29):
+- `plugins/user/fdshopprofile` erweitert Joomla-Registrierung, Frontendprofil
+  und Benutzerbearbeitung über aktuelle Form-, Daten- und User-Events.
+- Acht Profildaten liegen unter `fdshop_customer.*` in `#__user_profiles`;
+  Core-E-Mail und Benutzername verbleiben in `#__users`.
+- CheckoutService sperrt Benutzer- und Profilzeilen, prüft Pflichtdaten und
+  schreibt acht neue Kundensnapshot-Spalten sowie den zusammengesetzten
+  Kompatibilitätsnamen in `#__fdshop_orders`.
+- OrderModel und Bestelldetail lesen und zeigen den Snapshot. Browsertests
+  decken Registrierung, Profiländerung, Snapshot-Unveränderlichkeit,
+  Altbenutzerblockade, Adminanzeige und Checkout-Mails ab.
+
 =====================================================================
-ENDE DER QUELLE FDShop_Codebestand_V11
+ENDE DER QUELLE FDShop_Codebestand_V12
 =====================================================================

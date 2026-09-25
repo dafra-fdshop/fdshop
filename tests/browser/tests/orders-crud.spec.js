@@ -41,6 +41,9 @@ test('order list, search, status filters and fixture snapshot details', async ({
   await expect(body).toContainText('E2E Produkt Aktiv'); await expect(body).toContainText('E2E-PROD-ACTIVE');
   await expect(body).toContainText('9900000000001'); await expect(body).toContainText('E2E Hersteller Aktiv');
   await expect(body).toContainText('19,99 EUR'); await expect(body).toContainText('MwSt.: 19,00 %');
+  await expect(body).toContainText('Erika Mustermann'); await expect(body).toContainText('E2E Handel GmbH');
+  await expect(body).toContainText('Teststraße 12'); await expect(body).toContainText('12345 Teststadt');
+  await expect(body).toContainText('Deutschland'); await expect(body).toContainText('+49 30 123456');
   await expect(body).toContainText('E2E Snapshot angelegt'); await expect(body).toContainText('Künstlicher Ausgangsstatus');
   await search(page, 'E2E-ORDER-BUNDLE'); await page.getByRole('link', { name: 'E2E-ORDER-BUNDLE' }).click();
   await expect(page.locator('main')).toContainText('E2E-ORDER-BUNDLE'); await expect(page.locator('main')).toContainText('E2E Produkt Aktionspreis');

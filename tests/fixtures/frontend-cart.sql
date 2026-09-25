@@ -7,6 +7,17 @@ UPDATE `__PREFIX__fdshop_products` SET `min_order_qty`=2, `max_order_qty`=8, `st
 UPDATE `__PREFIX__fdshop_shipments` SET `published`=1, `is_default`=0 WHERE `id`=900601;
 UPDATE `__PREFIX__fdshop_payment_methods` SET `published`=1, `is_default`=0 WHERE `id`=900611;
 
+DELETE FROM `__PREFIX__user_profiles` WHERE `user_id`=__JOOMLA_USER_ID__ AND `profile_key` LIKE 'fdshop_customer.%';
+INSERT INTO `__PREFIX__user_profiles` (`user_id`,`profile_key`,`profile_value`,`ordering`) VALUES
+(__JOOMLA_USER_ID__,'fdshop_customer.first_name','"Erika"',100),
+(__JOOMLA_USER_ID__,'fdshop_customer.last_name','"Mustermann"',101),
+(__JOOMLA_USER_ID__,'fdshop_customer.company','"FDShop Test GmbH"',102),
+(__JOOMLA_USER_ID__,'fdshop_customer.street','"Teststraße 12"',103),
+(__JOOMLA_USER_ID__,'fdshop_customer.postal_code','"12345"',104),
+(__JOOMLA_USER_ID__,'fdshop_customer.city','"Teststadt"',105),
+(__JOOMLA_USER_ID__,'fdshop_customer.country','"Deutschland"',106),
+(__JOOMLA_USER_ID__,'fdshop_customer.phone','"+49 30 123456"',107);
+
 INSERT INTO `__PREFIX__fdshop_cart` (`id`,`user_id`,`session_id`,`product_id`,`buyer_group_id`,`quantity`,`unit_price_net`,`unit_price_gross`,`currency`,`created`) VALUES
 (910000,__JOOMLA_USER_ID__,'',900100,900020,1,16.7983,19.9900,'EUR','2026-01-10 10:00:00'),
 (910001,__JOOMLA_USER_ID__,'',900105,900020,2,33.6050,39.9900,'EUR','2026-01-10 10:01:00'),

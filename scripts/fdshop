@@ -37,18 +37,20 @@ build_package() {
   stage_dir="$(mktemp -d -t fdshop-package.XXXXXXXX)"
   trap '[[ -n "${stage_dir:-}" && "$stage_dir" == /tmp/fdshop-package.* ]] && rm -rf -- "$stage_dir"' RETURN
 
-  mkdir -p "$stage_dir/component" "$stage_dir/module" "$stage_dir/package"
+  mkdir -p "$stage_dir/component" "$stage_dir/module" "$stage_dir/plugin" "$stage_dir/package"
   cp -a "$REPO_ROOT/administrator" "$stage_dir/component/administrator"
   cp -a "$REPO_ROOT/site" "$stage_dir/component/site"
   cp -a "$REPO_ROOT/media" "$stage_dir/component/media"
   cp "$REPO_ROOT/fdshop.xml" "$REPO_ROOT/script.php" "$stage_dir/component/"
   cp -a "$REPO_ROOT/modules/mod_fdshop_filter/." "$stage_dir/module/"
+  cp -a "$REPO_ROOT/plugins/user/fdshopprofile/." "$stage_dir/plugin/"
   find "$stage_dir" -exec touch -h -d '2000-01-01 00:00:00 UTC' {} +
   ( cd "$stage_dir/component"; find administrator site media -type f -print | LC_ALL=C sort | zip -X -q "$stage_dir/package/com_fdshop_component.zip" -@; zip -X -q "$stage_dir/package/com_fdshop_component.zip" fdshop.xml script.php )
   ( cd "$stage_dir/module"; find . -type f -print | LC_ALL=C sort | zip -X -q "$stage_dir/package/mod_fdshop_filter.zip" -@ )
+  ( cd "$stage_dir/plugin"; find . -type f -print | LC_ALL=C sort | zip -X -q "$stage_dir/package/plg_user_fdshopprofile.zip" -@ )
   cp "$REPO_ROOT/pkg_fdshop.xml" "$stage_dir/package/"
   touch -d '2000-01-01 00:00:00 UTC' "$stage_dir/package/"*
-  ( cd "$stage_dir/package"; zip -X -q "$PACKAGE_PATH" com_fdshop_component.zip mod_fdshop_filter.zip pkg_fdshop.xml )
+  ( cd "$stage_dir/package"; zip -X -q "$PACKAGE_PATH" plg_user_fdshopprofile.zip com_fdshop_component.zip mod_fdshop_filter.zip pkg_fdshop.xml )
 
   printf 'Built %s\n' "$PACKAGE_PATH"
   sha256sum "$PACKAGE_PATH"
@@ -126,6 +128,8 @@ verify_installed() {
   compose exec -T joomla test -d /var/www/html/images/FDShop/products
   compose exec -T joomla test -f /var/www/html/modules/mod_fdshop_filter/mod_fdshop_filter.php
   [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}extensions WHERE type='module' AND element='mod_fdshop_filter' AND client_id=0;")" == "1" ]]
+  compose exec -T joomla test -f /var/www/html/plugins/user/fdshopprofile/services/provider.php
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}extensions WHERE type='plugin' AND folder='user' AND element='fdshopprofile' AND enabled=1;")" == "1" ]]
 
   printf 'FDShop installed: extension_id=%s, schema=%s, tables=%s; installation paths present.\n' "$id" "$schema_version" "$actual_tables"
 }
@@ -140,6 +144,7 @@ verify_uninstalled() {
   compose exec -T joomla test ! -e /var/www/html/components/com_fdshop
   compose exec -T joomla test ! -e /var/www/html/media/com_fdshop
   compose exec -T joomla test ! -e /var/www/html/modules/mod_fdshop_filter
+  compose exec -T joomla test ! -e /var/www/html/plugins/user/fdshopprofile
   printf 'FDShop uninstalled: extension record absent, tables=0, component paths absent.\n'
 }
 
@@ -185,7 +190,8 @@ sync_source() {
     rsync -a --delete /workspace/fdshop/media/images/ /var/www/html/media/com_fdshop/images/
     cp /workspace/fdshop/media/joomla.asset.json /var/www/html/media/com_fdshop/joomla.asset.json
     test ! -d /var/www/html/modules/mod_fdshop_filter || rsync -a --delete /workspace/fdshop/modules/mod_fdshop_filter/ /var/www/html/modules/mod_fdshop_filter/
-    chown -R www-data:www-data /var/www/html/administrator/components/com_fdshop /var/www/html/components/com_fdshop /var/www/html/media/com_fdshop /var/www/html/modules/mod_fdshop_filter 2>/dev/null || true
+    test ! -d /var/www/html/plugins/user/fdshopprofile || rsync -a --delete /workspace/fdshop/plugins/user/fdshopprofile/ /var/www/html/plugins/user/fdshopprofile/
+    chown -R www-data:www-data /var/www/html/administrator/components/com_fdshop /var/www/html/components/com_fdshop /var/www/html/media/com_fdshop /var/www/html/modules/mod_fdshop_filter /var/www/html/plugins/user/fdshopprofile 2>/dev/null || true
   '
   printf 'FDShop source synchronized. Manifest and installer lifecycle were not bypassed.\n'
 }
@@ -366,6 +372,27 @@ run_browser_frontend_cart() {
   load_frontend_cart_fixtures
   compose build browser
 
+  local old_registration old_activation old_mail_to_admin mail_count_before mail_count_after order_count_before
+  old_registration="$(sql "SELECT JSON_UNQUOTE(JSON_EXTRACT(params,'$.allowUserRegistration')) FROM ${JOOMLA_DB_PREFIX}extensions WHERE type='component' AND element='com_users';")"
+  old_activation="$(sql "SELECT JSON_UNQUOTE(JSON_EXTRACT(params,'$.useractivation')) FROM ${JOOMLA_DB_PREFIX}extensions WHERE type='component' AND element='com_users';")"
+  old_mail_to_admin="$(sql "SELECT JSON_UNQUOTE(JSON_EXTRACT(params,'$.mail_to_admin')) FROM ${JOOMLA_DB_PREFIX}extensions WHERE type='component' AND element='com_users';")"
+  sql "DELETE FROM ${JOOMLA_DB_PREFIX}user_usergroup_map WHERE user_id IN (SELECT id FROM ${JOOMLA_DB_PREFIX}users WHERE username='fdshop_customer_e2e'); DELETE FROM ${JOOMLA_DB_PREFIX}user_profiles WHERE user_id IN (SELECT id FROM ${JOOMLA_DB_PREFIX}users WHERE username='fdshop_customer_e2e'); DELETE FROM ${JOOMLA_DB_PREFIX}users WHERE username='fdshop_customer_e2e'; UPDATE ${JOOMLA_DB_PREFIX}extensions SET params=JSON_SET(params,'$.allowUserRegistration','1','$.useractivation','0','$.mail_to_admin','0') WHERE type='component' AND element='com_users';"
+  if ! compose run --rm --no-deps --env "PLAYWRIGHT_OUTPUT_DIR=$container_output-customer-profile" browser npx playwright test tests/customer-profile.spec.js; then
+    sql "UPDATE ${JOOMLA_DB_PREFIX}extensions SET params=JSON_SET(params,'$.allowUserRegistration','${old_registration}','$.useractivation','${old_activation}','$.mail_to_admin','${old_mail_to_admin}') WHERE type='component' AND element='com_users';" || true
+    printf 'Joomla customer registration/profile check failed.\n' >&2
+    load_fixtures || true
+    return 1
+  fi
+  if [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}users WHERE username='fdshop_customer_e2e' AND name='Max Beispiel';")" != 1 ]] ||
+     [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}user_profiles WHERE user_id=(SELECT id FROM ${JOOMLA_DB_PREFIX}users WHERE username='fdshop_customer_e2e') AND profile_key='fdshop_customer.phone' AND JSON_UNQUOTE(profile_value)='+49 40 654321';")" != 1 ]]; then
+    sql "DELETE FROM ${JOOMLA_DB_PREFIX}user_usergroup_map WHERE user_id IN (SELECT id FROM ${JOOMLA_DB_PREFIX}users WHERE username='fdshop_customer_e2e'); DELETE FROM ${JOOMLA_DB_PREFIX}user_profiles WHERE user_id IN (SELECT id FROM ${JOOMLA_DB_PREFIX}users WHERE username='fdshop_customer_e2e'); DELETE FROM ${JOOMLA_DB_PREFIX}users WHERE username='fdshop_customer_e2e'; UPDATE ${JOOMLA_DB_PREFIX}extensions SET params=JSON_SET(params,'$.allowUserRegistration','${old_registration}','$.useractivation','${old_activation}','$.mail_to_admin','${old_mail_to_admin}') WHERE type='component' AND element='com_users';" || true
+    printf 'Joomla core name composition or FDShop profile persistence missing.\n' >&2
+    load_fixtures || true
+    return 1
+  fi
+  sql "DELETE FROM ${JOOMLA_DB_PREFIX}user_usergroup_map WHERE user_id IN (SELECT id FROM ${JOOMLA_DB_PREFIX}users WHERE username='fdshop_customer_e2e'); DELETE FROM ${JOOMLA_DB_PREFIX}user_profiles WHERE user_id IN (SELECT id FROM ${JOOMLA_DB_PREFIX}users WHERE username='fdshop_customer_e2e'); DELETE FROM ${JOOMLA_DB_PREFIX}users WHERE username='fdshop_customer_e2e'; UPDATE ${JOOMLA_DB_PREFIX}extensions SET params=JSON_SET(params,'$.allowUserRegistration','${old_registration}','$.useractivation','${old_activation}','$.mail_to_admin','${old_mail_to_admin}') WHERE type='component' AND element='com_users';"
+  mail_count_before="$(compose exec -T joomla php -r '$data=json_decode(file_get_contents("http://mailpit:8025/api/v1/messages"),true); echo count($data["messages"] ?? []);')"
+
   if compose run --rm --no-deps \
     --env "PLAYWRIGHT_OUTPUT_DIR=$container_output" \
     browser npx playwright test tests/frontend-cart.spec.js tests/bundle-builder.spec.js; then
@@ -377,13 +404,27 @@ run_browser_frontend_cart() {
       load_fixtures || true
       return 1
     fi
-    [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_orders WHERE order_number REGEXP '^[0-9]{4}[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{4}$' AND order_status='ordered' AND customer_email<>'';")" == 1 ]] || { printf 'Checkout order snapshot missing or invalid.\n' >&2; return 1; }
+    [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_orders WHERE order_number REGEXP '^[0-9]{4}[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{4}$' AND order_status='ordered' AND customer_email<>'' AND customer_first_name='Erika' AND customer_last_name='Mustermann' AND customer_street='Teststraße 12' AND customer_postal_code='12345' AND customer_city='Teststadt' AND customer_country='Deutschland';")" == 1 ]] || { printf 'Checkout customer snapshot missing or invalid.\n' >&2; return 1; }
     [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_order_history WHERE event_type='order_created';")" == 1 ]] || { printf 'Checkout order history missing.\n' >&2; return 1; }
     [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_cart WHERE id=910003;")" == 1 ]] || { printf 'Cart V1 changed the isolated foreign cart item.\n' >&2; return 1; }
     [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_cart WHERE user_id=0 AND session_id<>'';")" -ge 1 ]] || { printf 'Cart V1 did not persist the isolated guest cart by session.\n' >&2; return 1; }
     [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_order_status_history WHERE new_status_id=900703;")" == 1 ]] || { printf 'Checkout initial status history missing.\n' >&2; return 1; }
     [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_order_stock_allocations WHERE stock_state='reserved';")" == 3 ]] || { printf 'Checkout stock allocations missing.\n' >&2; return 1; }
     [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_coupon_usage WHERE coupon_code='E2E-PERCENT';")" == 1 ]] || { printf 'Checkout coupon usage missing.\n' >&2; return 1; }
+    mail_count_after="$(compose exec -T joomla php -r '$data=json_decode(file_get_contents("http://mailpit:8025/api/v1/messages"),true); echo count($data["messages"] ?? []);')"
+    (( mail_count_after >= mail_count_before + 2 )) || { printf 'Buyer/seller checkout mail regression detected.\n' >&2; return 1; }
+    [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}user_profiles WHERE user_id=(SELECT id FROM ${JOOMLA_DB_PREFIX}users WHERE username='${JOOMLA_ADMIN_USERNAME}') AND profile_key='fdshop_customer.city' AND JSON_UNQUOTE(profile_value)='Neuhausen';")" == 1 ]] || { printf 'Frontend profile update missing.\n' >&2; return 1; }
+    [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_orders WHERE order_number REGEXP '^[0-9]{4}[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{4}$' AND customer_city='Teststadt';")" == 1 ]] || { printf 'Order snapshot changed after profile edit.\n' >&2; return 1; }
+    load_fixtures >/dev/null
+    load_frontend_cart_fixtures >/dev/null
+    sql "DELETE FROM ${JOOMLA_DB_PREFIX}user_profiles WHERE user_id=(SELECT id FROM ${JOOMLA_DB_PREFIX}users WHERE username='${JOOMLA_ADMIN_USERNAME}') AND profile_key='fdshop_customer.city';"
+    order_count_before="$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_orders;")"
+    if ! compose run --rm --no-deps --env "PLAYWRIGHT_OUTPUT_DIR=$container_output-incomplete-profile" browser npx playwright test tests/checkout-incomplete-profile.spec.js; then
+      printf 'Incomplete legacy customer checkout block failed.\n' >&2
+      load_fixtures || true
+      return 1
+    fi
+    [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_orders;")" == "$order_count_before" ]] || { printf 'Incomplete profile unexpectedly created an order.\n' >&2; return 1; }
     load_fixtures >/dev/null
     printf 'Frontend cart artifacts: %s\nFDShop checkout suite: PASS (order, snapshots, reservation, coupon and cleanup verified)\n' "$host_output"
   else
@@ -405,6 +446,7 @@ test_packaging_migration() {
   sql "ALTER TABLE ${JOOMLA_DB_PREFIX}fdshop_products ADD COLUMN unit_quantity INT UNSIGNED NOT NULL DEFAULT 1 AFTER unit_type;"
   sql "ALTER TABLE ${JOOMLA_DB_PREFIX}fdshop_products_details DROP COLUMN unit_discount_value, DROP COLUMN unit_discount_type, DROP COLUMN unit_quantity;"
   sql "ALTER TABLE ${JOOMLA_DB_PREFIX}fdshop_config DROP COLUMN image_quality_default, DROP COLUMN image_quality_small, DROP COLUMN image_quality_mobile;"
+  sql "DROP TABLE ${JOOMLA_DB_PREFIX}fdshop_order_stock_allocations; ALTER TABLE ${JOOMLA_DB_PREFIX}fdshop_order_items DROP COLUMN unit_variant, DROP COLUMN unit_type_snapshot, DROP COLUMN unit_quantity_snapshot, DROP COLUMN physical_quantity; ALTER TABLE ${JOOMLA_DB_PREFIX}fdshop_orders DROP INDEX uk_fdshop_orders_submission_id, DROP COLUMN customer_first_name, DROP COLUMN customer_last_name, DROP COLUMN customer_company, DROP COLUMN customer_street, DROP COLUMN customer_postal_code, DROP COLUMN customer_city, DROP COLUMN customer_country, DROP COLUMN customer_phone, DROP COLUMN customer_name, DROP COLUMN customer_email, DROP COLUMN payment_method_name, DROP COLUMN payment_fee, DROP COLUMN shipment_name, DROP COLUMN shipment_fee, DROP COLUMN subtotal, DROP COLUMN coupon_code, DROP COLUMN coupon_discount, DROP COLUMN order_note, DROP COLUMN terms_required, DROP COLUMN terms_accepted, DROP COLUMN terms_accepted_at, DROP COLUMN stock_state, DROP COLUMN submission_id, DROP COLUMN mail_warning;"
   sql "UPDATE ${JOOMLA_DB_PREFIX}fdshop_products SET unit_type='Stück', unit_quantity=99 WHERE id=900100; UPDATE ${JOOMLA_DB_PREFIX}fdshop_products SET unit_type='Display', unit_quantity=6 WHERE id=900103; UPDATE ${JOOMLA_DB_PREFIX}fdshop_products SET unit_type='Display', unit_quantity=1 WHERE id=900104; UPDATE ${JOOMLA_DB_PREFIX}schemas SET version_id='0.0.19' WHERE extension_id=${id};"
   install_fdshop >/dev/null
   [[ "$(sql "SELECT CONCAT(p.unit_type,'|',d.unit_quantity,'|',d.unit_discount_type,'|',d.unit_discount_value) FROM ${JOOMLA_DB_PREFIX}fdshop_products p JOIN ${JOOMLA_DB_PREFIX}fdshop_products_details d ON d.product_id=p.id WHERE p.id=900103;")" == "Display|6|none|0.0000" ]]
@@ -412,7 +454,8 @@ test_packaging_migration() {
   [[ "$(sql "SELECT CONCAT(p.unit_type,'|',d.unit_quantity) FROM ${JOOMLA_DB_PREFIX}fdshop_products p JOIN ${JOOMLA_DB_PREFIX}fdshop_products_details d ON d.product_id=p.id WHERE p.id=900100;")" == "Stück|1" ]]
   [[ "$(sql "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema='${MARIADB_DATABASE}' AND table_name='${JOOMLA_DB_PREFIX}fdshop_products' AND column_name='unit_quantity';")" == "0" ]]
   [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_cart WHERE unit_variant<>'piece' OR unit_type_snapshot<>'Stück' OR unit_quantity_snapshot<>1;")" == "0" ]]
-  [[ "$(sql "SELECT version_id FROM ${JOOMLA_DB_PREFIX}schemas WHERE extension_id=${id};")" == "0.0.28" ]]
+  [[ "$(sql "SELECT version_id FROM ${JOOMLA_DB_PREFIX}schemas WHERE extension_id=${id};")" == "0.0.29" ]]
+  [[ "$(sql "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema='${MARIADB_DATABASE}' AND table_name='${JOOMLA_DB_PREFIX}fdshop_orders' AND column_name IN ('customer_first_name','customer_last_name','customer_company','customer_street','customer_postal_code','customer_city','customer_country','customer_phone');")" == "8" ]]
   [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_filters;")" == "7" ]]
   [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_filter_ranges;")" == "9" ]]
   [[ "$(sql "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema='${MARIADB_DATABASE}' AND table_name='${JOOMLA_DB_PREFIX}fdshop_products_details' AND column_name='bundle_eligible';")" == "1" ]]
@@ -420,7 +463,7 @@ test_packaging_migration() {
   [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_products WHERE ribbon_bundle=1;")" == "2" ]]
   [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_filter_options;")" == "6" ]]
   [[ "$(sql "SELECT CONCAT(image_quality_default,'|',image_quality_small,'|',image_quality_mobile) FROM ${JOOMLA_DB_PREFIX}fdshop_config WHERE id=1;")" == "80|60|70" ]]
-  printf 'FDShop packaging, bundle, filter, media and checkout migration 0.0.19 -> 0.0.28: PASS\n'
+  printf 'FDShop packaging, bundle, filter, media, checkout and customer snapshot migration 0.0.19 -> 0.0.29: PASS\n'
 }
 
 run_browser_crud_manufacturers() {

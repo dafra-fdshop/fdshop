@@ -12,7 +12,7 @@ coupon codes, bundle numbers, order numbers, and names instead.
 
 ## Coupon model scope
 
-Fixtures represent schema `0.0.28` and the current CouponService, packaging-unit model, configurable-bundle foundation, category-aware filter configuration, product-media configuration, Tools/Master-Bildimport integration, and checkout/order-lifecycle schema:
+Fixtures represent schema `0.0.29` and the current CouponService, packaging-unit model, configurable-bundle foundation, category-aware filter configuration, product-media configuration, Tools/Master-Bildimport integration, checkout/order-lifecycle schema, and Joomla customer profile/order snapshot integration:
 `percent`/`fixed`, minimum total, validity dates, usage limits, and simple
 user/buyer-group/product/category mappings.
 

@@ -1,12 +1,12 @@
 =====================================================================
-FDShop_Fachregeln_Daten_und_Formulare_V12
+FDShop_Fachregeln_Daten_und_Formulare_V13
 =====================================================================
 
-Status: VERBINDLICHE PROJEKTQUELLE Priorität: SEHR HOCH Version: V12
+Status: VERBINDLICHE PROJEKTQUELLE Priorität: SEHR HOCH Version: V13
 
 Diese Quelle ersetzt vollständig:
 
-FDShop_Fachregeln_Daten_und_Formulare_V10
+FDShop_Fachregeln_Daten_und_Formulare_V12
 
 ===================================================================== 1.
 ZWECK
@@ -2752,8 +2752,26 @@ Master-Bildimport:
   Auswahl. Staging-Cleanup berührt Produktmedien und Import-State nicht.
 
 =====================================================================
+NACHTRAG KUNDENPROFIL UND BESTELLSNAPSHOT V1
+=====================================================================
+
+Das aktuelle Kundenprofil wird ausschließlich am Joomla-Benutzer geführt.
+Pflichtdaten sind Vorname, Nachname, Straße mit Hausnummer, PLZ, Ort, Land und
+die Joomla-Core-E-Mail; Benutzername bleibt Core-Anmeldeinformation und wird
+nicht in den Bestellsnapshot übernommen. Firma und Telefon sind optional.
+
+Kunden geben Vor- und Nachname getrennt ein. Der technische Joomla-Name wird
+deterministisch daraus gebildet. Bestehende Benutzer ohne vollständiges Profil
+bleiben administrierbar, dürfen eine Bestellung jedoch erst nach Ergänzung
+aller Pflichtdaten abschließen.
+
+Jede erfolgreiche Bestellung speichert den zu diesem Zeitpunkt gültigen
+Namen, Firma, Anschrift, Land, Telefon und E-Mail als historischen Snapshot.
+Spätere Änderungen am Joomla-Profil verändern bestehende Bestellungen nicht.
+
+=====================================================================
 ENDE DER QUELLE
 
-FDShop_Fachregeln_Daten_und_Formulare_V12
+FDShop_Fachregeln_Daten_und_Formulare_V13
 
-Status: VERBINDLICHE PROJEKTQUELLE Version: V12
+Status: VERBINDLICHE PROJEKTQUELLE Version: V13

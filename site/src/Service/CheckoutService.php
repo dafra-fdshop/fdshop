@@ -18,11 +18,9 @@ final class CheckoutService implements CheckoutServiceInterface
         if ($existing) return $this->result($existing, true);
         $note = trim(strip_tags($note));
         if (mb_strlen($note) > 2000) throw new \DomainException('Die Bemerkung darf höchstens 2000 Zeichen lang sein.');
-        $user = Factory::getContainer()->get('user.factory')->loadUserById($userId);
-        if (!$user || !$user->id || !filter_var($user->email, FILTER_VALIDATE_EMAIL)) throw new \DomainException('Das Benutzerkonto besitzt keine gültige E-Mail-Adresse.');
-
         $this->db->transactionStart();
         try {
+            $customer = $this->customerSnapshot($userId);
             $config = $this->lockOne('#__fdshop_config', 'id = 1');
             if (!$config || (int)$config->katalog_active === 1) throw new \DomainException('Bestellungen sind im Katalogmodus nicht möglich.');
             $required = (int)$config->require_terms_checkbox === 1;
@@ -50,7 +48,11 @@ final class CheckoutService implements CheckoutServiceInterface
                 'payment_method_id'=>(int)$cart['payment']->id, 'shipment_id'=>(int)$cart['shipment']->id,
                 'order_status'=>'ordered', 'order_status_id'=>(int)$status->id, 'state'=>1, 'currency'=>(string)$cart['currency'],
                 'grand_total'=>(float)$cart['total'], 'has_bundle'=>empty($cart['bundles'])?0:1,
-                'customer_name'=>(string)$user->name, 'customer_email'=>(string)$user->email,
+                'customer_name'=>$customer['name'], 'customer_email'=>$customer['email'],
+                'customer_first_name'=>$customer['first_name'], 'customer_last_name'=>$customer['last_name'],
+                'customer_company'=>$customer['company'] ?: null, 'customer_street'=>$customer['street'],
+                'customer_postal_code'=>$customer['postal_code'], 'customer_city'=>$customer['city'],
+                'customer_country'=>$customer['country'], 'customer_phone'=>$customer['phone'] ?: null,
                 'payment_method_name'=>(string)$cart['payment']->name, 'payment_fee'=>(float)$cart['payment_fee'],
                 'shipment_name'=>(string)$cart['shipment']->name, 'shipment_fee'=>(float)$cart['shipment_fee'],
                 'subtotal'=>(float)$cart['subtotal'], 'coupon_code'=>(string)($cart['coupon_code']??''), 'coupon_discount'=>(float)($cart['coupon_discount']??0),
@@ -107,5 +109,42 @@ final class CheckoutService implements CheckoutServiceInterface
     private function lockOne(string $table,string $where):?object{$this->db->setQuery('SELECT * FROM '.$this->db->quoteName($table).' WHERE '.$where.' FOR UPDATE');return $this->db->loadObject()?:null;}
     private function orderBySubmission(int $userId,string $id):?object{$q=$this->db->getQuery(true)->select(['id','order_number','grand_total','currency'])->from($this->db->quoteName('#__fdshop_orders'))->where('user_id='.(int)$userId)->where('submission_id='.$this->db->quote(strtolower($id)));$this->db->setQuery($q);return $this->db->loadObject()?:null;}
     private function orderNumber():string{$chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';for($try=0;$try<20;$try++){$number=Factory::getDate()->format('ym',true);for($i=0;$i<4;$i++)$number.=$chars[random_int(0,strlen($chars)-1)];$q=$this->db->getQuery(true)->select('COUNT(*)')->from($this->db->quoteName('#__fdshop_orders'))->where('order_number='.$this->db->quote($number));$this->db->setQuery($q);if(!(int)$this->db->loadResult())return $number;}throw new \RuntimeException('Es konnte keine eindeutige Bestellnummer erzeugt werden.');}
+
+    private function customerSnapshot(int $userId): array
+    {
+        $user = $this->lockOne('#__users', 'id = ' . $userId);
+        if (!$user || !filter_var((string) $user->email, FILTER_VALIDATE_EMAIL)) {
+            throw new \DomainException('Das Benutzerkonto besitzt keine gültige E-Mail-Adresse.');
+        }
+        $query = $this->db->getQuery(true)
+            ->select([$this->db->quoteName('profile_key'), $this->db->quoteName('profile_value')])
+            ->from($this->db->quoteName('#__user_profiles'))
+            ->where($this->db->quoteName('user_id') . ' = ' . $userId)
+            ->where($this->db->quoteName('profile_key') . ' LIKE ' . $this->db->quote('fdshop_customer.%'));
+        $this->db->setQuery((string) $query . ' FOR UPDATE');
+        $profile = [];
+        foreach ($this->db->loadRowList() as [$key, $value]) {
+            $profile[substr((string) $key, 16)] = trim((string) (json_decode($value, true) ?? $value));
+        }
+        foreach (['first_name', 'last_name', 'street', 'postal_code', 'city', 'country'] as $field) {
+            if (($profile[$field] ?? '') === '') {
+                throw new \DomainException('Bitte ergänzen Sie vor der Bestellung Ihre vollständigen Kundendaten unter „Mein Profil bearbeiten“: Vorname, Nachname, Straße, PLZ, Ort und Land.');
+            }
+        }
+        $firstName = mb_substr($profile['first_name'], 0, 100);
+        $lastName = mb_substr($profile['last_name'], 0, 100);
+        return [
+            'name' => trim($firstName . ' ' . $lastName),
+            'email' => (string) $user->email,
+            'first_name' => $firstName,
+            'last_name' => $lastName,
+            'company' => mb_substr($profile['company'] ?? '', 0, 255),
+            'street' => mb_substr($profile['street'], 0, 255),
+            'postal_code' => mb_substr($profile['postal_code'], 0, 32),
+            'city' => mb_substr($profile['city'], 0, 120),
+            'country' => mb_substr($profile['country'], 0, 120),
+            'phone' => mb_substr($profile['phone'] ?? '', 0, 64),
+        ];
+    }
     private function result(object $o,bool $existing):array{return ['order_id'=>(int)$o->id,'order_number'=>(string)$o->order_number,'grand_total'=>(float)$o->grand_total,'currency'=>(string)$o->currency,'already_processed'=>$existing,'confirmation_url'=>'index.php?option=com_fdshop&view=checkoutconfirmation&order_number='.rawurlencode((string)$o->order_number)];}
 }

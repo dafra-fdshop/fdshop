@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<extension type="plugin" group="user" method="upgrade">
+  <name>plg_user_fdshopprofile</name>
+  <author>FDShop</author>
+  <creationDate>2026-09-25</creationDate>
+  <version>0.0.29</version>
+  <description>FDShop-Kundendaten für Joomla-Benutzerprofile.</description>
+  <namespace path="src">FDShop\Plugin\User\FDShopProfile</namespace>
+  <scriptfile>script.php</scriptfile>
+  <files>
+    <folder>forms</folder>
+    <folder plugin="fdshopprofile">services</folder>
+    <folder>src</folder>
+    <filename>script.php</filename>
+  </files>
+</extension>

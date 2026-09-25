@@ -73,6 +73,10 @@ if (!empty($order->user_id)) {
                     <div class="small text-muted"><?php echo (int) ($order->user_id ?? 0); ?></div>
                 </div>
                 <div class="mt-3"><div class="fw-bold">Historische E-Mail</div><div><?php echo $this->escape((string) ($order->customer_email ?? 'Historisch unbekannt')); ?></div></div>
+                <div class="mt-3"><div class="fw-bold">Vorname / Nachname</div><div><?php echo $this->escape(trim((string) ($order->customer_first_name ?? '') . ' ' . (string) ($order->customer_last_name ?? '')) ?: 'Historisch unbekannt'); ?></div></div>
+                <div class="mt-3"><div class="fw-bold">Firma</div><div><?php echo $this->escape((string) ($order->customer_company ?? '–')); ?></div></div>
+                <div class="mt-3"><div class="fw-bold">Anschrift</div><div><?php echo $this->escape((string) ($order->customer_street ?? 'Historisch unbekannt')); ?><br><?php echo $this->escape(trim((string) ($order->customer_postal_code ?? '') . ' ' . (string) ($order->customer_city ?? ''))); ?><br><?php echo $this->escape((string) ($order->customer_country ?? '')); ?></div></div>
+                <div class="mt-3"><div class="fw-bold">Telefon</div><div><?php echo $this->escape((string) ($order->customer_phone ?? '–')); ?></div></div>
             </div>
         </div>
     </div>
