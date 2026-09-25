@@ -3,7 +3,9 @@ namespace FDShop\Component\FDShop\Site\Service;
 defined('_JEXEC') or die;
 
 use Joomla\CMS\Factory;
+use Joomla\CMS\Plugin\PluginHelper;
 use Joomla\Database\DatabaseInterface;
+use Joomla\Registry\Registry;
 use FDShop\Component\FDShop\Administrator\Service\OrderNotificationService;
 
 final class CheckoutService implements CheckoutServiceInterface
@@ -50,9 +52,9 @@ final class CheckoutService implements CheckoutServiceInterface
                 'grand_total'=>(float)$cart['total'], 'has_bundle'=>empty($cart['bundles'])?0:1,
                 'customer_name'=>$customer['name'], 'customer_email'=>$customer['email'],
                 'customer_first_name'=>$customer['first_name'], 'customer_last_name'=>$customer['last_name'],
-                'customer_company'=>$customer['company'] ?: null, 'customer_street'=>$customer['street'],
-                'customer_postal_code'=>$customer['postal_code'], 'customer_city'=>$customer['city'],
-                'customer_country'=>$customer['country'], 'customer_phone'=>$customer['phone'] ?: null,
+                'customer_company'=>$customer['company'] ?: null, 'customer_street'=>$customer['street'] ?: null,
+                'customer_postal_code'=>$customer['postal_code'] ?: null, 'customer_city'=>$customer['city'] ?: null,
+                'customer_country'=>$customer['country'] ?: null, 'customer_phone'=>$customer['phone'] ?: null,
                 'payment_method_name'=>(string)$cart['payment']->name, 'payment_fee'=>(float)$cart['payment_fee'],
                 'shipment_name'=>(string)$cart['shipment']->name, 'shipment_fee'=>(float)$cart['shipment_fee'],
                 'subtotal'=>(float)$cart['subtotal'], 'coupon_code'=>(string)($cart['coupon_code']??''), 'coupon_discount'=>(float)($cart['coupon_discount']??0),
@@ -126,9 +128,10 @@ final class CheckoutService implements CheckoutServiceInterface
         foreach ($this->db->loadRowList() as [$key, $value]) {
             $profile[substr((string) $key, 16)] = trim((string) (json_decode($value, true) ?? $value));
         }
-        foreach (['first_name', 'last_name', 'street', 'postal_code', 'city', 'country'] as $field) {
+        $config = $this->customerFieldConfiguration();
+        foreach ($config['required'] as $field) {
             if (($profile[$field] ?? '') === '') {
-                throw new \DomainException('Bitte ergänzen Sie vor der Bestellung Ihre vollständigen Kundendaten unter „Mein Profil bearbeiten“: Vorname, Nachname, Straße, PLZ, Ort und Land.');
+                throw new \DomainException('Bitte ergänzen Sie vor der Bestellung alle aktuell erforderlichen Kundendaten unter „Mein Profil bearbeiten“.');
             }
         }
         $firstName = mb_substr($profile['first_name'], 0, 100);
@@ -138,13 +141,28 @@ final class CheckoutService implements CheckoutServiceInterface
             'email' => (string) $user->email,
             'first_name' => $firstName,
             'last_name' => $lastName,
-            'company' => mb_substr($profile['company'] ?? '', 0, 255),
-            'street' => mb_substr($profile['street'], 0, 255),
-            'postal_code' => mb_substr($profile['postal_code'], 0, 32),
-            'city' => mb_substr($profile['city'], 0, 120),
-            'country' => mb_substr($profile['country'], 0, 120),
-            'phone' => mb_substr($profile['phone'] ?? '', 0, 64),
+            'company' => mb_substr($config['active']['company'] ? ($profile['company'] ?? '') : '', 0, 255),
+            'street' => mb_substr($config['active']['street'] ? ($profile['street'] ?? '') : '', 0, 255),
+            'postal_code' => mb_substr($config['active']['postal_code'] ? ($profile['postal_code'] ?? '') : '', 0, 32),
+            'city' => mb_substr($config['active']['city'] ? ($profile['city'] ?? '') : '', 0, 120),
+            'country' => mb_substr($config['active']['country'] ? ($profile['country'] ?? '') : '', 0, 120),
+            'phone' => mb_substr($config['active']['phone'] ? ($profile['phone'] ?? '') : '', 0, 64),
         ];
+    }
+
+    private function customerFieldConfiguration(): array
+    {
+        $defaults = ['company' => 1, 'street' => 2, 'postal_code' => 2, 'city' => 2, 'country' => 2, 'phone' => 1];
+        $plugin = PluginHelper::getPlugin('user', 'fdshopprofile');
+        $params = new Registry($plugin->params ?? '');
+        $required = ['first_name', 'last_name'];
+        $active = [];
+        foreach ($defaults as $field => $default) {
+            $status = (int) $params->get('field_' . $field, $default);
+            $active[$field] = $status > 0;
+            if ($status === 2) $required[] = $field;
+        }
+        return ['required' => $required, 'active' => $active];
     }
     private function result(object $o,bool $existing):array{return ['order_id'=>(int)$o->id,'order_number'=>(string)$o->order_number,'grand_total'=>(float)$o->grand_total,'currency'=>(string)$o->currency,'already_processed'=>$existing,'confirmation_url'=>'index.php?option=com_fdshop&view=checkoutconfirmation&order_number='.rawurlencode((string)$o->order_number)];}
 }

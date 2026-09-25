@@ -1,9 +1,9 @@
 =====================================================================
-FDShop_Architektur_Struktur_Installation_V11
+FDShop_Architektur_Struktur_Installation_V12
 =====================================================================
 
-Status: VERBINDLICHE PROJEKTQUELLE Version: V11 Ersetzt:
-FDShop_Architektur_Struktur_Installation_V10 Stand: 25.09.2026
+Status: VERBINDLICHE PROJEKTQUELLE Version: V12 Ersetzt:
+FDShop_Architektur_Struktur_Installation_V11 Stand: 25.09.2026
 
 ===================================================================== 1.
 ZWECK UND ZIELPLATTFORM
@@ -624,6 +624,21 @@ Architekturnachtrag Joomla-Kundenprofil / Bestellsnapshot V1 (Schema 0.0.29):
 - Das Paket installiert und aktiviert Plugin, Komponente und Filtermodul;
   Fresh Install und Update werden gemeinsam über Schema 0.0.29 getragen.
 
+Architekturnachtrag Profilkonfiguration / Registrierungsseite V1 (Schema 0.0.30):
+- Das User-Plugin `fdshopprofile` bleibt alleinige Quelle für Feldstatus,
+  Reihenfolge, Formularintegration, Validierung und Profilspeicherung.
+- Vor- und Nachname bleiben fest aktiv und Pflicht. Firma, Straße, PLZ, Ort,
+  Land und Telefon sind zentral als Pflicht, optional oder deaktiviert
+  konfigurierbar; deaktivierte historische Profilwerte werden nicht gelöscht.
+- Das paketierte System-Plugin `fdshopregistration` komponiert ausschließlich
+  die Darstellung der Core-Registrierung mit dem realen Joomla-Loginmodul. Es
+  implementiert weder Authentifizierung noch Registrierung oder Passwortlogik.
+- CheckoutService übernimmt dieselbe Plugin-Konfiguration serverseitig in
+  Pflichtprüfung und Snapshot. Deaktivierte Felder werden in neuen Snapshots
+  als NULL geführt; historische Bestellungen bleiben unverändert.
+- Paket, Fresh Install und Update enthalten beide Plugins und werden gemeinsam
+  über Schema 0.0.30 geführt.
+
 =====================================================================
-ENDE DER QUELLE FDShop_Architektur_Struktur_Installation_V11
+ENDE DER QUELLE FDShop_Architektur_Struktur_Installation_V12
 =====================================================================

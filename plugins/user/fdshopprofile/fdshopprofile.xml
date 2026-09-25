@@ -3,7 +3,7 @@
   <name>plg_user_fdshopprofile</name>
   <author>FDShop</author>
   <creationDate>2026-09-25</creationDate>
-  <version>0.0.29</version>
+  <version>0.0.30</version>
   <description>FDShop-Kundendaten für Joomla-Benutzerprofile.</description>
   <namespace path="src">FDShop\Plugin\User\FDShopProfile</namespace>
   <scriptfile>script.php</scriptfile>
@@ -11,6 +11,35 @@
     <folder>forms</folder>
     <folder plugin="fdshopprofile">services</folder>
     <folder>src</folder>
+    <folder>language</folder>
     <filename>script.php</filename>
   </files>
+  <languages folder="language">
+    <language tag="de-DE">de-DE/plg_user_fdshopprofile.ini</language>
+    <language tag="de-DE">de-DE/plg_user_fdshopprofile.sys.ini</language>
+    <language tag="en-GB">en-GB/plg_user_fdshopprofile.ini</language>
+    <language tag="en-GB">en-GB/plg_user_fdshopprofile.sys.ini</language>
+  </languages>
+  <config>
+    <fields name="params">
+      <fieldset name="customer" label="PLG_USER_FDSHOPPROFILE_CONFIG_TITLE" description="PLG_USER_FDSHOPPROFILE_CONFIG_DESC">
+        <field name="fixed_names" type="note" label="PLG_USER_FDSHOPPROFILE_FIXED_NAMES_LABEL" description="PLG_USER_FDSHOPPROFILE_FIXED_NAMES_DESC" />
+        <field name="field_company" type="list" label="PLG_USER_FDSHOPPROFILE_COMPANY_LABEL" default="1"><option value="2">PLG_USER_FDSHOPPROFILE_REQUIRED</option><option value="1">PLG_USER_FDSHOPPROFILE_OPTIONAL</option><option value="0">JDISABLED</option></field>
+        <field name="field_street" type="list" label="PLG_USER_FDSHOPPROFILE_STREET_LABEL" default="2"><option value="2">PLG_USER_FDSHOPPROFILE_REQUIRED</option><option value="1">PLG_USER_FDSHOPPROFILE_OPTIONAL</option><option value="0">JDISABLED</option></field>
+        <field name="field_postal_code" type="list" label="PLG_USER_FDSHOPPROFILE_POSTAL_CODE_LABEL" default="2"><option value="2">PLG_USER_FDSHOPPROFILE_REQUIRED</option><option value="1">PLG_USER_FDSHOPPROFILE_OPTIONAL</option><option value="0">JDISABLED</option></field>
+        <field name="field_city" type="list" label="PLG_USER_FDSHOPPROFILE_CITY_LABEL" default="2"><option value="2">PLG_USER_FDSHOPPROFILE_REQUIRED</option><option value="1">PLG_USER_FDSHOPPROFILE_OPTIONAL</option><option value="0">JDISABLED</option></field>
+        <field name="field_country" type="list" label="PLG_USER_FDSHOPPROFILE_COUNTRY_LABEL" default="2"><option value="2">PLG_USER_FDSHOPPROFILE_REQUIRED</option><option value="1">PLG_USER_FDSHOPPROFILE_OPTIONAL</option><option value="0">JDISABLED</option></field>
+        <field name="field_phone" type="list" label="PLG_USER_FDSHOPPROFILE_PHONE_LABEL" default="1"><option value="2">PLG_USER_FDSHOPPROFILE_REQUIRED</option><option value="1">PLG_USER_FDSHOPPROFILE_OPTIONAL</option><option value="0">JDISABLED</option></field>
+        <field name="ordering_note" type="note" label="PLG_USER_FDSHOPPROFILE_ORDERING_LABEL" description="PLG_USER_FDSHOPPROFILE_ORDERING_DESC" />
+        <field name="order_first_name" type="number" label="PLG_USER_FDSHOPPROFILE_FIRST_NAME_LABEL" default="10" min="0" step="10" />
+        <field name="order_last_name" type="number" label="PLG_USER_FDSHOPPROFILE_LAST_NAME_LABEL" default="20" min="0" step="10" />
+        <field name="order_company" type="number" label="PLG_USER_FDSHOPPROFILE_COMPANY_LABEL" default="30" min="0" step="10" />
+        <field name="order_street" type="number" label="PLG_USER_FDSHOPPROFILE_STREET_LABEL" default="40" min="0" step="10" />
+        <field name="order_postal_code" type="number" label="PLG_USER_FDSHOPPROFILE_POSTAL_CODE_LABEL" default="50" min="0" step="10" />
+        <field name="order_city" type="number" label="PLG_USER_FDSHOPPROFILE_CITY_LABEL" default="60" min="0" step="10" />
+        <field name="order_country" type="number" label="PLG_USER_FDSHOPPROFILE_COUNTRY_LABEL" default="70" min="0" step="10" />
+        <field name="order_phone" type="number" label="PLG_USER_FDSHOPPROFILE_PHONE_LABEL" default="80" min="0" step="10" />
+      </fieldset>
+    </fields>
+  </config>
 </extension>

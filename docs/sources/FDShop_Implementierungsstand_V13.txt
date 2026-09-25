@@ -1,9 +1,9 @@
 =====================================================================
-FDShop_Implementierungsstand_V12
+FDShop_Implementierungsstand_V13
 =====================================================================
 
-Status: VERBINDLICHE PROJEKTQUELLE Version: V12 Ersetzt:
-FDShop_Implementierungsstand_V11 Prüfdatum: 25.09.2026
+Status: VERBINDLICHE PROJEKTQUELLE Version: V13 Ersetzt:
+FDShop_Implementierungsstand_V12 Prüfdatum: 25.09.2026
 
 Technische Grundlage: Git-Repository dafra-fdshop/fdshop Branch: feature
 Technischer Referenzcommit: c970bca1d92673b0cdc4ee841acf0d2c583a88ee
@@ -599,6 +599,16 @@ Nachtrag Joomla-Kundenprofil / Bestellsnapshot V1 (Schema 0.0.29):
   umgesetzt. Gastbestellung, Adressbuch und alternative Lieferadresse bleiben
   außerhalb dieses Stands.
 
+Nachtrag Profilkonfiguration / Registrierungsseite V1 (Schema 0.0.30):
+- Pflicht/optional/deaktiviert und Ordering für FDShop-Kundenfelder im
+  User-Plugin: umgesetzt; Vor- und Nachname bleiben fest Pflicht.
+- Einheitliche Wirkung in Registrierung, Frontendprofil, Admin-Benutzerformular
+  und Checkout sowie Erhalt deaktivierter Altdaten: umgesetzt.
+- Zweispaltige Core-Registrierung mit realem Joomla-Loginmodul, Core-Routen,
+  Systemmeldungen und mobiler Stapelung: umgesetzt.
+- Checkout mit deaktiviertem ehemaligem Pflichtfeld und NULL-Snapshot sowie
+  unveränderte historische Bestellungen: umgesetzt und real geprüft.
+
 =====================================================================
-ENDE DER QUELLE FDShop_Implementierungsstand_V12
+ENDE DER QUELLE FDShop_Implementierungsstand_V13
 =====================================================================

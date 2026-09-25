@@ -1,9 +1,9 @@
 =====================================================================
-FDShop_Codebestand_V12
+FDShop_Codebestand_V13
 =====================================================================
 
-Status: VERBINDLICHE PROJEKTQUELLE Version: V12 Ersetzt:
-FDShop_Codebestand_V11 Prüfdatum: 25.09.2026
+Status: VERBINDLICHE PROJEKTQUELLE Version: V13 Ersetzt:
+FDShop_Codebestand_V12 Prüfdatum: 25.09.2026
 
 Technische Grundlage: Git-Repository dafra-fdshop/fdshop Branch: feature
 Technischer Referenzcommit: c970bca1d92673b0cdc4ee841acf0d2c583a88ee
@@ -621,6 +621,18 @@ Nachtrag Joomla-Kundenprofil / Bestellsnapshot V1 (Schema 0.0.29):
   decken Registrierung, Profiländerung, Snapshot-Unveränderlichkeit,
   Altbenutzerblockade, Adminanzeige und Checkout-Mails ab.
 
+Nachtrag Profilkonfiguration / Registrierungsseite V1 (Schema 0.0.30):
+- Das Manifest des User-Plugins stellt Status- und Orderingparameter für die
+  acht FDShop-Profilfelder bereit; Sprachdateien liefern übersetzbare Labels.
+- `FDShopProfile` sortiert Formfelder konfigurationsgetrieben, entfernt
+  deaktivierte Felder, validiert dynamische Pflichtfelder und erhält beim
+  Speichern die Daten deaktivierter Felder.
+- `plugins/system/fdshopregistration` enthält ein aktiviertes, paketiertes
+  Präsentations-Plugin mit Core-Loginmodul-Komposition und responsivem Layout.
+- CheckoutService liest die Pluginparameter und snapshotet ausschließlich
+  aktive Profilwerte. Neue Browserprüfungen decken Admin-Konfiguration,
+  Reihenfolge, Deaktivierung, Responsive-Layout und Checkout ab.
+
 =====================================================================
-ENDE DER QUELLE FDShop_Codebestand_V12
+ENDE DER QUELLE FDShop_Codebestand_V13
 =====================================================================

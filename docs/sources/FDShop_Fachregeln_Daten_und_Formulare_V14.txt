@@ -1,12 +1,12 @@
 =====================================================================
-FDShop_Fachregeln_Daten_und_Formulare_V13
+FDShop_Fachregeln_Daten_und_Formulare_V14
 =====================================================================
 
-Status: VERBINDLICHE PROJEKTQUELLE Priorität: SEHR HOCH Version: V13
+Status: VERBINDLICHE PROJEKTQUELLE Priorität: SEHR HOCH Version: V14
 
 Diese Quelle ersetzt vollständig:
 
-FDShop_Fachregeln_Daten_und_Formulare_V12
+FDShop_Fachregeln_Daten_und_Formulare_V13
 
 ===================================================================== 1.
 ZWECK
@@ -2756,22 +2756,33 @@ NACHTRAG KUNDENPROFIL UND BESTELLSNAPSHOT V1
 =====================================================================
 
 Das aktuelle Kundenprofil wird ausschließlich am Joomla-Benutzer geführt.
-Pflichtdaten sind Vorname, Nachname, Straße mit Hausnummer, PLZ, Ort, Land und
-die Joomla-Core-E-Mail; Benutzername bleibt Core-Anmeldeinformation und wird
-nicht in den Bestellsnapshot übernommen. Firma und Telefon sind optional.
+Vorname und Nachname sind immer aktiv und Pflicht. Firma, Straße mit
+Hausnummer, PLZ, Ort, Land und Telefon werden zentral im FDShop-User-Plugin als
+Pflicht, optional oder deaktiviert konfiguriert. Default sind Straße, PLZ, Ort
+und Land Pflicht sowie Firma und Telefon optional. Die Joomla-Core-E-Mail
+bleibt Pflicht; Benutzername bleibt Core-Anmeldeinformation und wird nicht in
+den Bestellsnapshot übernommen.
+
+Die Konfiguration gilt identisch für Registrierung, Frontendprofil,
+Admin-Benutzerbearbeitung und Checkout. Deaktivierte Felder sind dort nicht
+sichtbar und kein Checkoutblocker. Ihre bereits gespeicherten Profilwerte
+werden nicht ungefragt gelöscht. Die sichtbare Feldreihenfolge folgt den
+konfigurierten Orderingzahlen; Vor- und Nachname dürfen umsortiert, aber nicht
+deaktiviert oder optional werden.
 
 Kunden geben Vor- und Nachname getrennt ein. Der technische Joomla-Name wird
 deterministisch daraus gebildet. Bestehende Benutzer ohne vollständiges Profil
 bleiben administrierbar, dürfen eine Bestellung jedoch erst nach Ergänzung
 aller Pflichtdaten abschließen.
 
-Jede erfolgreiche Bestellung speichert den zu diesem Zeitpunkt gültigen
-Namen, Firma, Anschrift, Land, Telefon und E-Mail als historischen Snapshot.
-Spätere Änderungen am Joomla-Profil verändern bestehende Bestellungen nicht.
+Jede erfolgreiche Bestellung speichert die zu diesem Zeitpunkt aktiven
+Profilwerte und die E-Mail als historischen Snapshot. Deaktivierte oder leere
+optionale Werte werden im neuen Snapshot als NULL geführt. Spätere Profil- oder
+Konfigurationsänderungen verändern bestehende Bestellungen nicht.
 
 =====================================================================
 ENDE DER QUELLE
 
-FDShop_Fachregeln_Daten_und_Formulare_V13
+FDShop_Fachregeln_Daten_und_Formulare_V14
 
-Status: VERBINDLICHE PROJEKTQUELLE Version: V13
+Status: VERBINDLICHE PROJEKTQUELLE Version: V14

@@ -217,3 +217,18 @@
 .fdshop-cart__bundle header { display: flex; justify-content: space-between; gap: 1rem; }
 .fdshop-cart__bundle ul { margin: .5rem 0; }
 @media (max-width: 700px) { .fdshop-bundle__grid { grid-template-columns: 1fr; } .fdshop-bundle__chosen { min-height: auto; } .fdshop-bundle__summary { grid-template-columns: 1fr; } }
+
+.fdshop-registration-note { margin-bottom: 1rem; padding: 1rem; border: 1px solid #dfbd88; border-radius: .25rem; background: #f5e6cf; }
+.fdshop-account-entry { display: grid; grid-template-columns: minmax(15rem, .75fr) minmax(0, 2fr); gap: 1rem; align-items: start; }
+.fdshop-account-entry > section { min-width: 0; padding: 1rem; border: 1px solid var(--border-color, #dfe3e7); background: #fff; }
+.fdshop-account-entry h2 { margin: 0 0 1rem; }
+.fdshop-account-entry__login .mod-login__userdata { display: grid; gap: .75rem; }
+.fdshop-account-entry__login .form-group { margin: 0; }
+.fdshop-account-entry__login .mod-login__options { margin: .75rem 0 0; }
+.fdshop-account-entry__registration .page-header { display: none; }
+.fdshop-account-entry__registration fieldset { margin: 0 0 1rem; padding: 0; border: 0; }
+.fdshop-account-entry__registration fieldset legend { margin-bottom: .75rem; font-size: 1rem; font-weight: 700; }
+.fdshop-account-entry__registration .control-group { display: grid; grid-template-columns: minmax(9rem, .38fr) minmax(0, 1fr); gap: .5rem 1rem; align-items: center; margin-bottom: .75rem; }
+.fdshop-account-entry__registration .controls, .fdshop-account-entry__registration input { min-width: 0; }
+.fdshop-account-entry__registration .com-users-registration__submit { display: block; }
+@media (max-width: 700px) { .fdshop-account-entry { grid-template-columns: 1fr; } .fdshop-account-entry__registration .control-group { grid-template-columns: 1fr; gap: .25rem; } }

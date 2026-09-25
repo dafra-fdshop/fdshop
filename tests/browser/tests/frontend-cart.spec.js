@@ -179,9 +179,9 @@ test('authenticated cart validates mutations and keeps checkout state correctly 
   await expect(page.locator('[data-customer-snapshot]')).toContainText('12345 Teststadt');
 
   await page.goto('/index.php?option=com_users&view=profile&layout=edit');
-  await expect(page.getByLabel('Vorname')).toHaveValue('Erika');
-  await expect(page.getByLabel('Nachname')).toHaveValue('Mustermann');
-  await page.getByLabel('Ort').fill('Neuhausen');
+  await expect(page.getByLabel(/First name|Vorname/i)).toHaveValue('Erika');
+  await expect(page.getByLabel(/Last name|Nachname/i)).toHaveValue('Mustermann');
+  await page.getByLabel(/City|Ort/i).fill('Neuhausen');
   await page.locator('form').getByRole('button', { name: /Speichern|Save/i }).click();
   await page.goto(confirmationUrl);
   await expect(page.locator('[data-customer-snapshot]')).toContainText('12345 Teststadt');

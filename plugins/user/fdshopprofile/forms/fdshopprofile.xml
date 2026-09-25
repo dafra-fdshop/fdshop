@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <form>
   <fields name="fdshop_customer">
-    <fieldset name="fdshop_customer" label="FDShop Kundendaten">
-      <field name="first_name" type="text" label="Vorname" required="true" filter="string" maxlength="100" autocomplete="given-name" />
-      <field name="last_name" type="text" label="Nachname" required="true" filter="string" maxlength="100" autocomplete="family-name" />
-      <field name="company" type="text" label="Firma" required="false" filter="string" maxlength="255" autocomplete="organization" />
-      <field name="street" type="text" label="Straße + Hausnummer" required="true" filter="string" maxlength="255" autocomplete="street-address" />
-      <field name="postal_code" type="text" label="PLZ" required="true" filter="string" maxlength="32" autocomplete="postal-code" />
-      <field name="city" type="text" label="Ort" required="true" filter="string" maxlength="120" autocomplete="address-level2" />
-      <field name="country" type="text" label="Land" required="true" filter="string" maxlength="120" default="Deutschland" autocomplete="country-name" />
-      <field name="phone" type="tel" label="Telefon" required="false" filter="string" maxlength="64" autocomplete="tel" />
+    <fieldset name="fdshop_customer" label="PLG_USER_FDSHOPPROFILE_FIELDSET_LABEL">
+      <field name="first_name" type="text" label="PLG_USER_FDSHOPPROFILE_FIRST_NAME_LABEL" required="true" filter="string" maxlength="100" autocomplete="given-name" />
+      <field name="last_name" type="text" label="PLG_USER_FDSHOPPROFILE_LAST_NAME_LABEL" required="true" filter="string" maxlength="100" autocomplete="family-name" />
+      <field name="company" type="text" label="PLG_USER_FDSHOPPROFILE_COMPANY_LABEL" required="false" filter="string" maxlength="255" autocomplete="organization" />
+      <field name="street" type="text" label="PLG_USER_FDSHOPPROFILE_STREET_LABEL" required="true" filter="string" maxlength="255" autocomplete="street-address" />
+      <field name="postal_code" type="text" label="PLG_USER_FDSHOPPROFILE_POSTAL_CODE_LABEL" required="true" filter="string" maxlength="32" autocomplete="postal-code" />
+      <field name="city" type="text" label="PLG_USER_FDSHOPPROFILE_CITY_LABEL" required="true" filter="string" maxlength="120" autocomplete="address-level2" />
+      <field name="country" type="text" label="PLG_USER_FDSHOPPROFILE_COUNTRY_LABEL" required="true" filter="string" maxlength="120" default="Deutschland" autocomplete="country-name" />
+      <field name="phone" type="tel" label="PLG_USER_FDSHOPPROFILE_PHONE_LABEL" required="false" filter="string" maxlength="64" autocomplete="tel" />
     </fieldset>
   </fields>
 </form>

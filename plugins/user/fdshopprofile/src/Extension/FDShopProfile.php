@@ -23,6 +23,8 @@ final class FDShopProfile extends CMSPlugin implements SubscriberInterface
     private const GROUP = 'fdshop_customer';
     private const FIELDS = ['first_name', 'last_name', 'company', 'street', 'postal_code', 'city', 'country', 'phone'];
     private const REQUIRED = ['first_name', 'last_name', 'street', 'postal_code', 'city', 'country'];
+    private const DEFAULT_STATUS = ['company' => 1, 'street' => 2, 'postal_code' => 2, 'city' => 2, 'country' => 2, 'phone' => 1];
+    private const DEFAULT_ORDER = ['first_name' => 10, 'last_name' => 20, 'company' => 30, 'street' => 40, 'postal_code' => 50, 'city' => 60, 'country' => 70, 'phone' => 80];
 
     public static function getSubscribedEvents(): array
     {
@@ -40,17 +42,16 @@ final class FDShopProfile extends CMSPlugin implements SubscriberInterface
     {
         $form = $event->getForm();
         if (!in_array($form->getName(), ['com_users.registration', 'com_users.profile', 'com_users.user'], true)) return;
+        $this->loadLanguage();
         FormHelper::addFormPath(JPATH_PLUGINS . '/user/fdshopprofile/forms');
         $form->loadFile('fdshopprofile');
+        $this->configureFields($form);
         if (in_array($form->getName(), ['com_users.registration', 'com_users.profile'], true)) {
             $form->setFieldAttribute('name', 'type', 'hidden');
             $form->setFieldAttribute('name', 'label', '');
-        } elseif ($form->getName() === 'com_users.user') {
-            // Existing Joomla accounts may legitimately predate FDShop customer profiles.
-            // Administrators can keep editing those accounts; checkout remains the hard gate.
-            foreach (self::REQUIRED as $field) {
-                $form->setFieldAttribute($field, 'required', 'false', self::GROUP);
-            }
+        }
+        if ($form->getName() === 'com_users.registration') {
+            $this->orderRegistrationCoreFields($form);
         }
     }
 
@@ -91,7 +92,7 @@ final class FDShopProfile extends CMSPlugin implements SubscriberInterface
     {
         $data = $event->getData();
         if (!isset($data[self::GROUP]) || !is_array($data[self::GROUP])) return;
-        foreach (self::REQUIRED as $field) {
+        foreach ($this->requiredFields() as $field) {
             if (trim((string) ($data[self::GROUP][$field] ?? '')) === '') throw new \InvalidArgumentException('Bitte füllen Sie alle erforderlichen FDShop-Kundendaten aus.');
         }
         if ($this->fullName($data[self::GROUP]) === '') throw new \InvalidArgumentException('Vorname und Nachname sind erforderlich.');
@@ -103,16 +104,18 @@ final class FDShopProfile extends CMSPlugin implements SubscriberInterface
         $userId = ArrayHelper::getValue($data, 'id', 0, 'int');
         if (!$event->getSavingResult() || $userId < 1 || !isset($data[self::GROUP]) || !is_array($data[self::GROUP])) return;
         $db = $this->getDatabase();
-        $query = $db->getQuery(true)->delete($db->quoteName('#__user_profiles'))
-            ->where($db->quoteName('user_id') . ' = :userId')
-            ->where($db->quoteName('profile_key') . ' LIKE ' . $db->quote(self::GROUP . '.%'))
-            ->bind(':userId', $userId, ParameterType::INTEGER);
-        $db->setQuery($query)->execute();
         $ordering = 100;
         foreach (self::FIELDS as $field) {
+            if (!$this->isActive($field) || !array_key_exists($field, $data[self::GROUP])) continue;
             $value = trim((string) ($data[self::GROUP][$field] ?? ''));
             $profileKey = self::GROUP . '.' . $field;
             $profileValue = json_encode($value, JSON_UNESCAPED_UNICODE);
+            $query = $db->getQuery(true)->delete($db->quoteName('#__user_profiles'))
+                ->where($db->quoteName('user_id') . ' = :userId')
+                ->where($db->quoteName('profile_key') . ' = :profileKey')
+                ->bind(':userId', $userId, ParameterType::INTEGER)
+                ->bind(':profileKey', $profileKey);
+            $db->setQuery($query)->execute();
             $query = $db->getQuery(true)->insert($db->quoteName('#__user_profiles'))
                 ->columns($db->quoteName(['user_id', 'profile_key', 'profile_value', 'ordering']))
                 ->values(':userId, :profileKey, :profileValue, :ordering')
@@ -140,5 +143,51 @@ final class FDShopProfile extends CMSPlugin implements SubscriberInterface
     private function fullName(array $profile): string
     {
         return trim(trim((string) ($profile['first_name'] ?? '')) . ' ' . trim((string) ($profile['last_name'] ?? '')));
+    }
+
+    private function configureFields(\Joomla\CMS\Form\Form $form): void
+    {
+        $definitions = [];
+        foreach (self::FIELDS as $field) {
+            $xml = $form->getFieldXml($field, self::GROUP);
+            if ($xml) $definitions[$field] = new \SimpleXMLElement($xml->asXML());
+            $form->removeField($field, self::GROUP);
+        }
+        uasort($definitions, fn(\SimpleXMLElement $a, \SimpleXMLElement $b): int =>
+            $this->fieldOrder((string) $a['name']) <=> $this->fieldOrder((string) $b['name']));
+        foreach ($definitions as $field => $xml) {
+            if (!$this->isActive($field)) continue;
+            $xml['required'] = $this->fieldStatus($field) === 2 ? 'true' : 'false';
+            $form->setField($xml, self::GROUP, true, self::GROUP);
+        }
+    }
+
+    private function orderRegistrationCoreFields(\Joomla\CMS\Form\Form $form): void
+    {
+        $definitions = [];
+        foreach (['email1', 'username', 'password1', 'password2'] as $field) {
+            $xml = $form->getFieldXml($field);
+            if ($xml) $definitions[$field] = new \SimpleXMLElement($xml->asXML());
+            $form->removeField($field);
+        }
+        foreach ($definitions as $xml) $form->setField($xml, null, true, 'default');
+    }
+
+    private function fieldStatus(string $field): int
+    {
+        if (in_array($field, ['first_name', 'last_name'], true)) return 2;
+        return (int) $this->params->get('field_' . $field, self::DEFAULT_STATUS[$field] ?? 1);
+    }
+
+    private function fieldOrder(string $field): int
+    {
+        return (int) $this->params->get('order_' . $field, self::DEFAULT_ORDER[$field] ?? 999);
+    }
+
+    private function isActive(string $field): bool { return $this->fieldStatus($field) > 0; }
+
+    private function requiredFields(): array
+    {
+        return array_values(array_filter(self::FIELDS, fn(string $field): bool => $this->fieldStatus($field) === 2));
     }
 }
