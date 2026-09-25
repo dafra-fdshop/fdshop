@@ -1,9 +1,9 @@
 =====================================================================
-FDShop_Implementierungsstand_V13
+FDShop_Implementierungsstand_V14
 =====================================================================
 
-Status: VERBINDLICHE PROJEKTQUELLE Version: V13 Ersetzt:
-FDShop_Implementierungsstand_V12 Prüfdatum: 25.09.2026
+Status: VERBINDLICHE PROJEKTQUELLE Version: V14 Ersetzt:
+FDShop_Implementierungsstand_V13 Prüfdatum: 25.09.2026
 
 Technische Grundlage: Git-Repository dafra-fdshop/fdshop Branch: feature
 Technischer Referenzcommit: c970bca1d92673b0cdc4ee841acf0d2c583a88ee
@@ -609,6 +609,18 @@ Nachtrag Profilkonfiguration / Registrierungsseite V1 (Schema 0.0.30):
 - Checkout mit deaktiviertem ehemaligem Pflichtfeld und NULL-Snapshot sowie
   unveränderte historische Bestellungen: umgesetzt und real geprüft.
 
+Nachtrag Transaktionale Admin-Bestellbearbeitung V1 (Schema 0.0.30):
+- Gemeinsamer Draft mit Toolbar-Speichern/Abbrechen für Mengen, Hinzufügen,
+  Entfernen und Shipment: umgesetzt und real geprüft.
+- Atomare Validierung/Persistenz mit Sperren, Revisionsschutz, Rollback,
+  Reservierungsdelta, Bundle-Bedarfsanteil und serverseitigen Summen: umgesetzt.
+- Historische Positionspreise und Couponabzug bleiben erhalten; neue Positionen
+  erhalten aktuelle Preissnapshots. Uneindeutiger Couponzustand wird blockiert.
+- Genau ein Change-History-Eintrag und eine Käufermail nach Commit; Mailfehler
+  bleiben nicht-transaktionale, protokollierte Warnungen: umgesetzt.
+- Inhaltsänderungen bei `deducted` oder unbekannter Lagerwirkung und ein
+  Bundle-Inhaltseditor bleiben bewusst außerhalb dieses Stands.
+
 =====================================================================
-ENDE DER QUELLE FDShop_Implementierungsstand_V13
+ENDE DER QUELLE FDShop_Implementierungsstand_V14
 =====================================================================

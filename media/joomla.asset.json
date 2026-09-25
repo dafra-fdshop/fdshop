@@ -57,6 +57,12 @@
       "type": "script",
       "uri": "com_fdshop/admin-master-import.js",
       "attributes": { "defer": true }
+    },
+    {
+      "name": "com_fdshop.admin-order",
+      "type": "script",
+      "uri": "com_fdshop/admin-order.js",
+      "attributes": { "defer": true }
     }
   ]
 }

@@ -1,9 +1,9 @@
 =====================================================================
-FDShop_Architektur_Struktur_Installation_V12
+FDShop_Architektur_Struktur_Installation_V13
 =====================================================================
 
-Status: VERBINDLICHE PROJEKTQUELLE Version: V12 Ersetzt:
-FDShop_Architektur_Struktur_Installation_V11 Stand: 25.09.2026
+Status: VERBINDLICHE PROJEKTQUELLE Version: V13 Ersetzt:
+FDShop_Architektur_Struktur_Installation_V12 Stand: 25.09.2026
 
 ===================================================================== 1.
 ZWECK UND ZIELPLATTFORM
@@ -639,6 +639,21 @@ Architekturnachtrag Profilkonfiguration / Registrierungsseite V1 (Schema 0.0.30)
 - Paket, Fresh Install und Update enthalten beide Plugins und werden gemeinsam
   über Schema 0.0.30 geführt.
 
+Architekturnachtrag Transaktionale Admin-Bestellbearbeitung V1 (Schema 0.0.30):
+- Die Admin-Bestelldetailseite bildet einen vollständigen Browserentwurf. Nur
+  der Joomla-Toolbar-Befehl `order.save` übergibt den Zielzustand; lokale
+  Mengen-, Hinzufügen- und Entfernen-Aktionen besitzen keine Persistenzwirkung.
+- OrderController orchestriert POST, CSRF und ACL. OrderService sperrt Bestellung,
+  Positionen sowie betroffene Bestände, validiert eine Revision und übernimmt
+  Positionen, Shipment-Snapshot, Reservierungsdeltas, Summen und einen
+  übergeordneten Historieneintrag in genau einer Datenbanktransaktion.
+- Die Käufer-Änderungsmail wird erst nach Commit über OrderNotificationService
+  an die historische Snapshot-Adresse versandt. Mailfehler rollen die
+  Bestellung nicht zurück und werden als Warnung und Historie festgehalten.
+- Bundle-Inhalte bleiben unveränderlich, fließen aber in den physischen
+  Zielbedarf ein. Inhaltsänderungen an `deducted`- und unbekannten Legacyorders
+  bleiben konservativ blockiert; reine Shipment-Änderungen sind zulässig.
+
 =====================================================================
-ENDE DER QUELLE FDShop_Architektur_Struktur_Installation_V12
+ENDE DER QUELLE FDShop_Architektur_Struktur_Installation_V13
 =====================================================================

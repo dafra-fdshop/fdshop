@@ -1,9 +1,9 @@
 =====================================================================
-FDShop_Codebestand_V13
+FDShop_Codebestand_V14
 =====================================================================
 
-Status: VERBINDLICHE PROJEKTQUELLE Version: V13 Ersetzt:
-FDShop_Codebestand_V12 Prüfdatum: 25.09.2026
+Status: VERBINDLICHE PROJEKTQUELLE Version: V14 Ersetzt:
+FDShop_Codebestand_V13 Prüfdatum: 25.09.2026
 
 Technische Grundlage: Git-Repository dafra-fdshop/fdshop Branch: feature
 Technischer Referenzcommit: c970bca1d92673b0cdc4ee841acf0d2c583a88ee
@@ -633,6 +633,19 @@ Nachtrag Profilkonfiguration / Registrierungsseite V1 (Schema 0.0.30):
   aktive Profilwerte. Neue Browserprüfungen decken Admin-Konfiguration,
   Reihenfolge, Deaktivierung, Responsive-Layout und Checkout ab.
 
+Nachtrag Transaktionale Admin-Bestellbearbeitung V1 (Schema 0.0.30):
+- `OrderServiceInterface::saveDraft()` und `OrderService::saveDraft()` bilden
+  die atomare Save-Grenze für Positionen, Shipment, Lager, Summen und Historie.
+- `OrderController::save/cancel`, OrderModel, HtmlView und das Ordertemplate
+  stellen Joomla-Toolbar, vollständiges Draftformular und aktive Shipments bereit.
+- `media/js/admin-order.js` pflegt ausschließlich lokale Draftzeilen und
+  Entfernen-Markierungen; Produkt-, Preis- und Bestandsvalidierung bleibt im Service.
+- `OrderNotificationService::sendOrderChanged()` erzeugt genau eine idempotente
+  Käufermail je erfolgreichem History-Change und protokolliert Mailwarnungen.
+- `orders-crud.spec.js` und der Orderrunner prüfen Cancel, Rollback,
+  Reservierungsdeltas, Preis-/Coupon-Snapshots, Shipment, Stale Submit, Mail und
+  unveränderte Bundle-/deducted-Inhalte real in der Sandbox.
+
 =====================================================================
-ENDE DER QUELLE FDShop_Codebestand_V13
+ENDE DER QUELLE FDShop_Codebestand_V14
 =====================================================================

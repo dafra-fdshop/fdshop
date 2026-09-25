@@ -29,6 +29,8 @@ class OrderModel extends BaseDatabaseModel
             $db->quoteName('a.order_number'),
             $db->quoteName('a.user_id'),
             $db->quoteName('a.buyer_group_id'),
+            $db->quoteName('a.payment_method_id'),
+            $db->quoteName('a.shipment_id'),
             $db->quoteName('a.order_status'),
             $db->quoteName('a.order_status_id'),
             $db->quoteName('a.currency'),
@@ -101,6 +103,10 @@ class OrderModel extends BaseDatabaseModel
             $db->quoteName('a.gtin'),
             $db->quoteName('a.manufacturer_name'),
             $db->quoteName('a.quantity'),
+            $db->quoteName('a.unit_variant'),
+            $db->quoteName('a.unit_type_snapshot'),
+            $db->quoteName('a.unit_quantity_snapshot'),
+            $db->quoteName('a.physical_quantity'),
             $db->quoteName('a.regular_price_gross'),
             $db->quoteName('a.discount_price_gross'),
             $db->quoteName('a.unit_price_net'),
@@ -224,6 +230,11 @@ class OrderModel extends BaseDatabaseModel
         $db->setQuery($query);
 
         return $db->loadObjectList() ?: [];
+    }
+
+    public function getAvailableShipments(): array
+    {
+        $db=$this->getDatabase();$q=$db->getQuery(true)->select(['id','shipment_name','shipment_price'])->from($db->quoteName('#__fdshop_shipments'))->where('published=1')->order('ordering ASC')->order('id ASC');$db->setQuery($q);return $db->loadObjectList()?:[];
     }
 
     private function resolveOrderId($pk = null): int

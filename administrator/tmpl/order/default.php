@@ -1,277 +1,31 @@
 <?php
-/**
- * @package     Joomla.Administrator
- * @subpackage  com_fdshop
- */
-
 defined('_JEXEC') or die;
-
 use Joomla\CMS\HTML\HTMLHelper;
 use Joomla\CMS\Router\Route;
-
-$order = $this->item;
-$userLink = '';
-$availableProducts = $this->availableProducts ?? [];
-
-if (!empty($order->user_id)) {
-    $userLink = Route::_('index.php?option=com_users&task=user.edit&id=' . (int) $order->user_id);
-}
+$order=$this->item;$products=$this->availableProducts??[];$shipments=$this->availableShipments??[];
+$userLink=!empty($order->user_id)?Route::_('index.php?option=com_users&task=user.edit&id='.(int)$order->user_id):'';
+$this->getDocument()->getWebAssetManager()->useScript('com_fdshop.admin-order');
 ?>
-
+<form action="<?php echo Route::_('index.php?option=com_fdshop&view=order&id='.(int)$order->id); ?>" method="post" name="adminForm" id="adminForm" data-fdshop-order-draft>
 <div class="row">
-    <div class="col-12 col-xl-6">
-        <div class="card mb-3">
-            <div class="card-header">Bestell-Kopf</div>
-            <div class="card-body">
-                <div class="mb-3">
-                    <div class="fw-bold">Bestellnummer</div>
-                    <div><?php echo $this->escape((string) ($order->order_number ?? '')); ?></div>
-                </div>
-
-                <div class="mb-3">
-                    <div class="fw-bold">Statusname</div>
-                    <div><?php echo $this->escape((string) ($order->status_name ?? '')); ?></div>
-                </div>
-
-                <div class="mb-3">
-                    <div class="fw-bold">Datum</div>
-                    <div><?php echo !empty($order->created) ? HTMLHelper::_('date', $order->created, 'Y-m-d H:i') : ''; ?></div>
-                </div>
-
-                <div class="mb-3">
-                    <div class="fw-bold">Gesamtbetrag</div>
-                    <div><?php echo number_format((float) ($order->grand_total ?? 0), 2, ',', '.'); ?></div>
-                </div>
-
-                <div class="mb-0">
-                    <div class="fw-bold">Währung</div>
-                    <div><?php echo $this->escape((string) ($order->currency ?? '')); ?></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-12 col-xl-6">
-        <div class="card mb-3">
-            <div class="card-header">Kunde</div>
-            <div class="card-body">
-                <div class="mb-3">
-                    <div class="fw-bold">Name</div>
-                    <div>
-                        <?php if ($userLink !== '') : ?>
-                            <a href="<?php echo $userLink; ?>">
-                                <?php echo $this->escape((string) ($order->customer_name ?? '')); ?>
-                            </a>
-                        <?php else : ?>
-                            <?php echo $this->escape((string) ($order->customer_name ?? '')); ?>
-                        <?php endif; ?>
-                    </div>
-                </div>
-
-                <div class="mb-0">
-                    <div class="fw-bold">User-ID</div>
-                    <div class="small text-muted"><?php echo (int) ($order->user_id ?? 0); ?></div>
-                </div>
-                <div class="mt-3"><div class="fw-bold">Historische E-Mail</div><div><?php echo $this->escape((string) ($order->customer_email ?? 'Historisch unbekannt')); ?></div></div>
-                <div class="mt-3"><div class="fw-bold">Vorname / Nachname</div><div><?php echo $this->escape(trim((string) ($order->customer_first_name ?? '') . ' ' . (string) ($order->customer_last_name ?? '')) ?: 'Historisch unbekannt'); ?></div></div>
-                <div class="mt-3"><div class="fw-bold">Firma</div><div><?php echo $this->escape((string) ($order->customer_company ?? '–')); ?></div></div>
-                <div class="mt-3"><div class="fw-bold">Anschrift</div><div><?php echo $this->escape((string) ($order->customer_street ?? 'Historisch unbekannt')); ?><br><?php echo $this->escape(trim((string) ($order->customer_postal_code ?? '') . ' ' . (string) ($order->customer_city ?? ''))); ?><br><?php echo $this->escape((string) ($order->customer_country ?? '')); ?></div></div>
-                <div class="mt-3"><div class="fw-bold">Telefon</div><div><?php echo $this->escape((string) ($order->customer_phone ?? '–')); ?></div></div>
-            </div>
-        </div>
-    </div>
+ <div class="col-12 col-xl-6"><div class="card mb-3"><div class="card-header">Bestell-Kopf</div><div class="card-body">
+  <div class="mb-3"><strong>Bestellnummer</strong><div><?php echo $this->escape((string)$order->order_number); ?></div></div><div class="mb-3"><strong>Statusname</strong><div><?php echo $this->escape((string)$order->status_name); ?></div></div><div class="mb-3"><strong>Datum</strong><div><?php echo HTMLHelper::_('date',$order->created,'Y-m-d H:i'); ?></div></div><div><strong>Gesamtbetrag</strong><div><?php echo number_format((float)$order->grand_total,2,',','.'); ?> <?php echo $this->escape((string)$order->currency); ?></div></div>
+ </div></div></div>
+ <div class="col-12 col-xl-6"><div class="card mb-3"><div class="card-header">Kunde</div><div class="card-body">
+  <div class="mb-2"><strong>Name</strong><div><?php if($userLink):?><a href="<?php echo $userLink; ?>"><?php endif; ?><?php echo $this->escape((string)$order->customer_name); ?><?php if($userLink):?></a><?php endif; ?></div></div><div class="mb-2"><strong>Historische E-Mail</strong><div><?php echo $this->escape((string)($order->customer_email??'Historisch unbekannt')); ?></div></div><div class="mb-2"><strong>Vorname / Nachname</strong><div><?php echo $this->escape(trim((string)$order->customer_first_name.' '.(string)$order->customer_last_name)?:'Historisch unbekannt'); ?></div></div><div class="mb-2"><strong>Firma</strong><div><?php echo $this->escape((string)($order->customer_company??'–')); ?></div></div><div class="mb-2"><strong>Anschrift</strong><div><?php echo $this->escape((string)($order->customer_street??'Historisch unbekannt')); ?><br><?php echo $this->escape(trim((string)$order->customer_postal_code.' '.(string)$order->customer_city)); ?><br><?php echo $this->escape((string)$order->customer_country); ?></div></div><div><strong>Telefon</strong><div><?php echo $this->escape((string)($order->customer_phone??'–')); ?></div></div>
+ </div></div></div>
 </div>
-
 <div class="card mb-3"><div class="card-header">Checkout-Snapshot</div><div class="card-body row g-3">
- <div class="col-md-4"><strong>Zahlungsart</strong><div><?php echo $this->escape((string)($order->payment_method_name ?? 'Historisch unbekannt')); ?> · <?php echo number_format((float)($order->payment_fee ?? 0),2,',','.'); ?></div></div>
- <div class="col-md-4"><strong>Abholung/Versand</strong><div><?php echo $this->escape((string)($order->shipment_name ?? 'Historisch unbekannt')); ?> · <?php echo number_format((float)($order->shipment_fee ?? 0),2,',','.'); ?></div></div>
- <div class="col-md-4"><strong>Lagerzustand</strong><div><?php echo $this->escape((string)($order->stock_state ?? 'Historisch unbekannt')); ?></div></div>
- <div class="col-md-4"><strong>Gutschein</strong><div><?php echo $this->escape((string)($order->coupon_code ?? '–')); ?> · -<?php echo number_format((float)($order->coupon_discount ?? 0),2,',','.'); ?></div></div>
- <div class="col-md-4"><strong>AGB</strong><div><?php echo (int)($order->terms_required ?? 0)===1?'erforderlich · ':''; ?><?php echo (int)($order->terms_accepted ?? 0)===1?'bestätigt':'nicht bestätigt'; ?></div></div>
- <div class="col-12"><strong>Bestellbemerkung</strong><div><?php echo nl2br($this->escape((string)($order->order_note ?? ''))); ?></div></div>
- <?php if(!empty($order->mail_warning)):?><div class="col-12 alert alert-warning"><?php echo $this->escape((string)$order->mail_warning); ?></div><?php endif; ?>
+ <div class="col-md-4"><strong>Zahlungsart</strong><div><?php echo $this->escape((string)($order->payment_method_name??'Historisch unbekannt')); ?> · <?php echo number_format((float)$order->payment_fee,2,',','.'); ?></div></div>
+ <div class="col-md-4"><label for="jform_shipment_id" class="form-label fw-bold">Abholung/Versand</label><select name="shipment_id" id="jform_shipment_id" class="form-select"><?php $found=false;foreach($shipments as $shipment):$selected=(int)$shipment->id===(int)$order->shipment_id;$found=$found||$selected;?><option value="<?php echo (int)$shipment->id; ?>"<?php echo $selected?' selected':''; ?>><?php echo $this->escape((string)$shipment->shipment_name); ?> · <?php echo number_format((float)$shipment->shipment_price,2,',','.'); ?></option><?php endforeach; ?><?php if(!$found):?><option value="<?php echo (int)$order->shipment_id; ?>" selected><?php echo $this->escape((string)$order->shipment_name); ?> · <?php echo number_format((float)$order->shipment_fee,2,',','.'); ?> [historisch]</option><?php endif; ?></select></div>
+ <div class="col-md-4"><strong>Lagerzustand</strong><div><?php echo $this->escape((string)($order->stock_state??'Historisch unbekannt')); ?></div></div><div class="col-md-4"><strong>Gutschein</strong><div><?php echo $this->escape((string)($order->coupon_code??'–')); ?> · -<?php echo number_format((float)$order->coupon_discount,2,',','.'); ?></div></div><div class="col-md-4"><strong>AGB</strong><div><?php echo (int)$order->terms_required===1?'erforderlich · ':''; ?><?php echo (int)$order->terms_accepted===1?'bestätigt':'nicht bestätigt'; ?></div></div><div class="col-12"><strong>Bestellbemerkung</strong><div><?php echo nl2br($this->escape((string)$order->order_note)); ?></div></div><?php if(!empty($order->mail_warning)):?><div class="col-12 alert alert-warning"><?php echo $this->escape((string)$order->mail_warning); ?></div><?php endif; ?>
 </div></div>
-
-<div class="card mb-3">
-    <div class="card-header">Bestellpositionen</div>
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-striped align-middle">
-                <thead>
-                    <tr>
-                        <th>Produktname</th>
-                        <th>SKU</th>
-                        <th>Menge</th>
-                        <th>Einzelpreis (Brutto)</th>
-                        <th>Gesamtpreis Position</th>
-                        <th>Aktion</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if (!empty($this->orderItems)) : ?>
-                        <?php foreach ($this->orderItems as $item) : ?>
-                            <tr class="<?php echo !empty($item->is_removed) ? 'table-secondary text-muted' : ''; ?>">
-                                <td>
-                                    <?php echo $this->escape((string) ($item->product_name ?? '')); ?>
-                                    <?php if (!empty($item->is_removed)) : ?><span class="badge bg-secondary">Entfernt</span><?php endif; ?>
-                                    <div class="small text-muted"><?php echo $this->escape((string) ($item->manufacturer_name ?? 'Historischer Hersteller unbekannt')); ?></div>
-                                </td>
-                                <td>
-                                    <?php echo $this->escape((string) ($item->sku ?? '')); ?>
-                                    <div class="small text-muted">GTIN: <?php echo $this->escape((string) ($item->gtin ?? 'historisch unbekannt')); ?></div>
-                                </td>
-                                <td>
-                                    <?php if (empty($item->is_removed)) : ?>
-                                    <form action="<?php echo Route::_('index.php?option=com_fdshop&task=order.updateItemQuantity'); ?>" method="post" class="d-flex gap-2 align-items-center">
-                                        <input type="number" name="quantity" class="form-control" min="1" step="1" value="<?php echo (int) ($item->quantity ?? 1); ?>">
-                                        <input type="hidden" name="id" value="<?php echo (int) ($order->id ?? 0); ?>">
-                                        <input type="hidden" name="order_item_id" value="<?php echo (int) ($item->id ?? 0); ?>">
-                                        <button type="submit" class="btn btn-outline-primary btn-sm">Speichern</button>
-                                        <?php echo HTMLHelper::_('form.token'); ?>
-                                    </form>
-                                    <?php else : ?><?php echo $this->escape((string) $item->quantity); ?><?php endif; ?>
-                                </td>
-                                <td>
-                                    <?php echo number_format((float) ($item->unit_price_gross ?? 0), 2, ',', '.'); ?> <?php echo $this->escape((string) ($item->currency ?? '')); ?>
-                                    <div class="small text-muted">Regulär: <?php echo number_format((float) ($item->regular_price_gross ?? 0), 2, ',', '.'); ?> · Aktion: <?php echo number_format((float) ($item->discount_price_gross ?? 0), 2, ',', '.'); ?> · MwSt.: <?php echo number_format((float) ($item->tax_rate ?? 0), 2, ',', '.'); ?> %</div>
-                                </td>
-                                <td><?php echo number_format((float) ($item->line_total_gross ?? 0), 2, ',', '.'); ?> <?php echo $this->escape((string) ($item->currency ?? '')); ?></td>
-                                <td>
-                                    <?php if (empty($item->is_removed)) : ?>
-                                    <form action="<?php echo Route::_('index.php?option=com_fdshop&task=order.removeItem'); ?>" method="post">
-                                        <input type="hidden" name="id" value="<?php echo (int) ($order->id ?? 0); ?>">
-                                        <input type="hidden" name="order_item_id" value="<?php echo (int) ($item->id ?? 0); ?>">
-                                        <button type="submit" class="btn btn-outline-danger btn-sm">Entfernen</button>
-                                        <?php echo HTMLHelper::_('form.token'); ?>
-                                    </form>
-                                    <?php else : ?><span class="small">Historisch erhalten</span><?php endif; ?>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    <?php else : ?>
-                        <tr>
-                            <td colspan="6" class="text-center">Keine Bestellpositionen vorhanden.</td>
-                        </tr>
-                    <?php endif; ?>
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
-<div class="card mb-3">
-    <div class="card-header">Neues Produkt hinzufügen</div>
-    <div class="card-body">
-        <form action="<?php echo Route::_('index.php?option=com_fdshop&task=order.addItem'); ?>" method="post">
-            <div class="row g-3 align-items-end">
-                <div class="col-12 col-xl-7">
-                    <label for="jform_product_id" class="form-label">Produktauswahl</label>
-                    <select name="product_id" id="jform_product_id" class="form-select">
-                        <option value="">- Produkt wählen -</option>
-                        <?php foreach ($availableProducts as $product) : ?>
-                            <option value="<?php echo (int) ($product->id ?? 0); ?>">
-                                <?php
-                                $optionText = (string) ($product->product_name ?? '');
-
-                                if (!empty($product->sku)) {
-                                    $optionText .= ' (' . (string) $product->sku . ')';
-                                }
-
-                                if (empty($product->is_active)) {
-                                    $optionText .= ' [inaktiv]';
-                                }
-
-                                echo $this->escape($optionText);
-                                ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-
-                <div class="col-12 col-md-4 col-xl-3">
-                    <label for="jform_quantity" class="form-label">Menge</label>
-                    <input type="number" name="quantity" id="jform_quantity" class="form-control" min="1" step="1" value="1">
-                </div>
-
-                <div class="col-12 col-md-8 col-xl-2">
-                    <button type="submit" class="btn btn-success w-100">Hinzufügen</button>
-                </div>
-            </div>
-
-            <input type="hidden" name="id" value="<?php echo (int) ($order->id ?? 0); ?>">
-            <?php echo HTMLHelper::_('form.token'); ?>
-        </form>
-
-        <?php if (empty($availableProducts)) : ?>
-            <div class="text-muted small mt-3">Keine Produktauswahl verfügbar.</div>
-        <?php endif; ?>
-    </div>
-</div>
-
-<div class="card mb-3">
-    <div class="card-header">Summenblock</div>
-    <div class="card-body">
-        <div class="fw-bold">Gesamtbetrag</div>
-        <div><?php echo number_format((float) ($order->grand_total ?? 0), 2, ',', '.'); ?></div>
-    </div>
-</div>
-
-<?php if (!empty($this->statusHistory)) : ?>
-    <div class="card mb-3">
-        <div class="card-header">Status-Historie</div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Datum</th>
-                            <th>Alter Status</th>
-                            <th>Neuer Status</th>
-                            <th>Benutzer / Kommentar</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($this->statusHistory as $entry) : ?>
-                            <tr>
-                                <td><?php echo !empty($entry->changed_at) ? HTMLHelper::_('date', $entry->changed_at, 'Y-m-d H:i') : ''; ?></td>
-                                <td><?php echo $this->escape((string) ($entry->old_status_name ?? '')); ?></td>
-                                <td><?php echo $this->escape((string) ($entry->new_status_name ?? '')); ?></td>
-                                <td><?php echo $this->escape((string) ($entry->changed_by_name ?? ('ID ' . (int) ($entry->changed_by ?? 0)))); ?><br><span class="small text-muted"><?php echo $this->escape((string) ($entry->comment ?? '')); ?></span></td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-<?php endif; ?>
-
-<?php if (!empty($this->orderHistory)) : ?>
-    <div class="card mb-3">
-        <div class="card-header">Allgemeine Historie</div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>Titel</th>
-                            <th>Text</th>
-                            <th>Datum</th>
-                            <th>Benutzer</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($this->orderHistory as $entry) : ?>
-                            <tr>
-                                <td><?php echo $this->escape((string) ($entry->event_title ?? '')); ?></td>
-                                <td><?php echo $this->escape((string) ($entry->event_text ?? '')); ?></td>
-                                <td><?php echo !empty($entry->created) ? HTMLHelper::_('date', $entry->created, 'Y-m-d H:i') : ''; ?></td>
-                                <td><?php echo $this->escape((string) ($entry->created_by_name ?? ('ID ' . (int) ($entry->created_by ?? 0)))); ?></td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-<?php endif; ?>
+<div class="card mb-3"><div class="card-header">Bestellpositionen</div><div class="card-body"><div class="table-responsive"><table class="table table-striped align-middle" data-order-items><thead><tr><th>Produktname</th><th>SKU</th><th>Menge</th><th>Einzelpreis (Brutto)</th><th>Gesamtpreis Position</th><th>Aktion</th></tr></thead><tbody>
+<?php foreach($this->orderItems as $item):?><tr class="<?php echo $item->is_removed?'table-secondary text-muted':''; ?>" data-order-item-row><td><?php echo $this->escape((string)$item->product_name); ?> <?php if($item->is_removed):?><span class="badge bg-secondary">Entfernt</span><?php endif; ?><div class="small text-muted"><?php echo $this->escape((string)($item->manufacturer_name?:'Historischer Hersteller unbekannt')); ?></div></td><td><?php echo $this->escape((string)$item->sku); ?><div class="small text-muted">GTIN: <?php echo $this->escape((string)($item->gtin?:'historisch unbekannt')); ?></div></td><td><?php if(!$item->is_removed):?><input type="number" name="items[<?php echo (int)$item->id; ?>][quantity]" class="form-control" min="1" step="1" value="<?php echo $this->escape((string)(float)$item->quantity); ?>"><?php else:?><?php echo $this->escape((string)$item->quantity); ?><?php endif; ?></td><td><?php echo number_format((float)$item->unit_price_gross,2,',','.'); ?> <?php echo $this->escape((string)$item->currency); ?><div class="small text-muted">Regulär: <?php echo number_format((float)$item->regular_price_gross,2,',','.'); ?> · Aktion: <?php echo number_format((float)$item->discount_price_gross,2,',','.'); ?> · MwSt.: <?php echo number_format((float)$item->tax_rate,2,',','.'); ?> %</div></td><td><?php echo number_format((float)$item->line_total_gross,2,',','.'); ?> <?php echo $this->escape((string)$item->currency); ?></td><td><?php if(!$item->is_removed):?><input type="hidden" name="items[<?php echo (int)$item->id; ?>][removed]" value="0" data-removed><button type="button" class="btn btn-outline-danger btn-sm" data-remove-existing>Entfernen</button><?php else:?><span class="small">Historisch erhalten</span><?php endif; ?></td></tr><?php endforeach; ?>
+</tbody></table></div></div></div>
+<div class="card mb-3"><div class="card-header">Neues Produkt hinzufügen</div><div class="card-body"><div class="row g-3 align-items-end"><div class="col-12 col-xl-7"><label for="jform_product_id" class="form-label">Produktauswahl</label><select id="jform_product_id" class="form-select"><option value="">- Produkt wählen -</option><?php foreach($products as $product):?><option value="<?php echo (int)$product->id; ?>" data-name="<?php echo $this->escape((string)$product->product_name); ?>" data-sku="<?php echo $this->escape((string)$product->sku); ?>"<?php echo empty($product->is_active)?' disabled':''; ?>><?php echo $this->escape((string)$product->product_name.' ('.(string)$product->sku.')'.(empty($product->is_active)?' [inaktiv]':'')); ?></option><?php endforeach; ?></select></div><div class="col-12 col-md-4 col-xl-3"><label for="jform_quantity" class="form-label">Menge</label><input type="number" id="jform_quantity" class="form-control" min="1" step="1" value="1"></div><div class="col-12 col-md-8 col-xl-2"><button type="button" class="btn btn-success w-100" data-add-draft>Hinzufügen</button></div></div><div class="mt-3" data-new-items aria-live="polite"></div><p class="small text-muted mt-2 mb-0">Entwurfsänderungen werden erst über die Joomla-Toolbar „Speichern“ übernommen.</p></div></div>
+<div class="card mb-3"><div class="card-header">Summenblock</div><div class="card-body"><strong>Gesamtbetrag</strong><div><?php echo number_format((float)$order->grand_total,2,',','.'); ?> <?php echo $this->escape((string)$order->currency); ?></div><div class="small text-muted">Die endgültige Summe wird beim Speichern serverseitig berechnet.</div></div></div>
+<?php if($this->statusHistory):?><div class="card mb-3"><div class="card-header">Status-Historie</div><div class="card-body"><div class="table-responsive"><table class="table table-striped"><thead><tr><th>Datum</th><th>Alter Status</th><th>Neuer Status</th><th>Benutzer / Kommentar</th></tr></thead><tbody><?php foreach($this->statusHistory as $entry):?><tr><td><?php echo HTMLHelper::_('date',$entry->changed_at,'Y-m-d H:i'); ?></td><td><?php echo $this->escape((string)$entry->old_status_name); ?></td><td><?php echo $this->escape((string)$entry->new_status_name); ?></td><td><?php echo $this->escape((string)($entry->changed_by_name?:'ID '.(int)$entry->changed_by)); ?><br><span class="small text-muted"><?php echo $this->escape((string)$entry->comment); ?></span></td></tr><?php endforeach; ?></tbody></table></div></div></div><?php endif; ?>
+<?php if($this->orderHistory):?><div class="card mb-3"><div class="card-header">Allgemeine Historie</div><div class="card-body"><div class="table-responsive"><table class="table table-striped"><thead><tr><th>Titel</th><th>Text</th><th>Datum</th><th>Benutzer</th></tr></thead><tbody><?php foreach($this->orderHistory as $entry):?><tr><td><?php echo $this->escape((string)$entry->event_title); ?></td><td><?php echo nl2br($this->escape((string)$entry->event_text)); ?></td><td><?php echo HTMLHelper::_('date',$entry->created,'Y-m-d H:i'); ?></td><td><?php echo $this->escape((string)($entry->created_by_name?:'ID '.(int)$entry->created_by)); ?></td></tr><?php endforeach; ?></tbody></table></div></div></div><?php endif; ?>
+<input type="hidden" name="id" value="<?php echo (int)$order->id; ?>"><input type="hidden" name="expected_modified" value="<?php echo $this->escape((string)($order->modified?:$order->created)); ?>"><input type="hidden" name="task" value="order.save"><?php echo HTMLHelper::_('form.token'); ?>
+</form>

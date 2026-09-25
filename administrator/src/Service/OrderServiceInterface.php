@@ -4,6 +4,7 @@ defined('_JEXEC') or die;
 
 interface OrderServiceInterface
 {
+    public function saveDraft(int $orderId, array $items, array $newItems, int $shipmentId, string $expectedModified): bool;
     public function addItem(int $orderId, int $productId, float $quantity = 1.0): int;
     public function removeItem(int $orderId, int $orderItemId): void;
     public function changeItemQuantity(int $orderId, int $orderItemId, float $quantity): void;

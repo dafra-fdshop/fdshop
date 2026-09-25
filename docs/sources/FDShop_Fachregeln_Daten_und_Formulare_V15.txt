@@ -1,12 +1,12 @@
 =====================================================================
-FDShop_Fachregeln_Daten_und_Formulare_V14
+FDShop_Fachregeln_Daten_und_Formulare_V15
 =====================================================================
 
-Status: VERBINDLICHE PROJEKTQUELLE Priorität: SEHR HOCH Version: V14
+Status: VERBINDLICHE PROJEKTQUELLE Priorität: SEHR HOCH Version: V15
 
 Diese Quelle ersetzt vollständig:
 
-FDShop_Fachregeln_Daten_und_Formulare_V13
+FDShop_Fachregeln_Daten_und_Formulare_V14
 
 ===================================================================== 1.
 ZWECK
@@ -2780,9 +2780,28 @@ Profilwerte und die E-Mail als historischen Snapshot. Deaktivierte oder leere
 optionale Werte werden im neuen Snapshot als NULL geführt. Spätere Profil- oder
 Konfigurationsänderungen verändern bestehende Bestellungen nicht.
 
+Admin-Bestelländerungen sind eine zusammenhängende fachliche Transaktion. Bis
+zum Toolbar-Speichern sind Mengen-, Produkt-, Entfernen- und Shipmentänderungen
+nur Entwurf; Abbrechen erzeugt keinerlei DB-, Lager-, Historien- oder Mailwirkung.
+Beim Speichern werden der vollständige Zielzustand und die aktuelle Revision
+serverseitig validiert. Ein Fehler verwirft sämtliche Teiländerungen.
+
+Bestehende Positionen behalten ihren historischen Stückpreissnapshot; neue
+Positionen erhalten den aktuellen gültigen Preis. Ein historischer Gutscheinabzug
+wird nicht neu bewertet, sondern unverändert in die neue Summe übernommen. Ist
+er mit der neuen Produktsumme nicht mehr eindeutig vereinbar, wird gespeichertes
+Ändern blockiert. Zahlungssnapshots bleiben unverändert.
+
+Reservierte Orders verrechnen nur die physische Bedarfsdifferenz. Bundlebedarf
+bleibt Bestandteil des Zielbedarfs, ohne dass Bundle-Inhalte editierbar werden.
+Bei `deducted` oder unbekannter Lagerwirkung bleiben Inhaltsänderungen blockiert;
+eine reine Änderung auf eine aktive Versandart darf Snapshot und Summe anpassen.
+Nach Commit entstehen genau ein übergeordneter Änderungseintrag und höchstens
+eine idempotent zugeordnete Käufermail an die historische Snapshot-Adresse.
+
 =====================================================================
 ENDE DER QUELLE
 
-FDShop_Fachregeln_Daten_und_Formulare_V14
+FDShop_Fachregeln_Daten_und_Formulare_V15
 
-Status: VERBINDLICHE PROJEKTQUELLE Version: V14
+Status: VERBINDLICHE PROJEKTQUELLE Version: V15

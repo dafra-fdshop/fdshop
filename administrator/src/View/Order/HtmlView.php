@@ -22,6 +22,7 @@ class HtmlView extends BaseHtmlView
     public $orderHistory = [];
 
     public $availableProducts = [];
+    public $availableShipments = [];
 
     public function display($tpl = null)
     {
@@ -32,6 +33,7 @@ class HtmlView extends BaseHtmlView
         $this->statusHistory     = $model->getStatusHistory();
         $this->orderHistory      = $model->getOrderHistory();
         $this->availableProducts = $model->getAvailableProducts();
+        $this->availableShipments = $model->getAvailableShipments();
 
         $title = 'FDShop - Bestellung';
 
@@ -40,6 +42,8 @@ class HtmlView extends BaseHtmlView
         }
 
         ToolbarHelper::title($title);
+        ToolbarHelper::apply('order.save', 'Speichern');
+        ToolbarHelper::cancel('order.cancel', 'Abbrechen');
 
         parent::display($tpl);
     }

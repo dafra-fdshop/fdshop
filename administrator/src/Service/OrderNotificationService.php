@@ -20,6 +20,21 @@ final class OrderNotificationService
         if((int)$status->create_invoice===1)$this->history($orderId,'invoice_pending','Rechnung vorgemerkt','Für diesen Status ist Rechnungserzeugung konfiguriert; eine Invoice-Engine ist in V1 noch nicht vorhanden.');
         return $warnings;
     }
+    public function sendOrderChanged(int $orderId, int $changeId): array
+    {
+        $order=$this->row('#__fdshop_orders','id='.(int)$orderId);
+        if(!$order)return ['Bestelldaten für Änderungsbestätigung fehlen.'];
+        $event='mail_buyer_order_changed';
+        $q=$this->db->getQuery(true)->select('COUNT(*)')->from($this->db->quoteName('#__fdshop_order_history'))->where('order_id='.(int)$orderId)->where('event_type='.$this->db->quote($event))->where('reference_id='.(int)$changeId);
+        $this->db->setQuery($q);if((int)$this->db->loadResult()>0)return [];
+        $to=(string)$order->customer_email;
+        if(!filter_var($to,FILTER_VALIDATE_EMAIL)){$warning='Die Käufer-E-Mail-Adresse ist ungültig.';$this->history($orderId,$event.'_failed','Änderungsbestätigung nicht versendet',$warning,'order_history',$changeId);return [$warning];}
+        $q=$this->db->getQuery(true)->select(['product_name','sku','quantity','line_total_gross'])->from($this->db->quoteName('#__fdshop_order_items'))->where('order_id='.(int)$orderId)->where('is_removed=0')->order('id ASC');$this->db->setQuery($q);$items=(array)$this->db->loadObjectList();
+        $lines='';foreach($items as $item){$lines.='<li>'.htmlspecialchars((string)$item->product_name,ENT_QUOTES,'UTF-8').' ('.htmlspecialchars((string)$item->sku,ENT_QUOTES,'UTF-8').') – '.htmlspecialchars((string)$item->quantity,ENT_QUOTES,'UTF-8').' × '.number_format((float)$item->line_total_gross/max(0.001,(float)$item->quantity),2,',','.').' '.htmlspecialchars((string)$order->currency,ENT_QUOTES,'UTF-8').'</li>';}
+        $body='<h1>Bestellung '.htmlspecialchars((string)$order->order_number,ENT_QUOTES,'UTF-8').' wurde geändert</h1><p>Status: '.htmlspecialchars((string)$order->order_status,ENT_QUOTES,'UTF-8').'</p><ul>'.$lines.'</ul><p>Abholung/Versand: '.htmlspecialchars((string)$order->shipment_name,ENT_QUOTES,'UTF-8').' ('.number_format((float)$order->shipment_fee,2,',','.').' '.htmlspecialchars((string)$order->currency,ENT_QUOTES,'UTF-8').')</p><p>Zahlungsart: '.htmlspecialchars((string)$order->payment_method_name,ENT_QUOTES,'UTF-8').'</p><p>Gesamtbetrag: <strong>'.number_format((float)$order->grand_total,2,',','.').' '.htmlspecialchars((string)$order->currency,ENT_QUOTES,'UTF-8').'</strong></p>';
+        if(trim((string)$order->order_note)!=='')$body.='<p>Bemerkung: '.nl2br(htmlspecialchars((string)$order->order_note,ENT_QUOTES,'UTF-8')).'</p>';
+        try{$mailer=Factory::getMailer();$mailer->addRecipient($to);$mailer->setSubject('FDShop Bestellung '.$order->order_number.' wurde geändert');$mailer->isHtml(true);$mailer->setBody($body);if($mailer->send()!==true)throw new \RuntimeException('Mailer hat die Nachricht nicht bestätigt.');$this->history($orderId,$event,'Änderungsbestätigung versendet',$to,'order_history',$changeId);return [];}catch(\Throwable $e){$warning='Änderungsbestätigung konnte nicht versendet werden.';$this->history($orderId,$event.'_failed','Änderungsbestätigung fehlgeschlagen',$e->getMessage(),'order_history',$changeId);return [$warning];}
+    }
     private function sendOnce(object $order,object $status,string $kind,string $to,array &$warnings):void
     {
         $event='mail_'.$kind.'_status_'.(int)$status->id;
@@ -27,6 +42,6 @@ final class OrderNotificationService
         if(!filter_var($to,FILTER_VALIDATE_EMAIL)){$warnings[]='Die '.$kind.'-E-Mail-Adresse ist ungültig.';$this->history((int)$order->id,$event.'_failed','E-Mail nicht versendet',end($warnings));return;}
         try{$mailer=Factory::getMailer();$mailer->addRecipient($to);$mailer->setSubject('FDShop Bestellung '.$order->order_number.' – '.$status->status_name);$mailer->isHtml(true);$mailer->setBody('<h1>Bestellung '.htmlspecialchars((string)$order->order_number,ENT_QUOTES,'UTF-8').'</h1><p>Status: '.htmlspecialchars((string)$status->status_name,ENT_QUOTES,'UTF-8').'</p><p>Gesamtbetrag: '.number_format((float)$order->grand_total,2,',','.').' '.htmlspecialchars((string)$order->currency,ENT_QUOTES,'UTF-8').'</p><p>Zahlungsart: '.htmlspecialchars((string)$order->payment_method_name,ENT_QUOTES,'UTF-8').'</p>');$result=$mailer->send();if($result!==true)throw new \RuntimeException('Mailer hat die Nachricht nicht bestätigt.');$this->history((int)$order->id,$event,'E-Mail versendet',$to);}catch(\Throwable $e){$warnings[]='E-Mail konnte nicht versendet werden.';$this->history((int)$order->id,$event.'_failed','E-Mail-Versand fehlgeschlagen',$e->getMessage());}
     }
-    private function history(int $orderId,string $type,string $title,?string $text):void{$row=(object)['order_id'=>$orderId,'event_type'=>$type,'event_title'=>$title,'event_text'=>$text,'reference_type'=>'order_status','reference_id'=>null,'is_system_event'=>1,'created'=>Factory::getDate()->toSql(),'created_by'=>(int)Factory::getApplication()->getIdentity()->id];$this->db->insertObject('#__fdshop_order_history',$row);}
+    private function history(int $orderId,string $type,string $title,?string $text, string $referenceType='order_status', ?int $referenceId=null):void{$row=(object)['order_id'=>$orderId,'event_type'=>$type,'event_title'=>$title,'event_text'=>$text,'reference_type'=>$referenceType,'reference_id'=>$referenceId,'is_system_event'=>1,'created'=>Factory::getDate()->toSql(),'created_by'=>(int)Factory::getApplication()->getIdentity()->id];$this->db->insertObject('#__fdshop_order_history',$row);}
     private function row(string $table,string $where):?object{$q=$this->db->getQuery(true)->select('*')->from($this->db->quoteName($table))->where($where);$this->db->setQuery($q);return $this->db->loadObject()?:null;}
 }
