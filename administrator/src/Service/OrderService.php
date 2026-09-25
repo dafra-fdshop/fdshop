@@ -9,7 +9,7 @@ use RuntimeException;
 
 final class OrderService implements OrderServiceInterface
 {
-    public function __construct(private readonly DatabaseInterface $db, private readonly OrderNotificationService $notifications) {}
+    public function __construct(private readonly DatabaseInterface $db, private readonly OrderNotificationService $notifications, private readonly ProductServiceInterface $products) {}
 
     public function saveDraft(int $orderId, array $items, array $newItems, int $shipmentId, string $expectedModified): bool
     {
@@ -32,6 +32,7 @@ final class OrderService implements OrderServiceInterface
             if($demandChanged&&$stockState==='unknown')throw new RuntimeException('Die Lagerwirkung dieser Legacy-Bestellung ist unbekannt; Positionsänderungen wurden sicher blockiert.');
             if($details===[])return $this->rollbackFalse();
             $this->applyDemandDelta($orderId,$stockState,$oldDemand,$targetDemand);
+            if($stockState==='reserved'&&$demandChanged)$this->products->recalculateStockStatus($this->changedDemandProductIds($oldDemand,$targetDemand));
             foreach($submitted as $id=>$entry){$row=$entry['row'];$quantity=$entry['quantity'];$q=$this->db->getQuery(true)->update($this->db->quoteName('#__fdshop_order_items'))->set('quantity='.$this->db->quote($quantity))->set('physical_quantity='.$this->db->quote($quantity*max(1,(int)$row->unit_quantity_snapshot)))->set('line_total_net='.$this->db->quote($this->money((float)$row->unit_price_net*$quantity)))->set('line_total_gross='.$this->db->quote($this->money((float)$row->unit_price_gross*$quantity)))->set('is_removed='.($entry['removed']?1:0))->where('id='.(int)$id)->where('order_id='.$orderId);$this->db->setQuery($q)->execute();}
             $tax=$this->taxRate();foreach($additions as $entry){$p=$entry['product'];$quantity=$entry['quantity'];$regular=(float)$p->sale_price;$discount=(int)$p->discount_active===1&&(float)$p->discount_price>0?(float)$p->discount_price:0.0;$gross=$discount>0?$discount:$regular;$net=$gross/(1+$tax/100);$row=(object)['order_id'=>$orderId,'product_id'=>(int)$p->id,'product_name'=>(string)$p->product_name,'sku'=>(string)$p->sku,'gtin'=>(string)$p->gtin,'manufacturer_name'=>(string)$p->manufacturer_name,'quantity'=>$quantity,'unit_variant'=>'piece','unit_type_snapshot'=>'Stück','unit_quantity_snapshot'=>1,'physical_quantity'=>$quantity,'regular_price_gross'=>$regular,'discount_price_gross'=>$discount,'unit_price_net'=>$this->money($net),'unit_price_gross'=>$gross,'tax_rate'=>$tax,'line_total_net'=>$this->money($net*$quantity),'line_total_gross'=>$this->money($gross*$quantity),'currency'=>(string)($p->currency?:$order->currency?:'EUR'),'is_removed'=>0];$this->db->insertObject('#__fdshop_order_items',$row);}
             $subtotal=$this->draftSubtotal($orderId);$coupon=(float)$order->coupon_discount;if($coupon>$subtotal+0.0001)throw new RuntimeException('Der historische Gutscheinabzug übersteigt die neue Produktsumme; diese Änderung wurde sicher blockiert.');$grand=$this->money($subtotal-$coupon+(float)$shipment->shipment_price+(float)$order->payment_fee);$date=Factory::getDate()->toSql();
@@ -182,6 +183,10 @@ final class OrderService implements OrderServiceInterface
     {
         foreach(array_unique(array_merge(array_keys($old),array_keys($new))) as $id)if(abs(($old[$id]??0)-($new[$id]??0))>0.0001)return true;return false;
     }
+    private function changedDemandProductIds(array $old,array $new): array
+    {
+        $changed=[];foreach(array_unique(array_merge(array_keys($old),array_keys($new))) as $id)if(abs(($old[$id]??0)-($new[$id]??0))>0.0001)$changed[]=(int)$id;return $changed;
+    }
     private function applyDemandDelta(int $orderId,string $state,array $old,array $new): void
     {
         foreach(array_unique(array_merge(array_keys($old),array_keys($new))) as $productId){$before=(float)($old[$productId]??0);$after=(float)($new[$productId]??0);$delta=$after-$before;$stock=null;$needsStock=$after>0.0001||($state==='reserved'&&abs($delta)>0.0001);if($needsStock&&in_array($state,['reserved','available','none'],true)){$q=$this->db->getQuery(true)->select(['product_id','stock_quantity','reserved_quantity'])->from($this->db->quoteName('#__fdshop_products_details'))->where('product_id='.(int)$productId);$this->db->setQuery((string)$q.' FOR UPDATE');$stock=$this->db->loadObject();if(!$stock)throw new RuntimeException('Ein lagerrelevantes Produkt wurde nicht gefunden.');$available=(float)$stock->stock_quantity-(float)$stock->reserved_quantity;if($state==='reserved'&&$delta>0&&$available+0.0001<$delta)throw new RuntimeException('Der verfügbare Bestand reicht für die gesamte Bestelländerung nicht aus.');if(in_array($state,['available','none'],true)&&$available+0.0001<$after)throw new RuntimeException('Der verfügbare Bestand reicht für die gesamte Bestelländerung nicht aus.');}
@@ -226,6 +231,7 @@ final class OrderService implements OrderServiceInterface
         if($current==='deducted' && $target!=='deducted')throw new RuntimeException('Bereits abgezogener Bestand kann in V1 nicht automatisch zurückgebucht werden.');
         $q=$this->db->getQuery(true)->select('*')->from($this->db->quoteName('#__fdshop_order_stock_allocations'))->where('order_id='.(int)$orderId)->order('product_id ASC');$this->db->setQuery($q);$allocations=(array)$this->db->loadObjectList();
         if($allocations===[])throw new RuntimeException('Für diese Bestellung existiert keine sichere Lagerzuordnung.');
+        $affectedProductIds=[];
         foreach($allocations as $a){$this->db->setQuery('SELECT product_id FROM '.$this->db->quoteName('#__fdshop_products_details').' WHERE product_id='.(int)$a->product_id.' FOR UPDATE')->loadResult();$qty=(float)$a->physical_quantity;
             if($target==='reserved' && $current==='available'){$set='reserved_quantity=reserved_quantity+'.$qty;}
             elseif($target==='available' && $current==='reserved'){$set='reserved_quantity=GREATEST(0,reserved_quantity-'.$qty.')';}
@@ -233,7 +239,8 @@ final class OrderService implements OrderServiceInterface
             elseif($target==='deducted' && $current==='available'){$set='stock_quantity=stock_quantity-'.$qty;}
             else throw new RuntimeException('Dieser Lagerzustandswechsel ist in V1 nicht sicher automatisierbar.');
             $q=$this->db->getQuery(true)->update($this->db->quoteName('#__fdshop_products_details'))->set($set)->where('product_id='.(int)$a->product_id);$this->db->setQuery($q)->execute();
-            $q=$this->db->getQuery(true)->update($this->db->quoteName('#__fdshop_order_stock_allocations'))->set('stock_state='.$this->db->quote($target))->set('modified='.$this->db->quote($date))->where('id='.(int)$a->id);$this->db->setQuery($q)->execute();}
+            $q=$this->db->getQuery(true)->update($this->db->quoteName('#__fdshop_order_stock_allocations'))->set('stock_state='.$this->db->quote($target))->set('modified='.$this->db->quote($date))->where('id='.(int)$a->id);$this->db->setQuery($q)->execute();$affectedProductIds[]=(int)$a->product_id;}
+        $this->products->recalculateStockStatus($affectedProductIds);
         $q=$this->db->getQuery(true)->update($this->db->quoteName('#__fdshop_orders'))->set('stock_state='.$this->db->quote($target))->where('id='.(int)$orderId);$this->db->setQuery($q)->execute();
         $this->writeOrderHistory($orderId,'stock_changed','Lagerwirkung geändert',$current.' → '.$target,'stock',null,true);
     }

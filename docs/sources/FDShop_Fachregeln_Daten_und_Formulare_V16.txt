@@ -1,12 +1,12 @@
 =====================================================================
-FDShop_Fachregeln_Daten_und_Formulare_V15
+FDShop_Fachregeln_Daten_und_Formulare_V16
 =====================================================================
 
-Status: VERBINDLICHE PROJEKTQUELLE Priorität: SEHR HOCH Version: V15
+Status: VERBINDLICHE PROJEKTQUELLE Priorität: SEHR HOCH Version: V16
 
 Diese Quelle ersetzt vollständig:
 
-FDShop_Fachregeln_Daten_und_Formulare_V14
+FDShop_Fachregeln_Daten_und_Formulare_V15
 
 ===================================================================== 1.
 ZWECK
@@ -2799,9 +2799,17 @@ eine reine Änderung auf eine aktive Versandart darf Snapshot und Summe anpassen
 Nach Commit entstehen genau ein übergeordneter Änderungseintrag und höchstens
 eine idempotent zugeordnete Käufermail an die historische Snapshot-Adresse.
 
+Jede erfolgreiche Änderung von lagerrelevanten Mengen durch Checkout,
+Bestellung, Bestellbearbeitung oder Bestellstatus/Lagertransition muss den
+persistierten Bestandsstatus aller betroffenen Produkte innerhalb desselben
+fachlichen Vorgangs über die zentrale Bestandsstatus-Berechnung aktualisieren.
+Maßgeblich sind stets die nach der Mengenmutation gültigen Werte für Bestand,
+Reservierung, Niedrigbestandsschwelle und physische Verfügbarkeit. Mengen- und
+Statusänderung werden gemeinsam committed oder gemeinsam zurückgerollt.
+
 =====================================================================
 ENDE DER QUELLE
 
-FDShop_Fachregeln_Daten_und_Formulare_V15
+FDShop_Fachregeln_Daten_und_Formulare_V16
 
-Status: VERBINDLICHE PROJEKTQUELLE Version: V15
+Status: VERBINDLICHE PROJEKTQUELLE Version: V16

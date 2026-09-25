@@ -16,6 +16,18 @@ async function search(page, value) {
   await page.locator('#filter_search').fill(value); await page.locator('#filter_search').press('Enter'); await page.waitForLoadState('networkidle');
 }
 async function openNormal(page) { await search(page, 'E2E-ORDER-NORMAL'); await page.getByRole('link', { name: 'E2E-ORDER-NORMAL' }).click(); await page.waitForLoadState('networkidle'); }
+async function expectProductStatus(page, sku, status) {
+  await openView(page, 'products'); await clearFilters(page);
+  await page.locator('#filter_search').fill(sku); await page.locator('#filter_search').press('Enter'); await page.waitForLoadState('networkidle');
+  await expect(page.locator('#productList tbody tr').filter({ hasText: sku })).toContainText(status);
+}
+async function changeNormalOrderStatus(page, statusId) {
+  await search(page, 'E2E-ORDER-NORMAL');
+  await page.locator('#orderList tbody tr').filter({ hasText: 'E2E-ORDER-NORMAL' }).locator('input[name="cid[]"]').check();
+  await page.locator('#bulk_order_status_id').selectOption(statusId);
+  await Promise.all([page.waitForNavigation({ waitUntil: 'load' }), page.getByRole('button', { name: /Save|Speichern/i }).click()]);
+  await expect(page.locator('#system-message-container')).toContainText('1 Bestellung(en) aktualisiert');
+}
 test('order list, search, status filters and fixture snapshot details', async ({ page }) => {
   await openView(page, 'orders');
   await expect(page.locator('#orderList')).toContainText('E2E-ORDER-NORMAL');
@@ -73,6 +85,7 @@ test('reserved order edits stay draft-only until atomic toolbar save', async ({ 
   await expect(page.locator('#system-message-container')).toContainText('atomar gespeichert'); await expect(page.locator('main')).toContainText('Bestellung geändert');
   original = page.locator('[data-order-items] tbody tr').filter({ hasText: 'E2E-PROD-ACTIVE' }); await expect(original.locator('input[type="number"]')).toHaveValue('2');
   let added = page.locator('[data-order-items] tbody tr').filter({ hasText: 'E2E-PROD-DISCOUNT' }); await expect(added).toHaveCount(1); await expect(added).toContainText('39,99 EUR'); await expect(page.locator('#jform_shipment_id')).toHaveValue('900602');
+  await expectProductStatus(page, 'E2E-PROD-ACTIVE', 'wenige Verfügbar'); await openNormal(page);
 
   const staleResponse = await page.evaluate(async revision => {
     const form = document.querySelector('#adminForm'); const body = new FormData(form);
@@ -82,9 +95,19 @@ test('reserved order edits stay draft-only until atomic toolbar save', async ({ 
   expect(staleResponse).toContain('zwischenzeitlich geändert'); await page.reload({ waitUntil: 'networkidle' }); original = page.locator('[data-order-items] tbody tr').filter({ hasText: 'E2E-PROD-ACTIVE' }); await expect(original.locator('input[type="number"]')).toHaveValue('2');
 
   await original.locator('input[type="number"]').fill('1'); await Promise.all([page.waitForNavigation({ waitUntil: 'load' }), page.getByRole('button', { name: /Save|Speichern/i }).click()]);
+  await expectProductStatus(page, 'E2E-PROD-ACTIVE', 'Verfügbar'); await openNormal(page);
   added = page.locator('[data-order-items] tbody tr').filter({ hasText: 'E2E-PROD-DISCOUNT' }); await added.getByRole('button', { name: 'Entfernen' }).click(); await expect(added).toHaveClass(/table-danger/);
   await Promise.all([page.waitForNavigation({ waitUntil: 'load' }), page.getByRole('button', { name: /Save|Speichern/i }).click()]);
   await expect(page.locator('[data-order-items] tbody tr').filter({ hasText: 'E2E-PROD-DISCOUNT' })).toContainText('Entfernt');
+  await expectProductStatus(page, 'E2E-PROD-DISCOUNT', 'Verfügbar');
+});
+test('stock transitions recalculate affected persisted product status', async ({ page }) => {
+  await changeNormalOrderStatus(page, '900704');
+  await expectProductStatus(page, 'E2E-PROD-ACTIVE', 'Verfügbar');
+  await changeNormalOrderStatus(page, '900700');
+  await expectProductStatus(page, 'E2E-PROD-ACTIVE', 'Verfügbar');
+  await changeNormalOrderStatus(page, '900701');
+  await expectProductStatus(page, 'E2E-PROD-ACTIVE', 'Verfügbar');
 });
 test('deducted bundle order permits shipment-only save but blocks content changes', async ({ page }) => {
   await search(page, 'E2E-ORDER-BUNDLE'); await page.getByRole('link', { name: 'E2E-ORDER-BUNDLE' }).click(); await page.waitForLoadState('networkidle');

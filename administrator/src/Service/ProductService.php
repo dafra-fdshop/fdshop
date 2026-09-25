@@ -906,6 +906,42 @@ class ProductService implements ProductServiceInterface
         return (int) $this->db->loadResult();
     }
 
+    public function recalculateStockStatus(array $productIds): void
+    {
+        $productIds = array_values(array_unique(array_filter(array_map('intval', $productIds))));
+
+        foreach ($productIds as $productId) {
+            $query = $this->db->getQuery(true)
+                ->select(['stock_quantity', 'reserved_quantity', 'low_stock', 'is_in_stock'])
+                ->from($this->db->quoteName('#__fdshop_products_details'))
+                ->where($this->db->quoteName('product_id') . ' = ' . $productId);
+            $this->db->setQuery((string) $query . ' FOR UPDATE');
+            $details = $this->db->loadAssoc();
+
+            if (!$details) {
+                throw new RuntimeException('Die Bestandsdetails des betroffenen Produkts wurden nicht gefunden.');
+            }
+
+            $query = $this->db->getQuery(true)
+                ->update($this->db->quoteName('#__fdshop_products'))
+                ->set($this->db->quoteName('in_stock') . ' = ' . $this->db->quote($this->calculateInStock($details)))
+                ->where($this->db->quoteName('id') . ' = ' . $productId);
+            $this->db->setQuery($query)->execute();
+
+            if ($this->db->getAffectedRows() === 0) {
+                $query = $this->db->getQuery(true)
+                    ->select('COUNT(*)')
+                    ->from($this->db->quoteName('#__fdshop_products'))
+                    ->where($this->db->quoteName('id') . ' = ' . $productId);
+                $this->db->setQuery($query);
+
+                if ((int) $this->db->loadResult() !== 1) {
+                    throw new RuntimeException('Das betroffene Produkt wurde nicht gefunden.');
+                }
+            }
+        }
+    }
+
     private function calculateInStock(array $detailsData): string
     {
         $stockQuantity = (float) ($detailsData['stock_quantity'] ?? 0);

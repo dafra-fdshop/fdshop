@@ -51,4 +51,6 @@ interface ProductServiceInterface
     public function deleteProductImage(int $productId, int $mediaId): void;
 
     public function importProductImageFromLocalFile(int $productId, string $sourcePath, int $userId): int;
+
+    public function recalculateStockStatus(array $productIds): void;
 }

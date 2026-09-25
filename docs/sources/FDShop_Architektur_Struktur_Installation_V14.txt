@@ -1,9 +1,9 @@
 =====================================================================
-FDShop_Architektur_Struktur_Installation_V13
+FDShop_Architektur_Struktur_Installation_V14
 =====================================================================
 
-Status: VERBINDLICHE PROJEKTQUELLE Version: V13 Ersetzt:
-FDShop_Architektur_Struktur_Installation_V12 Stand: 25.09.2026
+Status: VERBINDLICHE PROJEKTQUELLE Version: V14 Ersetzt:
+FDShop_Architektur_Struktur_Installation_V13 Stand: 25.09.2026
 
 ===================================================================== 1.
 ZWECK UND ZIELPLATTFORM
@@ -654,6 +654,18 @@ Architekturnachtrag Transaktionale Admin-Bestellbearbeitung V1 (Schema 0.0.30):
   Zielbedarf ein. Inhaltsänderungen an `deducted`- und unbekannten Legacyorders
   bleiben konservativ blockiert; reine Shipment-Änderungen sind zulässig.
 
+Architekturnachtrag zentrale Bestandsstatus-Aktualisierung (Schema 0.0.30):
+- `ProductService` bleibt Single Source of Truth für die Berechnung des
+  persistierten Produktfelds `in_stock`. Ein zentraler Batch-Einstieg berechnet
+  ausschließlich tatsächlich von einer Lagerbewegung betroffene Produkt-IDs.
+- CheckoutService und OrderService rufen diesen Einstieg nach Änderungen an
+  `stock_quantity` oder `reserved_quantity` und vor dem Commit ihrer bestehenden
+  fachlichen Transaktion auf. Dadurch werden Mengen und Status gemeinsam
+  committed oder gemeinsam zurückgerollt.
+- Physische Bundle-Bedarfe folgen ohne Sonderformel derselben Allocation- und
+  Demand-Struktur. Das Frontend liest weiterhin den persistierten Status und
+  führt keine dynamische Neuberechnung pro Seitenaufruf durch.
+
 =====================================================================
-ENDE DER QUELLE FDShop_Architektur_Struktur_Installation_V13
+ENDE DER QUELLE FDShop_Architektur_Struktur_Installation_V14
 =====================================================================

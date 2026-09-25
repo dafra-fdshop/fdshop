@@ -7,10 +7,11 @@ use Joomla\CMS\Plugin\PluginHelper;
 use Joomla\Database\DatabaseInterface;
 use Joomla\Registry\Registry;
 use FDShop\Component\FDShop\Administrator\Service\OrderNotificationService;
+use FDShop\Component\FDShop\Administrator\Service\ProductServiceInterface;
 
 final class CheckoutService implements CheckoutServiceInterface
 {
-    public function __construct(private readonly DatabaseInterface $db, private readonly CartServiceInterface $cartService, private readonly OrderNotificationService $notifications) {}
+    public function __construct(private readonly DatabaseInterface $db, private readonly CartServiceInterface $cartService, private readonly OrderNotificationService $notifications, private readonly ProductServiceInterface $products) {}
 
     public function createOrder(int $userId, string $sessionId, int $shipmentId, int $paymentId, string $couponCode, string $note, bool $termsAccepted, string $submissionId): array
     {
@@ -96,7 +97,7 @@ final class CheckoutService implements CheckoutServiceInterface
     }
 
     private function applyStockAction(int $orderId,string $action,array $demand,string $date):void
-    {if(!in_array($action,['none','reserve','deduct','available'],true))throw new \RuntimeException('Ungültige Lageraktion.'); if($action==='none')return; foreach($demand as $id=>$qty){if($action==='reserve'){$set='reserved_quantity = reserved_quantity + '.(float)$qty;$state='reserved';}elseif($action==='deduct'){$set='stock_quantity = stock_quantity - '.(float)$qty;$state='deducted';}else{$state='available';continue;}$q=$this->db->getQuery(true)->update($this->db->quoteName('#__fdshop_products_details'))->set($set)->where('product_id='.(int)$id);$this->db->setQuery($q)->execute();$q=$this->db->getQuery(true)->update($this->db->quoteName('#__fdshop_order_stock_allocations'))->set('stock_state='.$this->db->quote($state))->set('modified='.$this->db->quote($date))->where('order_id='.$orderId)->where('product_id='.(int)$id);$this->db->setQuery($q)->execute();}$q=$this->db->getQuery(true)->update($this->db->quoteName('#__fdshop_orders'))->set('stock_state='.$this->db->quote($state))->where('id='.$orderId);$this->db->setQuery($q)->execute();}
+    {if(!in_array($action,['none','reserve','deduct','available'],true))throw new \RuntimeException('Ungültige Lageraktion.'); if($action==='none')return;$affected=[]; foreach($demand as $id=>$qty){if($action==='reserve'){$set='reserved_quantity = reserved_quantity + '.(float)$qty;$state='reserved';}elseif($action==='deduct'){$set='stock_quantity = stock_quantity - '.(float)$qty;$state='deducted';}else{$state='available';continue;}$q=$this->db->getQuery(true)->update($this->db->quoteName('#__fdshop_products_details'))->set($set)->where('product_id='.(int)$id);$this->db->setQuery($q)->execute();$affected[]=(int)$id;$q=$this->db->getQuery(true)->update($this->db->quoteName('#__fdshop_order_stock_allocations'))->set('stock_state='.$this->db->quote($state))->set('modified='.$this->db->quote($date))->where('order_id='.$orderId)->where('product_id='.(int)$id);$this->db->setQuery($q)->execute();}if($affected!==[])$this->products->recalculateStockStatus($affected);$q=$this->db->getQuery(true)->update($this->db->quoteName('#__fdshop_orders'))->set('stock_state='.$this->db->quote($state))->where('id='.$orderId);$this->db->setQuery($q)->execute();}
     private function consumeCoupon(int $orderId,int $userId,string $code,float $gross,float $tax,string $date):void
     {
         $coupon=$this->lockOne('#__fdshop_coupons','coupon_code='.$this->db->quote($code));

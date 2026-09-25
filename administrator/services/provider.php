@@ -164,7 +164,8 @@ return new class () implements ServiceProviderInterface {
 			function (Container $container): OrderServiceInterface {
 				return new OrderService(
 					$container->get(DatabaseInterface::class),
-					$container->get(OrderNotificationService::class)
+					$container->get(OrderNotificationService::class),
+					$container->get(ProductServiceInterface::class)
 				);
 			}
 		);
@@ -206,7 +207,7 @@ return new class () implements ServiceProviderInterface {
             }
         );
 
-        $container->set(CheckoutServiceInterface::class, fn (Container $container): CheckoutServiceInterface => new CheckoutService($container->get(DatabaseInterface::class), $container->get(CartServiceInterface::class), $container->get(OrderNotificationService::class)));
+        $container->set(CheckoutServiceInterface::class, fn (Container $container): CheckoutServiceInterface => new CheckoutService($container->get(DatabaseInterface::class), $container->get(CartServiceInterface::class), $container->get(OrderNotificationService::class), $container->get(ProductServiceInterface::class)));
         $container->set(CheckoutService::class, fn (Container $container): CheckoutService => $container->get(CheckoutServiceInterface::class));
 
         $container->set(
