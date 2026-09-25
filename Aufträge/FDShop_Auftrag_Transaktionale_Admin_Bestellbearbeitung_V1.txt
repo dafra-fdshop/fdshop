@@ -1,0 +1,446 @@
+FDShop – Auftrag: Transaktionale Admin-Bestellbearbeitung V1
+Datum: 25.09.2026
+
+ZIEL
+Die bestehende Admin-Bestellbearbeitung so erweitern, dass eine Bestellung vollständig als ENTWURF im Formular geändert und erst durch den Joomla-Toolbar-Button "Speichern" fachlich übernommen wird.
+
+Änderungen dürfen NICHT mehr einzeln sofort in DB/Lager/Mail wirken.
+
+Nach erfolgreichem Speichern:
+- Änderungen atomar übernehmen
+- Preise/Summen sauber neu berechnen
+- Lagerwirkung konsistent anpassen
+- Historie schreiben
+- Käufer genau einmal über die geänderte Bestellung informieren
+
+Bei "Abbrechen":
+- Bestellung verlassen
+- keine Änderung persistieren
+- keine Lageränderung
+- keine Historie
+- keine Mail
+
+Zusätzlich muss Abholung/Versandart im Admin änderbar werden.
+
+AUSGANGSLAGE
+- Repository: dafra-fdshop/fdshop
+- Branch: feature
+- aktuellen origin/feature-Stand vor Beginn selbst prüfen.
+- aktuelle Paketversion vor Änderung selbst feststellen.
+- Checkout-/Bestell-Lifecycle und Kundensnapshot sind bereits umgesetzt.
+- OrderService blockiert derzeit Änderungen an Positionen, sobald stock_state "reserved" oder "deducted" ist.
+- Aktuelle Einzelaktionen addItem/removeItem/changeItemQuantity persistieren sofort.
+- administrator/tmpl/order/default.php enthält aktuell Inline-Formulare für Mengenänderung, Entfernen und Produkt hinzufügen.
+- Die bestehende Bestellhistorie und Status-/Lagerlogik müssen erhalten bleiben.
+- Käufer-/Verkäuferbenachrichtigung existiert bereits über OrderNotificationService.
+
+WICHTIGE FACHENTSCHEIDUNG
+Die Admin-Bestellung wird künftig als eine zusammenhängende Bearbeitungseinheit gespeichert.
+
+Nicht:
+Menge ändern → sofort DB
+Produkt hinzufügen → sofort DB
+Produkt entfernen → sofort DB
+Versandart ändern → sofort DB
+
+Sondern:
+Formularänderungen sammeln
+→ "Speichern"
+→ serverseitig vollständig validieren
+→ atomar übernehmen
+→ Lager anpassen
+→ Historie
+→ genau eine Änderungsbestätigung an Käufer
+
+Das ist der zentrale Scope dieses Auftrags.
+
+ADMIN-TOOLBAR
+In der üblichen Joomla-Toolbar der Bestell-Detailansicht ergänzen:
+- Speichern
+- Abbrechen
+
+Joomla-konforme Toolbar-/Controller-Patterns verwenden.
+
+"Speichern":
+- gesamte aktuelle Formularbearbeitung absenden
+- erst nach erfolgreicher Validierung persistieren
+- bei Fehler Bestellung unverändert lassen und verständliche Meldung anzeigen
+
+"Abbrechen":
+- Detailansicht verlassen, vorzugsweise zurück zur Bestellliste
+- nichts speichern
+- keine Nebenwirkung
+
+Keine JavaScript-only-Semantik; Server ist maßgeblich.
+
+BESTELLPOSITIONEN – MENGEN
+Bestehende Menge muss im Formular editierbar bleiben.
+
+Der derzeitige kleine Button "Speichern" an jeder Mengenzeile entfällt.
+
+Falls ein kleiner Zeilenbutton sinnvoll bleibt, soll er "Hinzufügen" heißen und ausschließlich die im Formular/Entwurf dargestellte Menge erhöhen bzw. eine lokale Formularaktion darstellen, NICHT sofort die Bestellung persistieren.
+
+Bevorzugt die UX möglichst einfach halten:
+- Menge direkt editieren
+- endgültige Übernahme nur über Toolbar "Speichern"
+
+Keine DB-/Lager-/Mail-Aktion allein durch Ändern des Inputfeldes oder einen lokalen Entwurfsbutton.
+
+PRODUKT HINZUFÜGEN
+Bereich "Neues Produkt hinzufügen" bleibt grundsätzlich erhalten.
+
+"Hinzufügen" bedeutet künftig:
+- Produkt/Menge in den aktuellen Bearbeitungsentwurf aufnehmen
+- noch keine fachliche Bestellung ändern
+- noch kein Lager verändern
+- noch keine Historie
+- noch keine Mail
+
+Falls dies mit kleinem JS für reine Formular-/Entwurfsdarstellung sinnvoll umgesetzt wird, ist das zulässig.
+Businessvalidierung bleibt serverseitig beim finalen Speichern.
+
+Beim finalen Speichern:
+- Produkt muss weiterhin gültig/verfügbar sein
+- aktuelle Preise/Snapshots gemäß bestehender OrderService-Fachregel verwenden
+- Bestand prüfen
+
+PRODUKT ENTFERNEN
+Aktives Produkt soll im Bearbeitungsentwurf entfernbar/als entfernt markierbar sein.
+
+Auch dies erst beim finalen Speichern persistieren.
+
+Historische Positionen gemäß bestehender FDShop-Philosophie nicht physisch löschen, wenn bisher is_removed verwendet wird.
+
+Abbrechen stellt automatisch den unveränderten DB-Zustand wieder dar, weil bis dahin nichts persistiert wurde.
+
+ABHOLUNG / VERSANDART
+Die Bestellung muss im Admin eine andere gültige Abhol-/Versandart erhalten können.
+
+Dafür die aktuell verfügbaren Shipment-/Abholarten aus der bestehenden FDShop-Datenquelle laden und als Auswahl in der Bestellbearbeitung anbieten.
+
+Beim Speichern Snapshot aktualisieren:
+- shipment_id
+- shipment_name
+- shipment_fee
+
+Gesamtsumme entsprechend neu berechnen.
+
+Keine neue Versandlogik erfinden.
+Bestehende aktive Shipment-Entitäten/Fachregeln verwenden.
+
+Wenn eine historische Bestellung eine inzwischen nicht mehr aktive Versandart besitzt:
+- bestehenden Snapshot weiterhin anzeigen
+- nicht still ersetzen
+- beim bewussten Wechsel nur gültige auswählbare Zielart akzeptieren
+
+ZAHLUNGSART
+In diesem Auftrag KEINE neue Zahlungsartbearbeitung erforderlich.
+Bestehenden Zahlungssnapshot nicht unbeabsichtigt verändern.
+
+PayPal ausdrücklich nicht Scope.
+
+LAGER – KERNANFORDERUNG
+Die bisherige Blockade
+"Lagerrelevante Positionen einer reservierten oder abgezogenen Bestellung dürfen in V1 nicht verändert werden."
+muss für die neue sichere Gesamtbearbeitung ersetzt werden.
+
+Aber NICHT einfach Schutz entfernen.
+
+Beim finalen Speichern muss die Änderung des Bestellinhalts mit dem aktuellen Lagerzustand konsistent verrechnet werden.
+
+Beispiel reservierter Auftrag:
+Alt:
+Produkt A Menge 2 reserviert
+
+Neu:
+Produkt A Menge 3
+
+→ zusätzlich 1 reservieren, sofern verfügbar.
+
+Alt:
+Produkt A Menge 3
+
+Neu:
+Produkt A Menge 1
+
+→ 2 Reservierungen freigeben.
+
+Produkt B neu Menge 2
+→ 2 reservieren.
+
+Produkt C entfernt
+→ dessen bisherige Reservierung freigeben.
+
+Für stock_state "reserved" ist eine saubere Delta-Verrechnung erforderlich.
+
+Für "available"/"none":
+entsprechend bestehender Status-/stock_action-Semantik behandeln; keine Lagerwirkung erfinden.
+
+Für "deducted":
+besondere Vorsicht.
+Die bestehende V1-Regel sagt, bereits abgezogener Bestand kann nicht automatisch zurückgebucht werden.
+Daher vor Umsetzung die aktuelle Fachregel/Statuslogik analysieren.
+
+Bevorzugt:
+- sichere fachlich definierbare Delta-Verrechnung implementieren, wenn sie mit vorhandener Bestandslogik eindeutig möglich ist;
+- andernfalls Bearbeitung einer bereits endgültig abgezogenen Bestellung weiterhin konservativ blockieren und dies klar melden.
+
+NICHT eigenmächtig eine unsichere Rückbuchungslogik für deducted einführen.
+
+VERFÜGBARKEITSPRÜFUNG
+Beim Speichern alle resultierenden physischen Mengen serverseitig gegen den dann aktuellen Bestand prüfen.
+
+Nicht auf Werte vertrauen, die beim Öffnen der Seite galten.
+
+Bundles/physical_quantity/unit variants entsprechend bestehender Fachregeln berücksichtigen.
+
+Bei unzureichendem Bestand:
+- gesamte Bearbeitung ablehnen
+- keine Teiländerung
+- keine Lageränderung
+- keine Historie
+- keine Mail
+- verständliche Meldung
+
+TRANSAKTION
+Finales Speichern muss eine fachliche Transaktion sein.
+
+Sinngemäß:
+1. Bestellung sperren/aktuell laden
+2. aktuellen DB-Zustand lesen
+3. eingereichten Zielzustand validieren
+4. Produkte/Shipment/Bestand aktuell validieren
+5. Differenzen ermitteln
+6. Positionen/Snapshots aktualisieren
+7. Lager/Stock-Allocations konsistent aktualisieren
+8. Summen neu berechnen
+9. Bestellhistorie schreiben
+10. Commit
+11. ERST DANACH Benachrichtigung senden
+
+Fehler vor Commit:
+Rollback.
+
+Keine teilweise geänderte Bestellung.
+
+SUMMEN
+Nach erfolgreicher Bearbeitung mindestens korrekt neu berechnen:
+- Produktpositionen
+- Bundle-Summen soweit betroffen/zulässig
+- subtotal
+- shipment_fee
+- coupon_discount gemäß bestehender Bestellsemantik
+- grand_total
+
+Wichtig:
+Vorhandene Gutscheinwirkung nicht blind neu gegen aktuelle Couponregeln ausführen, wenn Bestellung bereits einen historischen Coupon-Snapshot besitzt.
+Bestehende Snapshot-/Historiensemantik respektieren.
+
+Falls eine fachlich sichere Neuberechnung bei Kombination aus geänderten Positionen + historischem Gutschein im aktuellen Stand nicht eindeutig möglich ist:
+STOP für diesen Sonderfall bzw. konservativ blockieren und im Bericht nennen, statt Gutschein falsch zu verändern.
+
+PREIS-SNAPSHOT
+Bei bestehenden unveränderten Positionen historische Bestellpreise nicht still auf heutige Produktpreise aktualisieren.
+
+Bei neu hinzugefügten Positionen aktuelle gültige Produktpreise zum Zeitpunkt der Admin-Änderung snapshotten.
+
+Bei reiner Mengenänderung einer bestehenden Position den vorhandenen unit_price-Snapshot verwenden und line_total daraus neu berechnen.
+
+Das ist wichtig für historische Nachvollziehbarkeit.
+
+HISTORIE
+Nach erfolgreichem Speichern genau einen übergeordneten verständlichen Historieneintrag "Bestellung geändert" erzeugen.
+
+Zusätzlich dürfen strukturierte Detailereignisse geschrieben werden, wenn dies zum bestehenden System passt, z.B.:
+- Menge Produkt X: 2 → 3
+- Produkt Y hinzugefügt
+- Produkt Z entfernt
+- Abholung/Versand: A → B
+- Gesamtbetrag: alt → neu
+
+Keine Historieneinträge bei Abbrechen oder fehlgeschlagenem Speichern.
+
+Historie muss den ausführenden Administrator korrekt zuordnen.
+
+ÄNDERUNGSBESTÄTIGUNG AN KÄUFER
+Nach erfolgreichem DB-Commit genau EINE Käufermail für den gesamten Speichervorgang.
+
+Nicht:
+eine Mail pro Position/Mengenänderung.
+
+Die Mail soll eindeutig sagen, dass die bestehende Bestellung geändert wurde.
+
+Mindestens enthalten:
+- Bestellnummer
+- aktueller Status
+- aktualisierte Positionen mit Mengen
+- aktualisierte Abholung/Versandart
+- Zahlungsart
+- aktualisierte Gesamtsumme
+- Bestellbemerkung soweit bisher vorgesehen
+- Kundendaten soweit bestehende Mailstruktur dies bereits unterstützt/sinnvoll ist
+
+Diese Mail ist eine aktualisierte Bestellbestätigung, keine Statuswechselmail.
+
+Bestehenden OrderNotificationService sinnvoll erweitern/wiederverwenden.
+Keine zweite parallele Mail-Infrastruktur.
+
+Empfänger:
+customer_email aus dem Bestell-Snapshot, nicht eine eventuell inzwischen geänderte aktuelle Joomla-E-Mail, sofern bestehende Snapshot-Philosophie dies bestätigt.
+
+Verkäufermail:
+Für diesen Änderungs-Speichervorgang nicht zwingend gefordert.
+Wenn bestehende Architektur sauber eine Verkäuferkopie vorsieht, darf dies projektkonform umgesetzt werden; keine Doppelbenachrichtigungen.
+
+MAILFEHLER
+Wie beim Checkout:
+fachlich erfolgreiche Bestellung nicht wegen nachgelagertem Mailfehler zurückrollen.
+
+Mailfehler/Warnung nachvollziehbar speichern/anzeigen entsprechend bestehender mail_warning-Strategie.
+
+ABBRECHEN
+Toolbar "Abbrechen":
+- keine Persistierung
+- keine Lageränderung
+- keine History
+- keine Mail
+- zurück zur Bestellliste bzw. Joomla-konformer vorheriger Adminansicht
+
+Auch wenn im Browser Mengen, neue Produkte oder Shipment geändert wurden.
+
+DOPPELSPEICHERN
+Doppelter Klick / erneutes Submit darf nicht dieselbe fachliche Änderung doppelt auf Lager anwenden oder doppelte Positionen erzeugen.
+
+Geeignete serverseitige Absicherung/aktuelle Zustandsvalidierung vorsehen.
+
+Keine überkomplexe neue Job-/UUID-Infrastruktur, wenn normale Joomla-POST-/Transaction-/Zustandsprüfung genügt.
+
+CONTROLLER / SERVICE / MODEL
+Bestehende FDShop-Architektur einhalten:
+- Controller orchestriert
+- Service enthält Businesslogik
+- Model liefert Daten
+- View/Template rendert
+
+Keine SQL-Businesslogik im Template/Controller.
+
+Bestehende Einzelmethoden addItem/removeItem/changeItemQuantity dürfen intern refaktoriert oder für andere Zwecke erhalten bleiben, aber die Admin-Bestellseite soll sie nicht mehr als sofort persistierende Einzelaktionen verwenden.
+
+UI
+Keine große optische Neugestaltung.
+
+Ziel:
+- Joomla Toolbar mit Speichern / Abbrechen
+- Bestellpositionen verständlich editierbar
+- neues Produkt in Entwurf aufnehmen
+- Position im Entwurf entfernen
+- Abholung/Versandart auswählbar
+- Summen dürfen im Entwurf sinnvoll angezeigt werden, finale Serverberechnung ist maßgeblich
+
+Kein PayPal.
+Keine Rechnungsoptik.
+Keine Mail-Design-Perfektion über die notwendige Änderungsbestätigung hinaus.
+
+BUNDLES
+Bestehende Bundle-Bestellungen dürfen nicht regressieren.
+
+Vor Umsetzung prüfen, wie Bundle-Positionen aktuell im Admin dargestellt/geändert werden.
+
+Wenn sichere Bundle-Inhaltsbearbeitung nicht bereits vorgesehen ist:
+- Bundle selbst in diesem Auftrag nicht zerlegen/inhaltlich editieren
+- dessen Lagerwirkung bei der Gesamtvalidierung berücksichtigen
+- normale Einzelpositionen einer Bestellung weiterhin bearbeiten, sofern sicher
+
+Keine neue Bundle-Editor-Funktion erfinden.
+
+SICHERHEIT
+- Admin ACL
+- CSRF
+- POST-only für Speichern
+- IDs serverseitig validieren
+- keine Preis-/Produkt-/Lagerwerte aus Browser blind übernehmen
+- keine Eigentümer-/Frontendlogik vermischen
+
+TESTS – GEZIELT, ABER FACHLICH AUSREICHEND
+Dieser Auftrag greift bewusst in Bestellung + Lager ein. Daher stärker testen als reine UI-Korrektur, aber kein 600-Punkte-Testprogramm.
+
+Mindestens:
+1. reservierte Bestellung: Menge erhöhen bei ausreichendem Bestand → korrekt
+2. reservierte Bestellung: Menge erhöhen bei zu wenig Bestand → komplett abgelehnt, unverändert
+3. reservierte Bestellung: Menge reduzieren → Reservierung korrekt freigegeben
+4. Produkt hinzufügen → erst nach Speichern, Bestand/Preis/Summe korrekt
+5. Produkt entfernen → erst nach Speichern, Reservierung korrekt freigegeben
+6. mehrere Änderungen gleichzeitig → eine atomare Übernahme
+7. mehrere Änderungen + ein ungültiger Teil → alles Rollback
+8. Shipment wechseln → Snapshot/Fee/Gesamtsumme korrekt
+9. Abbrechen nach mehreren Entwurfsänderungen → keinerlei Persistierung/Nebenwirkung
+10. genau ein übergeordneter History-Eintrag je erfolgreichem Speichern
+11. Detailhistorie fachlich korrekt, falls implementiert
+12. genau eine Käufer-Änderungsmail pro erfolgreichem Speichern
+13. keine Mail bei Abbrechen
+14. keine Mail bei fehlgeschlagenem Speichern
+15. Mailfehler rollt Bestellung nicht zurück
+16. bestehender unit_price-Snapshot bleibt bei Mengenänderung erhalten
+17. neu hinzugefügtes Produkt erhält aktuellen Preis-Snapshot
+18. doppeltes Submit erzeugt keine doppelte Lagerwirkung/Dubletten
+19. Status-/Lagerwechsel bestehender OrderService-Funktionen regressiert nicht
+20. Bundle-Bestellung regressiert nicht
+21. Admin-Bestelldetail lädt und Toolbar funktioniert
+22. ACL/CSRF/POST-Schutz
+23. relevante Checkout-/Order-/Stock-/Notification-Tests
+24. PHP/Syntax + git diff --check
+25. realer Browser-/Sandbox-Test mit mindestens einer Bestellung
+
+Für diese lagerrelevante Änderung darf Codex die relevanten bestehenden Test-Suites großzügig ausführen.
+Ein vollständiges test-full ist NICHT automatisch vorgeschrieben. Nur wenn die tatsächliche Refaktorierung so breit wird, dass es fachlich gerechtfertigt ist; dann im Bericht kurz begründen.
+
+PAKET / VERSION / DOKUMENTATION
+- aktuellen Stand selbst prüfen
+- Paket-/Schema-Version nur nach Projektstandard erhöhen
+- Schemaänderung nur wenn tatsächlich erforderlich
+- Install-/Update-Pfad gezielt testen, falls Paket/Schema betroffen
+- nur tatsächlich betroffene Projektquellen fortschreiben
+
+NICHT SCOPE
+- PayPal
+- Zahlungsart ändern
+- Rechnungserstellung/-design
+- allgemeines Mail-Redesign
+- Frontend-Bestelländerung durch Kunden
+- Gastcheckout
+- Bundle-Inhaltseditor
+- unsichere automatische Rückbuchung bereits endgültig deducted Bestände
+- komplette Admin-Bestellansicht optisch neu bauen
+
+STOP / RÜCKFRAGE
+STOP und berichten, wenn eine der folgenden Fragen nicht anhand bestehender FDShop-Fachregeln sicher lösbar ist:
+- Änderung bereits deducted Bestellung würde unsichere Lager-Rückbuchung verlangen
+- Gutschein-Neuberechnung nach Positionsänderung ist fachlich nicht eindeutig
+- bestehende Bundle-Lagerwirkung lässt sich bei normalen Positionsänderungen nicht sicher erhalten
+
+Für normale Implementierungsdetails selbstständig entscheiden.
+
+GIT
+- nur feature
+- keine fremden Änderungen verwerfen
+- Commit + Push nach origin/feature nach grüner Abnahme
+- kein Force-Push
+- kein Merge nach main
+- Windows-/Offline-Synchronisierung gemäß etabliertem Workflow
+
+ABSCHLUSSBERICHT
+Kurz und konkret:
+- gewählte Entwurfs-/Save-Architektur
+- Verhalten bei reserved / available / none / deducted
+- Shipment-Änderung
+- Preis-/Summenlogik
+- Historie
+- Käufer-Änderungsmail
+- Abbrechen
+- ausgeführte Tests
+- Paket-/Schema-Version
+- geänderte Dateien/Dokumente
+- Commit/Push
+- offene/konservativ blockierte Sonderfälle
+
+ENDE DES AUFTRAGS
