@@ -1,0 +1,206 @@
+FDShop – Korrekturauftrag: Bestandsstatus nach Lagerbewegungen zentral neu berechnen
+Datum: 25.09.2026
+
+ZIEL
+Einen real gefundenen Konsistenzfehler korrigieren:
+
+Lagerbewegungen durch Checkout, Admin-Bestelländerungen und Bestellstatus-/Stornoaktionen aktualisieren aktuell zwar stock_quantity bzw. reserved_quantity korrekt, aber der persistierte Produkt-Bestandsstatus wird danach nicht neu berechnet.
+
+Folge:
+Die echten Mengen stimmen, aber der gespeicherte Bestandsstatus und damit die Frontend-Anzeige bleiben veraltet, bis das Produkt manuell gespeichert wird.
+
+Dieser Zustand ist fachlich unzulässig.
+
+AUSGANGSLAGE / REALER NACHWEIS
+Beispiel:
+- stock_quantity = 4
+- low_stock = 2
+- reserved_quantity zunächst 0
+- persistierter Status: "wenige Verfügbar" bzw. abhängig vom Ausgangszustand
+- Bestellung reserviert 2 Stück
+- reserved_quantity wird korrekt auf 2 gesetzt
+- Bestandsstatus bleibt jedoch auf dem alten Wert
+- manuelles Speichern des Produkts berechnet ihn korrekt neu
+
+Umgekehrt bei Storno/Freigabe:
+- reserved_quantity wird korrekt reduziert
+- Bestandsstatus bleibt erneut veraltet
+
+Dasselbe Problem wurde sowohl beim normalen Kunden-Checkout als auch bei Admin-Bestelländerungen beobachtet.
+
+BESTEHENDE FACHREGEL
+FDShop berechnet den Bestandsstatus bewusst NICHT bei jedem Frontend-Aufruf dynamisch.
+
+Der Status wird persistiert/als Snapshot gehalten und muss bei jeder relevanten Lageränderung neu berechnet werden.
+
+Die bestehende ProductService-Berechnung ist fachliche Grundlage.
+Keine zweite abweichende Formel in OrderService/CheckoutService einführen.
+
+SINGLE SOURCE OF TRUTH
+Vor Änderung aktuellen Code analysieren.
+
+Die bestehende Bestandsstatus-Berechnung zentral verfügbar machen bzw. einen kleinen zentralen Service-/ProductService-Einstieg schaffen, sodass alle Lagerbewegungen dieselbe Berechnung verwenden.
+
+Aktuell existiert im ProductService bereits calculateInStock() mit den maßgeblichen Werten:
+- stock_quantity
+- reserved_quantity
+- low_stock
+- is_in_stock
+
+Diese Fachlogik NICHT kopieren.
+
+Falls die bestehende Methode dafür sinnvoll von private auf einen klaren Service-Einstieg refaktoriert werden muss, ist dies freigegeben.
+
+Wichtig:
+Controller/OrderService/CheckoutService dürfen nicht jeweils eigene Statusformeln erhalten.
+
+AUSLÖSER – VERBINDLICH
+Nach JEDER erfolgreich persistierten Änderung, die den fachlichen Bestandsstatus eines Produkts beeinflussen kann, muss der Status für alle betroffenen Produkte innerhalb desselben fachlichen Vorgangs neu berechnet und gespeichert werden.
+
+Mindestens abdecken:
+
+1. Kunden-Checkout / neue Bestellung
+   - Reservierung entsteht
+   - alle betroffenen Einzelprodukte
+   - physische Bundle-Bedarfe entsprechend bestehender Lagerlogik
+
+2. Admin-Bestellbearbeitung
+   - Menge erhöht
+   - Menge reduziert
+   - Produkt hinzugefügt
+   - Produkt entfernt
+   - mehrere Änderungen gemeinsam
+
+3. Bestellstatus-/Lagertransition
+   - available → reserved
+   - reserved → available
+   - reserved → deducted
+   - available → deducted
+   - Storno/Freigabe soweit bestehende Statuslogik dies auslöst
+
+4. sonstige bestehende zentrale Order-/Stock-Pfade, die stock_quantity oder reserved_quantity verändern.
+
+Nicht nur die aktuell beobachteten zwei SQL-Stellen flicken; den bestehenden Codebestand gezielt auf Lagerbewegungen prüfen.
+
+TRANSAKTION / KONSISTENZ
+Die Neuberechnung gehört fachlich zur Lageränderung.
+
+Wenn Bestellung/Lagerbewegung in einer DB-Transaktion läuft:
+- Mengen ändern
+- neuen Status aus den danach gültigen Mengen berechnen
+- Status speichern
+- erst dann Commit
+
+Kein Zustand:
+Menge committed, Status alt.
+
+Bei Rollback:
+auch Statusänderung zurückrollen.
+
+Bei mehreren betroffenen Produkten:
+alle betroffenen Produkte neu berechnen.
+
+STATUSFELD
+Vor Umsetzung exakt feststellen, welches persistierte Feld im aktuellen Schema/Code die Frontend-Bestandsanzeige speist (z.B. in_stock / tatsächlicher aktueller Name).
+
+Keine neue parallele Statusspalte anlegen.
+
+Keine Schemaänderung, sofern nicht tatsächlich erforderlich.
+
+BERECHNUNG NACH DER ÄNDERUNG
+Immer die POST-MUTATION-Werte verwenden.
+
+Beispiel aus dem realen Test:
+stock_quantity = 4
+reserved_quantity = 2
+low_stock = 2
+is_in_stock = 1
+
+→ bestehende ProductService-Regel muss daraus "wenige Verfügbar" ergeben.
+
+Wird die Reservierung anschließend wieder 0:
+→ bestehende ProductService-Regel erneut anwenden und den entsprechenden aktuellen Status speichern.
+
+Keine Statusentscheidung aus Delta allein ableiten.
+
+BUNDLES
+Bundle-Bestellungen verwenden physische Produktbedarfe.
+
+Wenn dadurch reserved_quantity/stock_quantity eines zugrunde liegenden Produkts verändert wird, muss auch dessen Bestandsstatus neu berechnet werden.
+
+Keine neue Bundle-Fachlogik; bestehende Allocation-/Demand-Struktur verwenden.
+
+PERFORMANCE
+Keine globale Neuberechnung aller Produkte pro Bestellung.
+
+Nur tatsächlich von der Lagerbewegung betroffene product_ids.
+
+Frontend bleibt server-side/performance-orientiert und liest weiterhin den persistierten Status.
+
+DOKUMENTATION / FACHREGEL FESTHALTEN
+Diese Regel soll ausdrücklich in der passenden verbindlichen FDShop-Fach-/Architekturdokumentation festgehalten werden:
+
+"Jede erfolgreiche Änderung von lagerrelevanten Mengen durch Checkout, Bestellung, Bestellbearbeitung oder Bestellstatus/Lagertransition muss den persistierten Bestandsstatus aller betroffenen Produkte innerhalb desselben fachlichen Vorgangs über die zentrale Bestandsstatus-Berechnung aktualisieren."
+
+Damit darf diese Pflicht bei zukünftigen Order-/Stock-Funktionen nicht erneut vergessen werden.
+
+Keine unnötige Dokumentationslawine; nur die tatsächlich passende aktuelle Quelle fortschreiben.
+
+TESTS – GEZIELT
+Dies ist eine kleine, aber zentrale fachliche Korrektur. Kein kompletter Lifecycle/test-full nur aus Gewohnheit.
+
+Mindestens:
+1. Checkout reserviert Produkt → reserved_quantity UND Bestandsstatus korrekt
+2. Checkout mit mehreren Produkten → alle betroffenen Status korrekt
+3. Admin Menge erhöhen → Status korrekt
+4. Admin Menge reduzieren → Status korrekt
+5. Admin Produkt hinzufügen/entfernen → betroffene Status korrekt
+6. Storno/Freigabe → reserved_quantity und Status korrekt zurück
+7. reserved → deducted → stock/reserved und Status korrekt
+8. Bundle-Bedarf → zugrunde liegende Produktstatus korrekt
+9. fehlgeschlagene/gerollbackte Bestelländerung → weder Menge noch Status verändert
+10. normales manuelles Produktspeichern verwendet weiterhin dieselbe zentrale Berechnung
+11. relevante Checkout-/Order-/Stock-Tests
+12. PHP-Syntax + git diff --check
+
+Zusätzlich nach Möglichkeit einen Regressionstest genau für den real beobachteten Fall:
+stock=4, reserved 0→2→0, low_stock=2, is_in_stock=1
+und die erwarteten Statusübergänge gemäß bestehender ProductService-Regel prüfen.
+
+NICHT SCOPE
+- Änderung der fachlichen Schwellenwertformel
+- Frontend-Dynamik bei jedem Seitenaufruf
+- neue Lagerstatus
+- Redesign Lagerverwaltung
+- neue DB-Spalten
+- PayPal
+- Mail-/Rechnungsarbeit
+- allgemeine Order-Refaktorierung
+
+VERSION
+Aktuellen Paketstand prüfen.
+Bei reiner Code-/Dokumentationskorrektur keine unnötige Schemaänderung.
+Paketversion nach bestehender Projektregel behandeln.
+
+GIT
+- nur feature
+- keine fremden Änderungen verwerfen
+- Commit + Push nach origin/feature nach grüner gezielter Abnahme
+- kein Force-Push
+- kein Merge nach main
+- Windows-/Offline-Synchronisierung gemäß etabliertem Workflow
+
+ABSCHLUSSBERICHT
+Kurz berichten:
+- Ursache
+- zentral gewählter Berechnungsweg
+- alle gefundenen Lagerbewegungspfade, die nun aktualisieren
+- Bundle-Behandlung
+- Transaktionsverhalten
+- Tests
+- Dokumentationsänderung
+- Version
+- Commit/Push
+- offene Punkte
+
+ENDE DES AUFTRAGS
