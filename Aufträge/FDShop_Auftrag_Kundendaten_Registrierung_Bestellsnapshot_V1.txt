@@ -1,0 +1,222 @@
+FDShop – Auftrag: Kundendaten, Joomla-Registrierung und Bestell-Snapshot V1
+Datum: 25.09.2026
+
+ZIEL
+FDShop soll für registrierte Kunden die für Bestellung und spätere Kommunikation benötigten Kundendaten sauber über Joomla erfassen und beim Checkout als unveränderlichen Bestell-Snapshot speichern.
+
+Der Auftrag ist bewusst kompakt. Keine allgemeine Neuentwicklung der Joomla-Benutzerverwaltung und kein eigener FDShop-Kundenstamm.
+
+AUSGANGSLAGE
+- Repository: dafra-fdshop/fdshop
+- Arbeitsbranch: feature
+- aktuellen origin/feature-Stand vor Beginn selbst prüfen; keinen hier genannten Commit blind voraussetzen.
+- FDShop nutzt bewusst die Joomla-Benutzerverwaltung.
+- Checkout-/Bestell-Lifecycle V1 ist mit Version 0.0.28 umgesetzt.
+- Aktuell verwendet CheckoutService beim Bestellen nur Joomla user_id, name und email.
+- Benutzername bleibt Joomla-Anmeldeinformation und gehört NICHT in den Bestell-Snapshot.
+- Benutzername muss aber weiterhin Bestandteil der Joomla-Registrierung bleiben.
+- Keine Gastbestellung in diesem Auftrag.
+
+FACHLICHE KUNDENDATEN
+
+Pflicht:
+- Vorname
+- Nachname
+- Straße + Hausnummer
+- PLZ
+- Ort
+- Land
+- E-Mail (weiterhin Joomla-Core-Feld)
+- Benutzername (weiterhin Joomla-Core-Pflichtfeld für Registrierung/Login, aber kein Bestell-Snapshot)
+
+Optional:
+- Firma
+- Telefon
+
+Land:
+- Default Deutschland.
+- Trotzdem als echtes Kundendatum speichern und beim Bestell-Snapshot übernehmen.
+
+NAME / JOOMLA-SONDERFALL
+Joomla besitzt im Core weiterhin das Feld "Name". In der bisherigen Shop-Praxis führte ein einziges sichtbares Namensfeld wiederholt zu schlechten Kundeneingaben (nur Vorname, nur Nachname usw.).
+
+Daher verbindliches Ziel:
+- Registrierung zeigt getrennte Felder "Vorname" und "Nachname".
+- Das technische Joomla-Core-Feld "Name" soll dem Kunden nach Möglichkeit NICHT zusätzlich als drittes Namensfeld präsentiert werden.
+- Joomla muss intern weiterhin einen gültigen Wert für "name" erhalten.
+- Der interne Joomla-Name soll deterministisch aus Vorname + Nachname gebildet werden.
+- Keine doppelte manuelle Namenseingabe durch den Kunden.
+- Bevorzugt serverseitige Joomla-6-Lösung OHNE eigenes JavaScript.
+- Falls Joomla 6 hierfür einen sauberen Core-/Plugin-/Form-Event-Weg bietet, diesen verwenden.
+- Nicht einfach die alte JS-Lösung aus dem Legacy-Shop nachbauen.
+
+JOOMLA-6-RECHERCHE VOR UMSETZUNG
+Vor Codeänderungen kurz den tatsächlich aktuellen Joomla-6.1.x-Core bzw. die offizielle Joomla-6-Dokumentation prüfen:
+- Wie lässt sich com_users Registrierung Joomla-konform um zusätzliche Felder erweitern?
+- Wie kann das Core-Feld "name" bei Registrierung serverseitig aus Vorname + Nachname gesetzt werden?
+- Zu welchem Zeitpunkt laufen Formularvalidierung und User-Save-Events?
+- Wie werden dieselben Daten beim Frontend-Profil bearbeiten und, soweit sinnvoll, im Joomla-Administrator korrekt geladen/gespeichert?
+
+Keine Annahme aus alten Joomla-3/4-Anleitungen übernehmen.
+Keine Änderung am Joomla-Core.
+
+Hinweis aus Vorrecherche:
+Die Joomla-Dokumentation beschreibt das Standard-Registrierungsformular weiterhin mit Name, Username, Password und Email. Zusätzliche Profilfelder sind über Joomla-Erweiterungs-/Profilmechanismen möglich. Die konkrete beste Joomla-6.1-Lösung für getrennten Vor-/Nachnamen und das serverseitige Befüllen von Core "name" ist im aktuellen Core zu verifizieren.
+
+ARCHITEKTUR
+- Joomla-Benutzer bleibt Single Source of Truth für das aktuelle Kundenprofil.
+- Keine eigene umfangreiche FDShop-Kundentabelle.
+- Falls für die saubere Joomla-Integration ein kleines FDShop-User/Profile-Plugin innerhalb des FDShop-Pakets die richtige Lösung ist, ist das zulässig.
+- Bestehende Joomla-Mechanismen bevorzugen.
+- Keine Core-Hacks.
+- Keine unnötige JS-Abhängigkeit.
+- Keine doppelte Datenhaltung ohne fachlichen Grund.
+
+REGISTRIERUNG
+Die normale Joomla-Frontend-Registrierung muss nach Installation des FDShop-Pakets die oben genannten Daten erfassen können.
+
+Prüfen/umsetzen:
+- Vorname Pflicht
+- Nachname Pflicht
+- Straße + Hausnummer Pflicht
+- PLZ Pflicht
+- Ort Pflicht
+- Land Pflicht, Default Deutschland
+- Firma optional
+- Telefon optional
+- E-Mail Core Pflicht
+- Benutzername Core Pflicht
+- Passwort / Passwortbestätigung gemäß Joomla-Core
+- technisches Joomla-Feld name wird korrekt aus Vorname + Nachname erzeugt
+- Validierung serverseitig
+- Eingaben werden dauerhaft am Joomla-Benutzer gespeichert
+
+Keine manuelle Einrichtung von Custom Fields nach jeder FDShop-Installation, wenn dies sauber über das FDShop-Paket automatisierbar ist.
+
+BESTEHENDE BENUTZER / PROFIL
+Bestehende Benutzer ohne neue Pflichtdaten dürfen nicht die gesamte Joomla-Seite beschädigen.
+
+Für den Checkout gilt aber:
+Eine Bestellung darf erst abgeschlossen werden, wenn die erforderlichen Kundendaten vollständig vorhanden sind.
+
+Bei fehlenden Pflichtdaten:
+- verständliche Meldung
+- sinnvoller Weg zur Profilergänzung
+- keine Bestellung mit halbem Kundensnapshot
+
+Frontend-Profilbearbeitung soll die neuen Kundendaten anzeigen und ändern können.
+
+BESTELL-SNAPSHOT
+Beim erfolgreichen Checkout werden die zu diesem Zeitpunkt gültigen Kundendaten in #__fdshop_orders kopiert.
+
+Mindestens Snapshot:
+- customer_first_name
+- customer_last_name
+- customer_company
+- customer_street
+- customer_postal_code
+- customer_city
+- customer_country
+- customer_phone
+- customer_email
+
+Das bestehende customer_name darf aus Kompatibilitätsgründen sinnvoll weitergeführt werden und soll aus Vorname + Nachname gebildet werden, sofern die aktuelle Architektur dies vorsieht.
+
+Wichtig:
+Ändert der Benutzer später sein Joomla-Profil, darf sich eine bereits erzeugte Bestellung NICHT rückwirkend verändern.
+
+BESTELLUNG / CHECKOUT
+CheckoutService darf die Pflichtdaten nicht aus Browser-POST als Wahrheit übernehmen.
+Die aktuellen Kundendaten serverseitig aus dem angemeldeten Joomla-Benutzer/Profile-System laden, validieren und snapshotten.
+
+E-Mail weiterhin auf gültiges Joomla-Core-E-Mail-Feld stützen.
+
+ADMIN-BESTELLUNG
+Die neuen Kundensnapshot-Daten in der bestehenden Bestell-Detailansicht sinnvoll anzeigen.
+
+Keine große optische Neugestaltung in diesem Auftrag.
+Ziel ist zunächst fachlich vollständige und verständliche Anzeige.
+
+BESTELLBESTÄTIGUNG / MAIL
+Noch KEIN umfassendes Mail-Redesign in diesem Auftrag.
+Die neue Snapshot-Struktur jedoch so bereitstellen, dass der unmittelbar folgende Mail-Auftrag darauf aufbauen kann.
+
+Wenn bestehende Mail-/Confirmation-Ausgabe durch die Schemaerweiterung minimal angepasst werden muss, nur notwendige Anpassung durchführen.
+
+SCHEMA / PAKET
+- notwendige Install-SQL- und Update-SQL-Änderungen sauber umsetzen.
+- Paket-/Schema-Version nach Projektstandard erhöhen.
+- Fresh Install und Update vom aktuellen Stand müssen funktionieren.
+- keine manuelle SQL-Nacharbeit nach Paketinstallation.
+
+VALIDIERUNG
+Mindestens:
+- Vor-/Nachname nicht leer
+- Straße nicht leer
+- PLZ nicht leer und sinnvoll begrenzt; keine unnötig Deutschland-exklusive Logik, solange Land ein eigenes Feld ist
+- Ort nicht leer
+- Land nicht leer
+- E-Mail weiterhin Joomla-Core-Validierung
+- Telefon optional; keine überstrenge Formatvalidierung
+- Firma optional
+
+Keine Adressvalidierung über externe Dienste/API.
+
+TESTS – ZIELGERICHTET
+Dieser Auftrag soll NICHT wieder unnötig größer getestet werden als die Änderung erfordert.
+
+Mindestens:
+1. neue Registrierung mit vollständigen Daten → PASS
+2. Joomla user.name korrekt aus Vorname + Nachname → PASS
+3. Profil bearbeiten → Daten bleiben korrekt / Änderungen werden gespeichert
+4. Checkout mit vollständigem Profil → Bestellung erfolgreich
+5. Bestell-Snapshot enthält die Daten
+6. Profil nach Bestellung ändern → alter Bestell-Snapshot bleibt unverändert
+7. Checkout mit fehlendem Pflichtfeld → sicher blockiert und verständliche Meldung
+8. Admin-Bestelldetail zeigt Snapshot
+9. Käufer-/Verkäufermail wird durch Änderung nicht regressiert
+10. relevante Syntax-/Unit-/Checkout-/Browser-Tests
+11. git diff --check
+
+Kein vollständiges test-full und kein kompletter Lifecycle nur aus Gewohnheit, WENN die tatsächliche Änderung klein/isoliert bleibt und gezielte Tests die betroffenen Pfade ausreichend abdecken.
+Wenn Install-/Update-Struktur oder Paketplugin neu hinzukommt, den dafür relevanten Install-/Update-Test selbstverständlich durchführen.
+Bei unerwartet breiter Architekturänderung selbstständig angemessen erweitern und im Bericht begründen.
+
+NICHT SCOPE
+- PayPal
+- Gastbestellung
+- alternative Lieferadresse
+- mehrere gespeicherte Adressen
+- Adressbuch
+- automatische Adressprüfung
+- Versandlogik-Neuentwicklung
+- komplettes Mail-Design
+- kompletter Checkout-Redesign
+- eigener FDShop-Kundenstamm
+- Joomla-Core-Änderungen
+
+DOKUMENTATION
+Nur tatsächlich betroffene FDShop-Projektquellen nach Dokumentationsstandard fortschreiben.
+Keine Dokumentationsversion nur aus Gewohnheit erhöhen, wenn keine fachlich relevante Änderung vorliegt.
+
+GIT
+- nur feature
+- keine fremden Änderungen verwerfen
+- Commit + Push nach origin/feature nach grüner gezielter Abnahme
+- kein Force-Push
+- kein Merge nach main
+- Windows-/Offline-Synchronisierung nur gemäß etabliertem Projektworkflow
+
+ABSCHLUSSBERICHT
+Kurz berichten:
+- gewählte Joomla-6-Lösung für getrennten Vor-/Nachnamen und Core-name
+- wo die Profildaten gespeichert werden
+- neue Bestell-Snapshot-Felder
+- Verhalten bei unvollständigen Altbenutzern
+- ausgeführte Tests
+- Paket-/Schema-Version
+- geänderte Dateien/Dokumente
+- Commit/Push
+- offene Punkte
+
+ENDE DES AUFTRAGS
