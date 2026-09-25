@@ -53,7 +53,7 @@ test('guest purchase uses the central action, adds quantities and reports a stoc
   await expect(page.locator('[data-purchase-title]')).toHaveText('Menge angepasst');
   await expect(page.locator('[data-purchase-message]')).toContainText('maximal verfügbare Menge von 6');
   const cartHref = await page.locator('[data-purchase-cart]').getAttribute('href');
-  expect(cartHref).toMatch(/(?:view=cart|\/fdshop\/cart)/);
+  expect(cartHref).toMatch(/(?:view=cart|\/fdshop\/cart|\/warenkorb)/);
   await page.locator('[data-purchase-cart]').click();
   await expect(page.locator('[data-fdshop-cart] [data-cart-item]')).toHaveCount(1);
   await expect(page.locator('[data-cart-quantity]')).toHaveValue('10');

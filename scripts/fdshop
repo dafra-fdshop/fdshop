@@ -37,22 +37,24 @@ build_package() {
   stage_dir="$(mktemp -d -t fdshop-package.XXXXXXXX)"
   trap '[[ -n "${stage_dir:-}" && "$stage_dir" == /tmp/fdshop-package.* ]] && rm -rf -- "$stage_dir"' RETURN
 
-  mkdir -p "$stage_dir/component" "$stage_dir/module" "$stage_dir/user-plugin" "$stage_dir/system-plugin" "$stage_dir/package"
+  mkdir -p "$stage_dir/component" "$stage_dir/filter-module" "$stage_dir/products-module" "$stage_dir/user-plugin" "$stage_dir/system-plugin" "$stage_dir/package"
   cp -a "$REPO_ROOT/administrator" "$stage_dir/component/administrator"
   cp -a "$REPO_ROOT/site" "$stage_dir/component/site"
   cp -a "$REPO_ROOT/media" "$stage_dir/component/media"
   cp "$REPO_ROOT/fdshop.xml" "$REPO_ROOT/script.php" "$stage_dir/component/"
-  cp -a "$REPO_ROOT/modules/mod_fdshop_filter/." "$stage_dir/module/"
+  cp -a "$REPO_ROOT/modules/mod_fdshop_filter/." "$stage_dir/filter-module/"
+  cp -a "$REPO_ROOT/modules/mod_fdshop_products/." "$stage_dir/products-module/"
   cp -a "$REPO_ROOT/plugins/user/fdshopprofile/." "$stage_dir/user-plugin/"
   cp -a "$REPO_ROOT/plugins/system/fdshopregistration/." "$stage_dir/system-plugin/"
   find "$stage_dir" -exec touch -h -d '2000-01-01 00:00:00 UTC' {} +
   ( cd "$stage_dir/component"; find administrator site media -type f -print | LC_ALL=C sort | zip -X -q "$stage_dir/package/com_fdshop_component.zip" -@; zip -X -q "$stage_dir/package/com_fdshop_component.zip" fdshop.xml script.php )
-  ( cd "$stage_dir/module"; find . -type f -print | LC_ALL=C sort | zip -X -q "$stage_dir/package/mod_fdshop_filter.zip" -@ )
+  ( cd "$stage_dir/filter-module"; find . -type f -print | LC_ALL=C sort | zip -X -q "$stage_dir/package/mod_fdshop_filter.zip" -@ )
+  ( cd "$stage_dir/products-module"; find . -type f -print | LC_ALL=C sort | zip -X -q "$stage_dir/package/mod_fdshop_products.zip" -@ )
   ( cd "$stage_dir/user-plugin"; find . -type f -print | LC_ALL=C sort | zip -X -q "$stage_dir/package/plg_user_fdshopprofile.zip" -@ )
   ( cd "$stage_dir/system-plugin"; find . -type f -print | LC_ALL=C sort | zip -X -q "$stage_dir/package/plg_system_fdshopregistration.zip" -@ )
   cp "$REPO_ROOT/pkg_fdshop.xml" "$stage_dir/package/"
   touch -d '2000-01-01 00:00:00 UTC' "$stage_dir/package/"*
-  ( cd "$stage_dir/package"; zip -X -q "$PACKAGE_PATH" plg_user_fdshopprofile.zip plg_system_fdshopregistration.zip com_fdshop_component.zip mod_fdshop_filter.zip pkg_fdshop.xml )
+  ( cd "$stage_dir/package"; zip -X -q "$PACKAGE_PATH" plg_user_fdshopprofile.zip plg_system_fdshopregistration.zip com_fdshop_component.zip mod_fdshop_filter.zip mod_fdshop_products.zip pkg_fdshop.xml )
 
   printf 'Built %s\n' "$PACKAGE_PATH"
   sha256sum "$PACKAGE_PATH"
@@ -130,6 +132,8 @@ verify_installed() {
   compose exec -T joomla test -d /var/www/html/images/FDShop/products
   compose exec -T joomla test -f /var/www/html/modules/mod_fdshop_filter/mod_fdshop_filter.php
   [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}extensions WHERE type='module' AND element='mod_fdshop_filter' AND client_id=0;")" == "1" ]]
+  compose exec -T joomla test -f /var/www/html/modules/mod_fdshop_products/mod_fdshop_products.php
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}extensions WHERE type='module' AND element='mod_fdshop_products' AND client_id=0;")" == "1" ]]
   compose exec -T joomla test -f /var/www/html/plugins/user/fdshopprofile/services/provider.php
   [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}extensions WHERE type='plugin' AND folder='user' AND element='fdshopprofile' AND enabled=1;")" == "1" ]]
   compose exec -T joomla test -f /var/www/html/plugins/system/fdshopregistration/services/provider.php
@@ -148,6 +152,7 @@ verify_uninstalled() {
   compose exec -T joomla test ! -e /var/www/html/components/com_fdshop
   compose exec -T joomla test ! -e /var/www/html/media/com_fdshop
   compose exec -T joomla test ! -e /var/www/html/modules/mod_fdshop_filter
+  compose exec -T joomla test ! -e /var/www/html/modules/mod_fdshop_products
   compose exec -T joomla test ! -e /var/www/html/plugins/user/fdshopprofile
   compose exec -T joomla test ! -e /var/www/html/plugins/system/fdshopregistration
   printf 'FDShop uninstalled: extension record absent, tables=0, component paths absent.\n'
@@ -195,9 +200,10 @@ sync_source() {
     rsync -a --delete /workspace/fdshop/media/images/ /var/www/html/media/com_fdshop/images/
     cp /workspace/fdshop/media/joomla.asset.json /var/www/html/media/com_fdshop/joomla.asset.json
     test ! -d /var/www/html/modules/mod_fdshop_filter || rsync -a --delete /workspace/fdshop/modules/mod_fdshop_filter/ /var/www/html/modules/mod_fdshop_filter/
+    test ! -d /var/www/html/modules/mod_fdshop_products || rsync -a --delete /workspace/fdshop/modules/mod_fdshop_products/ /var/www/html/modules/mod_fdshop_products/
     test ! -d /var/www/html/plugins/user/fdshopprofile || rsync -a --delete /workspace/fdshop/plugins/user/fdshopprofile/ /var/www/html/plugins/user/fdshopprofile/
     test ! -d /var/www/html/plugins/system/fdshopregistration || rsync -a --delete /workspace/fdshop/plugins/system/fdshopregistration/ /var/www/html/plugins/system/fdshopregistration/
-    chown -R www-data:www-data /var/www/html/administrator/components/com_fdshop /var/www/html/components/com_fdshop /var/www/html/media/com_fdshop /var/www/html/modules/mod_fdshop_filter /var/www/html/plugins/user/fdshopprofile /var/www/html/plugins/system/fdshopregistration 2>/dev/null || true
+    chown -R www-data:www-data /var/www/html/administrator/components/com_fdshop /var/www/html/components/com_fdshop /var/www/html/media/com_fdshop /var/www/html/modules/mod_fdshop_filter /var/www/html/modules/mod_fdshop_products /var/www/html/plugins/user/fdshopprofile /var/www/html/plugins/system/fdshopregistration 2>/dev/null || true
   '
   printf 'FDShop source synchronized. Manifest and installer lifecycle were not bypassed.\n'
 }
@@ -338,6 +344,41 @@ run_browser_frontend_category() {
     load_fixtures || true
     return 1
   fi
+}
+
+run_browser_products_module() {
+  verify_installed >/dev/null
+  load_fixtures >/dev/null
+  local category_id module_ids="" params module_id first_module_id="" run_id container_output host_output one_time eight_time
+  category_id="$(sql "SELECT id FROM ${JOOMLA_DB_PREFIX}fdshop_categories WHERE is_active=1 ORDER BY id LIMIT 1;")"
+  [[ "$category_id" =~ ^[0-9]+$ ]] || { printf 'No active FDShop category found.\n' >&2; return 1; }
+  sql "DELETE mm FROM ${JOOMLA_DB_PREFIX}modules_menu mm INNER JOIN ${JOOMLA_DB_PREFIX}modules m ON m.id=mm.moduleid WHERE m.module='mod_fdshop_products' AND m.title LIKE 'FDShop Produkte %'; DELETE FROM ${JOOMLA_DB_PREFIX}modules WHERE module='mod_fdshop_products' AND title LIKE 'FDShop Produkte %';"
+  sql "INSERT IGNORE INTO ${JOOMLA_DB_PREFIX}fdshop_product_category_map (product_id, category_id) SELECT id, ${category_id} FROM ${JOOMLA_DB_PREFIX}fdshop_products WHERE is_active=1 AND is_deleted=0;"
+  params="{\"category_id\":\"${category_id}\",\"max_products\":\"8\",\"desktop_items\":\"5\",\"sorting\":\"name_asc\",\"show_category_link\":\"1\",\"category_link_text\":\"Zur Kategorie\",\"show_ribbons\":\"1\",\"show_technical\":\"1\",\"show_price\":\"1\",\"show_cart\":\"1\",\"carousel\":\"1\",\"cache\":\"0\",\"cache_time\":\"300\"}"
+  for number in $(seq 1 8); do
+    sql "INSERT INTO ${JOOMLA_DB_PREFIX}modules (asset_id,title,note,content,ordering,position,checked_out,checked_out_time,publish_up,publish_down,published,module,access,showtitle,params,client_id,language) VALUES (0,'FDShop Produkte ${number}','','',${number},'top-a',NULL,NULL,NULL,NULL,1,'mod_fdshop_products',1,0,'${params}',0,'*');"
+    module_id="$(sql "SELECT id FROM ${JOOMLA_DB_PREFIX}modules WHERE client_id=0 AND module='mod_fdshop_products' AND title='FDShop Produkte ${number}' ORDER BY id DESC LIMIT 1;")"
+    [[ -n "$first_module_id" ]] || first_module_id="$module_id"
+    sql "INSERT INTO ${JOOMLA_DB_PREFIX}modules_menu (moduleid,menuid) VALUES (${module_id},0);"
+    module_ids="${module_ids}${module_ids:+,}${module_id}"
+  done
+  sql "UPDATE ${JOOMLA_DB_PREFIX}modules SET params=JSON_SET(params, '$.cache', '1') WHERE module='mod_fdshop_products' AND title LIKE 'FDShop Produkte %' ORDER BY id DESC LIMIT 4;"
+  sql "UPDATE ${JOOMLA_DB_PREFIX}modules SET params=JSON_SET(params, '$.carousel', '0') WHERE id=${module_id};"
+  sql "UPDATE ${JOOMLA_DB_PREFIX}modules SET published=0 WHERE id IN (${module_ids}) AND id<>${first_module_id};"
+  one_time="$(curl --silent --output /dev/null --write-out '%{time_total}' "http://127.0.0.1:8080/index.php?option=com_fdshop&view=category&id=${category_id}")"
+  sql "UPDATE ${JOOMLA_DB_PREFIX}modules SET published=1 WHERE id IN (${module_ids});"
+  eight_time="$(curl --silent --output /dev/null --write-out '%{time_total}' "http://127.0.0.1:8080/index.php?option=com_fdshop&view=category&id=${category_id}")"
+  printf 'Products module render timing: 1 instance=%ss, 8 instances=%ss (three queries first configuration, request-cache hits thereafter).\n' "$one_time" "$eight_time"
+  run_id="${FDSHOP_PRODUCTS_MODULE_RUN_ID:-$(date -u +%Y%m%dT%H%M%SZ)-products-module-$RANDOM}"
+  container_output="/workspace/artifacts/$run_id"; host_output="$REPO_ROOT/.docker/test-results/playwright/$run_id"; mkdir -p "$host_output"
+  compose build browser
+  if compose run --rm --no-deps --env "PLAYWRIGHT_OUTPUT_DIR=$container_output" --env "FDSHOP_PRODUCTS_MODULE_CATEGORY_ID=$category_id" browser npx playwright test tests/products-module.spec.js; then
+    printf 'Products module artifacts: %s\nFDShop products module suite: PASS\n' "$host_output"
+  else
+    sql "DELETE FROM ${JOOMLA_DB_PREFIX}modules WHERE id IN (${module_ids});" || true; load_fixtures >/dev/null || true; return 1
+  fi
+  sql "DELETE FROM ${JOOMLA_DB_PREFIX}modules WHERE id IN (${module_ids});"
+  load_fixtures >/dev/null
 }
 
 run_browser_purchase() {
@@ -926,6 +967,7 @@ Usage: scripts/fdshop COMMAND
   browser-frontend-category  Run the public category view browser suite with isolated fixtures
   browser-frontend-cart  Run the authenticated frontend cart browser suite with isolated fixtures
   browser-purchase  Run the central purchase action suite with isolated fixtures
+  browser-products-module  Run the category products module multi-instance suite
   test-readonly     Run reset, smoke, foundation and read-only browser tests
   browser-crud-manufacturers  Run manufacturer CRUD browser tests
   browser-crud-categories  Run category CRUD browser tests with cleanup
@@ -976,6 +1018,7 @@ main() {
         browser-frontend-category) run_browser_frontend_category ;;
         browser-frontend-cart) run_browser_frontend_cart ;;
         browser-purchase) run_browser_purchase ;;
+        browser-products-module) run_browser_products_module ;;
         test-readonly) test_readonly ;;
         browser-crud-manufacturers) run_browser_crud_manufacturers ;;
         browser-crud-categories) run_browser_crud_categories ;;

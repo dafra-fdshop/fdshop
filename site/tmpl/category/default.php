@@ -73,26 +73,6 @@ $filterData = ['facets' => $this->filterFacets, 'active' => $this->activeFilters
     <?php else : ?>
         <div class="fdshop-products">
             <?php foreach ($this->items as $item) : ?>
-                <?php
-                $factValues = [
-                    'NEM' => (float) $item->nem > 0
-                        ? rtrim(rtrim(number_format((float) $item->nem, 3, ',', '.'), '0'), ',') . ' g'
-                        : '-',
-                    'Schusszahl' => (float) $item->shot_count > 0
-                        ? rtrim(rtrim(number_format((float) $item->shot_count, 3, ',', '.'), '0'), ',')
-                        : '-',
-                    'Kaliber' => trim((string) $item->caliber) !== '' && (float) $item->caliber !== 0.0 ? (string) $item->caliber : '-',
-                    'Brenndauer' => trim((string) $item->burn_time) !== '' && (float) $item->burn_time !== 0.0 ? (string) $item->burn_time : '-',
-                    'Steighöhe' => trim((string) $item->rise_height) !== '' && (float) $item->rise_height !== 0.0 ? (string) $item->rise_height : '-',
-                ];
-                $factIcons = [
-                    'NEM' => 'icon_nem.svg',
-                    'Schusszahl' => 'icon_anzahl.svg',
-                    'Kaliber' => 'icon_durchm.svg',
-                    'Brenndauer' => 'icon_zeit.svg',
-                    'Steighöhe' => 'icon_hoehe.svg',
-                ];
-                ?>
                 <article class="fdshop-card" data-product-id="<?php echo (int) $item->id; ?>" data-price="<?php echo $this->escape((string) $item->current_price); ?>" data-visual-state="<?php echo $this->escape($item->visual_state); ?>">
                     <div class="fdshop-card__visual fdshop-product-visual--<?php echo $this->escape($item->visual_state); ?>">
                     <div class="fdshop-card__media">
@@ -127,12 +107,12 @@ $filterData = ['facets' => $this->filterFacets, 'active' => $this->activeFilters
                     </div>
                     <div class="fdshop-card__info">
                             <dl class="fdshop-card__facts" aria-label="Technische Produktdaten">
-                                <?php foreach ($factValues as $factLabel => $factValue) : ?>
-                                    <div class="fdshop-card__fact" title="<?php echo $this->escape($factLabel); ?>">
-                                        <dt class="visually-hidden"><?php echo $this->escape($factLabel); ?></dt>
-                                        <dd aria-label="<?php echo $this->escape($factLabel . ': ' . $factValue); ?>">
-                                            <img src="<?php echo $this->escape(\Joomla\CMS\Uri\Uri::root(true) . '/media/com_fdshop/images/product-facts/' . $factIcons[$factLabel]); ?>" alt="" aria-hidden="true" width="28" height="28" loading="lazy">
-                                            <span><?php echo $this->escape($factValue); ?></span>
+                                <?php foreach ($item->card_facts as $fact) : ?>
+                                    <div class="fdshop-card__fact" title="<?php echo $this->escape($fact['label']); ?>">
+                                        <dt class="visually-hidden"><?php echo $this->escape($fact['label']); ?></dt>
+                                        <dd aria-label="<?php echo $this->escape($fact['label'] . ': ' . $fact['value']); ?>">
+                                            <img src="<?php echo $this->escape(\Joomla\CMS\Uri\Uri::root(true) . '/media/com_fdshop/images/product-facts/' . $fact['icon']); ?>" alt="" aria-hidden="true" width="28" height="28" loading="lazy">
+                                            <span><?php echo $this->escape($fact['value']); ?></span>
                                         </dd>
                                     </div>
                                 <?php endforeach; ?>

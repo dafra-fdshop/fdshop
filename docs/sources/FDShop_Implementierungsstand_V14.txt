@@ -621,6 +621,17 @@ Nachtrag Transaktionale Admin-Bestellbearbeitung V1 (Schema 0.0.30):
 - Inhaltsänderungen bei `deducted` oder unbekannter Lagerwirkung und ein
   Bundle-Inhaltseditor bleiben bewusst außerhalb dieses Stands.
 
+Nachtrag Kategorie-Produktmodul V1 (Paket 0.0.31):
+- Aktive Kategorie, Produktlimit 5–25, fünf Sortierungen, optionaler
+  Kategoriebutton sowie schaltbare Ribbons, technische Daten, Preis,
+  Warenkorb und Carousel/Grid: umgesetzt.
+- Media-V1-Kartenderivate, No-Image, Aktionspreise, Ribbons, persistierter
+  Bestandsstatus, Produkt-/Kategorierouten und bestehende Purchase Action:
+  wiederverwendet; keine neue Produktfachlogik oder AJAX-API.
+- Mehrfachinstanzen besitzen getrennte DOM-Ziele und Purchase-IDs. Abfragen
+  bleiben je verschiedener Konfiguration konstant und identische Konfigurationen
+  verwenden innerhalb eines Requests dieselben vorbereiteten Daten.
+
 =====================================================================
 ENDE DER QUELLE FDShop_Implementierungsstand_V14
 =====================================================================

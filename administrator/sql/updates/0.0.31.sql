@@ -1,0 +1,2 @@
+-- Package release 0.0.31 adds the category products module.
+-- No database schema changes are required.

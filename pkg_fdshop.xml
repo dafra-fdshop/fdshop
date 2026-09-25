@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <extension type="package" method="upgrade">
-  <name>FDShop</name><packagename>fdshop</packagename><version>0.0.30</version><author>FDShop</author><creationDate>2026-09-25</creationDate>
-  <description>FDShop-Komponente mit Filtermodul und Joomla-Kundenprofilintegration.</description>
-  <files><file type="plugin" id="fdshopprofile" group="user">plg_user_fdshopprofile.zip</file><file type="plugin" id="fdshopregistration" group="system">plg_system_fdshopregistration.zip</file><file type="component" id="com_fdshop">com_fdshop_component.zip</file><file type="module" id="mod_fdshop_filter" client="site">mod_fdshop_filter.zip</file></files>
+  <name>FDShop</name><packagename>fdshop</packagename><version>0.0.31</version><author>FDShop</author><creationDate>2026-09-25</creationDate>
+  <description>FDShop-Komponente mit Filter-, Kategorie-Produktmodul und Joomla-Kundenprofilintegration.</description>
+  <files><file type="plugin" id="fdshopprofile" group="user">plg_user_fdshopprofile.zip</file><file type="plugin" id="fdshopregistration" group="system">plg_system_fdshopregistration.zip</file><file type="component" id="com_fdshop">com_fdshop_component.zip</file><file type="module" id="mod_fdshop_filter" client="site">mod_fdshop_filter.zip</file><file type="module" id="mod_fdshop_products" client="site">mod_fdshop_products.zip</file></files>
 </extension>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extension type="module" client="site" method="upgrade">
+  <name>FDShop Kategorie-Produkte</name><author>FDShop</author><creationDate>2026-09-25</creationDate><version>0.0.31</version>
+  <description>Zeigt Produkte einer aktiven FDShop-Kategorie als responsives Karussell oder Grid.</description>
+  <files><filename module="mod_fdshop_products">mod_fdshop_products.php</filename><filename>helper.php</filename><folder>tmpl</folder></files>
+  <config><fields name="params">
+    <fieldset name="basic" label="Inhalt">
+      <field name="category_id" type="sql" label="Kategorie" query="SELECT id AS value, category_name AS text FROM #__fdshop_categories WHERE is_active = 1 ORDER BY category_name" key_field="value" value_field="text" required="true" />
+      <field name="max_products" type="number" label="Maximale Produktzahl" default="20" min="5" max="25" filter="integer" />
+      <field name="desktop_items" type="number" label="Karten pro Desktopansicht" default="5" min="3" max="6" filter="integer" />
+      <field name="sorting" type="list" label="Sortierung" default="newest"><option value="newest">Neueste zuerst</option><option value="name_asc">Produktname aufsteigend</option><option value="price_asc">Preis aufsteigend</option><option value="price_desc">Preis absteigend</option><option value="random">Zufällig</option></field>
+    </fieldset>
+    <fieldset name="display" label="Darstellung">
+      <field name="show_category_link" type="radio" layout="joomla.form.field.radio.switcher" label="Zur Kategorie anzeigen" default="1"><option value="0">JNO</option><option value="1">JYES</option></field>
+      <field name="category_link_text" type="text" label="Buttontext" default="Zur Kategorie" showon="show_category_link:1" />
+      <field name="show_ribbons" type="radio" layout="joomla.form.field.radio.switcher" label="Ribbons" default="1"><option value="0">JNO</option><option value="1">JYES</option></field>
+      <field name="show_technical" type="radio" layout="joomla.form.field.radio.switcher" label="Technische Details" default="1"><option value="0">JNO</option><option value="1">JYES</option></field>
+      <field name="show_price" type="radio" layout="joomla.form.field.radio.switcher" label="Preis" default="1"><option value="0">JNO</option><option value="1">JYES</option></field>
+      <field name="show_cart" type="radio" layout="joomla.form.field.radio.switcher" label="Warenkorbbutton" default="1"><option value="0">JNO</option><option value="1">JYES</option></field>
+      <field name="carousel" type="radio" layout="joomla.form.field.radio.switcher" label="Karussell" default="1"><option value="0">JNO</option><option value="1">JYES</option></field>
+      <field name="moduleclass_sfx" type="textarea" label="COM_MODULES_FIELD_MODULECLASS_SFX_LABEL" />
+    </fieldset>
+    <fieldset name="advanced" label="Performance">
+      <field name="cache" type="list" label="Caching" default="1"><option value="1">JGLOBAL_USE_GLOBAL</option><option value="0">COM_MODULES_FIELD_VALUE_NOCACHING</option></field>
+      <field name="cache_time" type="number" label="Cachezeit" default="300" filter="integer" />
+      <field name="cachemode" type="hidden" default="itemid" />
+    </fieldset>
+  </fields></config>
+</extension>

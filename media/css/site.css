@@ -232,3 +232,27 @@
 .fdshop-account-entry__registration .controls, .fdshop-account-entry__registration input { min-width: 0; }
 .fdshop-account-entry__registration .com-users-registration__submit { display: block; }
 @media (max-width: 700px) { .fdshop-account-entry { grid-template-columns: 1fr; } .fdshop-account-entry__registration .control-group { grid-template-columns: 1fr; gap: .25rem; } }
+
+/* Category products module */
+.fdshop-products-module { position: relative; margin-block: 1.5rem; }
+.fdshop-products-module__header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: .75rem; }
+.fdshop-products-module__header h2 { margin: 0; }
+.fdshop-products-module__viewport { min-width: 0; }
+.fdshop-products-module.is-carousel .fdshop-products-module__viewport { overflow-x: auto; scroll-behavior: smooth; scroll-snap-type: x mandatory; scrollbar-width: none; }
+.fdshop-products-module.is-carousel .fdshop-products-module__viewport::-webkit-scrollbar { display: none; }
+.fdshop-products-module__track { display: grid; grid-template-columns: repeat(var(--fdshop-module-columns, 5), minmax(0, 1fr)); gap: .75rem; }
+.fdshop-products-module.is-carousel .fdshop-products-module__track { display: flex; }
+.fdshop-products-module.is-carousel .fdshop-products-module__card { flex: 0 0 calc((100% - (var(--fdshop-module-columns, 5) - 1) * .75rem) / var(--fdshop-module-columns, 5)); scroll-snap-align: start; }
+.fdshop-products-module__card .fdshop-card__description,
+.fdshop-products-module__card .fdshop-card__actions { display: none; }
+.fdshop-products-module__navigation { display: flex; justify-content: flex-end; gap: .5rem; margin-top: .75rem; }
+.fdshop-products-module__navigation .btn { width: 2.75rem; font-size: 1.5rem; line-height: 1; }
+@media (max-width: 991.98px) {
+  .fdshop-products-module__track { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .fdshop-products-module.is-carousel .fdshop-products-module__card { flex-basis: calc((100% - 1.5rem) / 3); }
+}
+@media (max-width: 575.98px) {
+  .fdshop-products-module__header { align-items: flex-start; }
+  .fdshop-products-module__track { grid-template-columns: 1fr; }
+  .fdshop-products-module.is-carousel .fdshop-products-module__card { flex-basis: min(82%, 18rem); }
+}

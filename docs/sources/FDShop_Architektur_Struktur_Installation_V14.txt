@@ -666,6 +666,20 @@ Architekturnachtrag zentrale Bestandsstatus-Aktualisierung (Schema 0.0.30):
   Demand-Struktur. Das Frontend liest weiterhin den persistierten Status und
   führt keine dynamische Neuberechnung pro Seitenaufruf durch.
 
+Architekturnachtrag Kategorie-Produktmodul V1 (Paket 0.0.31):
+- `mod_fdshop_products` ist ein eigenständiges Site-Modul im FDShop-Paket.
+  Es lädt je Konfiguration Kategorie, sichtbare Produktkarten und primäre
+  Media-Derivate in höchstens drei gebündelten Abfragen; Produktanzahl erzeugt
+  keine weiteren Queries. Identische Instanzdaten werden requestlokal geteilt.
+- Die gemeinsame `ProductCardHelper`-Aufbereitung hält Routen, Bildvarianten,
+  Preis-/Aktionsanzeige, Bestandsklasse, Hintergrundzustand und technische
+  Fakten zwischen Kategorieansicht und Modul synchron. Kaufvalidierung bleibt
+  unverändert serverseitig in der bestehenden Cart-/Checkout-Architektur.
+- Das responsive Karussell ist ohne Fremdbibliothek als kleine, instanzlokale
+  Scroll-Snap-Navigation umgesetzt. Ohne Karussell wird dasselbe Markup als
+  responsives Grid dargestellt. Joomla-Modulcache und Cachezeit sind
+  konfigurierbar; Cachekeys bleiben durch die Modulinstanz getrennt.
+
 =====================================================================
 ENDE DER QUELLE FDShop_Architektur_Struktur_Installation_V14
 =====================================================================
