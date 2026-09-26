@@ -1,0 +1,295 @@
+FDShop – Auftrag: Bestellbestätigung & Packliste V1
+Datum: 26.09.2026
+
+ZIEL
+Die funktionierende Order-/Status-/Mail-Infrastruktur um professionelle PDF-Bestellbestätigungen erweitern.
+
+Bei `ordered`:
+- Käufermail: HTML-Bestellbestätigung + archivierte Kunden-PDF.
+- Verkäufermail: gleicher Grundinhalt + interne PDF-Packliste.
+- Keine Rechnung; Invoice-Engine bleibt separater Folgeauftrag.
+- Bestehende Statuskonfiguration entscheidet weiterhin, ob Käufer/Verkäufer benachrichtigt werden.
+
+Vor Beginn aktuellen Repo-, Schema-, Mail-, Order-, Shipment-, Category-, Media- und Configstand sowie aktuelle Projektquellen vollständig analysieren. ORDER IS KING.
+
+1. PDF-LIBRARY
+Serverseitige PDF-Library ist ausdrücklich freigegeben. Nicht blind altes TCPDF 6.x neu einbauen. Stand 2026 ist TCPDF nur noch Maintenance-/Compatibility-Layer; Hersteller empfiehlt für neue Projekte `tecnickcom/tc-lib-pdf`.
+Prüfen, ob bereits geeignete Abhängigkeit existiert. Sonst darf Codex `tecnickcom/tc-lib-pdf` oder eine gleichwertige moderne, PHP-8.4/8.5-taugliche Library per Composer in Sandbox/Projekt integrieren.
+Wichtig: IONOS darf später KEIN manuelles Composer benötigen. Runtime-Abhängigkeiten müssen projektkonform im FDShop-Paket deployt werden. Keine SaaS-, Browser-, Headless-Chrome-, Shell- oder CLI-Pflicht im Livebetrieb. Lizenz/Extensions/Fonts/Paketgröße prüfen. Wenn keine saubere paketierbare Lösung möglich: STOP.
+
+2. LAYOUTREFERENZEN
+Für diesen Auftrag gelten:
+- Screenshot Mail-Inhalt.png
+- bestellbestätigung kunde.png
+- bestellbestätigung firma.png
+unter `Aufträge/Referenzen/`.
+Sie definieren Informationshierarchie, Positionen und Grundgestaltung, nicht pixelgenaue Maße. Typografie/Abstände professionell auf DIN A4 anpassen.
+
+3. MAIL-ARCHITEKTUR
+Bestehenden `OrderNotificationService`/Lifecycle erweitern, keine zweite Mailengine.
+Mail/PDF erfolgt Post-Commit. Fehler rollt Order nicht zurück und erzeugt keinen Retry-Doppelversand.
+Bestehende sendOnce-/History-/Idempotenzregeln erhalten.
+`create_invoice` nicht implementieren; Rechnung bleibt separater Auftrag.
+
+4. HTML-MAIL ORDERED
+Orientierung an Referenz des Live-Shops.
+Sinngemäß:
+„Bestellbestätigung zu Ihrer Bestellung {ORDER_NUMBER}.“
+„Vielen Dank für Ihre Bestellung! Die Bestellbestätigung haben wir dieser E-Mail als PDF beigefügt.“
+Danach kompakt Bestelldatum, Gesamtsumme, Abholstation/Versandart und Footer.
+Keinen toten „Bestellung online ansehen“-Link einbauen, solange kein Kundenbereich existiert.
+Käufer- und Verkäufermail dürfen denselben Grundinhalt nutzen; Anhänge unterscheiden sich.
+Historische Orderdaten verwenden.
+
+5. KUNDEN-PDF
+Dateiname: `Bestellbestaetigung_{ORDER_NUMBER}.pdf`, z.B. `Bestellbestaetigung_2609AB12.pdf`.
+DIN A4 nach Referenz.
+
+Oben links: Bestellbestätigung + historische Kundenadresse (Firma nur wenn vorhanden, Vorname/Nachname, Straße, PLZ/Ort, ggf. Land).
+Oben rechts: konfiguriertes Logo + Firmendaten.
+Danach Bestelldatum, Bestellnummer, Abholstation.
+
+Tabelle:
+Bild | Art.-Nr. | Produkt | Einzelpreis | Menge | Rabatt | Betrag
+
+- Order-Snapshots sind Wahrheit.
+- Bild über vorhandene Media-Pipeline/geeignetes Derivat; No-Image robust.
+- SKU/Sales-SKU und Produktname historisch.
+- Aktions-/produktbezogenen Rabatt nachvollziehbar darstellen; regulärer Preis ggf. durchgestrichen, effektiver Preis sichtbar.
+- Gutschein NICHT auf Positionen verteilen.
+- jede zweite Datenzeile hellgrau.
+
+Summen:
+Zwischensumme; Gutschein falls vorhanden; Paymentfee falls >0; Shipmentfee falls >0; Gesamtbetrag.
+Keine nutzlosen Nullzeilen.
+
+Zahlungshinweis für Überweisung sinngemäß:
+„Bitte überweisen Sie den Gesamtbetrag innerhalb von {N} Tagen.“
+Zahlungsziel konfigurierbar, Default 7. Nicht bei ungeeigneter anderer Paymentart fälschlich anzeigen.
+
+Unten Dankestext + konfigurierbare Bank-/Fußzeile.
+
+6. KUNDEN-PDF ARCHIV
+Das tatsächlich an den Kunden gesendete PDF einmalig dauerhaft und geschützt zur Order archivieren. Späterer Adminabruf liefert EXAKT dieses Original, nicht eine Neugenerierung mit geänderten Firmen-/Bankdaten.
+Geschützter FDShop-Datenpfad, keine öffentliche erratbare URL/Directory Listing. Dokumentreferenz minimal/projektkonform persistieren.
+Mail-/PDF-Fehler nach Commit: Order bleibt; History/Logs; keine Doppelorder.
+
+7. FIRMA-PDF / PACKLISTE
+Dateiname: `Packliste_{ORDER_NUMBER}.pdf`.
+DIN A4 nach Referenz.
+Internes Arbeitsdokument. Für Verkäufermail erzeugen und später im Admin bei Bedarf frisch aus Order generieren; keine dauerhafte Archivierung nötig.
+
+Kopf:
+„Bestellbestätigung (Firma)“
+links historische Kundenadresse, rechts Logo, Bestellnummer, Bestelldatum.
+
+8. VERSANDINFORMATIONEN
+Kasten „Versandinformationen“ erhält Hintergrundfarbe aus bereits bestehendem `shipment_color` der Shipment-/Abholstation.
+Keine neue Farbverwaltung.
+Bei Regeneration aktuelle shipment_color zulässig; Text der Abholstation aus historischem order.shipment_name. Fehlt Stammdatensatz: neutrale Fallbackfarbe.
+
+Im Kasten:
+Käufergruppe: Label bereits vorbereiten; aktuell keinen Wert erfinden, solange Funktion fachlich nicht fertig durchgezogen ist.
+Abholstation: historischer shipment_name.
+Darunter reine Papierfelder:
+☐ Gepackt: Paketanzahl __________
+Keine DB-Speicherung.
+
+9. BEMERKUNG / NOTIZEN
+„Bemerkung Käufer:“ + order_note; wenn leer „Keine Bemerkung“.
+Sicher ausgeben.
+Darunter große umrandete leere Notizenbox zum handschriftlichen Arbeiten; keine DB-Spalte.
+
+10. PACKLISTE – ZWEI EXKLUSIVE BLÖCKE
+Block 1 Defaulttitel:
+„Sammlung: Batterien, Raketen, Single Shots etc.“
+Alle Produkte, die NICHT der konfigurierten Sonderkategorie angehören.
+
+Block 2 Defaulttitel:
+„Sammlung: Verbünde“
+Alle Produkte, die der konfigurierten Sonderkategorie angehören.
+
+Produkt kann mehrere Kategorien haben. Sobald Sonderkategorie enthalten: ausschließlich Block 2. Keine Doppelauflistung.
+Aktuelle ID 23 NICHT hartcodieren. Kategorie über Config auswählen.
+
+Beide Tabellen:
+Bild | Art.-Nr. | Produkt | Kategorie | Anzahl | Gerichtet | Gepackt
+
+Kategorie-Spalte:
+Block 1 = „Alle außer Verbünde“
+Block 2 = „Verbundfeuerwerk“
+
+Gerichtet/Gepackt sind leere Papiercheckboxen, keinerlei digitale Speicherung.
+Gerichtet = bereitgelegt; Gepackt = eingepackt.
+Zebra-Zeilen erwünscht.
+
+11. HISTORISCHE KLASSIFIKATION
+Prüfen, ob Order-Snapshot die Packlistenklassifikation bereits historisch absichert.
+Wenn nicht: für NEUE Orders minimalen Snapshot ergänzen, damit spätere Kategorieänderung alte Orders nicht unbemerkt zwischen Packblöcken verschiebt. Keine komplette Kategoriearchitektur duplizieren.
+Legacyorders ohne Snapshot dürfen dokumentierten Fallback auf aktuelle Kategoriezuordnung nutzen.
+Kleine Schemaerweiterung dafür ist freigegeben.
+
+12. BUNDLES
+Aktuelle Bundle-/Order-Snapshotsemantik analysieren.
+Kunden-PDF kundenverständlich.
+Packliste muss physisch korrekt packbare Artikel/Mengen zeigen; keine falschen Mengen und keine Doppelauflistung. Bestehende Bundle-Snapshots nutzen, keine aktuelle Bundledefinition als historische Wahrheit.
+
+13. NEUER CONFIG-TAB „DOKUMENTE & E-MAIL“
+In FDShop-Konfiguration neuen Tab/Abschnitt „Dokumente & E-Mail“ integrieren.
+
+Strukturierte Firmendaten:
+- Firmenname
+- Straße
+- PLZ
+- Ort
+- Telefon
+- E-Mail
+- Website
+- Logo über Joomla-Mediaauswahl
+
+Bankdaten:
+- Kontoinhaber
+- Bankname
+- IBAN
+- BIC/SWIFT
+
+Zusätzliche Fußzeile:
+freier Text für Inhaber/Qualifikation o.ä.; sichere Ausgabe, keine ungefilterte Script-/HTML-Ausführung.
+
+Bestellbestätigung:
+- Zahlungsziel Überweisung in Tagen, Default 7.
+
+Packliste:
+- Sonderkategorie Sammlung 2 über FDShop-Kategorieauswahl
+- Defaulttitel Sammlung 1
+- Defaulttitel Sammlung 2
+
+Für bestehende Installation sinnvolle Defaults/Migration. Wenn „Verbundfeuerwerk“ eindeutig vorhanden ist, darf Update sie sinnvoll vorbelegen; keine PHP-Hardcodierung auf ID 23.
+Keine übertriebene Template-Engine bauen.
+
+14. ADMIN-DOKUMENTAKTIONEN
+Bestellliste und/oder Bestelldetail projektkonform um Dokumentaktionen erweitern:
+- Kunden-Bestellbestätigung: archiviertes Original anzeigen/herunterladen.
+- Packliste: bei Klick neu generieren/anzeigen/herunterladen.
+
+Sichere Admin-ACL; keine öffentliche Dokumentroute.
+Geeignete Icons/Tooltips.
+Wenn archiviertes Kunden-PDF wegen Legacy/Fehler fehlt: verständlicher Zustand, nicht still neu generieren und als historisches Original ausgeben.
+
+Spätere Rechnung kann als eigener Folgeauftrag daneben ergänzt werden.
+
+15. SEITENUMBRUCH / DRUCK
+Dokumente müssen mit vielen Positionen sauber mehrseitig funktionieren:
+- Tabellenkopf auf Folgeseite sinnvoll wiederholen,
+- keine abgeschnittenen Zeilen,
+- Footer sinnvoll,
+- Packlistenblöcke dürfen umbrechen,
+- keine leeren Zusatzseite,
+- kleine und große Orders testen.
+
+16. SICHERHEIT
+- keine Path Traversal über order_number,
+- Dateiname serverseitig erzeugen,
+- Adminabruf ACL-geschützt,
+- Kundendaten nicht in Logs/öffentlichen Pfaden unnötig exponieren,
+- HTML/Text escapen,
+- keine Remote-URL-Abhängigkeit für PDF-Bilder,
+- keine Requestpreise/-summen als Wahrheit.
+
+17. TESTS
+Gezielt mindestens:
+- ordered Käufermail + Kunden-PDF-Anhang,
+- ordered Verkäufermail + Packliste,
+- Mailpit Anhänge tatsächlich öffnbar,
+- PDF-Signatur/Dateiname/Seitenformat,
+- historische Kundendaten/Orderwerte,
+- Aktionspreis/Rabatt,
+- Coupon separat,
+- Payment-/Shipmentfee,
+- Shipmentfarbe,
+- Bemerkung vorhanden/leer,
+- Sonderkategorie und Mehrfachkategorie → exakt Block 2,
+- normales Produkt → Block 1,
+- keine Doppelauflistung,
+- Bundle physisch korrekt,
+- gerade Zeilen grau,
+- Gerichtet/Gepackt leer,
+- viele Positionen / Mehrseiten-PDF,
+- archiviertes Kunden-PDF bleibt nach Config-/Produktänderung bytegleich bzw. identisches gespeichertes Original,
+- regenerierte Packliste kann aktuelle shipment_color nutzen,
+- Admin-ACL/Download,
+- Retry erzeugt keine Doppelmail/Doppelorder,
+- Mail-/PDF-Fehler nach Commit rollt Order nicht zurück,
+- Update + Fresh Install soweit Schema/Dependency betroffen,
+- Logs ohne relevante Warning/Deprecated/Fatal.
+
+Tests proportional; bei neuer PDF-Dependency Paketinstallation unbedingt real testen.
+
+18. PAKET / DOKUMENTATION
+Versionen nach Projektstandard fortschreiben.
+Schema nur bei tatsächlicher DB-Erweiterung erhöhen.
+PDF-Runtime-Abhängigkeit vollständig ins installierbare Paket.
+Dauerhaft dokumentieren:
+- Dokument-/Mail-Konfiguration,
+- Kunden-PDF als archiviertes historisches Dokument,
+- Packliste regenerierbar,
+- Shipmentfarbe,
+- Sonderkategorie / historischer Klassifikationssnapshot,
+- PDF-Library/Deployment,
+- Rechnung ausdrücklich noch offen.
+
+19. FREIGABEN
+Freigegeben:
+- Docker/WSL/Sandbox,
+- Composer/PDF-Library-Installation in Entwicklungsumgebung,
+- benötigte Runtime-Dependencies im FDShop-Paket,
+- Fixtures/Testorders/Testuser/Testshipments/Testkategorien,
+- Mailpit,
+- Browser-/PDF-/CLI-Testwerkzeuge in Sandbox,
+- temporäre PDF-Dateien,
+- notwendige kleine Schemaänderung,
+- Services/Models/Views/Templates/Config/Language,
+- Paketbau/Install/Update/Fresh,
+- gezielte Korrekturzyklen,
+- Commit,
+- Push origin/feature,
+- Windows-/Offline-Sync nach etabliertem Workflow.
+
+Nicht freigegeben:
+- IONOS-Eingriff,
+- main-Merge,
+- Force-Push,
+- echte Kunden-/Produktivdaten,
+- Invoice-Engine/Rechnungsnummer,
+- Paymentprovider,
+- Käufergruppenfachbereich fertigbauen,
+- externe PDF-SaaS.
+
+STOP bei:
+- PDF-Runtime nicht sauber paketierbar,
+- notwendiger Breaking Change an Order/Lifecycle,
+- historischer Snapshot nur durch unsichere Rekonstruktion möglich,
+- fremde Änderungen nicht sicher erhaltbar,
+- Scope verlangt unerwartet große Invoice-/Payment-/Customer-Neuarchitektur.
+
+Normale technische Detailentscheidungen selbstständig treffen.
+
+20. ABSCHLUSS
+Kompakt berichten:
+- PDF-Library + Version + Packaging,
+- Kunden-PDF und Archivierung,
+- Packliste,
+- Mailintegration,
+- Config,
+- Adminaktionen,
+- Sonderkategorie/Snapshot,
+- Tests,
+- Paket-/Schemaversion,
+- SHA-256,
+- Commit/Push/Windows-Sync,
+- offene Punkte.
+
+Bei grünem Stand technisch abschließen.
+Rechnung bleibt nächster separater Auftrag.
+
+ENDE DES AUFTRAGS
