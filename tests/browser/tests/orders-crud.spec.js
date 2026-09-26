@@ -91,6 +91,13 @@ test('reserved order edits stay draft-only until atomic toolbar save', async ({ 
   const staleRevision = await page.locator('input[name="expected_modified"]').inputValue();
   await Promise.all([page.waitForNavigation({ waitUntil: 'load' }), page.getByRole('button', { name: /Save|Speichern/i }).click()]);
   await expect(page.locator('#system-message-container')).toContainText('atomar gespeichert'); await expect(page.locator('main')).toContainText('Bestellung geändert');
+  await expect(page.getByRole('link', { name: 'Version 01' })).toBeVisible();
+  const changedMailList = await (await page.request.get('http://mailpit:8025/api/v1/messages')).json();
+  const changedMessages = changedMailList.messages.filter(message => String(message.Subject || '').includes('E2E-ORDER-NORMAL wurde geändert'));
+  expect(changedMessages).toHaveLength(2);
+  const changedAttachments=[];
+  for(const message of changedMessages){const detail=await (await page.request.get(`http://mailpit:8025/api/v1/message/${message.ID}`)).json();expect(detail.HTML).toContain('max-width:640px');expect(detail.HTML).toContain('wurde geändert');expect(detail.Attachments).toHaveLength(1);changedAttachments.push(detail.Attachments[0].FileName);}
+  expect(changedAttachments.sort()).toEqual(['Bestellbestaetigung_E2E-ORDER-NORMAL_01.pdf','Packliste_E2E-ORDER-NORMAL.pdf'].sort());
   original = page.locator('[data-order-items] tbody tr').filter({ hasText: 'E2E-PROD-ACTIVE' }); await expect(original.locator('input[type="number"]')).toHaveValue('2');
   let added = page.locator('[data-order-items] tbody tr').filter({ hasText: 'E2E-PROD-DISCOUNT' }); await expect(added).toHaveCount(1); await expect(added).toContainText('39,99 EUR'); await expect(page.locator('#jform_shipment_id')).toHaveValue('900602');
   await expectProductStatus(page, 'E2E-PROD-ACTIVE', 'wenige Verfügbar'); await openNormal(page);
@@ -103,7 +110,7 @@ test('reserved order edits stay draft-only until atomic toolbar save', async ({ 
   expect(staleResponse).toContain('zwischenzeitlich geändert'); await page.reload({ waitUntil: 'networkidle' }); original = page.locator('[data-order-items] tbody tr').filter({ hasText: 'E2E-PROD-ACTIVE' }); await expect(original.locator('input[type="number"]')).toHaveValue('2');
 
   await original.locator('input[type="number"]').fill('1'); await Promise.all([page.waitForNavigation({ waitUntil: 'load' }), page.getByRole('button', { name: /Save|Speichern/i }).click()]);
-  await expectProductStatus(page, 'E2E-PROD-ACTIVE', 'Verfügbar'); await openNormal(page);
+  await expectProductStatus(page, 'E2E-PROD-ACTIVE', 'Verfügbar'); await openNormal(page); await expect(page.getByRole('link', { name: 'Version 02' })).toBeVisible();
   added = page.locator('[data-order-items] tbody tr').filter({ hasText: 'E2E-PROD-DISCOUNT' }); await added.getByRole('button', { name: 'Entfernen' }).click(); await expect(added).toHaveClass(/table-danger/);
   await Promise.all([page.waitForNavigation({ waitUntil: 'load' }), page.getByRole('button', { name: /Save|Speichern/i }).click()]);
   await expect(page.locator('[data-order-items] tbody tr').filter({ hasText: 'E2E-PROD-DISCOUNT' })).toContainText('Entfernt');

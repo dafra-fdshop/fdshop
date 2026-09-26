@@ -682,3 +682,5 @@ BESTELLDOKUMENTE / MAIL
 - site/src/Service/CheckoutService.php: historischer Dokumentbild-/Packgruppen-Snapshot für normale und physische Bundlepositionen.
 - administrator/vendor/: paketierte Dompdf-3.1.6-Runtime samt transitive Abhängigkeiten und Lizenzen.
 - tests/documents/: echte PDF-Erzeugung, Byteidentität, Shipmentfarben- und Mehrseitenregression.
+- Bestelldokumente V1.1: OrderDocumentService rendert Joomla-Layouts für Kunden-PDF, Packliste und gemeinsamen Mailrahmen. OrderNotificationService versendet Initial- und Änderungsmails an Käufer und Verkäufer mit den passenden Anhängen.
+- #__fdshop_order_documents verwaltet versionierte Kundenbestätigungen mit SHA-256; persistenter Speicher: media/com_fdshop-private/documents.

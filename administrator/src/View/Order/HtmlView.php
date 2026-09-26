@@ -21,6 +21,8 @@ class HtmlView extends BaseHtmlView
 
     public $orderHistory = [];
 
+    public $customerDocuments = [];
+
     public $availableProducts = [];
     public $availableShipments = [];
 
@@ -32,6 +34,7 @@ class HtmlView extends BaseHtmlView
         $this->orderItems        = $model->getOrderItems();
         $this->statusHistory     = $model->getStatusHistory();
         $this->orderHistory      = $model->getOrderHistory();
+        $this->customerDocuments = $model->getCustomerDocuments();
         $this->availableProducts = $model->getAvailableProducts();
         $this->availableShipments = $model->getAvailableShipments();
 

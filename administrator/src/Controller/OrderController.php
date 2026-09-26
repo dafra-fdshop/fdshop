@@ -101,7 +101,7 @@ class OrderController extends BaseController
     public function downloadConfirmation(): void
     {
         $this->authoriseDocument();
-        $document=$this->getDocumentService()->archivedCustomerDocument($this->input->getInt('id'));
+        $document=$this->getDocumentService()->archivedCustomerDocument($this->input->getInt('id'),$this->input->getInt('document_id')?:null);
         if(!$document)throw new \RuntimeException('Für diese Bestellung liegt keine archivierte Kunden-Bestellbestätigung vor.');
         $this->sendPdf($document);
     }

@@ -189,7 +189,9 @@ test('authenticated cart validates mutations and keeps checkout state correctly 
     const detailResponse = await page.request.get(`http://mailpit:8025/api/v1/message/${message.ID}`);
     expect(detailResponse.ok()).toBe(true);
     const detail = await detailResponse.json();
-    expect(detail.HTML).toContain('Vielen Dank für Ihre Bestellung');
+    expect(detail.HTML).toMatch(/Vielen Dank für Ihre Bestellung|Eine neue Bestellung ist eingegangen/);
+    expect(detail.HTML).toContain('max-width:640px');
+    expect(detail.HTML).toContain('background:#f3f4f6');
     expect(detail.HTML).not.toContain('Bestellung online ansehen');
     expect(detail.Attachments).toHaveLength(1);
     const attachment = detail.Attachments[0];

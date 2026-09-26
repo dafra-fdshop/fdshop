@@ -15,6 +15,7 @@ DROP TABLE IF EXISTS `#__fdshop_coupon_buyer_group_map`;
 DROP TABLE IF EXISTS `#__fdshop_coupon_user_map`;
 DROP TABLE IF EXISTS `#__fdshop_coupons`;
 DROP TABLE IF EXISTS `#__fdshop_order_status_history`;
+DROP TABLE IF EXISTS `#__fdshop_order_documents`;
 DROP TABLE IF EXISTS `#__fdshop_order_history`;
 DROP TABLE IF EXISTS `#__fdshop_order_bundle_items`;
 DROP TABLE IF EXISTS `#__fdshop_order_bundles`;

@@ -13,6 +13,10 @@ use Joomla\CMS\MVC\Model\BaseDatabaseModel;
 
 class OrderModel extends BaseDatabaseModel
 {
+    public function getCustomerDocuments($pk = null): array
+    {
+        $orderId=$this->resolveOrderId($pk);if($orderId<=0)return [];$db=$this->getDatabase();$q=$db->getQuery(true)->select('*')->from($db->quoteName('#__fdshop_order_documents'))->where('order_id='.(int)$orderId)->where('document_type='.$db->quote('confirmation'))->order('version_no ASC');$db->setQuery($q);return (array)$db->loadObjectList();
+    }
     public function getItem($pk = null): ?object
     {
         $orderId = $this->resolveOrderId($pk);

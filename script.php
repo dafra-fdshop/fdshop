@@ -77,7 +77,7 @@ final class Com_FdshopInstallerScript implements InstallerScriptInterface
 			}
 		}
 
-		$documents = JPATH_ADMINISTRATOR . '/components/com_fdshop/documents';
+		$documents = JPATH_ROOT . '/media/com_fdshop-private/documents';
 		if (!is_dir($documents) && !Folder::create($documents))
 		{
 			Factory::getApplication()->enqueueMessage('FDShop: Geschützter Dokumentordner konnte nicht angelegt werden.', 'error');
@@ -85,6 +85,26 @@ final class Com_FdshopInstallerScript implements InstallerScriptInterface
 		}
 		if (!is_file($documents . '/.htaccess')) file_put_contents($documents . '/.htaccess', "Require all denied\nDeny from all\n");
 		if (!is_file($documents . '/index.html')) file_put_contents($documents . '/index.html', '');
+
+		// Preserve 0.0.33 archives outside the replaceable component directory.
+		$legacy = JPATH_ADMINISTRATOR . '/components/com_fdshop/documents';
+		if (is_dir($legacy))
+		{
+			foreach ((array) glob($legacy . '/Bestellbestaetigung_*.pdf') as $source)
+			{
+				$target = $documents . '/' . basename($source);
+				if (!is_file($target) && !copy($source, $target))
+				{
+					Factory::getApplication()->enqueueMessage('FDShop: Historisches Bestelldokument konnte nicht übernommen werden: ' . basename($source), 'error');
+					return false;
+				}
+				if (is_file($target) && !hash_equals(hash_file('sha256', $source), hash_file('sha256', $target)))
+				{
+					Factory::getApplication()->enqueueMessage('FDShop: Prüfsummenfehler bei historischer Dokumentübernahme: ' . basename($source), 'error');
+					return false;
+				}
+			}
+		}
 
 		return true;
 	}

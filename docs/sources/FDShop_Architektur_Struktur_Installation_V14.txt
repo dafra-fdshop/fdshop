@@ -707,3 +707,6 @@ BESTELLDOKUMENTE V1 (0.0.33)
 - Der Adminabruf läuft ausschließlich über ACL- und Token-geschützte Controlleraktionen; es existiert keine öffentliche Dokumentroute.
 - PDF-/Mailfehler treten post-commit auf, werden in der Orderhistorie erfasst und rollen keine Bestellung zurück.
 - Rechnungserzeugung und Rechnungsnummern sind ausdrücklich nicht Bestandteil dieser Version.
+- V1.1 / Schema 0.0.34 trennt Darstellung in Joomla-Layouts unter administrator/layouts/orderdocuments. Services liefern Daten, orchestrieren PDF/Mail, Archivierung und Integrität.
+- Unveränderliche Kundenbestätigungen liegen updatefest unter media/com_fdshop-private/documents; direkter Zugriff und Listing sind gesperrt. Die relationale Tabelle #__fdshop_order_documents verbindet Original/Version, Change-ID, Dateiname und SHA-256.
+- 0.0.33-Archive werden beim Update hashgeprüft übernommen; Änderungs-PDFs verwenden _01, _02 usw. und Retry derselben Change-ID bleibt idempotent. Packlisten werden weiterhin aus aktuellem Versandfarbwert regeneriert.

@@ -653,3 +653,5 @@ IMPLEMENTIERUNGSSTAND 0.0.33 - BESTELLBESTÄTIGUNG & PACKLISTE V1
 - Dokumente & E-Mail ist im Admin konfigurierbar; Kundenoriginal und Packliste sind ACL-geschützt abrufbar.
 - Schema 0.0.33 ergänzt Archivverweis/-Hash, Dokumentbild, Packgruppen-Snapshot und Dokumentkonfiguration.
 - Rechnung/Invoice-Engine, Rechnungsnummern, Paymentprovider und Käufergruppenfachlogik bleiben offen.
+- 0.0.34 / V1.1: Adminänderungen erzeugen unveränderliche _01/_02-Dokumente, Käufer- und Verkäuferänderungsmail nutzen den gemeinsamen Layoutpfad, und die aktuelle Packliste wird dem Verkäufer beigefügt.
+- PDF-/Mail-HTML ist aus den Services in Joomla-Layouts ausgelagert. Persistenter, geschützter Dokumentbereich und hashgeprüfte Legacyübernahme sind umgesetzt; Dompdf 3.1.6 bleibt paketierte Runtime.

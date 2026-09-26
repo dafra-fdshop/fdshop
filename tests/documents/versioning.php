@@ -1,0 +1,17 @@
+<?php
+declare(strict_types=1);
+define('_JEXEC',1);define('JPATH_BASE','/var/www/html');require JPATH_BASE.'/includes/defines.php';require JPATH_BASE.'/includes/framework.php';
+require_once JPATH_ADMINISTRATOR.'/components/com_fdshop/src/Extension/FdshopComponent.php';require_once JPATH_ADMINISTRATOR.'/components/com_fdshop/src/Service/OrderDocumentService.php';require_once JPATH_ADMINISTRATOR.'/components/com_fdshop/src/Service/OrderNotificationService.php';
+use FDShop\Component\FDShop\Administrator\Service\OrderDocumentService;use FDShop\Component\FDShop\Administrator\Service\OrderNotificationService;use Joomla\CMS\Application\SiteApplication;use Joomla\CMS\Factory;use Joomla\Database\DatabaseInterface;use Joomla\Session\SessionInterface;
+$_SERVER['HTTP_HOST']='localhost';$_SERVER['REQUEST_URI']='/';$_SERVER['SCRIPT_NAME']='/index.php';$container=Factory::getContainer();$container->alias(SessionInterface::class,'session.web.site');$app=$container->get(SiteApplication::class);Factory::$application=$app;$db=$container->get(DatabaseInterface::class);$service=$app->bootComponent('com_fdshop')->getContainer()->get(OrderDocumentService::class);$orderId=(int)($argv[1]??900800);
+$original=$service->customerDocument($orderId,true);$originalHash=hash('sha256',$original['bytes']);
+$changeIds=[];foreach([1,2] as $n){$row=(object)['order_id'=>$orderId,'event_type'=>'test_document_change','event_title'=>'Teständerung '.$n,'event_text'=>null,'reference_type'=>'test','reference_id'=>null,'is_system_event'=>1,'created'=>Factory::getDate()->toSql(),'created_by'=>0];$db->insertObject('#__fdshop_order_history',$row);$changeIds[]=(int)$db->insertid();}
+$v1=$service->customerDocument($orderId,true,$changeIds[0]);$retry=$service->customerDocument($orderId,true,$changeIds[0]);$v2=$service->customerDocument($orderId,true,$changeIds[1]);
+if($v1['name']!=='Bestellbestaetigung_E2E-ORDER-NORMAL_01.pdf'||$v2['name']!=='Bestellbestaetigung_E2E-ORDER-NORMAL_02.pdf')throw new RuntimeException('Document version filenames invalid.');
+if(!hash_equals(hash('sha256',$v1['bytes']),hash('sha256',$retry['bytes'])))throw new RuntimeException('Change retry is not idempotent.');
+if(!hash_equals($originalHash,hash('sha256',$service->archivedCustomerDocument($orderId,$original['id'])['bytes'])))throw new RuntimeException('Original changed after versioning.');
+$db->setQuery($db->getQuery(true)->select('COUNT(*)')->from($db->quoteName('#__fdshop_order_documents'))->where('order_id='.$orderId));if((int)$db->loadResult()!==3)throw new RuntimeException('Unexpected document version count.');
+foreach($service->customerDocuments($orderId) as $row){$document=$service->archivedCustomerDocument($orderId,(int)$row->id);if(!hash_equals((string)$row->sha256,hash('sha256',$document['bytes'])))throw new RuntimeException('Stored document hash mismatch.');}
+$notifications=$app->bootComponent('com_fdshop')->getContainer()->get(OrderNotificationService::class);$notifications->sendOrderChanged($orderId,$changeIds[0]);$notifications->sendOrderChanged($orderId,$changeIds[0]);
+$db->setQuery($db->getQuery(true)->select('COUNT(*)')->from($db->quoteName('#__fdshop_order_history'))->where('order_id='.$orderId)->whereIn('event_type',['mail_buyer_order_changed','mail_seller_order_changed'])->where('reference_id='.$changeIds[0]));if((int)$db->loadResult()!==2)throw new RuntimeException('Change-mail retry produced duplicate or missing history.');
+echo "document versioning PASS original+01+02 document-and-mail-retry-idempotent\n";

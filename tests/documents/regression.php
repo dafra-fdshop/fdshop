@@ -17,6 +17,10 @@ use Joomla\Session\SessionInterface;
 $_SERVER['HTTP_HOST']='localhost';$_SERVER['REQUEST_URI']='/';$_SERVER['SCRIPT_NAME']='/index.php';
 $container=Factory::getContainer();$container->alias(SessionInterface::class,'session.web.site');$app=$container->get(SiteApplication::class);Factory::$application=$app;
 $service=$app->bootComponent('com_fdshop')->getContainer()->get(OrderDocumentService::class);$db=$container->get(DatabaseInterface::class);$orderId=(int)($argv[1]??900800);
+if($service->addressLine('97950','97950 Gerchsheim')!=='97950 Gerchsheim')throw new RuntimeException('Postal code duplication regression.');
+$db->setQuery($db->getQuery(true)->select('document_company_logo')->from($db->quoteName('#__fdshop_config'))->where('id=1'));$oldLogo=(string)$db->loadResult();
+$logoPath='images/fdshop-document-test-logo.png';file_put_contents(JPATH_ROOT.'/'.$logoPath,base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL8WQAAAABJRU5ErkJggg=='));
+try{$joomlaLogo=$logoPath.'#joomlaImage://local-'.$logoPath.'?width=300&height=70';$imageHtml=$service->image($joomlaLogo);if($imageHtml===''||!str_contains($imageHtml,'data:image/png;base64,'))throw new RuntimeException('Joomla media logo path was not normalized and embedded as local data.');$db->setQuery($db->getQuery(true)->update($db->quoteName('#__fdshop_config'))->set('document_company_logo='.$db->quote($joomlaLogo))->where('id=1'))->execute();$service->customerDocument($orderId,false);}finally{$db->setQuery($db->getQuery(true)->update($db->quoteName('#__fdshop_config'))->set('document_company_logo='.$db->quote($oldLogo))->where('id=1'))->execute();if(is_file(JPATH_ROOT.'/'.$logoPath))unlink(JPATH_ROOT.'/'.$logoPath);}
 $first=$service->customerDocument($orderId,true);$second=$service->customerDocument($orderId,true);
 if(!hash_equals(hash('sha256',$first['bytes']),hash('sha256',$second['bytes'])))throw new RuntimeException('Archived customer PDF is not byte-identical.');
 $db->setQuery($db->getQuery(true)->select('document_company_name')->from($db->quoteName('#__fdshop_config'))->where('id=1'));$company=(string)$db->loadResult();
