@@ -1,0 +1,373 @@
+FDShop – Auftrag: Kategorie-Produktmodul V1.1 – Standalone Assets, Header und Kategorie-Link
+Datum: 26.09.2026
+
+ZIEL
+Das gestern umgesetzte Joomla-Site-Modul `mod_fdshop_products` gezielt korrigieren und um eine kleine Darstellungs-/Konfigurationsfunktion erweitern.
+
+Der aktuelle Stand ist grundsätzlich gelungen und soll NICHT neu entwickelt werden. Die vorhandene Architektur, Performanceoptimierung, ProductCardHelper-/PurchaseHelper-Wiederverwendung, Carousel/Grid-Funktion und Mehrfachinstanzfähigkeit bleiben erhalten.
+
+Dieser Auftrag umfasst:
+1. einen real auf IONOS gefundenen Standalone-WebAsset-Fehler,
+2. einen kompakten Umbau der Modul-Kopfzeile,
+3. eine neue dreistufige Einstellung „Link-Kategorie“,
+4. gezielte Regressionstests.
+
+ARBEITSMODUS / FREIHEIT
+Wenn keine echte STOP-Bedingung eintritt:
+- aktuellen Repositorystand vollständig berücksichtigen,
+- Ursache des Assetfehlers anhand Joomla-6-WebAsset-Mechanismus sauber lösen,
+- Implementierungsdetails selbst entscheiden,
+- gezielt testen und notwendige scope-konforme Korrekturen selbst durchführen,
+- Paket/Version/Dokumentation nur soweit projektkonform nötig fortschreiben,
+- committen und nach origin/feature pushen,
+- Windows-/Offline-Clone nach etabliertem Workflow synchronisieren.
+
+Keine Rückfrage für normale Implementierungsdetails oder Test-/Korrekturzyklen.
+
+AUSGANGSLAGE
+Repository: dafra-fdshop/fdshop
+Branch: feature
+Ausgangsstand vor Beginn selbst prüfen.
+
+Aktuell:
+- Paketstand 0.0.31.
+- `mod_fdshop_products` ist im FDShop-Gesamtpaket enthalten.
+- Modul verwendet vorhandene FDShop-Produktkarten-, Media-, Ribbon-, Preis-, Bestands- und Purchase-Logik.
+- `ProductCardHelper` und `PurchaseHelper` wurden bewusst gemeinsam genutzt.
+- mehrere Modulinstanzen, Carousel/Grid und requestlokaler Daten-Cache wurden bereits erfolgreich geprüft.
+- keine neue Produkt-/Preis-/Warenkorbfachlogik erforderlich.
+
+WICHTIG:
+Der bestehende Stand ist Basis. Keine unnötige Großrefaktorierung.
+
+=====================================================================
+1. REAL GEFUNDENER FEHLER – MODUL OHNE GELADENE FDSHOP-KOMPONENTE
+=====================================================================
+
+Auf IONOS funktioniert das Modul auf Seiten, auf denen `com_fdshop` selbst gerendert/geladen wird, z.B. Kategorie- und Produktansichten.
+
+Auf der Startseite befindet sich dagegen keine FDShop-Komponentenansicht. Dort führt das Modul aktuell zu einem fatalen Joomla-Fehler:
+
+0 There is no "com_fdshop.site" asset of a "style" type in the registry.
+
+Der Call Stack führt zum Modul und dessen Verwendung von:
+- `com_fdshop.site`
+- sowie den weiteren FDShop-WebAssets.
+
+Im aktuellen Modulcode wird sinngemäß:
+`useStyle('com_fdshop.site')->useScript('com_fdshop.purchase')->useScript('com_fdshop.products-module')`
+aufgerufen.
+
+Die Assetdefinitionen existieren bereits zentral in `media/joomla.asset.json`.
+
+URSACHE / ZIELRICHTUNG
+Das eigenständige Site-Modul darf nicht voraussetzen, dass `com_fdshop` vorher als aktive Seitenkomponente gelaufen ist und dadurch deren WebAsset-Registry bereits bekannt ist.
+
+Das Modul ist gerade für Startseite und andere Joomla-Seiten außerhalb einer FDShop-Komponentenansicht vorgesehen.
+
+Saubere Joomla-6-konforme Lösung:
+- vorhandene zentrale FDShop-WebAsset-Definition weiterhin als Single Source verwenden,
+- benötigte Registry/Assetdefinition vor `useStyle()/useScript()` sicher verfügbar machen,
+- keine Kopie von site.css/purchase.js/products-module.js in das Modul,
+- keine zweite Assetdefinition, die langfristig auseinanderlaufen kann,
+- keine Abhängigkeit von zufälliger Renderreihenfolge anderer FDShop-Erweiterungen.
+
+Die genaue Joomla-6-konforme Registrierung anhand des aktuellen Codes selbst bestimmen.
+
+ABNAHME ASSET
+Mindestens real in Sandbox prüfen:
+A. Seite mit aktiver `com_fdshop`-Kategorie/Produktansicht + Modul → funktioniert.
+B. normale Joomla-Seite/Startseite OHNE aktive FDShop-Komponentenansicht + Modul → funktioniert.
+C. benötigtes CSS und JS wird geladen.
+D. keine doppelte/fehlerhafte Assetregistrierung.
+E. mehrere Modulinstanzen auf derselben Nicht-FDShop-Seite funktionieren.
+F. Purchase Action funktioniert dort ebenfalls.
+G. keine PHP-/Joomla-/JS-Fehler.
+
+Dieser Punkt ist der wichtigste Bugfix des Auftrags.
+
+=====================================================================
+2. MODULHEADER – NEUE ANORDNUNG
+=====================================================================
+
+Die Kopfzeile über dem Produktkarussell soll künftig in EINER gemeinsamen Zeile aufgebaut sein.
+
+Gewünschtes Desktopprinzip:
+
+[Titel] [Zur Kategorie]                                  [‹] [›]
+[                    Produktkarussell                         ]
+
+Links:
+1. Modultitel
+2. mit leichtem Abstand direkt dahinter ggf. Button „Zur Kategorie“
+
+Rechts:
+3. Carousel-Navigation, sofern für die konkrete Instanz erforderlich.
+
+Die Navigation soll NICHT mehr in einer eigenen Zeile unterhalb des Karussells stehen.
+
+ANFORDERUNGEN
+- Titel links.
+- Kategoriebutton direkt nach Titel, nicht an den rechten Rand.
+- kleiner optisch sauberer Abstand zwischen Titel und Button.
+- Carousel-Navigation ganz rechts.
+- Navigation bleibt an dieser Position auch dann, wenn kein Kategoriebutton angezeigt wird.
+- Navigation nur anzeigen, wenn sie fachlich benötigt wird (bestehende Carousel-/Produktanzahlregel beibehalten).
+- Grid-Modus ohne Carousel benötigt keine Carouselnavigation.
+- responsive Verhalten sinnvoll; auf sehr kleinen Breiten darf die Kopfzeile sauber umbrechen, ohne Überlagerung.
+- keine starre Pixelkonstruktion.
+- bestehende FDShop-CI respektieren.
+
+NAVIGATIONSDESIGN
+Carousel-Navigationsbuttons:
+- Hintergrund schwarz,
+- Pfeile weiß,
+- kompakte Form passend zum Modul,
+- sinnvoller Hover-/Focuszustand,
+- zugängliche aria-labels beibehalten,
+- keine externe Iconbibliothek nur dafür einführen.
+
+=====================================================================
+3. NEUE ADMINOPTION „LINK-KATEGORIE“
+=====================================================================
+
+Die bisherige einfache Option für den Kategoriebutton soll zu einer dreistufigen Einstellung weiterentwickelt werden.
+
+Eigene Admin-Zeile / Feldbezeichnung:
+
+„Link-Kategorie“
+
+Dropdown mit exakt folgenden fachlichen Varianten:
+
+1. „Kein“
+2. „Titel + Button“
+3. „Nur Titel“
+
+FACHLICHE WIRKUNG
+
+A) KEIN
+- Modultitel ist normaler Text, KEIN Link.
+- Button „Zur Kategorie“ wird NICHT ausgegeben.
+- Carouselnavigation bleibt davon unberührt und weiterhin rechts, sofern benötigt.
+
+B) TITEL + BUTTON
+- Modultitel ist Link zur aktuell gewählten FDShop-Kategorie.
+- Button „Zur Kategorie“ wird ebenfalls angezeigt und verlinkt auf dieselbe Kategorie.
+- Carouselnavigation bleibt rechts.
+
+C) NUR TITEL
+- Modultitel ist Link zur aktuell gewählten FDShop-Kategorie.
+- Button „Zur Kategorie“ wird NICHT ausgegeben.
+- Carouselnavigation bleibt rechts.
+
+ROUTING
+Titel und Button müssen denselben vorhandenen FDShop/Joomla-Router für die Kategorie verwenden.
+Keine manuell zusammengesetzten nicht-SEF-fähigen URLs.
+
+BUTTONTEXT
+Die bestehende Konfiguration für den Buttontext („Zur Kategorie“) bleibt erhalten.
+
+Sie ist nur relevant/sichtbar, wenn die Einstellung „Titel + Button“ gewählt ist.
+Joomla-`showon` oder gleichwertige saubere Formlogik verwenden, sofern passend.
+
+=====================================================================
+4. BESTEHENDE MODULINSTANZEN / UPDATEKOMPATIBILITÄT
+=====================================================================
+
+Vor Umsetzung die aktuelle Parametrisierung analysieren.
+
+Der bisherige Parameter `show_category_link` darf nicht unbedacht so ersetzt werden, dass vorhandene Modulinstanzen nach Update unerwartet kaputt sind.
+
+Ziel für bestehende Instanzen:
+- bestehende Konfiguration sinnvoll und vorhersehbar weiterführen,
+- keine leeren/ungültigen Parameterzustände,
+- neue Defaultsemantik sinnvoll wählen.
+
+Für neu angelegte Instanzen ist als Default „Titel + Button“ erwünscht.
+
+Falls für Altinstanzen eine kleine Kompatibilitätsbehandlung nötig ist, projektkonform lösen, ohne eine dauerhafte zweite Konfigurationswelt aufzubauen.
+
+Im Abschlussbericht kurz nennen, wie Altinstanzen behandelt werden.
+
+=====================================================================
+5. MODULTITEL / JOOMLA SHOWTITLE
+=====================================================================
+
+Aktuellen Zusammenhang mit Joomla-`showtitle` ausdrücklich analysieren.
+
+Im aktuellen Modul-Template wird der Titel selbst ausgegeben, wenn `module->showtitle === 0`. Das kann bewusst dazu dienen, doppelte Ausgabe über Joomla-Modul-Chrome zu vermeiden.
+
+Mit dem neuen verlinkbaren Titel im gemeinsamen Modulheader muss gelten:
+- Titel genau einmal sichtbar,
+- keine doppelte Joomla-Chrome- plus FDShop-Titelausgabe,
+- Link-Kategorie kann den tatsächlich im FDShop-Header dargestellten Titel verlinken,
+- Modul bleibt in normalen Joomla-Modulpositionen verwendbar.
+
+Keine globale Template-/Chrome-Neuentwicklung.
+
+Wenn die aktuelle `showtitle`-Semantik bewusst erforderlich ist, sauber fortführen und testen. Falls sie korrigiert werden muss, nur scope-konform.
+
+=====================================================================
+6. BESTEHENDE FUNKTIONEN MÜSSEN ERHALTEN BLEIBEN
+=====================================================================
+
+Nicht verändern/regressieren:
+- Kategorieauswahl
+- Produktlimit
+- Desktop-Kartenanzahl
+- fünf Sortierungen
+- Ribbons
+- technische Details
+- Preise/Aktionspreise
+- Warenkorbbutton/Purchase Action
+- Media-V1-Derivate / No-Image
+- Lazy Loading
+- Carousel
+- Grid
+- mehrere Instanzen
+- eindeutige DOM-/Purchase-IDs
+- Joomla-Modulcache
+- requestlokale Datenwiederverwendung
+- keine produktabhängige N+1-Abfrage
+- persistierter Bestandsstatus als Frontendwahrheit.
+
+WICHTIGE PROJEKTREGEL:
+Keine dynamische Bestandsstatus-Neuberechnung im Modul.
+Der persistierte Bestandsstatus wird nach bestandsverändernden Operationen zentral über die bestehende ProductService-Logik neu berechnet. Das Modul liest diesen Snapshot nur.
+
+=====================================================================
+7. RESPONSIVE / LAYOUT
+=====================================================================
+
+Desktop:
+Titel + optionaler Button links, Navigation rechts, alles möglichst eine Zeile.
+
+Tablet/Mobil:
+- sauber umbrechen, wenn Breite nicht reicht,
+- Navigation weiterhin klar zuordenbar,
+- keine Überlagerung,
+- keine abgeschnittenen Titel,
+- Produktkarten-/Carouselbreiten aus V1 nicht unnötig verändern.
+
+Keine große neue Modulgestaltung.
+
+=====================================================================
+8. TESTS – GEZIELT UND PROPORTIONAL
+=====================================================================
+
+Dies ist eine V1.1-Korrektur, kein Grund für eine erneute Vollentwicklung.
+
+Mindestens prüfen:
+
+ASSETS
+1. Modul auf Nicht-FDShop-Seite ohne aktive com_fdshop-Komponentenansicht.
+2. Modul auf FDShop-Kategorie-/Produktseite.
+3. benötigte Assets tatsächlich geladen.
+4. keine Registry-Exception.
+5. Purchase Action auf Nicht-FDShop-Seite.
+
+LINK-KATEGORIE
+6. „Kein“ → Titel kein Link, kein Button.
+7. „Titel + Button“ → beide verlinkt.
+8. „Nur Titel“ → nur Titel verlinkt.
+9. beide Linkvarianten führen zur richtigen Kategorie/SEF-Route.
+10. Buttontext funktioniert weiterhin.
+
+HEADER
+11. Titel/Button links.
+12. Navigation rechts.
+13. Navigation nicht mehr unterhalb des Karussells.
+14. schwarze Buttons / weiße Pfeile.
+15. Carousel ohne notwendige Navigation zeigt keine leeren Controls.
+
+REGRESSION
+16. Carousel.
+17. Grid.
+18. mehrere Modulinstanzen.
+19. Desktop.
+20. Mobile.
+21. Add-to-cart.
+22. Cache an/aus bzw. relevante bestehende Cachekeys.
+23. Kategorieansicht/ProductCardHelper/PurchaseHelper gezielt regressionsprüfen.
+
+Keine komplette 1-vs-8-Performancekampagne erneut, sofern keine Datenlade-/Cachinglogik verändert wird.
+Keine vollständige FDShop-`test-full`-Abnahme nur aus Gewohnheit.
+Wenn die Änderung unerwartet breitere gemeinsame Logik berührt, risikobasiert passende Tests erweitern.
+
+=====================================================================
+9. PAKET / VERSION / DOKUMENTATION
+=====================================================================
+
+Aktuellen Stand selbst feststellen.
+
+Da Produktcode geändert wird:
+- Paketversion nach bestehendem Projektstandard sinnvoll fortschreiben.
+- Schema nur dann ändern, wenn tatsächlich DB-/Schemaänderung nötig ist; für reine Modulparameter-/Asset-/CSS-Anpassung keine künstliche DB-Migration bauen.
+- pkg_fdshop / Modulmanifest / relevante Versionen konsistent halten.
+
+Dokumentation nur knapp fortschreiben, soweit die Änderung dauerhaft relevant ist:
+- Modul funktioniert eigenständig auch ohne aktive FDShop-Komponentenansicht.
+- Link-Kategorie-Modi.
+- Header-/Navigation nur soweit als Modulverhalten sinnvoll.
+- keine Dokumentationsinflation.
+
+=====================================================================
+10. GIT / FREIGABEN
+=====================================================================
+
+Ausdrücklich freigegeben:
+- Docker-Sandbox starten/stoppen/resetten soweit nötig,
+- Fixtures,
+- temporäre Joomla-Seiten/Menüs/Modulpositionen,
+- Modulinstanzen,
+- Browser-/Playwrighttests,
+- Asset-/Networkprüfung,
+- Cachetests,
+- Paketbau und Paketinstallation,
+- kleine scope-konforme PHP-/Template-/CSS-/Manifestkorrekturen,
+- Dokumentationsfortschreibung,
+- gezielte Test-/Korrekturzyklen,
+- Commit,
+- Push nach origin/feature,
+- Windows-/Offline-Synchronisierung nach etabliertem Workflow.
+
+Keine Rückfrage nach jedem Zyklus.
+
+NICHT FREIGEGEBEN:
+- IONOS verändern,
+- Live-Shop verändern,
+- main mergen,
+- Force-Push,
+- große Kategorie-/Produktkarten-Neuarchitektur,
+- neue Warenkorb-/Preis-/Media-Fachlogik,
+- externe Sliderbibliothek.
+
+STOP nur bei echtem Grundsatzproblem:
+- Assetproblem ist entgegen Analyse nur mit Breaking Change an zentraler FDShop-Assetarchitektur lösbar,
+- bestehende Modul-/Komponentenarchitektur widerspricht wesentlich dem Auftrag,
+- fremde Änderungen können nicht sicher erhalten werden,
+- Scope würde eine größere Frontend-Neuarchitektur verlangen.
+
+Normale Implementierungsentscheidungen selbst treffen.
+
+=====================================================================
+11. ABSCHLUSSBERICHT
+=====================================================================
+
+Kompakt berichten:
+- tatsächliche Ursache des Standalone-Assetfehlers,
+- gewählte Joomla-6-konforme Assetlösung,
+- Ergebnis auf Seite ohne com_fdshop,
+- neue Headerstruktur,
+- Link-Kategorie-Konfiguration und Altinstanz-Kompatibilität,
+- Desktop/Mobile,
+- gezielte Regressionstests,
+- Paketversion,
+- Dokumentationsänderungen,
+- Commit/Push/Windows-Sync,
+- offene Punkte.
+
+Wenn alles grün:
+technisch abgeschlossen.
+
+ENDE DES AUFTRAGS
