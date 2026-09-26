@@ -1,0 +1,283 @@
+FDShop – Auftrag: Bestellbestätigung & Packliste V1.1 – Realtest-Korrekturen
+Datum: 26.09.2026
+
+ZIEL
+Die mit 0.0.33 eingeführte Dokument-/Mailfunktion anhand des realen IONOS-Tests vervollständigen. Bestehende Funktion NICHT neu bauen.
+
+Umfang:
+A Admin-Bestelländerungen in neuen Mail-/Dokumentworkflow integrieren.
+B versionierte unveränderliche Kunden-PDFs für Änderungen.
+C Verkäufer bei Änderungen benachrichtigen + aktuelle Packliste.
+D gemeinsames zentriertes Maildesign.
+E PDF-Layoutkorrekturen.
+F Logo-/PLZ-Fehler.
+G Darstellung aus Services in Templates/Layouts.
+H dauerhafte PDFs aus Komponentenverzeichnis in persistenten geschützten Datenbereich.
+I Update/Legacy/Regression.
+
+KEINE Invoice-Engine.
+
+1. GRUNDLAGE / REFERENZEN
+Aktuellen feature-Stand, Projektquellen, Schema, OrderDocumentService, OrderNotificationService, OrderService/Admin-Change-Workflow, History/Change-ID, Config, Order-Snapshots, Shipment, Dompdf, Admin Orders und Tests vollständig analysieren.
+
+`Aufträge/Referenzen/` enthält ursprüngliche Vorgaben UND reale Ergebnisse. Insbesondere:
+- Screenshot Mail-Inhalt.png
+- bestellbestätigung kunde.png
+- bestellbestätigung firma.png
+- Bestellbestaetigung_2609PN62.pdf
+- Packliste_2609PN62.pdf
+- Screenshot Kunden-mail.png
+- Screenshot nac händerung admin.png
+- Screenshot admin Einstellungen dokumente.png
+sowie ggf. weitere aktuelle Dateien.
+Reale 0.0.33-Ergebnisse sind verbindliche Korrekturgrundlage.
+
+2. TEMPLATE-ARCHITEKTUR
+Große HTML/CSS-Blöcke aus OrderDocumentService und OrderNotificationService herauslösen.
+Service = Daten/Orchestrierung/Archivierung/Businesslogik.
+Layout/Template = Darstellung.
+Joomla-konforme wartbare Layoutstruktur wählen.
+Gemeinsame Bausteine für Mailrahmen, Firmendaten, PDF-Header/Footer soweit sinnvoll wiederverwenden.
+Vorbereitung für spätere Rechnung erwünscht, aber Rechnung NICHT implementieren.
+Keine eigene Templateengine.
+
+3. GEMEINSAMES MAILDESIGN
+Alle Bestellmails (Käufer/Verkäufer, Initial/Änderung) gleicher professioneller Rahmen:
+- begrenzte Maximalbreite ca. 600–650px nach Referenz sinnvoll wählen,
+- horizontal zentriert,
+- außen neutraler Hintergrund,
+- weißer Innencontainer / sauberes Padding,
+- Outlook-/Mailclient-robust,
+- mobil responsiv, keine horizontale Scrollfläche,
+- bestehende dunkle FDShop-Kopfzeile/Grundwirkung.
+Keine Abhängigkeit von externem CSS.
+
+Initialmail inhaltlich wie 0.0.33: Bestellnummer, Dank, PDF-Hinweis, Datum, Summe, Shipment, Footer.
+Käufer: Kunden-PDF.
+Verkäufer: Packliste.
+Kein toter Kundenkonto-Link.
+
+4. ADMIN-BESTELLÄNDERUNG
+Realer Fehler: Admin ändert z.B. Menge; Änderung wird gespeichert und Käufermail gesendet, aber über alten `sendOrderChanged()`-HTMLpfad ohne neues Design/PDF; Verkäufer erhält nicht den vollständigen Änderungsworkflow.
+
+Diesen Parallelpfad in gemeinsame neue Notification-/Template-/Dokumentarchitektur integrieren.
+Keine zweite Engine.
+
+Käufer-Änderungsmail:
+- gemeinsames Design,
+- eindeutiger Betreff „Bestellung ... wurde geändert“,
+- sinngemäß „Ihre Bestellung wurde geändert. Die aktualisierte Bestellbestätigung haben wir als PDF beigefügt.“
+- Datum, aktuelle Summe, Shipment,
+- neue versionierte Kunden-PDF.
+
+Verkäufer-Änderungsmail:
+- ebenfalls gemeinsames Design,
+- an bestehende projektkonforme Verkäuferadresse,
+- frisch generierte aktuelle Packliste als Anhang.
+
+Mailfehler rollt committede Änderung nicht zurück. History/Warnings/Idempotenz beibehalten.
+Retry derselben Change-ID erzeugt weder neue Dokumentversion noch Doppelmail.
+
+5. VERSIONIERTE KUNDENDOKUMENTE
+Original:
+`Bestellbestaetigung_2609PN62.pdf`
+
+1. relevante Änderung:
+`Bestellbestaetigung_2609PN62_01.pdf`
+2.:
+`..._02.pdf`
+usw.
+KEIN „Aenderung“ im Dateinamen.
+
+Suffix mindestens zweistellig; robust ohne Kollision.
+Version zählt bestätigte relevante Dokumentstände pro Order, nicht Änderungsarten.
+Original nie überschreiben.
+
+Jede Version:
+- unveränderlich archiviert,
+- eigener SHA-256,
+- Order + konkrete Änderung/Change-ID nachvollziehbar,
+- Retry-idempotent.
+
+Admin-Bestelldetail soll Original und _01/_02/... sicher anzeigen/herunterladen können.
+Packliste bleibt regenerierbar, keine Versionshistorie nötig.
+
+6. PERSISTENTER DOKUMENTSPEICHER
+0.0.33 speichert unter `administrator/components/com_fdshop/documents/`.
+Dauerhafte Geschäftsdokumente dort herauslösen.
+
+Projektkonformen persistenten geschützten FDShop-Datenbereich verwenden, analog bestehendem geschützten Datenprinzip.
+Anforderungen:
+- Komponentenupdate löscht PDFs nicht,
+- kein öffentlicher Direktzugriff/Listing,
+- Adminzugriff nur kontrolliert,
+- keine Requestpfade,
+- absolute Serverpfade nicht unnötig in DB.
+
+Bestehende 0.0.33-Dokumente beim Update sicher/idempotent migrieren oder übernehmen.
+Vorhandene PDFs + SHA nicht verlieren.
+Legacydatei nur nach verifizierter Übernahme entfernen, falls sinnvoll.
+Fehlende Legacydatei nicht durch neu generiertes Dokument als angebliches Original ersetzen.
+
+SHA-256-Prüfung für alle archivierten Versionen beibehalten/erweitern. Hashabweichung => nicht still ausliefern.
+
+7. LOGO-FEHLER
+Konfiguriertes Joomla-Media-Logo ist im Admin sichtbar, fehlt aber in beiden PDFs.
+Gespeicherter Mediawert enthält ggf. `#joomlaImage://...`-Metadaten.
+Joomla-konform tatsächlichen lokalen Pfad normalisieren; keine fragile willkürliche Stringabschneidung.
+Lokale Sicherheitsprüfung/kein Remotezugriff erhalten.
+Logo oben rechts über/bei Firmendaten in Kunden-PDF und Packliste sichtbar.
+Produktbilder nicht regressieren.
+
+8. PLZ-DOPPLUNG
+Reale PDFs zeigen z.B. `97950 97950 Gerchsheim`.
+Ursache in Datenzusammensetzung analysieren und korrekt beheben.
+PLZ genau einmal + Ort.
+Kunden-PDF und Packliste.
+Keine kosmetische Regex, wenn Datenmodell/Renderer Ursache ist.
+
+9. KUNDEN-PDF – SHIPMENTBOX
+Graues Feld der Abholstation aktuell zu groß.
+- kompakter,
+- Text vertikal sauber zentriert,
+- deutlich hervorgehoben,
+- lange Namen dürfen sinnvoll umbrechen.
+
+10. KUNDEN-PDF – PRODUKTTABELLE
+Mehr Platz für Produktnamen.
+Spalten bewusst definieren:
+links: Bild kompakt | Art.-Nr. kompakt | Produkt größter Hauptanteil.
+rechts: Einzelpreis | Menge | Rabatt | Betrag so schmal wie sinnvoll und weit rechts.
+Für typische Preisbreite darf dreistelliger Eurobetrag angenommen werden; höhere Werte niemals abschneiden/überlagern.
+Menge kompakt; Zahlen sinnvoll rechts/zentriert.
+Produktspalte feste großzügige Breite.
+Zebrazeilen, Bilder und wiederholte Tabellenköpfe erhalten.
+
+11. KUNDEN-PDF – SUMMENBLOCK
+Bedingt darstellen:
+Zwischensumme
+Gutschein (wenn >0)
+Versand/Abholung (wenn Gebühr >0)
+Zahlungsgebühr (wenn >0)
+Trennlinie
+Gesamtbetrag deutlich.
+
+Gutschein nicht auf Positionen verteilen.
+0,00-Zeilen dürfen entfallen.
+Order-Snapshot ist Wahrheit.
+
+12. KUNDEN-PDF – FOOTER
+Ab „Vielen Dank für Ihren Einkauf bei ...“ inklusive Bank-/Zusatzfußzeile immer am unteren Seitenrand.
+Bei mehrseitigem Dokument auf JEDER Seite unten.
+Nicht per zufälligem margin-top.
+Dompdf-konformen Page Footer + ausreichenden Bottom-Margin nutzen.
+Footer darf Inhalt nicht überdecken.
+
+13. PACKLISTE – VERSANDINFO
+Kasten ungefähr halbe nutzbare Seitenbreite und als Container rechts positionieren.
+INHALT bleibt linksbündig.
+shipment_color + Kontrastfarbe erhalten.
+Käufergruppe-Platzhalter, Shipment, Papierfeld Gepackt/Paketanzahl erhalten.
+
+14. PACKLISTE – PRODUKTTABELLE
+Mehr Platz für Produktnamen.
+Links: Bild kompakt | Art.-Nr. kompakt | Produkt FESTE großzügige Breite.
+Rechts: Kategorie | Anzahl | Gerichtet | Gepackt so kompakt und weit rechts wie sinnvoll.
+Inhalte Kategorie/Anzahl/Gerichtet/Gepackt horizontal zentrieren.
+Gerichtet/Gepackt-Spalten dürfen fast aneinanderstoßen, solange Header lesbar.
+Checkboxen deutlich größer und mit Stift gut markierbar.
+Keine digitale Speicherung.
+Kategorieblocklogik/Sonderkategorie nicht verändern.
+Zebra/Mehrseitenkopf erhalten.
+
+15. DOKUMENT-/MAIL-DATEN
+Keine Repricing-/Live-Produktwerte statt Snapshots.
+ORDER IS KING.
+Packliste darf weiterhin aktuelle shipment_color verwenden.
+Historische Produkt-/Preis-/Kunden-/Shipmenttexte bleiben Snapshot.
+Bundle-/physische Packlogik aus 0.0.33 nicht regressieren.
+
+16. DOMPDF
+Dompdf 3.1.6 funktioniert real auf IONOS und bleibt grundsätzlich bestehen.
+Keine Librarymigration nur wegen dieses Auftrags.
+Vendor bleibt paketiert.
+PDF-Templates/CSS müssen Dompdf-kompatibel sein.
+Keine Remoteassets.
+
+17. UPDATE / SCHEMA
+Notwendige Dokumenthistorie darf kleine relationale Tabelle/Schemaerweiterung erhalten, wenn dies sauberer ist als immer mehr Felder an orders.
+Codex entscheidet projektkonform.
+Fresh Install + Update identisch.
+Bestehende 0.0.33-Order/PDF erhalten.
+Version nach Projektstandard erhöhen.
+Keine Invoicefelder/-engine.
+
+18. TESTS
+Mindestens:
+- Initialcheckout Käufermail + Original-PDF,
+- Initial Verkäufermail + Packliste,
+- Admin Mengenänderung => Käufer Änderungsmail + _01 PDF,
+- Verkäufer Änderungsmail + aktuelle Packliste,
+- zweite relevante Änderung => _02,
+- Retry derselben Change-ID => keine _03/Doppelmail,
+- Original bleibt bytegleich/hashgleich,
+- alle Versionshashes prüfen,
+- Admindownload Original/_01/_02 ACL-geschützt,
+- Legacy-0.0.33-Dokumentmigration,
+- Komponentenupdate löscht persistente PDFs nicht,
+- Logo mit realem Joomla-Mediawert sichtbar,
+- PLZ genau einmal,
+- Mailcontainer Desktop/Mobile,
+- Kunden-PDF Shipmentbox,
+- Spaltenbreiten/lange Produktnamen,
+- Summen mit Coupon/Shipmentfee/Paymentfee,
+- Footer einseitig unten,
+- Footer auf jeder Seite bei Mehrseiten-PDF,
+- Packlistenbox halbe Breite rechts,
+- Packlistenspalten/Checkboxen,
+- Bundle/Sonderkategorie,
+- Mailpit Anhänge öffnbar,
+- PDF A4,
+- Logs sauber,
+- PHP 8.5 Syntax,
+- Paket real install/update/fresh soweit betroffen.
+
+Tests risikobasiert, aber Dokumenthistorie/Update/Idempotenz nicht nur oberflächlich testen.
+
+19. FREIGABEN
+Freigegeben:
+Docker/WSL/Sandbox, Fixtures, Mailpit, Browser-/PDF-Tests, Testorders, Composer bestehende Runtime verwalten, Schemaänderung, persistente Testdatenpfade, Migration alter Test-PDFs, Templates/Layouts/Services/Controller/Admin/Config, Paketbau/Install/Update/Fresh, Dokumentation, gezielte Korrekturzyklen, Commit, Push origin/feature, Windows-/Offline-Sync.
+
+Nicht freigegeben:
+IONOS verändern, main mergen, Force-Push, Invoice-Engine, Paymentprovider, Käufergruppenfachbereich fertigbauen, echte Produktivdaten.
+
+STOP nur bei echtem Grundsatzproblem: persistenter Speicher nicht update-sicher realisierbar, bestehende historische PDFs nur verlustbehaftet migrierbar, Breaking Change an Lifecycle/Orderintegrität, fremde Änderungen nicht sicher erhaltbar.
+Normale Implementierungs-/Layoutentscheidungen selbstständig treffen.
+
+20. DOKUMENTATION
+Dauerhaft knapp festhalten:
+- Templates statt HTML in Services,
+- Dokumentversionslogik,
+- persistenter Dokumentpfad,
+- SHA-Integrität,
+- Änderungsmail/-packliste,
+- Dompdf bleibt Runtime.
+Keine Dokumentationsinflation.
+
+21. GIT / ABSCHLUSS
+Aktuellen Branch/Working Tree vor Arbeit prüfen.
+Keine fremden Änderungen überschreiben.
+Nach grünem Stand:
+- finale Version/Paket,
+- SHA-256,
+- Commit(s) klar benennen,
+- push origin/feature,
+- Windows-Sync soweit sicher,
+- main unverändert.
+
+Abschlussbericht kompakt:
+Ursachen (Logo/PLZ/Change-Mail), Templatearchitektur, Dokumenthistorie, Speicher/Migration, Designkorrekturen, Tests, Version/SHA, Git, offene Punkte.
+
+Ziel: nach diesem Auftrag nur noch kleine optische „Pixel hier/Pixel dort“-Korrekturen.
+
+ENDE DES AUFTRAGS
