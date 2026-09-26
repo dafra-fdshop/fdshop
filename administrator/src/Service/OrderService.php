@@ -34,7 +34,7 @@ final class OrderService implements OrderServiceInterface
             $this->applyDemandDelta($orderId,$stockState,$oldDemand,$targetDemand);
             if($stockState==='reserved'&&$demandChanged)$this->products->recalculateStockStatus($this->changedDemandProductIds($oldDemand,$targetDemand));
             foreach($submitted as $id=>$entry){$row=$entry['row'];$quantity=$entry['quantity'];$q=$this->db->getQuery(true)->update($this->db->quoteName('#__fdshop_order_items'))->set('quantity='.$this->db->quote($quantity))->set('physical_quantity='.$this->db->quote($quantity*max(1,(int)$row->unit_quantity_snapshot)))->set('line_total_net='.$this->db->quote($this->money((float)$row->unit_price_net*$quantity)))->set('line_total_gross='.$this->db->quote($this->money((float)$row->unit_price_gross*$quantity)))->set('is_removed='.($entry['removed']?1:0))->where('id='.(int)$id)->where('order_id='.$orderId);$this->db->setQuery($q)->execute();}
-            $tax=$this->taxRate();foreach($additions as $entry){$p=$entry['product'];$quantity=$entry['quantity'];$regular=(float)$p->sale_price;$discount=(int)$p->discount_active===1&&(float)$p->discount_price>0?(float)$p->discount_price:0.0;$gross=$discount>0?$discount:$regular;$net=$gross/(1+$tax/100);$row=(object)['order_id'=>$orderId,'product_id'=>(int)$p->id,'product_name'=>(string)$p->product_name,'sku'=>(string)$p->sku,'gtin'=>(string)$p->gtin,'manufacturer_name'=>(string)$p->manufacturer_name,'quantity'=>$quantity,'unit_variant'=>'piece','unit_type_snapshot'=>'Stück','unit_quantity_snapshot'=>1,'physical_quantity'=>$quantity,'regular_price_gross'=>$regular,'discount_price_gross'=>$discount,'unit_price_net'=>$this->money($net),'unit_price_gross'=>$gross,'tax_rate'=>$tax,'line_total_net'=>$this->money($net*$quantity),'line_total_gross'=>$this->money($gross*$quantity),'currency'=>(string)($p->currency?:$order->currency?:'EUR'),'is_removed'=>0];$this->db->insertObject('#__fdshop_order_items',$row);}
+            $tax=$this->taxRate();foreach($additions as $entry){$p=$entry['product'];$quantity=$entry['quantity'];$regular=(float)$p->sale_price;$discount=(int)$p->discount_active===1&&(float)$p->discount_price>0?(float)$p->discount_price:0.0;$gross=$discount>0?$discount:$regular;$net=$gross/(1+$tax/100);$document=$this->documentSnapshot((int)$p->id);$row=(object)['order_id'=>$orderId,'product_id'=>(int)$p->id,'product_name'=>(string)$p->product_name,'sku'=>(string)$p->sku,'gtin'=>(string)$p->gtin,'manufacturer_name'=>(string)$p->manufacturer_name,'quantity'=>$quantity,'unit_variant'=>'piece','unit_type_snapshot'=>'Stück','unit_quantity_snapshot'=>1,'physical_quantity'=>$quantity,'regular_price_gross'=>$regular,'discount_price_gross'=>$discount,'unit_price_net'=>$this->money($net),'unit_price_gross'=>$gross,'tax_rate'=>$tax,'line_total_net'=>$this->money($net*$quantity),'line_total_gross'=>$this->money($gross*$quantity),'currency'=>(string)($p->currency?:$order->currency?:'EUR'),'is_removed'=>0,'document_image_path'=>$document['image'],'packing_group'=>$document['group']];$this->db->insertObject('#__fdshop_order_items',$row);}
             $subtotal=$this->draftSubtotal($orderId);$coupon=(float)$order->coupon_discount;if($coupon>$subtotal+0.0001)throw new RuntimeException('Der historische Gutscheinabzug übersteigt die neue Produktsumme; diese Änderung wurde sicher blockiert.');$grand=$this->money($subtotal-$coupon+(float)$shipment->shipment_price+(float)$order->payment_fee);$date=Factory::getDate()->toSql();
             $q=$this->db->getQuery(true)->update($this->db->quoteName('#__fdshop_orders'))->set('shipment_id='.(int)$shipment->id)->set('shipment_name='.$this->db->quote((string)$shipment->shipment_name))->set('shipment_fee='.$this->db->quote((float)$shipment->shipment_price))->set('subtotal='.$this->db->quote($subtotal))->set('grand_total='.$this->db->quote($grand))->set('modified='.$this->db->quote($date))->where('id='.$orderId);$this->db->setQuery($q)->execute();
             $details[]=sprintf('Gesamtbetrag: %.2f → %.2f',(float)$order->grand_total,$grand);$changeId=$this->writeOrderHistory($orderId,'order_changed','Bestellung geändert',implode("\n",$details),'order',$orderId,false);
@@ -53,6 +53,7 @@ final class OrderService implements OrderServiceInterface
         $gross = $discount > 0 ? $discount : $regular;
         $tax = $this->taxRate();
         $net = $gross / (1 + $tax / 100);
+        $document=$this->documentSnapshot($productId);
         $item = (object) [
             'order_id'=>$orderId, 'product_id'=>$productId, 'product_name'=>(string)$product->product_name,
             'sku'=>(string)($product->sku ?? ''), 'gtin'=>(string)($product->gtin ?? ''),
@@ -61,6 +62,7 @@ final class OrderService implements OrderServiceInterface
             'unit_price_net'=>$this->money($net), 'unit_price_gross'=>$gross, 'tax_rate'=>$tax,
             'line_total_net'=>$this->money($net*$quantity), 'line_total_gross'=>$this->money($gross*$quantity),
             'currency'=>(string)($product->currency ?: $order->currency ?: 'EUR'), 'is_removed'=>0,
+            'document_image_path'=>$document['image'], 'packing_group'=>$document['group'],
         ];
         $this->db->transactionStart();
         try {
@@ -69,6 +71,14 @@ final class OrderService implements OrderServiceInterface
             $this->writeOrderHistory($orderId,'item_added','Produkt hinzugefügt',sprintf('%s (SKU: %s), Menge: %s',$item->product_name,$item->sku,$this->qty($quantity)),'order_item',$id,false);
             $this->db->transactionCommit(); return $id;
         } catch (\Throwable $e) { $this->db->transactionRollback(); throw $e; }
+    }
+
+    private function documentSnapshot(int $productId): array
+    {
+        $q=$this->db->getQuery(true)->select('document_special_category_id')->from($this->db->quoteName('#__fdshop_config'))->where('id=1');$this->db->setQuery($q);$special=(int)$this->db->loadResult();
+        $q=$this->db->getQuery(true)->select('COALESCE(path_invoice,path_small,path_standard,path_mobile,\'\')')->from($this->db->quoteName('#__fdshop_media'))->where('product_id='.$productId)->where('media_type='.$this->db->quote('image'))->order('is_primary DESC, ordering ASC, id ASC');$this->db->setQuery($q,0,1);$image=(string)$this->db->loadResult();
+        $group=1;if($special>0){$q=$this->db->getQuery(true)->select('COUNT(*)')->from($this->db->quoteName('#__fdshop_product_category_map'))->where('product_id='.$productId)->where('category_id='.$special);$this->db->setQuery($q);$group=(int)$this->db->loadResult()>0?2:1;}
+        return ['image'=>$image?:null,'group'=>$group];
     }
 
     public function removeItem(int $orderId, int $orderItemId): void

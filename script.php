@@ -77,6 +77,15 @@ final class Com_FdshopInstallerScript implements InstallerScriptInterface
 			}
 		}
 
+		$documents = JPATH_ADMINISTRATOR . '/components/com_fdshop/documents';
+		if (!is_dir($documents) && !Folder::create($documents))
+		{
+			Factory::getApplication()->enqueueMessage('FDShop: Geschützter Dokumentordner konnte nicht angelegt werden.', 'error');
+			return false;
+		}
+		if (!is_file($documents . '/.htaccess')) file_put_contents($documents . '/.htaccess', "Require all denied\nDeny from all\n");
+		if (!is_file($documents . '/index.html')) file_put_contents($documents . '/index.html', '');
+
 		return true;
 	}
 }

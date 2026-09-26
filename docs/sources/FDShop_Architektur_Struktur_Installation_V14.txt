@@ -697,3 +697,13 @@ Korrektur Kategorie-Produktmodul V1.1 (Paket 0.0.32, Schema 0.0.31):
 =====================================================================
 ENDE DER QUELLE FDShop_Architektur_Struktur_Installation_V14
 =====================================================================
+BESTELLDOKUMENTE V1 (0.0.33)
+-----------------------------
+- OrderDocumentService erzeugt serverseitig DIN-A4-Bestellbestätigungen und Packlisten mit Dompdf 3.1.6.
+- Die vollständige Dompdf-Runtime liegt paketiert unter administrator/vendor; auf IONOS ist kein Composer-Lauf erforderlich.
+- Kunden-Bestellbestätigungen werden nach dem Order-Commit einmalig unter dem geschützten Komponentenpfad administrator/components/com_fdshop/documents archiviert, per SHA-256 abgesichert und später ausschließlich als dieses Original ausgeliefert.
+- Packlisten werden aus historischen Order-/Bundle-Snapshots bei Bedarf neu erzeugt. Nur die konfigurierte Shipmentfarbe darf dabei aktuell gelesen werden.
+- Neue Orderpositionen speichern Dokumentbild und Packlistenklassifikation. Legacyorders verwenden dokumentiert die aktuelle Kategoriezuordnung als Fallback.
+- Der Adminabruf läuft ausschließlich über ACL- und Token-geschützte Controlleraktionen; es existiert keine öffentliche Dokumentroute.
+- PDF-/Mailfehler treten post-commit auf, werden in der Orderhistorie erfasst und rollen keine Bestellung zurück.
+- Rechnungserzeugung und Rechnungsnummern sind ausdrücklich nicht Bestandteil dieser Version.

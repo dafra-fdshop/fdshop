@@ -178,6 +178,31 @@ test('authenticated cart validates mutations and keeps checkout state correctly 
   await expect(page.locator('[data-customer-snapshot]')).toContainText('Erika Mustermann');
   await expect(page.locator('[data-customer-snapshot]')).toContainText('12345 Teststadt');
 
+  const mailListResponse = await page.request.get('http://mailpit:8025/api/v1/messages');
+  expect(mailListResponse.ok()).toBe(true);
+  const mailList = await mailListResponse.json();
+  const currentOrderNumber = new URL(confirmationUrl).searchParams.get('order_number');
+  const confirmationMessages = mailList.messages.filter(message => String(message.Subject || '').includes(`Bestellbestätigung ${currentOrderNumber}`));
+  expect(confirmationMessages).toHaveLength(2);
+  const attachmentNames = [];
+  for (const message of confirmationMessages) {
+    const detailResponse = await page.request.get(`http://mailpit:8025/api/v1/message/${message.ID}`);
+    expect(detailResponse.ok()).toBe(true);
+    const detail = await detailResponse.json();
+    expect(detail.HTML).toContain('Vielen Dank für Ihre Bestellung');
+    expect(detail.HTML).not.toContain('Bestellung online ansehen');
+    expect(detail.Attachments).toHaveLength(1);
+    const attachment = detail.Attachments[0];
+    attachmentNames.push(attachment.FileName);
+    const partResponse = await page.request.get(`http://mailpit:8025/api/v1/message/${message.ID}/part/${attachment.PartID}`);
+    expect(partResponse.ok()).toBe(true);
+    expect((await partResponse.body()).subarray(0, 5).toString()).toBe('%PDF-');
+  }
+  expect(attachmentNames.sort()).toEqual([
+    `Bestellbestaetigung_${currentOrderNumber}.pdf`,
+    `Packliste_${currentOrderNumber}.pdf`,
+  ].sort());
+
   await page.goto('/index.php?option=com_users&view=profile&layout=edit');
   await expect(page.getByLabel(/First name|Vorname/i)).toHaveValue('Erika');
   await expect(page.getByLabel(/Last name|Nachname/i)).toHaveValue('Mustermann');

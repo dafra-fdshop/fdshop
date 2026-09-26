@@ -66,6 +66,10 @@ class ConfigurationModel extends AdminModel
                 'image_size_manufacturer' => '',
                 'show_terms_checkbox'     => 0,
                 'require_terms_checkbox'  => 0,
+                'document_payment_days' => 7,
+                'document_special_category_id' => 0,
+                'document_collection_one_title' => 'Sammlung: Batterien, Raketen, Single Shots etc.',
+                'document_collection_two_title' => 'Sammlung: Verbünde',
             ];
         }
 

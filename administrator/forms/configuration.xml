@@ -102,5 +102,24 @@
                 <option value="0">Nein</option>
             </field>
         </fieldset>
+        <fieldset name="documents_email" label="Dokumente &amp; E-Mail">
+            <field name="document_company_name" type="text" label="Firmenname" filter="string" />
+            <field name="document_company_street" type="text" label="Straße" filter="string" />
+            <field name="document_company_postal_code" type="text" label="PLZ" filter="string" />
+            <field name="document_company_city" type="text" label="Ort" filter="string" />
+            <field name="document_company_phone" type="text" label="Telefon" filter="string" />
+            <field name="document_company_email" type="email" label="E-Mail" />
+            <field name="document_company_website" type="url" label="Website" />
+            <field name="document_company_logo" type="media" label="Logo" directory="images" preview="tooltip" />
+            <field name="document_account_holder" type="text" label="Kontoinhaber" filter="string" />
+            <field name="document_bank_name" type="text" label="Bankname" filter="string" />
+            <field name="document_iban" type="text" label="IBAN" filter="string" />
+            <field name="document_bic" type="text" label="BIC/SWIFT" filter="string" />
+            <field name="document_footer_text" type="textarea" label="Zusätzliche Fußzeile" filter="safehtml" rows="3" />
+            <field name="document_payment_days" type="number" label="Zahlungsziel Überweisung (Tage)" default="7" min="1" max="365" />
+            <field name="document_special_category_id" type="sql" label="Sonderkategorie Sammlung 2" query="SELECT id AS value, category_name AS text FROM #__fdshop_categories WHERE is_active = 1 ORDER BY category_name" key_field="value" value_field="text" translate="false"><option value="0">- Keine Sonderkategorie -</option></field>
+            <field name="document_collection_one_title" type="text" label="Titel Sammlung 1" default="Sammlung: Batterien, Raketen, Single Shots etc." filter="string" />
+            <field name="document_collection_two_title" type="text" label="Titel Sammlung 2" default="Sammlung: Verbünde" filter="string" />
+        </fieldset>
     </fields>
 </form>

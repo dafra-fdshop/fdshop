@@ -673,3 +673,12 @@ Korrektur Kategorie-Produktmodul V1.1 (Paket 0.0.32):
 =====================================================================
 ENDE DER QUELLE FDShop_Codebestand_V14
 =====================================================================
+BESTELLDOKUMENTE / MAIL
+----------------------
+- administrator/src/Service/OrderDocumentService.php: historische Dokumentdaten, HTML-Layouts, Dompdf-Rendering, Archivierung, Packlistengruppen, sichere lokale Medien und Shipmentfarbe.
+- administrator/src/Service/OrderNotificationService.php: bestehende sendOnce-Mailengine mit HTML-Bestellbestätigung und rollenabhängigem PDF-Anhang.
+- administrator/src/Controller/OrderController.php und administrator/tmpl/order/default.php: geschützte Downloads für archiviertes Kundenoriginal und frisch erzeugte Packliste.
+- administrator/forms/configuration.xml: Tab Dokumente & E-Mail mit Firma, Logo, Bank, Fußzeile, Zahlungsziel, Sonderkategorie und Sammlungstiteln.
+- site/src/Service/CheckoutService.php: historischer Dokumentbild-/Packgruppen-Snapshot für normale und physische Bundlepositionen.
+- administrator/vendor/: paketierte Dompdf-3.1.6-Runtime samt transitive Abhängigkeiten und Lizenzen.
+- tests/documents/: echte PDF-Erzeugung, Byteidentität, Shipmentfarben- und Mehrseitenregression.

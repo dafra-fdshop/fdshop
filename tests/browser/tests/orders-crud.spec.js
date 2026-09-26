@@ -28,7 +28,7 @@ async function changeNormalOrderStatus(page, statusId) {
   await Promise.all([page.waitForNavigation({ waitUntil: 'load' }), page.getByRole('button', { name: /Save|Speichern/i }).click()]);
   await expect(page.locator('#system-message-container')).toContainText('1 Bestellung(en) aktualisiert');
 }
-test('order list, search, status filters and fixture snapshot details', async ({ page }) => {
+test('order list, search, status filters and fixture snapshot details', async ({ page, request }) => {
   await openView(page, 'orders');
   await expect(page.locator('#orderList')).toContainText('E2E-ORDER-NORMAL');
   await expect(page.locator('#orderList')).toContainText('E2E-ORDER-BUNDLE');
@@ -48,6 +48,14 @@ test('order list, search, status filters and fixture snapshot details', async ({
   await expect(body).toContainText('Erika Mustermann'); await expect(body).toContainText('E2E Handel GmbH');
   await expect(body).toContainText('Teststraße 12'); await expect(body).toContainText('12345 Teststadt');
   await expect(body).toContainText('Deutschland'); await expect(body).toContainText('+49 30 123456');
+  await expect(body).toContainText('Keine archivierte Kunden-Bestellbestätigung vorhanden');
+  const packingHref = await page.getByRole('link', { name: /Packliste erzeugen/ }).getAttribute('href');
+  const packingResponse = await page.request.get(packingHref);
+  expect(packingResponse.ok()).toBe(true);
+  expect(packingResponse.headers()['content-disposition']).toContain('Packliste_E2E-ORDER-NORMAL.pdf');
+  expect((await packingResponse.body()).subarray(0, 5).toString()).toBe('%PDF-');
+  const deniedResponse = await request.get(packingHref);
+  expect(deniedResponse.headers()['content-type']).not.toContain('application/pdf');
   await expect(body).toContainText('E2E Snapshot angelegt'); await expect(body).toContainText('Künstlicher Ausgangsstatus');
   await search(page, 'E2E-ORDER-BUNDLE'); await page.getByRole('link', { name: 'E2E-ORDER-BUNDLE' }).click();
   await expect(page.locator('main')).toContainText('E2E-ORDER-BUNDLE'); await expect(page.locator('main')).toContainText('E2E Produkt Aktionspreis');

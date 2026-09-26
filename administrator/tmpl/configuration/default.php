@@ -92,6 +92,20 @@ $orderStatusSearchView = (object) [
 		</div>
 	<?php echo HTMLHelper::_('uitab.endTab'); ?>
 
+	<?php echo HTMLHelper::_('uitab.addTab', 'fdshopConfigurationTabs', 'documents-email', 'Dokumente &amp; E-Mail'); ?>
+		<div class="row"><div class="col-12 col-xl-8">
+			<div class="card mb-3"><div class="card-header">Firmendaten</div><div class="card-body">
+				<?php foreach (['document_company_name','document_company_street','document_company_postal_code','document_company_city','document_company_phone','document_company_email','document_company_website','document_company_logo'] as $field) echo $configurationField($this->form->renderField($field)); ?>
+			</div></div>
+			<div class="card mb-3"><div class="card-header">Bankdaten und Fußzeile</div><div class="card-body">
+				<?php foreach (['document_account_holder','document_bank_name','document_iban','document_bic','document_footer_text'] as $field) echo $configurationField($this->form->renderField($field)); ?>
+			</div></div>
+			<div class="card mb-3"><div class="card-header">Bestellbestätigung und Packliste</div><div class="card-body">
+				<?php foreach (['document_payment_days','document_special_category_id','document_collection_one_title','document_collection_two_title'] as $field) echo $configurationField($this->form->renderField($field)); ?>
+			</div></div>
+		</div></div>
+	<?php echo HTMLHelper::_('uitab.endTab'); ?>
+
 	<?php echo HTMLHelper::_('uitab.addTab', 'fdshopConfigurationTabs', 'images', 'Bilder'); ?>
 		<div class="row">
 			<div class="col-12 col-xl-8">

@@ -95,6 +95,25 @@ test('configuration general and image values persist and are restored', async ({
   await expect(page.locator('#jform_image_quality_default')).toHaveValue(originalImageQualityDefault);
 });
 
+test('document and email configuration persists safely', async ({ page }) => {
+  await openConfigurationTab(page, 'Dokumente & E-Mail');
+  const company = page.locator('#jform_document_company_name');
+  const days = page.locator('#jform_document_payment_days');
+  const title = page.locator('#jform_document_collection_two_title');
+  const original = { company: await company.inputValue(), days: await days.inputValue(), title: await title.inputValue() };
+  await company.fill('E2E FDShop Dokumente');
+  await days.fill('14');
+  await title.fill('E2E Sammlung Sonderkategorie');
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await page.waitForLoadState('domcontentloaded');
+  await page.getByRole('tab', { name: 'Dokumente & E-Mail', exact: true }).click();
+  await expect(company).toHaveValue('E2E FDShop Dokumente');
+  await expect(days).toHaveValue('14');
+  await expect(title).toHaveValue('E2E Sammlung Sonderkategorie');
+  await company.fill(original.company); await days.fill(original.days); await title.fill(original.title);
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+});
+
 test('shipment validation, CRUD, status actions and filters', async ({ page }) => {
   await openConfigurationTab(page, 'Versand');
   await page.getByRole('link', { name: 'Hinzufügen', exact: true }).click();

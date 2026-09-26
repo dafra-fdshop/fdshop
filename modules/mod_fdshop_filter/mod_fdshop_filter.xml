@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <extension type="module" client="site" method="upgrade">
-  <name>FDShop Filter</name><author>FDShop</author><creationDate>2026-09-16</creationDate><version>0.0.32</version>
+  <name>FDShop Filter</name><author>FDShop</author><creationDate>2026-09-16</creationDate><version>0.0.33</version>
   <description>Gibt den zentralen FDShop-Kategoriefilter an einer frei wählbaren Joomla-Modulposition aus.</description>
   <files><filename module="mod_fdshop_filter">mod_fdshop_filter.php</filename><folder>tmpl</folder></files>
   <config><fields name="params"><fieldset name="basic"><field name="moduleclass_sfx" type="textarea" label="COM_MODULES_FIELD_MODULECLASS_SFX_LABEL" /></fieldset></fields></config>

@@ -3,7 +3,7 @@
 	<name>com_fdshop</name>
 	<author>FDShop</author>
 	<creationDate>2026-03-19</creationDate>
-	<version>0.0.32</version>
+	<version>0.0.33</version>
 	<description>Neuer schneller Shop</description>
 
 	<namespace path="src">FDShop\Component\FDShop</namespace>
@@ -44,6 +44,9 @@
 			<folder>layouts</folder>
 			<folder>tmpl</folder>
 			<folder>sql</folder>
+			<folder>vendor</folder>
+			<filename>composer.json</filename>
+			<filename>composer.lock</filename>
 			<filename>access.xml</filename>
 		</files>
 	</administration>

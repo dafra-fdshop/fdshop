@@ -461,6 +461,8 @@ CREATE TABLE IF NOT EXISTS `#__fdshop_orders` (
   `stock_state` VARCHAR(16) NULL,
   `submission_id` CHAR(36) NULL,
   `mail_warning` TEXT NULL,
+  `confirmation_pdf_path` VARCHAR(255) NULL,
+  `confirmation_pdf_sha256` CHAR(64) NULL,
 
   `created` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `modified` DATETIME NULL DEFAULT NULL,
@@ -506,6 +508,8 @@ CREATE TABLE IF NOT EXISTS `#__fdshop_order_items` (
   `line_total_gross` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
   `currency` CHAR(3) NOT NULL DEFAULT 'EUR',
   `is_removed` TINYINT(1) NOT NULL DEFAULT 0,
+  `document_image_path` VARCHAR(500) NULL,
+  `packing_group` TINYINT UNSIGNED NULL,
 
   PRIMARY KEY (`id`),
   KEY `idx_fdshop_order_items_order_id` (`order_id`),
@@ -582,6 +586,8 @@ CREATE TABLE IF NOT EXISTS `#__fdshop_order_bundle_items` (
   `total_gross` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
   `currency` CHAR(3) NOT NULL DEFAULT 'EUR',
   `is_removed` TINYINT(1) NOT NULL DEFAULT 0,
+  `document_image_path` VARCHAR(500) NULL,
+  `packing_group` TINYINT UNSIGNED NULL,
   `created` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
   PRIMARY KEY (`id`),
@@ -942,6 +948,23 @@ CREATE TABLE `#__fdshop_config` (
   `show_terms_checkbox` TINYINT(1) NOT NULL DEFAULT 0,
   `require_terms_checkbox` TINYINT(1) NOT NULL DEFAULT 0,
   `katalog_active` TINYINT(1) NOT NULL DEFAULT 0,
+  `document_company_name` VARCHAR(255) NOT NULL DEFAULT '',
+  `document_company_street` VARCHAR(255) NOT NULL DEFAULT '',
+  `document_company_postal_code` VARCHAR(32) NOT NULL DEFAULT '',
+  `document_company_city` VARCHAR(120) NOT NULL DEFAULT '',
+  `document_company_phone` VARCHAR(64) NOT NULL DEFAULT '',
+  `document_company_email` VARCHAR(255) NOT NULL DEFAULT '',
+  `document_company_website` VARCHAR(255) NOT NULL DEFAULT '',
+  `document_company_logo` VARCHAR(500) NOT NULL DEFAULT '',
+  `document_account_holder` VARCHAR(255) NOT NULL DEFAULT '',
+  `document_bank_name` VARCHAR(255) NOT NULL DEFAULT '',
+  `document_iban` VARCHAR(64) NOT NULL DEFAULT '',
+  `document_bic` VARCHAR(32) NOT NULL DEFAULT '',
+  `document_footer_text` TEXT NULL,
+  `document_payment_days` INT UNSIGNED NOT NULL DEFAULT 7,
+  `document_special_category_id` BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  `document_collection_one_title` VARCHAR(255) NOT NULL DEFAULT 'Sammlung: Batterien, Raketen, Single Shots etc.',
+  `document_collection_two_title` VARCHAR(255) NOT NULL DEFAULT 'Sammlung: Verbünde',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

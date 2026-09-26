@@ -642,3 +642,14 @@ Korrektur Kategorie-Produktmodul V1.1 (Paket 0.0.32, Schema 0.0.31):
 =====================================================================
 ENDE DER QUELLE FDShop_Implementierungsstand_V14
 =====================================================================
+IMPLEMENTIERUNGSSTAND 0.0.33 - BESTELLBESTÄTIGUNG & PACKLISTE V1
+----------------------------------------------------------------
+- ordered-Käufermail: HTML-Bestellbestätigung plus dauerhaft archiviertes Kunden-PDF.
+- ordered-Verkäufermail: gleicher kompakter Grundinhalt plus regenerierbare interne Packliste.
+- Statuskonfiguration, sendOnce, History und Post-Commit-Verhalten bleiben maßgeblich.
+- Kunden-PDF enthält historischen Kunden-/Order-/Preis-/Rabatt-/Gutschein-/Gebührensnapshot und lokale Produktbilder mit robustem Fallback.
+- Packliste enthält aktuelle Shipmentfarbe, Bemerkung, Papierfelder, Notizfläche sowie zwei exklusive konfigurierbare Sammlungen.
+- Bundleköpfe werden kundenverständlich dargestellt; physische Bundlepositionen erscheinen ohne Doppelauflistung in der Packliste.
+- Dokumente & E-Mail ist im Admin konfigurierbar; Kundenoriginal und Packliste sind ACL-geschützt abrufbar.
+- Schema 0.0.33 ergänzt Archivverweis/-Hash, Dokumentbild, Packgruppen-Snapshot und Dokumentkonfiguration.
+- Rechnung/Invoice-Engine, Rechnungsnummern, Paymentprovider und Käufergruppenfachlogik bleiben offen.

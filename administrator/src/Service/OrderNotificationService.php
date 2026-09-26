@@ -6,7 +6,7 @@ use Joomla\Database\DatabaseInterface;
 
 final class OrderNotificationService
 {
-    public function __construct(private readonly DatabaseInterface $db){}
+    public function __construct(private readonly DatabaseInterface $db, private readonly OrderDocumentService $documents){}
     public function sendForStatus(int $orderId,int $statusId):array
     {
         $order=$this->row('#__fdshop_orders','id='.(int)$orderId);$status=$this->row('#__fdshop_order_statuses','id='.(int)$statusId);
@@ -40,7 +40,22 @@ final class OrderNotificationService
         $event='mail_'.$kind.'_status_'.(int)$status->id;
         $q=$this->db->getQuery(true)->select('COUNT(*)')->from($this->db->quoteName('#__fdshop_order_history'))->where('order_id='.(int)$order->id)->where('event_type='.$this->db->quote($event));$this->db->setQuery($q);if((int)$this->db->loadResult()>0)return;
         if(!filter_var($to,FILTER_VALIDATE_EMAIL)){$warnings[]='Die '.$kind.'-E-Mail-Adresse ist ungültig.';$this->history((int)$order->id,$event.'_failed','E-Mail nicht versendet',end($warnings));return;}
-        try{$mailer=Factory::getMailer();$mailer->addRecipient($to);$mailer->setSubject('FDShop Bestellung '.$order->order_number.' – '.$status->status_name);$mailer->isHtml(true);$mailer->setBody('<h1>Bestellung '.htmlspecialchars((string)$order->order_number,ENT_QUOTES,'UTF-8').'</h1><p>Status: '.htmlspecialchars((string)$status->status_name,ENT_QUOTES,'UTF-8').'</p><p>Gesamtbetrag: '.number_format((float)$order->grand_total,2,',','.').' '.htmlspecialchars((string)$order->currency,ENT_QUOTES,'UTF-8').'</p><p>Zahlungsart: '.htmlspecialchars((string)$order->payment_method_name,ENT_QUOTES,'UTF-8').'</p>');$result=$mailer->send();if($result!==true)throw new \RuntimeException('Mailer hat die Nachricht nicht bestätigt.');$this->history((int)$order->id,$event,'E-Mail versendet',$to);}catch(\Throwable $e){$warnings[]='E-Mail konnte nicht versendet werden.';$this->history((int)$order->id,$event.'_failed','E-Mail-Versand fehlgeschlagen',$e->getMessage());}
+        $temporary=null;
+        try{
+            $mailer=Factory::getMailer();$mailer->addRecipient($to);$mailer->setSubject('FDShop Bestellbestätigung '.$order->order_number);$mailer->isHtml(true);$mailer->setBody($this->orderedBody($order));
+            if((string)$status->status_code==='ordered'){
+                $document=$kind==='buyer'?$this->documents->customerDocument((int)$order->id,true):$this->documents->packingList((int)$order->id);
+                if($kind==='seller'){$temporary=tempnam(JPATH_CACHE,'fdshop-pack-');if($temporary===false||file_put_contents($temporary,$document['bytes'])===false)throw new \RuntimeException('Temporäre Packliste konnte nicht erzeugt werden.');$mailer->addAttachment($temporary,$document['name']);}
+                else $mailer->addAttachment($document['path'],$document['name']);
+            }
+            $result=$mailer->send();if($result!==true)throw new \RuntimeException('Mailer hat die Nachricht nicht bestätigt.');$this->history((int)$order->id,$event,'E-Mail versendet',$to);
+        }catch(\Throwable $e){$warnings[]='E-Mail oder Bestelldokument konnte nicht versendet werden.';$this->history((int)$order->id,$event.'_failed','E-Mail-/Dokumentversand fehlgeschlagen',$e->getMessage());}
+        finally{if($temporary&&is_file($temporary))unlink($temporary);}
+    }
+    private function orderedBody(object $order):string
+    {
+        $e=static fn(mixed $v):string=>htmlspecialchars((string)$v,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8');
+        return '<div style="font-family:Arial,sans-serif;max-width:680px;margin:auto"><h2 style="background:#111827;color:#fff;padding:18px">FDShop</h2><h3>Bestellbestätigung zu Ihrer Bestellung '.$e($order->order_number).'.</h3><p>Vielen Dank für Ihre Bestellung! Die Bestellbestätigung haben wir dieser E-Mail als PDF beigefügt.</p><table style="width:100%;border-collapse:collapse"><tr><th style="text-align:left;padding:8px;border-bottom:1px solid #ddd">Bestelldatum</th><td style="padding:8px;border-bottom:1px solid #ddd">'.$e(Factory::getDate($order->created)->format('d.m.Y H:i',true)).'</td></tr><tr><th style="text-align:left;padding:8px;border-bottom:1px solid #ddd">Gesamtsumme</th><td style="padding:8px;border-bottom:1px solid #ddd">'.number_format((float)$order->grand_total,2,',','.').' '.$e($order->currency).'</td></tr><tr><th style="text-align:left;padding:8px;border-bottom:1px solid #ddd">Abholstation/Versandart</th><td style="padding:8px;border-bottom:1px solid #ddd">'.$e($order->shipment_name).'</td></tr></table><p style="color:#666;margin-top:28px">Bei Fragen antworten Sie einfach auf diese E-Mail. Vielen Dank für Ihren Einkauf!</p></div>';
     }
     private function history(int $orderId,string $type,string $title,?string $text, string $referenceType='order_status', ?int $referenceId=null):void{$row=(object)['order_id'=>$orderId,'event_type'=>$type,'event_title'=>$title,'event_text'=>$text,'reference_type'=>$referenceType,'reference_id'=>$referenceId,'is_system_event'=>1,'created'=>Factory::getDate()->toSql(),'created_by'=>(int)Factory::getApplication()->getIdentity()->id];$this->db->insertObject('#__fdshop_order_history',$row);}
     private function row(string $table,string $where):?object{$q=$this->db->getQuery(true)->select('*')->from($this->db->quoteName($table))->where($where);$this->db->setQuery($q);return $this->db->loadObject()?:null;}

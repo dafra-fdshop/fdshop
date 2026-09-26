@@ -60,6 +60,8 @@ class OrderModel extends BaseDatabaseModel
             $db->quoteName('a.terms_accepted_at'),
             $db->quoteName('a.stock_state'),
             $db->quoteName('a.mail_warning'),
+            $db->quoteName('a.confirmation_pdf_path'),
+            $db->quoteName('a.confirmation_pdf_sha256'),
             $db->quoteName('os.status_name'),
             $db->quoteName('u.name', 'current_customer_name'),
             $db->quoteName('u.username', 'customer_username'),

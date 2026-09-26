@@ -9,6 +9,7 @@ namespace FDShop\Component\FDShop\Administrator\Controller;
 defined('_JEXEC') or die;
 
 use FDShop\Component\FDShop\Administrator\Service\OrderServiceInterface;
+use FDShop\Component\FDShop\Administrator\Service\OrderDocumentService;
 use Joomla\CMS\Factory;
 use Joomla\CMS\MVC\Controller\BaseController;
 
@@ -97,12 +98,42 @@ class OrderController extends BaseController
         return true;
     }
 
+    public function downloadConfirmation(): void
+    {
+        $this->authoriseDocument();
+        $document=$this->getDocumentService()->archivedCustomerDocument($this->input->getInt('id'));
+        if(!$document)throw new \RuntimeException('Für diese Bestellung liegt keine archivierte Kunden-Bestellbestätigung vor.');
+        $this->sendPdf($document);
+    }
+
+    public function downloadPackingList(): void
+    {
+        $this->authoriseDocument();
+        $this->sendPdf($this->getDocumentService()->packingList($this->input->getInt('id')));
+    }
+
     private function getOrderService(): OrderServiceInterface
     {
         $component = Factory::getApplication()->bootComponent('com_fdshop');
         $container = $component->getContainer();
 
         return $container->get(OrderServiceInterface::class);
+    }
+
+    private function getDocumentService(): OrderDocumentService
+    {
+        return Factory::getApplication()->bootComponent('com_fdshop')->getContainer()->get(OrderDocumentService::class);
+    }
+
+    private function authoriseDocument(): void
+    {
+        $this->checkToken('get');
+        if(!Factory::getApplication()->getIdentity()->authorise('core.manage','com_fdshop'))throw new \RuntimeException('Sie sind nicht berechtigt, Bestelldokumente abzurufen.');
+    }
+
+    private function sendPdf(array $document): void
+    {
+        $app=Factory::getApplication();$app->setHeader('Content-Type','application/pdf',true);$app->setHeader('Content-Disposition','attachment; filename="'.str_replace('"','',(string)$document['name']).'"',true);$app->setHeader('Content-Length',(string)strlen((string)$document['bytes']),true);$app->sendHeaders();echo $document['bytes'];$app->close();
     }
 
     private function getOrderRedirect(int $orderId): string
