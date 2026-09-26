@@ -17,11 +17,21 @@ $showPrice = (int) $params->get('show_price', 1) === 1;
 $showCart = (int) $params->get('show_cart', 1) === 1 && $purchaseEnabled;
 $categoryUrl = RouteHelper::getCategoryRoute((int) $category->id);
 $factsRoot = rtrim(Uri::root(true), '/') . '/media/com_fdshop/images/product-facts/';
+$configuredLinkMode = trim((string) $params->get('link_category', ''));
+$linkMode = in_array($configuredLinkMode, ['none', 'title_button', 'title_only'], true)
+    ? $configuredLinkMode
+    : ((int) $params->get('show_category_link', 1) === 1 ? 'title_button' : 'none');
+$linkTitle = in_array($linkMode, ['title_button', 'title_only'], true);
+$showCategoryButton = $linkMode === 'title_button';
+$showNavigation = $carousel && count($items) > $desktopItems;
 ?>
-<section id="<?php echo $moduleId; ?>" class="fdshop-products-module<?php echo $carousel ? ' is-carousel' : ' is-grid'; ?>" data-fdshop-products-module data-cache-mode="<?php echo (int) $params->get('cache', 1); ?>" data-query-count="<?php echo (int) $data['query_count']; ?>" data-request-cache-hit="<?php echo !empty($data['request_cache_hit']) ? '1' : '0'; ?>" data-render-ms="<?php echo number_format((float) $data['render_ms'], 3, '.', ''); ?>" style="--fdshop-module-columns:<?php echo $desktopItems; ?>">
+<section id="<?php echo $moduleId; ?>" class="fdshop-products-module<?php echo $carousel ? ' is-carousel' : ' is-grid'; ?>" data-fdshop-products-module data-link-category="<?php echo $escape($linkMode); ?>" data-cache-mode="<?php echo (int) $params->get('cache', 1); ?>" data-query-count="<?php echo (int) $data['query_count']; ?>" data-request-cache-hit="<?php echo !empty($data['request_cache_hit']) ? '1' : '0'; ?>" data-render-ms="<?php echo number_format((float) $data['render_ms'], 3, '.', ''); ?>" style="--fdshop-module-columns:<?php echo $desktopItems; ?>">
   <header class="fdshop-products-module__header">
-    <?php if ((int) $module->showtitle === 0) : ?><h2><?php echo $escape($module->title); ?></h2><?php endif; ?>
-    <?php if ((int) $params->get('show_category_link', 1) === 1) : ?><a class="btn btn-primary btn-sm" href="<?php echo $escape($categoryUrl); ?>"><?php echo $escape($params->get('category_link_text', 'Zur Kategorie')); ?></a><?php endif; ?>
+    <div class="fdshop-products-module__heading">
+      <h2><?php if ($linkTitle) : ?><a href="<?php echo $escape($categoryUrl); ?>"><?php echo $escape($module->title); ?></a><?php else : ?><?php echo $escape($module->title); ?><?php endif; ?></h2>
+      <?php if ($showCategoryButton) : ?><a class="btn btn-primary btn-sm" data-category-link href="<?php echo $escape($categoryUrl); ?>"><?php echo $escape($params->get('category_link_text', 'Zur Kategorie')); ?></a><?php endif; ?>
+    </div>
+    <?php if ($showNavigation) : ?><nav class="fdshop-products-module__navigation" aria-label="Karussellnavigation"><button type="button" data-products-prev aria-label="Vorherige Produkte"><span aria-hidden="true">‹</span></button><button type="button" data-products-next aria-label="Nächste Produkte"><span aria-hidden="true">›</span></button></nav><?php endif; ?>
   </header>
   <div class="fdshop-products-module__viewport" data-products-viewport tabindex="0" aria-label="Produkte aus <?php echo $escape($category->category_name); ?>">
     <div class="fdshop-products-module__track">
@@ -57,11 +67,8 @@ $factsRoot = rtrim(Uri::root(true), '/') . '/media/com_fdshop/images/product-fac
     <?php endforeach; ?>
     </div>
   </div>
-  <?php if ($carousel && count($items) > $desktopItems) : ?><nav class="fdshop-products-module__navigation" aria-label="Karussellnavigation"><button type="button" class="btn btn-outline-secondary" data-products-prev aria-label="Vorherige Produkte"><span aria-hidden="true">‹</span></button><button type="button" class="btn btn-outline-secondary" data-products-next aria-label="Nächste Produkte"><span aria-hidden="true">›</span></button></nav><?php endif; ?>
 </section>
 <?php
-static $purchaseModalRendered = false;
-if ($showCart && !$purchaseModalRendered) {
+if ($showCart && PurchaseHelper::claimModal()) {
     echo LayoutHelper::render('purchase.modal', [], JPATH_ROOT . '/components/com_fdshop/layouts');
-    $purchaseModalRendered = true;
 }

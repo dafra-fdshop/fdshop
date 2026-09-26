@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <extension type="module" client="site" method="upgrade">
-  <name>FDShop Kategorie-Produkte</name><author>FDShop</author><creationDate>2026-09-25</creationDate><version>0.0.31</version>
+  <name>FDShop Kategorie-Produkte</name><author>FDShop</author><creationDate>2026-09-25</creationDate><version>0.0.32</version>
   <description>Zeigt Produkte einer aktiven FDShop-Kategorie als responsives Karussell oder Grid.</description>
   <files><filename module="mod_fdshop_products">mod_fdshop_products.php</filename><filename>helper.php</filename><folder>tmpl</folder></files>
   <config><fields name="params">
@@ -11,8 +11,8 @@
       <field name="sorting" type="list" label="Sortierung" default="newest"><option value="newest">Neueste zuerst</option><option value="name_asc">Produktname aufsteigend</option><option value="price_asc">Preis aufsteigend</option><option value="price_desc">Preis absteigend</option><option value="random">Zufällig</option></field>
     </fieldset>
     <fieldset name="display" label="Darstellung">
-      <field name="show_category_link" type="radio" layout="joomla.form.field.radio.switcher" label="Zur Kategorie anzeigen" default="1"><option value="0">JNO</option><option value="1">JYES</option></field>
-      <field name="category_link_text" type="text" label="Buttontext" default="Zur Kategorie" showon="show_category_link:1" />
+      <field name="link_category" type="list" label="Link-Kategorie" default="title_button"><option value="none">Kein</option><option value="title_button">Titel + Button</option><option value="title_only">Nur Titel</option></field>
+      <field name="category_link_text" type="text" label="Buttontext" default="Zur Kategorie" showon="link_category:title_button" />
       <field name="show_ribbons" type="radio" layout="joomla.form.field.radio.switcher" label="Ribbons" default="1"><option value="0">JNO</option><option value="1">JYES</option></field>
       <field name="show_technical" type="radio" layout="joomla.form.field.radio.switcher" label="Technische Details" default="1"><option value="0">JNO</option><option value="1">JYES</option></field>
       <field name="show_price" type="radio" layout="joomla.form.field.radio.switcher" label="Preis" default="1"><option value="0">JNO</option><option value="1">JYES</option></field>

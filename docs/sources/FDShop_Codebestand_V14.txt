@@ -658,6 +658,18 @@ Nachtrag Kategorie-Produktmodul V1 (Paket 0.0.31):
   bestehenden FDShop-Kartenstile und liefern 5/3/1 Karten als responsive
   Ausgangswerte. Der Paketbuilder installiert beide FDShop-Site-Module.
 
+Korrektur Kategorie-Produktmodul V1.1 (Paket 0.0.32):
+- `mod_fdshop_products.php` lädt das vorhandene zentrale WebAsset-Registry-File
+  explizit und funktioniert dadurch unabhängig von der aktiven Komponente.
+- Das Template normalisiert `link_category` auf `none`, `title_button` oder
+  `title_only`; fehlt der neue Wert, bildet `show_category_link=0/1` bestehende
+  Instanzen kompatibel auf `none/title_button` ab.
+- Header-CSS ordnet Titel und optionalen Kategoriebutton links sowie schwarze,
+  weiß beschriftete Navigation rechts an und erlaubt mobilen Flex-Umbruch.
+- `PurchaseHelper::claimModal()` garantiert seitenweit genau einen gemeinsamen
+  Purchase-Dialog, auch wenn Komponente und mehrere Produktmodule gemeinsam
+  gerendert werden.
+
 =====================================================================
 ENDE DER QUELLE FDShop_Codebestand_V14
 =====================================================================

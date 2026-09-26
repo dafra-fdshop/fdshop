@@ -108,7 +108,7 @@ package_extension_id() {
 }
 
 verify_installed() {
-  local id actual_tables expected_tables schema_version manifest_version
+  local id actual_tables expected_tables schema_version expected_schema_version
   id="$(extension_id)"
   [[ "$id" =~ ^[0-9]+$ ]] || { printf 'FDShop extension record is missing.\n' >&2; return 1; }
 
@@ -119,10 +119,10 @@ verify_installed() {
     return 1
   }
 
-  manifest_version="$(sed -n 's:.*<version>\([^<]*\)</version>.*:\1:p' "$REPO_ROOT/fdshop.xml" | head -1)"
+  expected_schema_version="$(find "$REPO_ROOT/administrator/sql/updates" -maxdepth 1 -type f -name '*.sql' -printf '%f\n' | sed 's/\.sql$//' | sort -V | tail -1)"
   schema_version="$(sql "SELECT version_id FROM ${JOOMLA_DB_PREFIX}schemas WHERE extension_id=${id};")"
-  [[ "$schema_version" == "$manifest_version" ]] || {
-    printf 'Schema mismatch: manifest %s, Joomla %s.\n' "$manifest_version" "$schema_version" >&2
+  [[ "$schema_version" == "$expected_schema_version" ]] || {
+    printf 'Schema mismatch: latest migration %s, Joomla %s.\n' "$expected_schema_version" "$schema_version" >&2
     return 1
   }
 
@@ -356,12 +356,17 @@ run_browser_products_module() {
   sql "INSERT IGNORE INTO ${JOOMLA_DB_PREFIX}fdshop_product_category_map (product_id, category_id) SELECT id, ${category_id} FROM ${JOOMLA_DB_PREFIX}fdshop_products WHERE is_active=1 AND is_deleted=0;"
   params="{\"category_id\":\"${category_id}\",\"max_products\":\"8\",\"desktop_items\":\"5\",\"sorting\":\"name_asc\",\"show_category_link\":\"1\",\"category_link_text\":\"Zur Kategorie\",\"show_ribbons\":\"1\",\"show_technical\":\"1\",\"show_price\":\"1\",\"show_cart\":\"1\",\"carousel\":\"1\",\"cache\":\"0\",\"cache_time\":\"300\"}"
   for number in $(seq 1 8); do
-    sql "INSERT INTO ${JOOMLA_DB_PREFIX}modules (asset_id,title,note,content,ordering,position,checked_out,checked_out_time,publish_up,publish_down,published,module,access,showtitle,params,client_id,language) VALUES (0,'FDShop Produkte ${number}','','',${number},'top-a',NULL,NULL,NULL,NULL,1,'mod_fdshop_products',1,0,'${params}',0,'*');"
+    sql "INSERT INTO ${JOOMLA_DB_PREFIX}modules (asset_id,title,note,content,ordering,position,checked_out,checked_out_time,publish_up,publish_down,published,module,access,showtitle,params,client_id,language) VALUES (0,'FDShop Produkte ${number}','','',${number},'main-top',NULL,NULL,NULL,NULL,1,'mod_fdshop_products',1,0,'${params}',0,'*');"
     module_id="$(sql "SELECT id FROM ${JOOMLA_DB_PREFIX}modules WHERE client_id=0 AND module='mod_fdshop_products' AND title='FDShop Produkte ${number}' ORDER BY id DESC LIMIT 1;")"
     [[ -n "$first_module_id" ]] || first_module_id="$module_id"
     sql "INSERT INTO ${JOOMLA_DB_PREFIX}modules_menu (moduleid,menuid) VALUES (${module_id},0);"
     module_ids="${module_ids}${module_ids:+,}${module_id}"
   done
+  sql "UPDATE ${JOOMLA_DB_PREFIX}modules SET params=JSON_SET(params, '$.link_category', 'none') WHERE title='FDShop Produkte 1';"
+  sql "UPDATE ${JOOMLA_DB_PREFIX}modules SET params=JSON_SET(params, '$.link_category', 'title_button', '$.category_link_text', 'Alle Artikel') WHERE title='FDShop Produkte 2';"
+  sql "UPDATE ${JOOMLA_DB_PREFIX}modules SET params=JSON_SET(params, '$.link_category', 'title_only') WHERE title='FDShop Produkte 3';"
+  sql "UPDATE ${JOOMLA_DB_PREFIX}modules SET params=JSON_SET(params, '$.show_category_link', '0') WHERE title='FDShop Produkte 4';"
+  sql "UPDATE ${JOOMLA_DB_PREFIX}modules SET showtitle=1 WHERE title='FDShop Produkte 6';"
   sql "UPDATE ${JOOMLA_DB_PREFIX}modules SET params=JSON_SET(params, '$.cache', '1') WHERE module='mod_fdshop_products' AND title LIKE 'FDShop Produkte %' ORDER BY id DESC LIMIT 4;"
   sql "UPDATE ${JOOMLA_DB_PREFIX}modules SET params=JSON_SET(params, '$.carousel', '0') WHERE id=${module_id};"
   sql "UPDATE ${JOOMLA_DB_PREFIX}modules SET published=0 WHERE id IN (${module_ids}) AND id<>${first_module_id};"

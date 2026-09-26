@@ -235,8 +235,12 @@
 
 /* Category products module */
 .fdshop-products-module { position: relative; margin-block: 1.5rem; }
-.fdshop-products-module__header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: .75rem; }
-.fdshop-products-module__header h2 { margin: 0; }
+.fdshop-products-module__header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .6rem 1rem; margin-bottom: .75rem; }
+.fdshop-products-module__heading { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; min-width: 0; }
+.fdshop-products-module__header h2 { min-width: 0; margin: 0; }
+.fdshop-products-module__header h2 a { color: inherit; text-decoration: none; }
+.fdshop-products-module__header h2 a:hover,
+.fdshop-products-module__header h2 a:focus-visible { text-decoration: underline; }
 .fdshop-products-module__viewport { min-width: 0; }
 .fdshop-products-module.is-carousel .fdshop-products-module__viewport { overflow-x: auto; scroll-behavior: smooth; scroll-snap-type: x mandatory; scrollbar-width: none; }
 .fdshop-products-module.is-carousel .fdshop-products-module__viewport::-webkit-scrollbar { display: none; }
@@ -245,14 +249,17 @@
 .fdshop-products-module.is-carousel .fdshop-products-module__card { flex: 0 0 calc((100% - (var(--fdshop-module-columns, 5) - 1) * .75rem) / var(--fdshop-module-columns, 5)); scroll-snap-align: start; }
 .fdshop-products-module__card .fdshop-card__description,
 .fdshop-products-module__card .fdshop-card__actions { display: none; }
-.fdshop-products-module__navigation { display: flex; justify-content: flex-end; gap: .5rem; margin-top: .75rem; }
-.fdshop-products-module__navigation .btn { width: 2.75rem; font-size: 1.5rem; line-height: 1; }
+.fdshop-products-module__navigation { display: flex; flex: 0 0 auto; justify-content: flex-end; gap: .35rem; margin-left: auto; }
+.fdshop-products-module__navigation button { display: inline-grid; width: 2.35rem; height: 2.1rem; padding: 0; border: 1px solid #000; border-radius: .15rem; place-items: center; color: #fff; background: #000; font-size: 1.45rem; line-height: 1; }
+.fdshop-products-module__navigation button:hover,
+.fdshop-products-module__navigation button:focus-visible { border-color: #dc8f00; color: #fff; background: #343a40; outline: 2px solid transparent; box-shadow: 0 0 0 .2rem rgb(220 143 0 / 35%); }
 @media (max-width: 991.98px) {
   .fdshop-products-module__track { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .fdshop-products-module.is-carousel .fdshop-products-module__card { flex-basis: calc((100% - 1.5rem) / 3); }
 }
 @media (max-width: 575.98px) {
   .fdshop-products-module__header { align-items: flex-start; }
+  .fdshop-products-module__heading { flex: 1 1 14rem; }
   .fdshop-products-module__track { grid-template-columns: 1fr; }
   .fdshop-products-module.is-carousel .fdshop-products-module__card { flex-basis: min(82%, 18rem); }
 }

@@ -632,6 +632,13 @@ Nachtrag Kategorie-Produktmodul V1 (Paket 0.0.31):
   bleiben je verschiedener Konfiguration konstant und identische Konfigurationen
   verwenden innerhalb eines Requests dieselben vorbereiteten Daten.
 
+Korrektur Kategorie-Produktmodul V1.1 (Paket 0.0.32, Schema 0.0.31):
+- Standalone-Betrieb auf normalen Joomla-Seiten inklusive zentraler Styles,
+  Carousel- und Purchase-Skripte: umgesetzt.
+- Einmaliger interner Modultitel, dreistufige Kategorieverlinkung und gemeinsam
+  angeordnete Headernavigation: umgesetzt; bestehende V1-Instanzen behalten
+  anhand ihres bisherigen Boolean-Parameters ihre sichtbare Wirkung.
+
 =====================================================================
 ENDE DER QUELLE FDShop_Implementierungsstand_V14
 =====================================================================

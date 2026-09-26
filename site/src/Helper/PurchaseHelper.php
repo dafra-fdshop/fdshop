@@ -10,6 +10,7 @@ use Joomla\Database\DatabaseInterface;
 final class PurchaseHelper
 {
     private static ?bool $shopEnabled = null;
+    private static bool $modalRendered = false;
 
     public static function isShopEnabled(): bool
     {
@@ -36,5 +37,15 @@ final class PurchaseHelper
             $maximum = floor($available / max(1, (int) ($item->package['unit_quantity'] ?? 1)));
         }
         return compact('item', 'minimum', 'step', 'maximum', 'unitVariant', 'instanceSuffix');
+    }
+
+    public static function claimModal(): bool
+    {
+        if (self::$modalRendered) {
+            return false;
+        }
+
+        self::$modalRendered = true;
+        return true;
     }
 }

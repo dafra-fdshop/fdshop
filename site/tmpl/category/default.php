@@ -134,5 +134,5 @@ $filterData = ['facets' => $this->filterFacets, 'active' => $this->activeFilters
         <div class="fdshop-video__header"><h2 id="fdshop-video-title" data-fdshop-video-title>Produktvideo</h2><button type="button" class="fdshop-video__close" data-fdshop-video-close aria-label="Video schließen">×</button></div>
         <div class="fdshop-video__content" data-fdshop-video-content></div>
     </dialog>
-    <?php if ($this->purchaseEnabled) : ?><?php echo LayoutHelper::render('purchase.modal', [], JPATH_COMPONENT_SITE . '/layouts'); ?><?php endif; ?>
+    <?php if ($this->purchaseEnabled && PurchaseHelper::claimModal()) : ?><?php echo LayoutHelper::render('purchase.modal', [], JPATH_COMPONENT_SITE . '/layouts'); ?><?php endif; ?>
 </main>
