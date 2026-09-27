@@ -111,8 +111,9 @@ class ProductTable extends Table
             $this->manufacturer_id = 0;
         }
 
-        if (!isset($this->buyer_group_id) || $this->buyer_group_id === '') {
-            $this->buyer_group_id = 1;
+        if ((int) ($this->buyer_group_id ?? 0) < 1) {
+            $this->setError('Bitte wählen Sie eine Käufergruppe.');
+            return false;
         }
 
         if (!isset($this->currency) || trim((string) $this->currency) === '') {

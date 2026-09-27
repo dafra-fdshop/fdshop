@@ -284,7 +284,7 @@ $logo = $h->image(
     >
         <b>Versandinformationen:</b><br>
 
-        Käufergruppe: __________________<br>
+        Berechtigung/Schein: <?= $h->permitSnapshot((int)($o->buyer_group_id ?? 0)) ? 'Ja' : 'Nein' ?><br>
 
         Abholstation
         „<?= $h->e($o->shipment_name) ?>“<br>

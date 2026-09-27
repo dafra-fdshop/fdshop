@@ -12,4 +12,13 @@
       <field name="phone" type="tel" label="PLG_USER_FDSHOPPROFILE_PHONE_LABEL" required="false" filter="string" maxlength="64" autocomplete="tel" />
     </fieldset>
   </fields>
+  <fields name="fdshop_buyer">
+    <fieldset name="fdshop_buyer" label="FDShop Käuferberechtigung">
+      <field name="status" type="list" label="Käuferstatus" required="true" filter="cmd">
+        <option value="standard">Ohne Schein (Standard)</option>
+        <option value="permit_holder">Mit Schein (F3-Berechtigung)</option>
+      </field>
+      <field name="notice" type="note" label="Hinweis" description="Die F3-Berechtigung darf erst nach manueller Prüfung der erforderlichen Unterlagen vergeben werden." />
+    </fieldset>
+  </fields>
 </form>

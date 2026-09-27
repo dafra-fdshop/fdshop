@@ -41,6 +41,9 @@
 .fdshop-ribbon--action { z-index: 1; margin-right: .1rem; transform: rotate(-4deg); transform-origin: left center; color: #fff; background: #e30613; }
 .fdshop-ribbon--new { background: var(--success, #198754); } .fdshop-ribbon--hot { background: var(--danger, #dc3545); } .fdshop-ribbon--bundle { background: var(--info, #0dcaf0); color: var(--dark, #212529); }
 .fdshop-ribbon--package { background: #e0a721; }
+.fdshop-ribbon--f3 { background: #111; color: #fff; }
+.fdshop-purchase--restricted { min-width: 2.75rem; background: #6c757d; }
+.fdshop-purchase--restricted:hover,.fdshop-purchase--restricted:focus-within { min-width: 2.75rem; }
 .fdshop-card__body { display: flex; flex-direction: column; gap: .5rem; padding: .7rem .5rem; background: transparent; }
 .fdshop-card__title { margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 1rem; line-height: 1.2; }
 .fdshop-card__title a { color: #e0a721; text-decoration: underline; }

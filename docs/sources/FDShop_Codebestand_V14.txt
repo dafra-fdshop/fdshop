@@ -699,3 +699,11 @@ PRODUCT STRUCTURED DATA / JSON-LD V1
   `ProductModel` ergänzt die bereits gejointe Sales-SKU ohne Zusatzabfrage.
 - Die Admin-Hinweisbox erinnert daran, dass keine separate JSON-LD-Pflege
   erforderlich ist und künftige Produktfunktionen auf Schema-Relevanz zu prüfen sind.
+
+KÄUFERBERECHTIGUNG / F3 V1
+---------------------------
+- `BuyerEligibilityService` kapselt Statusauflösung, requestlokale Caches,
+  Batchprüfung und manuelle Statuspersistenz.
+- Das bestehende User-Plugin erweitert Joomla-Benutzerbearbeitung und
+  Registrierung; Product-, Cart-, Bundle-, Checkout- und Order-Services binden
+  dieselbe zentrale Fachlogik ein.

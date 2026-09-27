@@ -57,6 +57,7 @@ final class ProductModel extends BaseDatabaseModel
                 $db->quoteName('m.id', 'manufacturer_id'),
                 $db->quoteName('m.manufacturer_name'),
                 $db->quoteName('m.alias', 'manufacturer_alias'),
+                $db->quoteName('bg.alias', 'buyer_group_alias'),
                 $db->quoteName('d.sku'),
                 $db->quoteName('d.is_in_stock', 'physically_in_stock'),
                 $db->quoteName('d.stock_quantity'),
@@ -68,6 +69,7 @@ final class ProductModel extends BaseDatabaseModel
             ->from($db->quoteName('#__fdshop_products', 'p'))
             ->leftJoin($db->quoteName('#__fdshop_products_details', 'd') . ' ON ' . $db->quoteName('d.product_id') . ' = ' . $db->quoteName('p.id'))
             ->leftJoin($db->quoteName('#__fdshop_manufacturers', 'm') . ' ON ' . $db->quoteName('m.id') . ' = ' . $db->quoteName('p.manufacturer_id') . ' AND ' . $db->quoteName('m.is_active') . ' = 1')
+            ->leftJoin($db->quoteName('#__fdshop_buyer_groups', 'bg') . ' ON bg.id=p.buyer_group_id')
             ->where($db->quoteName('p.id') . ' = :productId')
             ->where($db->quoteName('p.is_active') . ' = 1')
             ->where($db->quoteName('p.is_deleted') . ' = 0')

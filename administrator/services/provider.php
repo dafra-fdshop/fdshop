@@ -25,6 +25,8 @@ use FDShop\Component\FDShop\Administrator\Service\OrderNotificationService;
 use FDShop\Component\FDShop\Administrator\Service\OrderDocumentService;
 use FDShop\Component\FDShop\Administrator\Service\FilterService;
 use FDShop\Component\FDShop\Administrator\Service\FilterServiceInterface;
+use FDShop\Component\FDShop\Administrator\Service\BuyerEligibilityService;
+use FDShop\Component\FDShop\Administrator\Service\BuyerEligibilityServiceInterface;
 use FDShop\Component\FDShop\Site\Service\CartService;
 use FDShop\Component\FDShop\Site\Service\CartServiceInterface;
 use FDShop\Component\FDShop\Site\Service\CheckoutService;
@@ -116,6 +118,8 @@ return new class () implements ServiceProviderInterface {
 
         $container->set(FilterServiceInterface::class, fn (Container $container): FilterServiceInterface => new FilterService($container->get(DatabaseInterface::class)));
         $container->set(FilterService::class, fn (Container $container): FilterService => $container->get(FilterServiceInterface::class));
+        $container->set(BuyerEligibilityServiceInterface::class, fn (Container $container): BuyerEligibilityServiceInterface => new BuyerEligibilityService($container->get(DatabaseInterface::class)));
+        $container->set(BuyerEligibilityService::class, fn (Container $container): BuyerEligibilityService => $container->get(BuyerEligibilityServiceInterface::class));
 
         $container->set(
             ProductServiceInterface::class,
@@ -163,10 +167,11 @@ return new class () implements ServiceProviderInterface {
 		$container->set(
 			OrderServiceInterface::class,
 			function (Container $container): OrderServiceInterface {
-				return new OrderService(
+                return new OrderService(
 					$container->get(DatabaseInterface::class),
 					$container->get(OrderNotificationService::class),
-					$container->get(ProductServiceInterface::class)
+					$container->get(ProductServiceInterface::class),
+					$container->get(BuyerEligibilityServiceInterface::class)
 				);
 			}
 		);
@@ -184,7 +189,7 @@ return new class () implements ServiceProviderInterface {
         $container->set(
             SiteBundleServiceInterface::class,
             function (Container $container): SiteBundleServiceInterface {
-                return new SiteBundleService($container->get(DatabaseInterface::class));
+                return new SiteBundleService($container->get(DatabaseInterface::class), $container->get(BuyerEligibilityServiceInterface::class));
             }
         );
 
@@ -198,7 +203,7 @@ return new class () implements ServiceProviderInterface {
         $container->set(
             CartServiceInterface::class,
             function (Container $container): CartServiceInterface {
-                return new CartService($container->get(DatabaseInterface::class), $container->get(PackagingService::class), $container->get(SiteBundleServiceInterface::class));
+                return new CartService($container->get(DatabaseInterface::class), $container->get(PackagingService::class), $container->get(SiteBundleServiceInterface::class), $container->get(BuyerEligibilityServiceInterface::class));
             }
         );
 
@@ -209,7 +214,7 @@ return new class () implements ServiceProviderInterface {
             }
         );
 
-        $container->set(CheckoutServiceInterface::class, fn (Container $container): CheckoutServiceInterface => new CheckoutService($container->get(DatabaseInterface::class), $container->get(CartServiceInterface::class), $container->get(OrderNotificationService::class), $container->get(ProductServiceInterface::class)));
+        $container->set(CheckoutServiceInterface::class, fn (Container $container): CheckoutServiceInterface => new CheckoutService($container->get(DatabaseInterface::class), $container->get(CartServiceInterface::class), $container->get(OrderNotificationService::class), $container->get(ProductServiceInterface::class), $container->get(BuyerEligibilityServiceInterface::class)));
         $container->set(CheckoutService::class, fn (Container $container): CheckoutService => $container->get(CheckoutServiceInterface::class));
 
         $container->set(

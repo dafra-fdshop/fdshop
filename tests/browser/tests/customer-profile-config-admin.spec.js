@@ -35,5 +35,34 @@ test('FDShop customer profile plugin configuration loads and saves', async ({ pa
   await expect(page.getByLabel(/First name|Vorname/i)).toBeVisible();
   await expect(page.getByLabel(/Street|Straße/i)).toBeVisible();
   await expect(page.getByLabel(/Phone|Telefon/i)).toBeVisible();
+  await page.getByRole('tab', { name: 'FDShop Käuferberechtigung' }).click();
+  const buyerStatus = page.locator('#jform_fdshop_buyer_status');
+  const initialBuyerStatus = await buyerStatus.inputValue();
+  if (initialBuyerStatus !== 'standard') {
+    await buyerStatus.selectOption('standard');
+    await page.getByRole('button', { name: 'Save', exact: true }).click();
+    await expect(page.locator('#system-message-container')).toContainText(/saved|gespeichert/i);
+    await page.goto(`/administrator/index.php?option=com_users&task=user.edit&id=${userId}`);
+    await page.getByRole('tab', { name: 'FDShop Käuferberechtigung' }).click();
+  }
+  await expect(buyerStatus).toHaveValue('standard');
+  await expect(page.getByText(/erst nach manueller Prüfung/i)).toBeVisible();
+  await buyerStatus.selectOption('permit_holder');
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await expect(page.locator('#system-message-container')).toContainText(/saved|gespeichert/i);
+  await page.goto(`/administrator/index.php?option=com_users&task=user.edit&id=${userId}`);
+  await page.getByRole('tab', { name: 'FDShop Käuferberechtigung' }).click();
+  await expect(buyerStatus).toHaveValue('permit_holder');
+  await buyerStatus.selectOption('standard');
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await expect(page.locator('#system-message-container')).toContainText(/saved|gespeichert/i);
+  await page.goto(`/administrator/index.php?option=com_users&task=user.edit&id=${userId}`);
+  await page.getByRole('tab', { name: 'FDShop Käuferberechtigung' }).click();
+  await expect(buyerStatus).toHaveValue('standard');
+  if (initialBuyerStatus === 'permit_holder') {
+    await buyerStatus.selectOption('permit_holder');
+    await page.getByRole('button', { name: 'Save', exact: true }).click();
+    await expect(page.locator('#system-message-container')).toContainText(/saved|gespeichert/i);
+  }
   diagnostics.expectClean();
 });

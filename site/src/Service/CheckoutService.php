@@ -8,10 +8,11 @@ use Joomla\Database\DatabaseInterface;
 use Joomla\Registry\Registry;
 use FDShop\Component\FDShop\Administrator\Service\OrderNotificationService;
 use FDShop\Component\FDShop\Administrator\Service\ProductServiceInterface;
+use FDShop\Component\FDShop\Administrator\Service\BuyerEligibilityServiceInterface;
 
 final class CheckoutService implements CheckoutServiceInterface
 {
-    public function __construct(private readonly DatabaseInterface $db, private readonly CartServiceInterface $cartService, private readonly OrderNotificationService $notifications, private readonly ProductServiceInterface $products) {}
+    public function __construct(private readonly DatabaseInterface $db, private readonly CartServiceInterface $cartService, private readonly OrderNotificationService $notifications, private readonly ProductServiceInterface $products, private readonly BuyerEligibilityServiceInterface $eligibility) {}
 
     public function createOrder(int $userId, string $sessionId, int $shipmentId, int $paymentId, string $couponCode, string $note, bool $termsAccepted, string $submissionId): array
     {
@@ -35,6 +36,9 @@ final class CheckoutService implements CheckoutServiceInterface
             if (!$cart['shipment'] || !$cart['payment']) throw new \DomainException('Versand- und Zahlungsart müssen ausgewählt sein.');
             if ($couponCode !== '' && ($cart['coupon_code'] ?? '') === '') throw new \DomainException('Der Gutschein ist nicht mehr gültig. Bitte prüfen Sie den Warenkorb erneut.');
 
+            $eligibilityIds=array_map(static fn($item)=>(int)$item->product_id,$cart['items']);foreach(($cart['bundles']??[]) as $bundle)foreach($bundle->items as $item)$eligibilityIds[]=(int)$item->product_id;
+            $this->eligibility->assertProductsEligible($userId,$eligibilityIds,'checkout');
+
             $demand = [];
             foreach ($cart['items'] as $item) $demand[(int)$item->product_id] = ($demand[(int)$item->product_id] ?? 0) + (float)$item->physical_quantity;
             foreach (($cart['bundles'] ?? []) as $bundle) foreach ($bundle->items as $item) $demand[(int)$item->product_id] = ($demand[(int)$item->product_id] ?? 0) + (float)$item->quantity;
@@ -47,7 +51,7 @@ final class CheckoutService implements CheckoutServiceInterface
 
             $date = Factory::getDate()->toSql();
             $row = (object)[
-                'order_number'=>$this->orderNumber(), 'user_id'=>$userId, 'buyer_group_id'=>(int)($cart['items'][0]->buyer_group_id ?? 0),
+                'order_number'=>$this->orderNumber(), 'user_id'=>$userId, 'buyer_group_id'=>$this->eligibility->groupId($this->eligibility->userStatus($userId)),
                 'payment_method_id'=>(int)$cart['payment']->id, 'shipment_id'=>(int)$cart['shipment']->id,
                 'order_status'=>'ordered', 'order_status_id'=>(int)$status->id, 'state'=>1, 'currency'=>(string)$cart['currency'],
                 'grand_total'=>(float)$cart['total'], 'has_bundle'=>empty($cart['bundles'])?0:1,

@@ -3,6 +3,9 @@
 
   const actions = document.querySelectorAll('[data-fdshop-purchase]');
   const modal = document.querySelector('[data-purchase-modal]');
+  const f3Modal = document.querySelector('[data-f3-info-modal]');
+  document.querySelectorAll('[data-f3-info-open]').forEach(button => button.addEventListener('click', () => f3Modal?.showModal()));
+  f3Modal?.querySelectorAll('[data-f3-info-close]').forEach(button => button.addEventListener('click', () => f3Modal.close()));
   const token = document.querySelector('[data-purchase-token] input');
   const touchCapable = navigator.maxTouchPoints > 0;
   let returnFocus = null;

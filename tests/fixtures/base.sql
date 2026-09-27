@@ -65,9 +65,8 @@ VALUES
 INSERT INTO `__PREFIX__fdshop_buyer_groups`
 (id,group_name,alias,is_active,ordering,created,created_by)
 VALUES
-(900020,'E2E Standard','e2e-standard',1,10,'2026-01-01 00:00:00',0),
-(900021,'E2E Stammkunde','e2e-regular',1,20,'2026-01-01 00:00:00',0),
-(900022,'E2E Händler','e2e-dealer',1,30,'2026-01-01 00:00:00',0);
+(900020,'Ohne Schein (Standard)','standard',1,10,'2026-01-01 00:00:00',0),
+(900021,'Mit Schein (F3-Berechtigung)','permit_holder',1,20,'2026-01-01 00:00:00',0);
 
 INSERT INTO `__PREFIX__fdshop_products`
 (id,manufacturer_id,product_name,alias,short_description,description,buyer_group_id,sale_price,discount_price,discount_active,currency,min_order_qty,max_order_qty,step_order_qty,is_active,is_deleted,meta_title,in_stock,unit_type,ribbon_bundle)
@@ -114,8 +113,8 @@ INSERT INTO `__PREFIX__fdshop_filter_range_category_map` (range_id,category_id)
 SELECT r.id,900010 FROM `__PREFIX__fdshop_filter_ranges` r JOIN `__PREFIX__fdshop_filters` f ON f.id=r.filter_id WHERE f.filter_key='nem' ORDER BY r.ordering LIMIT 2;
 INSERT INTO `__PREFIX__fdshop_filter_option_category_map` (option_id,category_id)
 SELECT id,900010 FROM `__PREFIX__fdshop_filter_options` WHERE option_key='straight';
-INSERT INTO `__PREFIX__fdshop_product_buyer_group_map` (id,product_id,buyer_group_id) VALUES
-(900320,900109,900020),(900321,900109,900021),(900322,900109,900022);
+INSERT INTO `__PREFIX__fdshop_product_buyer_group_map` (product_id,buyer_group_id)
+SELECT id,buyer_group_id FROM `__PREFIX__fdshop_products` WHERE id BETWEEN 900100 AND 900109;
 INSERT INTO `__PREFIX__fdshop_user_buyer_group_map` (id,user_id,buyer_group_id) VALUES (900330,__JOOMLA_USER_ID__,900021);
 INSERT INTO `__PREFIX__fdshop_media` (id,product_id,media_type,file_name,file_type,path_standard,path_small,path_mobile,path_invoice,is_primary,ordering,created,created_by) VALUES
 (900340,900103,'image','e2e-fixture-product.svg','image/svg+xml','images/FDShop/products/e2e-fixture-product.svg','images/FDShop/products/e2e-fixture-product.svg','images/FDShop/products/e2e-fixture-product.svg','images/FDShop/products/e2e-fixture-product.svg',1,1,'2026-01-01 00:00:00',0);

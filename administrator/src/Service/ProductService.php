@@ -63,11 +63,23 @@ class ProductService implements ProductServiceInterface
             $buyerGroupIds = $this->normalizeIds($buyerGroupIds);
         }
 
+        if (count($buyerGroupIds) !== 1) {
+            throw new InvalidArgumentException('Bitte wählen Sie genau eine Käufergruppe.');
+        }
+        $buyerGroupId = (int) $buyerGroupIds[0];
+        $query = $this->db->getQuery(true)->select('COUNT(*)')->from($this->db->quoteName('#__fdshop_buyer_groups'))
+            ->where('id=' . $buyerGroupId)->where('is_active=1')->where("alias IN ('standard','permit_holder')");
+        $this->db->setQuery($query);
+        if ((int) $this->db->loadResult() !== 1) {
+            throw new InvalidArgumentException('Die gewählte Käufergruppe ist ungültig.');
+        }
+
         if ($primaryCategoryId === null && !empty($data['primary_category_id'])) {
             $primaryCategoryId = (int) $data['primary_category_id'];
         }
 
         [$productData, $detailsData] = $this->splitProductData($data);
+        $productData['buyer_group_id'] = $buyerGroupId;
         $productData['product_name'] = $productName;
         $productData['in_stock'] = $this->calculateInStock($detailsData);
 

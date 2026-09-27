@@ -51,6 +51,7 @@ $showNavigation = $carousel && count($items) > $desktopItems;
               <?php if ((int) $item->ribbon_new === 1) : ?><span class="fdshop-ribbon fdshop-ribbon--new">Neu</span><?php endif; ?>
               <?php if ((int) $item->ribbon_hot === 1) : ?><span class="fdshop-ribbon fdshop-ribbon--hot">Hot</span><?php endif; ?>
               <?php if ((int) $item->ribbon_bundle === 1) : ?><span class="fdshop-ribbon fdshop-ribbon--bundle">Bundle</span><?php endif; ?>
+              <?php if ((string) ($item->buyer_group_alias ?? '') === 'permit_holder') : ?><span class="fdshop-ribbon fdshop-ribbon--f3">F3</span><?php endif; ?>
               <?php if (in_array((string) $item->unit_type, ['Display', 'Schinken', 'VE'], true)) : ?><span class="fdshop-ribbon fdshop-ribbon--package"><?php echo $escape(strtoupper((string) $item->unit_type)); ?></span><?php endif; ?>
             </div><?php endif; ?>
           </div>

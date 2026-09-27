@@ -6,10 +6,11 @@ defined('_JEXEC') or die;
 
 use Joomla\CMS\Factory;
 use Joomla\Database\DatabaseInterface;
+use FDShop\Component\FDShop\Administrator\Service\BuyerEligibilityServiceInterface;
 
 final class BundleService implements BundleServiceInterface
 {
-    public function __construct(private readonly DatabaseInterface $db) {}
+    public function __construct(private readonly DatabaseInterface $db, private readonly BuyerEligibilityServiceInterface $eligibility) {}
 
     public function getBundlesForProduct(int $productId): array
     {
@@ -53,6 +54,7 @@ final class BundleService implements BundleServiceInterface
             $normal[$productId] = $quantity;
         }
         if (count($normal) < 2) throw new \DomainException('Bitte wählen Sie mindestens zwei verschiedene Produkte.');
+        $this->eligibility->assertProductsEligible($userId, array_keys($normal));
         $totalQuantity = array_sum($normal);
         $rule = null;
         foreach ($this->loadRules($bundleId) as $candidate) if ((int) $candidate->min_quantity <= $totalQuantity) $rule = $candidate;

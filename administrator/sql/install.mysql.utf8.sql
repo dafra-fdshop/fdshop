@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS `#__fdshop_products` (
   `alias` VARCHAR(191) NOT NULL,
   `short_description` TEXT NULL,
   `description` MEDIUMTEXT NULL,
-  `buyer_group_id` BIGINT UNSIGNED NOT NULL DEFAULT 1,
+  `buyer_group_id` BIGINT UNSIGNED NOT NULL DEFAULT 0,
 
   `sale_price` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
   `discount_price` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
@@ -241,6 +241,11 @@ CREATE TABLE IF NOT EXISTS `#__fdshop_buyer_groups` (
   KEY `idx_fdshop_buyer_groups_is_active` (`is_active`),
   KEY `idx_fdshop_buyer_groups_ordering` (`ordering`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT INTO `#__fdshop_buyer_groups` (`group_name`,`alias`,`is_active`,`ordering`,`created_by`)
+SELECT 'Ohne Schein (Standard)','standard',1,10,0 WHERE NOT EXISTS (SELECT 1 FROM `#__fdshop_buyer_groups` WHERE `alias`='standard');
+INSERT INTO `#__fdshop_buyer_groups` (`group_name`,`alias`,`is_active`,`ordering`,`created_by`)
+SELECT 'Mit Schein (F3-Berechtigung)','permit_holder',1,20,0 WHERE NOT EXISTS (SELECT 1 FROM `#__fdshop_buyer_groups` WHERE `alias`='permit_holder');
 
 -- --------------------------------------------------------
 -- #__fdshop_user_buyer_group_map

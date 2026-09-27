@@ -129,9 +129,11 @@ final class CategoryModel extends ListModel
                 $db->quoteName('p.ribbon_new'),
                 $db->quoteName('p.ribbon_hot'),
                 $db->quoteName('p.ribbon_bundle'),
+                $db->quoteName('bg.alias', 'buyer_group_alias'),
                 $currentPrice . ' AS ' . $db->quoteName('current_price'),
             ])
             ->from($db->quoteName('#__fdshop_products', 'p'))
+            ->leftJoin($db->quoteName('#__fdshop_buyer_groups', 'bg') . ' ON bg.id=p.buyer_group_id')
             ->innerJoin(
                 $db->quoteName('#__fdshop_product_category_map', 'pcm')
                 . ' ON ' . $db->quoteName('pcm.product_id') . ' = ' . $db->quoteName('p.id')

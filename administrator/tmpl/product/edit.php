@@ -30,7 +30,7 @@ $this->getDocument()->getWebAssetManager()->useScript('com_fdshop.admin-product'
                         <?php echo $this->form->renderField('bundle_eligible'); ?>
                         <?php echo $this->form->renderField('manufacturer_id'); ?>
                         <?php echo $this->form->renderField('category_ids'); ?>
-                        <?php echo $this->form->renderField('buyer_group_ids'); ?>
+                        <?php echo $this->form->renderField('buyer_group_id'); ?>
                     </div>
                 </div>
             </div>

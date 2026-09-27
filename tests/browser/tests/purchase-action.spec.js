@@ -60,6 +60,28 @@ test('guest purchase uses the central action, adds quantities and reports a stoc
   diagnostics.expectClean();
 });
 
+test('F3 product stays visible but eligibility is enforced in UI and server-side cart', async ({ page }) => {
+  await page.goto('/index.php?option=com_fdshop&view=product&id=900109&catid=900011');
+  await expect(page.locator('.fdshop-ribbon--f3')).toHaveText('F3');
+  await expect(page.locator('[data-purchase-submit]')).toHaveCount(0);
+  const info = page.getByRole('button', { name: 'Informationen zur F3-Kaufberechtigung' });
+  await info.click();
+  await expect(page.getByRole('dialog')).toContainText('F3 – Kauf nur mit entsprechender Berechtigung');
+  await page.getByRole('button', { name: 'Schließen' }).last().click();
+  const token = await page.locator('[data-purchase-token] input').getAttribute('name');
+  const forged = await page.evaluate(async token => {
+    const body = new FormData(); body.append(token, '1'); body.append('product_id', '900109'); body.append('quantity', '1');
+    return (await fetch('index.php?option=com_fdshop&format=json&task=cart.add', { method: 'POST', body })).json();
+  }, token);
+  expect(forged.success).toBe(false);
+  expect(forged.message).toContain('nicht berechtigt');
+
+  await authenticateSiteUser(page);
+  await page.goto('/index.php?option=com_fdshop&view=product&id=900109&catid=900011');
+  await expect(page.locator('[data-purchase-submit]')).toBeVisible();
+  await expect(page.locator('[data-f3-info-open]')).toHaveCount(0);
+});
+
 test('purchase validates zero, minimum and step and uses the server discount price', async ({ page, baseURL }) => {
   const diagnostics = await installDiagnostics(page, baseURL);
   await openCategory(page);

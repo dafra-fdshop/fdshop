@@ -10,8 +10,16 @@ $unitVariant = $displayData['unitVariant'] ?? 'piece';
 $instanceSuffix = preg_replace('/[^a-zA-Z0-9_-]/', '-', (string) ($displayData['instanceSuffix'] ?? ''));
 $quantityId = 'fdshop-purchase-quantity-' . (int) $item->id . ($instanceSuffix !== '' ? '-' . $instanceSuffix : '');
 $format = static fn (float $value): string => rtrim(rtrim(number_format($value, 3, '.', ''), '0'), '.');
+$eligible = (bool) ($displayData['eligible'] ?? true);
 
 if ((string) $item->in_stock === 'Ausverkauft') {
+    return;
+}
+if (!$eligible) {
+    ?><div class="fdshop-purchase fdshop-purchase--restricted"><button type="button" class="btn btn-primary fdshop-purchase__button" data-f3-info-open aria-label="Informationen zur F3-Kaufberechtigung" title="Informationen zur F3-Kaufberechtigung">!</button></div><?php
+    if (\FDShop\Component\FDShop\Site\Helper\PurchaseHelper::claimF3Modal()) {
+        echo \Joomla\CMS\Layout\LayoutHelper::render('purchase.f3modal', [], JPATH_ROOT . '/components/com_fdshop/layouts');
+    }
     return;
 }
 ?>

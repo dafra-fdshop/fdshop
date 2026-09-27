@@ -9,7 +9,7 @@ use RuntimeException;
 
 final class OrderService implements OrderServiceInterface
 {
-    public function __construct(private readonly DatabaseInterface $db, private readonly OrderNotificationService $notifications, private readonly ProductServiceInterface $products) {}
+    public function __construct(private readonly DatabaseInterface $db, private readonly OrderNotificationService $notifications, private readonly ProductServiceInterface $products, private readonly BuyerEligibilityServiceInterface $eligibility) {}
 
     public function saveDraft(int $orderId, array $items, array $newItems, int $shipmentId, string $expectedModified): bool
     {
@@ -21,7 +21,7 @@ final class OrderService implements OrderServiceInterface
             if($expectedModified==='' || !hash_equals($revision,$expectedModified))throw new RuntimeException('Die Bestellung wurde zwischenzeitlich geändert. Bitte neu laden und erneut bearbeiten.');
             $existing=$this->lockedItems($orderId);$submitted=[];$details=[];
             foreach($existing as $item){if((int)$item->is_removed===1)continue;$id=(int)$item->id;if(!isset($items[$id])||!is_array($items[$id]))throw new RuntimeException('Der Bestellentwurf ist unvollständig. Bitte neu laden.');$quantity=(float)($items[$id]['quantity']??0);$this->validQuantity($quantity);$removed=(int)($items[$id]['removed']??0)===1;$submitted[$id]=['row'=>$item,'quantity'=>$quantity,'removed'=>$removed];if($removed)$details[]=sprintf('Produkt %s entfernt',(string)$item->product_name);elseif(abs($quantity-(float)$item->quantity)>0.0001)$details[]=sprintf('Menge %s: %s → %s',(string)$item->product_name,$this->qty((float)$item->quantity),$this->qty($quantity));}
-            $additions=[];foreach($newItems as $new){if(!is_array($new))continue;$productId=(int)($new['product_id']??0);$quantity=(float)($new['quantity']??0);if($productId<=0&&$quantity<=0)continue;$this->validIds($productId);$this->validQuantity($quantity);$product=$this->lockedProduct($productId);$additions[]=['product'=>$product,'quantity'=>$quantity];$details[]=sprintf('Produkt %s hinzugefügt, Menge %s',(string)$product->product_name,$this->qty($quantity));}
+            $additions=[];foreach($newItems as $new){if(!is_array($new))continue;$productId=(int)($new['product_id']??0);$quantity=(float)($new['quantity']??0);if($productId<=0&&$quantity<=0)continue;$this->validIds($productId);$this->validQuantity($quantity);$this->eligibility->assertProductsEligible((int)$order->user_id,[$productId],'admin');$product=$this->lockedProduct($productId);$additions[]=['product'=>$product,'quantity'=>$quantity];$details[]=sprintf('Produkt %s hinzugefügt, Menge %s',(string)$product->product_name,$this->qty($quantity));}
             $shipmentChanged=$shipmentId!==(int)$order->shipment_id;$shipment=$this->shipmentForDraft($shipmentId,$order);if($shipmentChanged)$details[]=sprintf('Abholung/Versand: %s → %s',(string)$order->shipment_name,(string)$shipment->shipment_name);
             $oldDemand=$this->allocationDemand($orderId);$targetDemand=$this->bundleDemand($orderId);
             foreach($submitted as $entry){if($entry['removed'])continue;$row=$entry['row'];$targetDemand[(int)$row->product_id]=($targetDemand[(int)$row->product_id]??0)+$entry['quantity']*max(1,(int)$row->unit_quantity_snapshot);}
@@ -47,7 +47,7 @@ final class OrderService implements OrderServiceInterface
     public function addItem(int $orderId, int $productId, float $quantity = 1.0): int
     {
         $this->validIds($orderId, $productId); $this->validQuantity($quantity);
-        $order = $this->order($orderId); $this->assertItemsEditable($order); $product = $this->product($productId);
+        $order = $this->order($orderId); $this->assertItemsEditable($order); $this->eligibility->assertProductsEligible((int)$order->user_id,[$productId],'admin'); $product = $this->product($productId);
         $regular = (float) $product->sale_price;
         $discount = (int) $product->discount_active === 1 && (float) $product->discount_price > 0 ? (float) $product->discount_price : 0.0;
         $gross = $discount > 0 ? $discount : $regular;
@@ -94,7 +94,7 @@ final class OrderService implements OrderServiceInterface
 
     public function changeItemQuantity(int $orderId, int $orderItemId, float $quantity): void
     {
-        $this->validQuantity($quantity); $this->assertItemsEditable($this->order($orderId)); $item=$this->item($orderId,$orderItemId,true); $old=(float)$item->quantity;
+        $this->validQuantity($quantity); $order=$this->order($orderId); $this->assertItemsEditable($order); $item=$this->item($orderId,$orderItemId,true); $old=(float)$item->quantity;if($quantity>$old)$this->eligibility->assertProductsEligible((int)$order->user_id,[(int)$item->product_id],'admin');
         $this->db->transactionStart();
         try {
             $q=$this->db->getQuery(true)->update($this->db->quoteName('#__fdshop_order_items'))

@@ -15,6 +15,8 @@ use Joomla\Database\DatabaseAwareTrait;
 use Joomla\Database\ParameterType;
 use Joomla\Event\SubscriberInterface;
 use Joomla\Utilities\ArrayHelper;
+use Joomla\CMS\Factory;
+use FDShop\Component\FDShop\Administrator\Service\BuyerEligibilityServiceInterface;
 
 final class FDShopProfile extends CMSPlugin implements SubscriberInterface
 {
@@ -25,6 +27,7 @@ final class FDShopProfile extends CMSPlugin implements SubscriberInterface
     private const REQUIRED = ['first_name', 'last_name', 'street', 'postal_code', 'city', 'country'];
     private const DEFAULT_STATUS = ['company' => 1, 'street' => 2, 'postal_code' => 2, 'city' => 2, 'country' => 2, 'phone' => 1];
     private const DEFAULT_ORDER = ['first_name' => 10, 'last_name' => 20, 'company' => 30, 'street' => 40, 'postal_code' => 50, 'city' => 60, 'country' => 70, 'phone' => 80];
+    private static array $pendingBuyerStatuses = [];
 
     public static function getSubscribedEvents(): array
     {
@@ -45,6 +48,17 @@ final class FDShopProfile extends CMSPlugin implements SubscriberInterface
         $this->loadLanguage();
         FormHelper::addFormPath(JPATH_PLUGINS . '/user/fdshopprofile/forms');
         $form->loadFile('fdshopprofile');
+        if ($form->getName() !== 'com_users.user') {
+            $form->removeField('status', 'fdshop_buyer');
+            $form->removeField('notice', 'fdshop_buyer');
+        } else {
+            $input = Factory::getApplication()->getInput();
+            $submitted = $input->post->get('jform', [], 'array');
+            $userId = $input->getInt('id', (int) ($submitted['id'] ?? 0));
+            if ($userId > 0) {
+                $form->setFieldAttribute('status', 'default', $this->eligibility()->userStatus($userId), 'fdshop_buyer');
+            }
+        }
         $this->configureFields($form);
         if (in_array($form->getName(), ['com_users.registration', 'com_users.profile'], true)) {
             $form->setFieldAttribute('name', 'type', 'hidden');
@@ -59,24 +73,29 @@ final class FDShopProfile extends CMSPlugin implements SubscriberInterface
     {
         if (!in_array($event->getContext(), ['com_users.registration', 'com_users.profile', 'com_users.user'], true)) return;
         $data = $event->getData();
-        if (!is_object($data) || isset($data->{self::GROUP})) return;
+        if (!is_object($data)) return;
         $userId = (int) ($data->id ?? 0);
-        $profile = array_fill_keys(self::FIELDS, '');
-        $profile['country'] = 'Deutschland';
-        if ($userId > 0) {
-            $query = $this->getDatabase()->getQuery(true)
-                ->select([$this->getDatabase()->quoteName('profile_key'), $this->getDatabase()->quoteName('profile_value')])
-                ->from($this->getDatabase()->quoteName('#__user_profiles'))
-                ->where($this->getDatabase()->quoteName('user_id') . ' = :userId')
-                ->where($this->getDatabase()->quoteName('profile_key') . ' LIKE ' . $this->getDatabase()->quote(self::GROUP . '.%'))
-                ->bind(':userId', $userId, ParameterType::INTEGER);
-            $this->getDatabase()->setQuery($query);
-            foreach ($this->getDatabase()->loadRowList() as [$key, $value]) {
-                $field = substr((string) $key, strlen(self::GROUP) + 1);
-                if (in_array($field, self::FIELDS, true)) $profile[$field] = (string) (json_decode($value, true) ?? $value);
+        if (!isset($data->{self::GROUP})) {
+            $profile = array_fill_keys(self::FIELDS, '');
+            $profile['country'] = 'Deutschland';
+            if ($userId > 0) {
+                $query = $this->getDatabase()->getQuery(true)
+                    ->select([$this->getDatabase()->quoteName('profile_key'), $this->getDatabase()->quoteName('profile_value')])
+                    ->from($this->getDatabase()->quoteName('#__user_profiles'))
+                    ->where($this->getDatabase()->quoteName('user_id') . ' = :userId')
+                    ->where($this->getDatabase()->quoteName('profile_key') . ' LIKE ' . $this->getDatabase()->quote(self::GROUP . '.%'))
+                    ->bind(':userId', $userId, ParameterType::INTEGER);
+                $this->getDatabase()->setQuery($query);
+                foreach ($this->getDatabase()->loadRowList() as [$key, $value]) {
+                    $field = substr((string) $key, strlen(self::GROUP) + 1);
+                    if (in_array($field, self::FIELDS, true)) $profile[$field] = (string) (json_decode($value, true) ?? $value);
+                }
             }
+            $data->{self::GROUP} = $profile;
         }
-        $data->{self::GROUP} = $profile;
+        if ($event->getContext() === 'com_users.user' && $userId > 0) {
+            $data->fdshop_buyer = ['status' => $this->eligibility()->userStatus($userId)];
+        }
     }
 
     public function beforeValidateData(BeforeValidateDataEvent $event): void
@@ -91,6 +110,14 @@ final class FDShopProfile extends CMSPlugin implements SubscriberInterface
     public function beforeUserSave(BeforeSaveEvent $event): void
     {
         $data = $event->getData();
+        $submitted=Factory::getApplication()->getInput()->post->get('jform', [], 'array');
+        $buyerStatus=(string)($submitted['fdshop_buyer']['status']??$data['fdshop_buyer']['status']??'');
+        if ($buyerStatus !== '') {
+            if (!Factory::getApplication()->getIdentity()->authorise('core.edit', 'com_users')) throw new \RuntimeException('Keine Berechtigung zum Ändern der FDShop-Käuferberechtigung.', 403);
+            if (!in_array($buyerStatus, ['standard','permit_holder'], true)) throw new \InvalidArgumentException('Ungültige FDShop-Käuferberechtigung.');
+            $userId = ArrayHelper::getValue($data, 'id', ArrayHelper::getValue($event->getUser(), 'id', 0, 'int'), 'int');
+            if ($userId > 0) self::$pendingBuyerStatuses[$userId] = $buyerStatus;
+        }
         if (!isset($data[self::GROUP]) || !is_array($data[self::GROUP])) return;
         foreach ($this->requiredFields() as $field) {
             if (trim((string) ($data[self::GROUP][$field] ?? '')) === '') throw new \InvalidArgumentException('Bitte füllen Sie alle erforderlichen FDShop-Kundendaten aus.');
@@ -102,7 +129,17 @@ final class FDShopProfile extends CMSPlugin implements SubscriberInterface
     {
         $data = $event->getUser();
         $userId = ArrayHelper::getValue($data, 'id', 0, 'int');
-        if (!$event->getSavingResult() || $userId < 1 || !isset($data[self::GROUP]) || !is_array($data[self::GROUP])) return;
+        if (!$event->getSavingResult() || $userId < 1) return;
+        $submitted = Factory::getApplication()->getInput()->post->get('jform', [], 'array');
+        $buyerStatus = self::$pendingBuyerStatuses[$userId]
+            ?? (string) ($submitted['fdshop_buyer']['status'] ?? $data['fdshop_buyer']['status'] ?? '');
+        unset(self::$pendingBuyerStatuses[$userId]);
+        if ($buyerStatus !== '') {
+            $this->eligibility()->setUserStatus($userId, $buyerStatus);
+        } elseif ($event->getIsNew()) {
+            $this->eligibility()->setUserStatus($userId, 'standard');
+        }
+        if (!isset($data[self::GROUP]) || !is_array($data[self::GROUP])) return;
         $db = $this->getDatabase();
         $ordering = 100;
         foreach (self::FIELDS as $field) {
@@ -136,6 +173,10 @@ final class FDShopProfile extends CMSPlugin implements SubscriberInterface
         $query = $this->getDatabase()->getQuery(true)->delete($this->getDatabase()->quoteName('#__user_profiles'))
             ->where($this->getDatabase()->quoteName('user_id') . ' = :userId')
             ->where($this->getDatabase()->quoteName('profile_key') . ' LIKE ' . $this->getDatabase()->quote(self::GROUP . '.%'))
+            ->bind(':userId', $userId, ParameterType::INTEGER);
+        $this->getDatabase()->setQuery($query)->execute();
+        $query = $this->getDatabase()->getQuery(true)->delete($this->getDatabase()->quoteName('#__fdshop_user_buyer_group_map'))
+            ->where($this->getDatabase()->quoteName('user_id') . ' = :userId')
             ->bind(':userId', $userId, ParameterType::INTEGER);
         $this->getDatabase()->setQuery($query)->execute();
     }
@@ -189,5 +230,9 @@ final class FDShopProfile extends CMSPlugin implements SubscriberInterface
     private function requiredFields(): array
     {
         return array_values(array_filter(self::FIELDS, fn(string $field): bool => $this->fieldStatus($field) === 2));
+    }
+    private function eligibility(): BuyerEligibilityServiceInterface
+    {
+        return Factory::getApplication()->bootComponent('com_fdshop')->getContainer()->get(BuyerEligibilityServiceInterface::class);
     }
 }

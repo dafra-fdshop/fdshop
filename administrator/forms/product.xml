@@ -66,17 +66,11 @@
 				description="Mehrfachauswahl durch drücken der 'Strg'-Taste"
             />
 
-            <field
-                name="buyer_group_ids"
-                type="sql"
-                label="Käufergruppen"
-                query="SELECT id AS value, group_name AS text FROM #__fdshop_buyer_groups WHERE is_active = 1 ORDER BY ordering ASC, group_name ASC"
-                key_field="value"
-                value_field="text"
-                multiple="true"
-                size="12"
-				description="Mehrfachauswahl durch drücken der 'Strg'-Taste"
-            />
+            <field name="buyer_group_id" type="sql" label="Käufergruppe" required="true"
+                query="SELECT id AS value, group_name AS text FROM #__fdshop_buyer_groups WHERE is_active = 1 AND alias IN ('standard','permit_holder') ORDER BY ordering ASC"
+                key_field="value" value_field="text" default="">
+                <option value="">– Bitte auswählen –</option>
+            </field>
 
             <field
                 name="short_description"

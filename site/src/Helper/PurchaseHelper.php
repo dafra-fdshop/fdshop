@@ -6,11 +6,13 @@ defined('_JEXEC') or die;
 
 use Joomla\CMS\Factory;
 use Joomla\Database\DatabaseInterface;
+use FDShop\Component\FDShop\Administrator\Service\BuyerEligibilityServiceInterface;
 
 final class PurchaseHelper
 {
     private static ?bool $shopEnabled = null;
     private static bool $modalRendered = false;
+    private static bool $f3ModalRendered = false;
 
     public static function isShopEnabled(): bool
     {
@@ -36,7 +38,10 @@ final class PurchaseHelper
             $available = max(0, (float) ($item->stock_quantity ?? 0) - (float) ($item->reserved_quantity ?? 0));
             $maximum = floor($available / max(1, (int) ($item->package['unit_quantity'] ?? 1)));
         }
-        return compact('item', 'minimum', 'step', 'maximum', 'unitVariant', 'instanceSuffix');
+        $userId=(int)Factory::getApplication()->getIdentity()->id;
+        $service=Factory::getApplication()->bootComponent('com_fdshop')->getContainer()->get(BuyerEligibilityServiceInterface::class);
+        $eligible=(string)($item->buyer_group_alias??'')!=='permit_holder'||$service->userHasF3Permission($userId);
+        return compact('item', 'minimum', 'step', 'maximum', 'unitVariant', 'instanceSuffix', 'eligible');
     }
 
     public static function claimModal(): bool
@@ -48,4 +53,5 @@ final class PurchaseHelper
         self::$modalRendered = true;
         return true;
     }
+    public static function claimF3Modal(): bool { if(self::$f3ModalRendered)return false;self::$f3ModalRendered=true;return true; }
 }

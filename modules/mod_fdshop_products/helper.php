@@ -74,7 +74,9 @@ final class ModFdshopProductsHelper
         $fields = ['id', 'product_name', 'alias', 'short_description', 'sale_price', 'discount_price', 'discount_active', 'currency', 'in_stock', 'unit_type', 'min_order_qty', 'max_order_qty', 'step_order_qty', 'nem', 'shot_count', 'caliber', 'burn_time', 'rise_height', 'ribbon_new', 'ribbon_hot', 'ribbon_bundle'];
         $query = $db->getQuery(true)->select(array_map(static fn (string $field): string => $db->quoteName('p.' . $field), $fields))
             ->select($currentPrice . ' AS ' . $db->quoteName('current_price'))
+            ->select($db->quoteName('bg.alias', 'buyer_group_alias'))
             ->from($db->quoteName('#__fdshop_products', 'p'))
+            ->leftJoin($db->quoteName('#__fdshop_buyer_groups', 'bg') . ' ON bg.id=p.buyer_group_id')
             ->innerJoin($db->quoteName('#__fdshop_product_category_map', 'pcm') . ' ON ' . $db->quoteName('pcm.product_id') . ' = ' . $db->quoteName('p.id'))
             ->where($db->quoteName('pcm.category_id') . ' = :categoryId')
             ->where($db->quoteName('p.is_active') . ' = 1')->where($db->quoteName('p.is_deleted') . ' = 0')

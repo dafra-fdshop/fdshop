@@ -706,6 +706,18 @@ Architekturnachtrag Product Structured Data / JSON-LD V1 (Paket 0.0.36, Schema 0
 =====================================================================
 ENDE DER QUELLE FDShop_Architektur_Struktur_Installation_V14
 =====================================================================
+
+ARCHITEKTURREGEL KÄUFERBERECHTIGUNG / F3 V1 (PAKET 0.0.37, SCHEMA 0.0.36)
+- Joomla bleibt Benutzerverwaltung; FDShop kennt ausschließlich `standard` als
+  defensive Baseline und `permit_holder` als manuell vergebene F3-Freigabe.
+- `BuyerEligibilityService` ist die zentrale Wahrheit für Produkt, Bundle,
+  Warenkorb, Checkout und Admin-Bestelländerungen. Ein Bundle erbt stets die
+  strengste Anforderung seiner enthaltenen Produkte.
+- Produkte besitzen genau eine Pflicht-Käufergruppe. Bestandsprodukte werden
+  idempotent auf Standard migriert; der Order-Snapshot bewahrt den Benutzerstatus
+  zum Bestellzeitpunkt und steuert die Packlistenangabe Ja/Nein.
+- Ein späterer Dokumentupload ist nur ein Antrag zur manuellen Prüfung und darf
+  niemals automatisch F3 freischalten.
 BESTELLDOKUMENTE V1 (0.0.33)
 -----------------------------
 - OrderDocumentService erzeugt serverseitig DIN-A4-Bestellbestätigungen und Packlisten mit Dompdf 3.1.6.

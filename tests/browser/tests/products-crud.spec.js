@@ -80,6 +80,7 @@ test('product meta helper uses current unsaved values and protects manual conten
   await page.getByRole('tab', { name: 'Allgemein' }).click();
   await page.locator('#jform_product_name').fill('Acryl');
   await page.locator('#jform_manufacturer_id').selectOption('900001');
+  await page.locator('#jform_buyer_group_id').selectOption('900020');
   await page.getByRole('tab', { name: 'Beschreibung' }).click();
   await page.locator('#jform_short_description').fill('<strong>Blauer</strong> Feuertopf mit   Sternen.');
   await page.getByRole('tab', { name: 'Besondere Felder' }).click();
@@ -139,7 +140,7 @@ test('product invalid save, create, apply, save-close, mappings, stock, status a
   await setRadio(page, 'bundle_eligible', '1');
   await page.locator('#jform_manufacturer_id').selectOption('900001');
   await page.locator('#jform_category_ids').selectOption(['900010']);
-  await page.locator('#jform_buyer_group_ids').selectOption(['900020']);
+  await page.locator('#jform_buyer_group_id').selectOption('900020');
   await setRadio(page, 'is_active', '1');
 
   await page.getByRole('tab', { name: 'Preis' }).click();
@@ -236,9 +237,9 @@ test('product invalid save, create, apply, save-close, mappings, stock, status a
   await page.getByRole('tab', { name: 'Allgemein' }).click();
   await expect(page.locator('#jform_manufacturer_id option:checked')).toHaveText('E2E Hersteller Aktiv');
   await expect(page.locator('#jform_category_ids')).toHaveValues(['900010']);
-  await expect(page.locator('#jform_buyer_group_ids')).toHaveValues(['900020']);
+  await expect(page.locator('#jform_buyer_group_id')).toHaveValue('900020');
   await page.locator('#jform_category_ids').selectOption(['900010', '900012']);
-  await page.locator('#jform_buyer_group_ids').selectOption(['900020', '900021']);
+  await page.locator('#jform_buyer_group_id').selectOption('900021');
   await page.getByRole('tab', { name: 'Preis' }).click();
   await page.locator('#jform_sale_price').fill('32.50');
   await page.getByRole('tab', { name: 'Lager' }).click();
@@ -251,7 +252,7 @@ test('product invalid save, create, apply, save-close, mappings, stock, status a
   await expect(page.locator('#jform_id')).toHaveValue(createdId);
   await page.getByRole('tab', { name: 'Allgemein' }).click();
   await expect(page.locator('#jform_category_ids')).toHaveValues(['900010', '900012']);
-  await expect(page.locator('#jform_buyer_group_ids')).toHaveValues(['900020', '900021']);
+  await expect(page.locator('#jform_buyer_group_id')).toHaveValue('900021');
   await page.getByRole('tab', { name: 'Lager' }).click();
   await expect(page.locator('#jform_stock_quantity')).toHaveValue('3');
   await expect(page.locator('#jform_in_stock')).toHaveValue('Verfügbar');

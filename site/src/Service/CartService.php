@@ -8,10 +8,11 @@ use Joomla\CMS\Factory;
 use Joomla\Database\DatabaseInterface;
 use Joomla\Database\ParameterType;
 use FDShop\Component\FDShop\Administrator\Service\PackagingService;
+use FDShop\Component\FDShop\Administrator\Service\BuyerEligibilityServiceInterface;
 
 final class CartService implements CartServiceInterface
 {
-    public function __construct(private readonly DatabaseInterface $db, private readonly PackagingService $packagingService, private readonly BundleServiceInterface $bundleService)
+    public function __construct(private readonly DatabaseInterface $db, private readonly PackagingService $packagingService, private readonly BundleServiceInterface $bundleService, private readonly BuyerEligibilityServiceInterface $eligibility)
     {
     }
 
@@ -88,6 +89,7 @@ final class CartService implements CartServiceInterface
         $this->assertOwner($userId, $sessionId);
         $this->assertPurchasingEnabled();
         $product = $this->loadProduct($productId);
+        $this->eligibility->assertProductsEligible($userId, [$productId]);
         if (!in_array($unitVariant, ['piece', 'package'], true)) {
             throw new \DomainException('Die gewählte Verkaufseinheit ist ungültig.');
         }
@@ -530,8 +532,9 @@ final class CartService implements CartServiceInterface
             throw new \DomainException('Der Gutschein ist diesem Benutzer nicht zugeordnet.');
         }
         $groupIds = $this->mappedIds('coupon_buyer_group_map', 'buyer_group_id', (int) $coupon->id);
-        $cartGroupIds = array_values(array_unique(array_map(static fn ($item): int => (int) $item->buyer_group_id, $items)));
-        if ($groupIds !== [] && array_intersect($groupIds, $cartGroupIds) === []) {
+        $allowedByGroup=$groupIds===[]||in_array($this->eligibility->groupId('standard'),$groupIds,true)
+            ||($this->eligibility->userHasF3Permission($userId)&&in_array($this->eligibility->groupId('permit_holder'),$groupIds,true));
+        if (!$allowedByGroup) {
             throw new \DomainException('Der Gutschein ist für diese Käufergruppe nicht gültig.');
         }
 

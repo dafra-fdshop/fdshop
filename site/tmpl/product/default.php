@@ -27,6 +27,7 @@ $factIcons = ['NEM' => 'icon_nem.svg', 'Schusszahl' => 'icon_anzahl.svg', 'Kalib
                     <?php if ((int) $item->ribbon_new === 1) : ?><span class="fdshop-ribbon fdshop-ribbon--new">Neu</span><?php endif; ?>
                     <?php if ((int) $item->ribbon_hot === 1) : ?><span class="fdshop-ribbon fdshop-ribbon--hot">Hot</span><?php endif; ?>
                     <?php if ((int) $item->ribbon_bundle === 1) : ?><span class="fdshop-ribbon fdshop-ribbon--bundle">Bundle</span><?php endif; ?>
+                    <?php if ((string) ($item->buyer_group_alias ?? '') === 'permit_holder') : ?><span class="fdshop-ribbon fdshop-ribbon--f3">F3</span><?php endif; ?>
                 </div>
             </div>
             <?php if (count($this->images) > 1) : ?>
