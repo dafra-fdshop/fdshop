@@ -1,0 +1,353 @@
+FDShop – Auftrag: Product Structured Data / JSON-LD V1
+Datum: 27.09.2026
+
+ZIEL
+FDShop soll auf jeder öffentlichen Produktdetailseite automatisch korrekte, serverseitig erzeugte strukturierte Produktdaten im JSON-LD-Format ausgeben.
+
+Grundprinzip:
+- KEINE zweite SEO-/Produktdatenpflege.
+- JSON-LD ist eine abgeleitete Ausgabeschicht aus bestehenden FDShop-Daten.
+- Keine neuen Adminfelder nur für JSON-LD.
+- Keine KI/API.
+- Keine erfundenen Werte.
+- Nur Daten ausgeben, die FDShop fachlich wirklich kennt und die zur sichtbaren Produktseite passen.
+- V1 fokussiert Product + Offer.
+- Bewertungen/Reviews/aggregateRating ausdrücklich noch NICHT ausgeben, solange FDShop kein echtes Bewertungssystem besitzt.
+
+Google Product-/Merchant-Listing-Anforderungen und schema.org sind vor Implementierung aktuell zu prüfen; nicht auf veraltete Erinnerungen verlassen.
+
+1. ARBEITSGRUNDLAGE
+Vor Änderung aktuellen feature-Stand und aktuelle Projektquellen vollständig analysieren:
+- Product Site View / Model / Template
+- ProductService / ProductCardHelper / Preislogik
+- Manufacturer
+- Media V1 / Derivate / primäres Produktbild / No-Image
+- SKU / Sales-SKU
+- Kurz-/Produktbeschreibung
+- aktuelle Preis-/Aktionspreislogik
+- Währung
+- persistierter Bestandsstatus / in_stock und zentrale Stock-Regel
+- Routing / Canonical-/Produkt-URL
+- Katalog-/Purchase-Action-Regeln
+- gerade implementierte Meta-Daten V1
+- WebAsset/Document API
+- Tests/Fixtures
+- Governance/Fachregeln/Implementierungsstand.
+
+PRODUCT IS KING.
+Keine Live-Neuberechnung paralleler Wahrheiten.
+
+2. AUSGABEFORMAT
+Auf Produktdetailseiten genau einen geeigneten:
+<script type="application/ld+json">...</script>
+Block ausgeben.
+
+JSON serverseitig mit sicherem JSON-Encoder erzeugen, nicht per Stringkonkatenation zusammenbauen.
+Unicode/URLs korrekt.
+Keine HTML-Injection.
+Kein clientseitiges JS nötig.
+Keine externe Anfrage.
+
+Nicht auf Kategorie-/Listen-/Modulseiten ausgeben, sofern dort kein eigener fachlich korrekter Product-Markup-Scope definiert ist. V1 = Produktdetail.
+
+3. PRODUCT – V1
+Mindestens sinnvoll abbilden:
+@context = https://schema.org
+@type = Product
+name
+url
+sku, wenn vorhanden
+description, wenn sinnvoll vorhanden
+image, wenn echtes Produktbild vorhanden
+brand als Brand mit name, wenn Hersteller vorhanden
+offers als Offer, wenn Produkt auf der Seite tatsächlich als kaufbares Angebot mit belastbarem Preis dargestellt wird.
+
+Name:
+sichtbarer aktueller Produktname.
+
+URL:
+kanonische/öffentliche Produktdetail-URL, Joomla-routingkonform, absolut.
+Keine Admin-/interne URL.
+
+SKU:
+bestehende fachlich richtige öffentlich relevante SKU/Sales-SKU. Vorher aktuelle Semantik prüfen.
+
+Description:
+sichtbare Produktinformation verwenden; bevorzugt passende vorhandene Kurzbeschreibung bzw. fachlich sinnvollen bestehenden Text.
+Keine separate JSON-LD-Description pflegen.
+HTML entfernen, Whitespace normalisieren.
+Keine Meta-Description zwanghaft als zweite Wahrheit verwenden, wenn sichtbarer Produkttext fachlich passender ist.
+
+Brand:
+bestehender Manufacturer, wenn vorhanden:
+{"@type":"Brand","name":"Argento"}
+Keinen Hersteller erfinden.
+
+4. IMAGE
+Nur echtes, öffentlich erreichbares Produktbild aus Media V1 verwenden.
+Absolute URL.
+Bestehendes geeignetes Derivat bzw. Original nach Media-Fachregel.
+Kein lokaler Filesystempfad.
+Kein Adminpfad.
+No-Image-Platzhalter NICHT als echtes Product.image ausgeben, sofern dies semantisch nur ein Platzhalter ist.
+Mehrere Bilder nur, wenn bestehende Media-Daten sauber verfügbar sind und ohne Zusatzkomplexität; ein korrektes Hauptbild genügt V1.
+
+5. OFFER
+Wenn Produkt nach aktueller FDShop-Fachlogik ein echtes kaufbares Angebot darstellt:
+@type Offer
+url = Produkt-URL
+price = tatsächlich sichtbarer/aktiver Verkaufspreis
+priceCurrency = bestehende Währung, ISO 4217 (z.B. EUR)
+availability = aus zentralem persistierten Bestandsstatus
+itemCondition = https://schema.org/NewCondition, sofern FDShop ausschließlich Neuware verkauft und dies fachlich für alle Shopprodukte zutrifft; andernfalls weglassen.
+
+Preis:
+- exakt dieselbe Preiswahrheit wie Produktdetail/Purchase-Logik.
+- bei Aktionspreis aktuellen tatsächlich kaufbaren Preis ausgeben, nicht durchgestrichenen Altpreis.
+- keine Repricing-Sonderlogik nur für JSON-LD.
+- maschinenlesbar mit Punkt als Dezimaltrenner, keine „€“-Zeichen im price.
+- keine Käufergruppen-/späteren Preisregeln vorwegnehmen, die aktuell noch nicht implementiert sind.
+- falls aktuelle Produktlogik ein Produkt ohne belastbaren öffentlichen Kaufpreis darstellen kann, Offer nur ausgeben, wenn fachlich korrekt.
+
+6. AVAILABILITY – ZENTRALE BESTANDSWAHRHEIT
+Bestehenden persistierten Bestandsstatus verwenden.
+Keine neue Bestandsberechnung in JSON-LD.
+
+Aktuelle in_stock-Semantik im Repo prüfen und sauber mappen.
+Ziel mindestens:
+kaufbar/verfügbar -> https://schema.org/InStock
+nicht verfügbar/ausverkauft -> https://schema.org/OutOfStock
+
+Falls FDShop fachlich weitere Zustände besitzt (z.B. low stock), darf low stock weiterhin InStock sein, sofern kaufbar.
+Negative-/Backorder-/Preorder-Zustände NICHT erfinden. Nur mappen, wenn aktuelle Fachlogik sie tatsächlich unterscheidet.
+
+Wichtig:
+Produktkarte, Produktdetail, Purchase Action und JSON-LD dürfen sich bezüglich Verfügbarkeit nicht widersprechen.
+
+7. KATALOG-/NICHT KAUFBARE PRODUKTE
+Aktuelle FDShop-Regeln analysieren.
+Wenn ein Produkt sichtbar, aber aktuell bewusst nicht kaufbar ist (Katalogmodus, fehlende Purchase Action o.ä.), JSON-LD darf nicht fälschlich ein normales kaufbares Offer behaupten.
+
+Product-Markup kann trotzdem sinnvoll sein.
+Offer nur, wenn sichtbare Seite/Fachlogik dieses Angebot tatsächlich trägt.
+
+Keine neue Kataloglogik.
+
+8. KEINE ERFUNDENEN DATEN
+V1 ausdrücklich NICHT ausgeben, wenn keine echten Daten existieren:
+- aggregateRating
+- review
+- ratingValue
+- reviewCount
+- GTIN/EAN, wenn FDShop diese nicht belastbar pflegt
+- MPN, wenn nicht belastbar
+- priceValidUntil ohne echte Gültigkeit
+- shippingDetails ohne echte strukturierte Versandregel
+- hasMerchantReturnPolicy ohne gepflegte Rückgaberichtlinie
+- audience/age etc. ohne eigene saubere Fachregel.
+
+Später ergänzen, sobald entsprechende FDShop-Funktion/Daten existieren.
+
+9. BEWERTUNGSSYSTEM – ZUKUNFTSREGEL
+Wenn FDShop später ein echtes Bewertungssystem erhält:
+- bei dessen Implementierung JSON-LD-Relevanz ausdrücklich mitprüfen.
+- dann ggf. aggregateRating/review ergänzen, ausschließlich aus echten sichtbaren Bewertungen und gemäß dann aktueller Google-Richtlinie.
+
+Gleiches gilt später z.B. für:
+- GTIN/EAN
+- Varianten
+- Versandinformationen
+- Rückgaberichtlinien
+- weitere Preis-/Angebotsmodelle.
+
+10. GEDÄCHTNISSTÜTZE IM PRODUKTFORMULAR
+Die mit Meta-Daten V1 eingeführte Box „Hinweise & Tipps“ im Produktformular um einen kurzen Abschnitt ergänzen.
+
+Sinngemäß:
+
+„Strukturierte Produktdaten (JSON-LD)
+FDShop erzeugt auf Produktseiten automatisch strukturierte Produktdaten für Suchmaschinen, z.B. Produktname, Hersteller, SKU, Bild, Preis und Verfügbarkeit. Diese Daten werden aus den vorhandenen Produktdaten erzeugt und müssen nicht separat gepflegt werden.
+Hinweis für Erweiterungen: Werden künftig neue Produktinformationen wie Bewertungen, GTIN/EAN, Varianten, Angebote oder weitere SEO-relevante Daten ergänzt, sollte geprüft werden, ob auch die JSON-LD-Ausgabe erweitert werden muss.“
+
+Kompakt, kein Tutorial.
+Sprachstrings verwenden.
+
+11. DAUERHAFTE ARCHITEKTUR-/FACHREGEL
+In passender Projektdokumentation knapp festhalten:
+
+„Product Structured Data ist eine abgeleitete Ausgabeschicht. Es gibt keine parallele JSON-LD-Datenhaltung. Bei neuen fachlichen Produktfunktionen/-daten ist im Rahmen der Implementierung zu prüfen, ob die strukturierte Produktausgabe angepasst werden muss.“
+
+Diese Regel soll zukünftige Entwickler/KIs an Bewertungssystem, GTIN, Varianten etc. erinnern.
+
+Keine Dokumentationsinflation.
+
+12. META-DATEN V1 NICHT VERMISCHEN
+Meta-Titel und Meta-Description bleiben eigene Seitendarstellung/SEO-Snippet-Hilfe.
+JSON-LD ist strukturierte maschinenlesbare Produktausgabe.
+
+Keine neue Kopplung, bei der „Meta-Daten füllen“ JSON-LD persistiert.
+JSON-LD entsteht dynamisch aus Produktwahrheit.
+
+Meta-Produkttyp muss nicht zwingend in JSON-LD erscheinen. Nur nutzen, wenn schema.org/Google dafür fachlich passende Property vorsieht und es echten Mehrwert bringt; keine Fantasieproperty.
+
+13. JOOMLA-INTEGRATION
+JSON-LD Joomla-konform in das Dokument einfügen.
+Bestehende Document-/Script-API verwenden, wenn geeignet.
+Nicht als sichtbaren Text ins Produktmarkup drucken.
+Genau einmal pro Produktdetail.
+Kein doppelter Block durch Module/Layouts.
+
+Caching berücksichtigen: strukturierte Daten müssen mit der dargestellten Produkt-/Preis-/Bestandswahrheit konsistent bleiben.
+
+14. CANONICAL / URL
+Bestehendes Routing analysieren.
+JSON-LD Product.url und Offer.url sollen dieselbe kanonische Produktseite beschreiben.
+Absolute HTTPS-URL im realen Frontend.
+Keine Session-/Trackingparameter.
+Keine falsche localhost-/Docker-URL in produktiver Ausgabe.
+
+Falls Canonical aktuell nicht sauber bestimmbar ist, keine neue große SEO-Routingarchitektur bauen; projektkonform lösen oder bei echtem Grundsatzproblem STOP.
+
+15. GOOGLE-RICHTLINIEN / TESTBARKEIT
+Vor Implementierung aktuelle offizielle Google Search Central Product-/Merchant-Listing-Dokumentation prüfen.
+
+V1 soll soweit die vorhandenen FDShop-Daten es erlauben ein valides Product + Offer erzeugen.
+
+Wichtig:
+Google kann trotz korrektem Markup selbst entscheiden, ob Rich Results erscheinen. Keine Erfolgsgarantie im UI/Doku behaupten.
+
+Für Google Product Snippets ist Product.name erforderlich und Product braucht mindestens review, aggregateRating oder offers. Da FDShop echte Angebote hat, ist offers der V1-Pfad.
+Für Offer Preis und Währung korrekt angeben; availability sinnvoll ergänzen.
+Merchant-Listing-relevante empfohlene Felder (brand, description, image etc.) soweit echte Daten vorhanden.
+
+16. TESTS – STRUKTUR
+Mindestens folgende Fälle:
+
+A normales Produkt:
+- Product JSON-LD vorhanden
+- name
+- url
+- sku
+- description
+- brand
+- image
+- Offer
+- price
+- priceCurrency
+- availability.
+
+B Hersteller fehlt:
+- kein erfundener Brand, JSON bleibt valide.
+
+C Bild fehlt:
+- kein No-Image als echtes Produktbild, JSON bleibt valide.
+
+D Kurzbeschreibung fehlt:
+- sauberer vorhandener Beschreibungspfad oder Property weglassen; kein Müll.
+
+E Aktionspreis:
+- Offer.price entspricht tatsächlich sichtbarem aktiven Preis.
+
+F normal auf Lager:
+- InStock.
+
+G low stock/kaufbar:
+- InStock, sofern Fachlogik kaufbar.
+
+H ausverkauft:
+- OutOfStock.
+
+I Katalog/nicht kaufbar:
+- kein falsches kaufbares Offer.
+
+J Sonderzeichen/Umlaute/Quotes:
+- valides JSON, keine Script-/HTML-Injection.
+
+K Produkt mit langem Namen:
+- vollständig/valide, keine SEO-Zeichenlimitlogik auf JSON-LD anwenden.
+
+L genau ein JSON-LD-Block auf Produktdetail.
+
+M keine Product-JSON-LD-Ausgabe auf irrelevanten Seiten durch diese V1-Funktion.
+
+17. TESTS – VALIDIERUNG
+Zusätzlich technisch:
+- JSON aus gerendertem HTML extrahieren und json_decode/Parser erfolgreich.
+- @context/@type prüfen.
+- URL absolut.
+- price maschinenlesbar.
+- Currency korrekt.
+- availability schema.org URL.
+- Frontend sichtbarer Preis/Bestand gegen JSON-LD vergleichen.
+- bestehende Meta-title/description Regression.
+- Produktdetail/Kategorie/Filter/Module Regression proportional.
+- PHP-Syntax.
+- git diff --check.
+- Smoke/Fixtures.
+- Logs ohne relevante Fehler.
+- Fresh/Update nur soweit Version/Code dies erfordert.
+
+Wenn Internet/Testumgebung es erlaubt, Ausgabe zusätzlich gegen Googles Rich Results Test bzw. dokumentierte Anforderungen prüfen. Kein STOP, falls externer Google-Test aus Sandbox nicht automatisierbar ist; dann lokale strukturelle Validierung + Abschlussbericht.
+
+18. PERFORMANCE
+Kein zusätzlicher N+1-Datenbankpfad nur für JSON-LD.
+Vorhandene bereits geladene Produkt-/Hersteller-/Media-/Preis-/Stockdaten wiederverwenden.
+Keine externen Requests.
+JSON-Encoding trivial.
+Produktdetail-Performance nicht messbar verschlechtern.
+
+19. VERSIONIERUNG
+Voraussichtlich keine DB-Schemaänderung nötig.
+Paketversion nach Projektstandard fortschreiben.
+Schema nur erhöhen, wenn tatsächlich DB-Änderung notwendig wird.
+Keine No-op-Schemaänderung nur wegen Paketversion, entsprechend aktuellem Projektstandard.
+
+20. FREIGABEN
+Freigegeben:
+- Docker/WSL/Sandbox
+- Fixtures/Testprodukte/Testhersteller
+- Browser-/Frontendtests
+- lokale HTML-/JSON-Parsertests
+- Webrecherche offizieller Google-/schema.org-Dokumentation
+- View/Model/Service/Helper/Layout/Language/Dokumentation
+- Paketbau/Installation
+- gezielte Korrekturzyklen
+- Commit
+- Push origin/feature
+- Windows-/Offline-Sync.
+
+Nicht freigegeben:
+- IONOS verändern
+- main mergen
+- Force-Push
+- Bewertungssystem implementieren
+- GTIN/EAN-Fachbereich neu bauen
+- Merchant Center API
+- externe SEO-/KI-Dienste
+- Käufergruppen vorziehen
+- neue Versand-/Retourenfachlogik nur für JSON-LD.
+
+STOP nur bei echtem Grundsatzproblem:
+- sichtbare Preis-/Bestandswahrheit lässt sich nicht sicher wiederverwenden,
+- kanonische Produkt-URL nicht belastbar bestimmbar,
+- aktuelle Architektur würde doppelte/widersprüchliche Product-Daten erzeugen,
+- fremde Änderungen nicht sicher erhaltbar.
+
+Normale technische Detailentscheidungen selbstständig treffen.
+
+21. ABSCHLUSSBERICHT
+Kompakt berichten:
+- Integrationsort
+- ausgegebene Product-Properties
+- Offer-/Preisquelle
+- Availability-Mapping
+- Image/Brand/Description-Fallbackregeln
+- Katalog-/nicht-kaufbare Behandlung
+- Gedächtnisstütze + Doku
+- Validierung/Tests
+- Paket-/Schemaversion
+- Paket-SHA
+- Commit/Push/Sync
+- offene Punkte / bewusst nicht implementierte spätere Properties.
+
+ENDE DES AUFTRAGS
