@@ -64,10 +64,6 @@ final class HtmlView extends BaseHtmlView
         if (trim((string) $item->meta_description) !== '') {
             $document->setDescription((string) $item->meta_description);
         }
-        if (trim((string) $item->meta_keywords) !== '') {
-            $document->setMetaData('keywords', (string) $item->meta_keywords);
-        }
-
         $document->getWebAssetManager()->useStyle('com_fdshop.site')->useScript('com_fdshop.site')->useScript('com_fdshop.purchase')->useScript('com_fdshop.bundle');
         parent::display($tpl);
     }

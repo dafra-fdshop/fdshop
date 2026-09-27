@@ -684,3 +684,8 @@ BESTELLDOKUMENTE / MAIL
 - tests/documents/: echte PDF-Erzeugung, Byteidentität, Shipmentfarben- und Mehrseitenregression.
 - Bestelldokumente V1.1: OrderDocumentService rendert Joomla-Layouts für Kunden-PDF, Packliste und gemeinsamen Mailrahmen. OrderNotificationService versendet Initial- und Änderungsmails an Käufer und Verkäufer mit den passenden Anhängen.
 - #__fdshop_order_documents verwaltet versionierte Kundenbestätigungen mit SHA-256; persistenter Speicher: media/com_fdshop-private/documents.
+
+PRODUKT-META-DATEN V1
+---------------------
+- `administrator/forms/product.xml`, `administrator/tmpl/product/edit.php` und `media/js/admin-product.js`: optionaler SEO-Produkttyp, bewusster Vorschlagsbutton, Schutz vorhandener Inhalte und unverbindliche Live-Zähler.
+- `ProductTable` validiert die stabilen Typ-Keys; normales Speichern führt keine Meta-Ableitung aus. Die Site-Produktansicht setzt gespeicherten Titel und Description Joomla-konform und erzeugt keine Keywords.

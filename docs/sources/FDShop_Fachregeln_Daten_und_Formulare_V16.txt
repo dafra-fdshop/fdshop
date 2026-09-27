@@ -446,7 +446,7 @@ short_description description
 
 SEO
 
-meta_title meta_keywords meta_description
+meta_title meta_product_type meta_description
 
 PRODUKTMERKMALE
 
@@ -744,7 +744,7 @@ description
 
 SEO
 
-meta_title meta_keywords meta_description
+meta_title meta_description
 
 STATUS
 

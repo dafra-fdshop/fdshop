@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS `#__fdshop_products` (
   `publish_down` DATETIME NULL DEFAULT NULL,
 
   `meta_title` VARCHAR(255) NOT NULL,
-  `meta_keywords` TEXT NULL,
+  `meta_product_type` VARCHAR(50) NOT NULL DEFAULT '',
   `meta_description` TEXT NULL,
 
   `in_stock` VARCHAR(50) NOT NULL,
@@ -205,7 +205,6 @@ CREATE TABLE IF NOT EXISTS `#__fdshop_manufacturers` (
 
   `description` TEXT NULL,
   `meta_title` VARCHAR(255) NOT NULL DEFAULT '',
-  `meta_keywords` TEXT NULL,
   `meta_description` TEXT NULL,
 
   `is_active` TINYINT(1) NOT NULL DEFAULT 1,

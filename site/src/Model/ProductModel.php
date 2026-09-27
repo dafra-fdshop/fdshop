@@ -53,7 +53,6 @@ final class ProductModel extends BaseDatabaseModel
                 $db->quoteName('p.ribbon_hot'),
                 $db->quoteName('p.ribbon_bundle'),
                 $db->quoteName('p.meta_title'),
-                $db->quoteName('p.meta_keywords'),
                 $db->quoteName('p.meta_description'),
                 $db->quoteName('m.id', 'manufacturer_id'),
                 $db->quoteName('m.manufacturer_name'),

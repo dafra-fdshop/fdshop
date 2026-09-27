@@ -256,19 +256,35 @@
 
         <fieldset name="beschreibung" label="Beschreibung">
             <field
+                name="meta_product_type"
+                type="list"
+                label="COM_FDSHOP_FIELD_META_PRODUCT_TYPE_LABEL"
+                description="COM_FDSHOP_FIELD_META_PRODUCT_TYPE_DESC"
+                filter="cmd"
+            >
+                <option value="">COM_FDSHOP_META_PRODUCT_TYPE_SELECT</option>
+                <option value="fireworks_battery">COM_FDSHOP_META_PRODUCT_TYPE_FIREWORKS_BATTERY</option>
+                <option value="compound_fireworks">COM_FDSHOP_META_PRODUCT_TYPE_COMPOUND_FIREWORKS</option>
+                <option value="rocket">COM_FDSHOP_META_PRODUCT_TYPE_ROCKET</option>
+                <option value="rocket_assortment">COM_FDSHOP_META_PRODUCT_TYPE_ROCKET_ASSORTMENT</option>
+                <option value="single_shot">COM_FDSHOP_META_PRODUCT_TYPE_SINGLE_SHOT</option>
+                <option value="fountain">COM_FDSHOP_META_PRODUCT_TYPE_FOUNTAIN</option>
+                <option value="volcano">COM_FDSHOP_META_PRODUCT_TYPE_VOLCANO</option>
+                <option value="ground_fireworks">COM_FDSHOP_META_PRODUCT_TYPE_GROUND_FIREWORKS</option>
+                <option value="light_fireworks">COM_FDSHOP_META_PRODUCT_TYPE_LIGHT_FIREWORKS</option>
+                <option value="sound_generator">COM_FDSHOP_META_PRODUCT_TYPE_SOUND_GENERATOR</option>
+                <option value="firebirds">COM_FDSHOP_META_PRODUCT_TYPE_FIREBIRDS</option>
+                <option value="roman_candles">COM_FDSHOP_META_PRODUCT_TYPE_ROMAN_CANDLES</option>
+                <option value="youth_fireworks">COM_FDSHOP_META_PRODUCT_TYPE_YOUTH_FIREWORKS</option>
+                <option value="year_round_fireworks">COM_FDSHOP_META_PRODUCT_TYPE_YEAR_ROUND_FIREWORKS</option>
+                <option value="accessories">COM_FDSHOP_META_PRODUCT_TYPE_ACCESSORIES</option>
+            </field>
+
+            <field
                 name="meta_title"
                 type="text"
                 label="Meta-Titel"
                 size="60"
-            />
-
-            <field
-                name="meta_keywords"
-                type="textarea"
-                label="Meta-Keywords"
-                rows="4"
-                cols="60"
-                filter="raw"
             />
 
             <field

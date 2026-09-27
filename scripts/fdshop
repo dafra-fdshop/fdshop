@@ -614,13 +614,14 @@ run_browser_crud_products() {
   compose build browser
 
   if ! compose run --rm --no-deps --env "PLAYWRIGHT_OUTPUT_DIR=$container_output" browser \
-    npx playwright test tests/products-crud.spec.js --grep 'product invalid save'; then
+    npx playwright test tests/products-crud.spec.js --grep 'product meta helper|product invalid save'; then
     printf 'Product CRUD artifacts: %s\nFDShop product CRUD suite: FAIL\n' "$host_output" >&2
     return 1
   fi
 
   [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_products WHERE product_name='E2E-CRUD-PRODUCT-REFERENCE';")" == "1" ]]
-  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_products p JOIN ${JOOMLA_DB_PREFIX}fdshop_products_details d ON d.product_id=p.id WHERE p.product_name='E2E-CRUD-PRODUCT-REFERENCE' AND p.manufacturer_id=900001 AND p.sale_price=32.5000 AND p.discount_price=27.5000 AND p.discount_active=1 AND p.in_stock='Verfügbar' AND p.unit_type='Display' AND p.meta_title='CRUD meta title after save-close' AND d.sku='E2E-CRUD-PRODUCT-REFERENCE' AND d.stock_quantity=3 AND d.low_stock=4 AND d.reserved_quantity=2 AND d.unit_quantity=6 AND d.unit_discount_type='percent' AND d.unit_discount_value=5.0000;")" == "1" ]]
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_products p JOIN ${JOOMLA_DB_PREFIX}fdshop_products_details d ON d.product_id=p.id WHERE p.product_name='E2E-CRUD-PRODUCT-REFERENCE' AND p.manufacturer_id=900001 AND p.sale_price=32.5000 AND p.discount_price=27.5000 AND p.discount_active=1 AND p.in_stock='Verfügbar' AND p.unit_type='Display' AND p.meta_title='CRUD meta title after save-close' AND p.meta_description='CRUD initial meta description' AND p.meta_product_type='fireworks_battery' AND d.sku='E2E-CRUD-PRODUCT-REFERENCE' AND d.stock_quantity=3 AND d.low_stock=4 AND d.reserved_quantity=2 AND d.unit_quantity=6 AND d.unit_discount_type='percent' AND d.unit_discount_value=5.0000;")" == "1" ]]
+  [[ "$(sql "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema='${MARIADB_DATABASE}' AND table_name IN ('${JOOMLA_DB_PREFIX}fdshop_products','${JOOMLA_DB_PREFIX}fdshop_manufacturers') AND column_name='meta_keywords';")" == "0" ]]
   [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_product_category_map pcm JOIN ${JOOMLA_DB_PREFIX}fdshop_products p ON p.id=pcm.product_id WHERE p.product_name='E2E-CRUD-PRODUCT-REFERENCE';")" == "2" ]]
   [[ "$(sql "SELECT COUNT(DISTINCT pcm.category_id) FROM ${JOOMLA_DB_PREFIX}fdshop_product_category_map pcm JOIN ${JOOMLA_DB_PREFIX}fdshop_products p ON p.id=pcm.product_id WHERE p.product_name='E2E-CRUD-PRODUCT-REFERENCE';")" == "2" ]]
   [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_product_buyer_group_map pbgm JOIN ${JOOMLA_DB_PREFIX}fdshop_products p ON p.id=pbgm.product_id WHERE p.product_name='E2E-CRUD-PRODUCT-REFERENCE';")" == "2" ]]

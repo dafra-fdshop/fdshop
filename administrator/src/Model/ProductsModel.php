@@ -107,7 +107,7 @@ class ProductsModel extends ListModel
             $db->quoteName('a.publish_up'),
             $db->quoteName('a.publish_down'),
             $db->quoteName('a.meta_title'),
-            $db->quoteName('a.meta_keywords'),
+            $db->quoteName('a.meta_product_type'),
             $db->quoteName('a.meta_description'),
             $db->quoteName('a.in_stock'),
             $db->quoteName('a.available_from'),

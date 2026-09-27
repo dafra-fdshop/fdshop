@@ -710,3 +710,8 @@ BESTELLDOKUMENTE V1 (0.0.33)
 - V1.1 / Schema 0.0.34 trennt Darstellung in Joomla-Layouts unter administrator/layouts/orderdocuments. Services liefern Daten, orchestrieren PDF/Mail, Archivierung und Integrität.
 - Unveränderliche Kundenbestätigungen liegen updatefest unter media/com_fdshop-private/documents; direkter Zugriff und Listing sind gesperrt. Die relationale Tabelle #__fdshop_order_documents verbindet Original/Version, Change-ID, Dateiname und SHA-256.
 - 0.0.33-Archive werden beim Update hashgeprüft übernommen; Änderungs-PDFs verwenden _01, _02 usw. und Retry derselben Change-ID bleibt idempotent. Packlisten werden weiterhin aus aktuellem Versandfarbwert regeneriert.
+
+PRODUKT-META-DATEN V1 (SCHEMA 0.0.35)
+--------------------------------------
+- `#__fdshop_products.meta_product_type` speichert einen optionalen, serverseitig auf feste Keys begrenzten SEO-Produkttyp. Die Vorschlagserzeugung bleibt ein kleines lokales Admin-Asset ohne API und verwendet ausschließlich aktuelle Formularwerte.
+- `meta_keywords` wurde aus Produkt- und Herstellerschema entfernt. VM-/Legacy-Mappings übernehmen weder Keywords noch leiten sie den neuen Produkttyp heuristisch aus Kategorien ab.

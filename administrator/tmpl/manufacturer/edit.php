@@ -28,7 +28,6 @@ use Joomla\CMS\HTML\HTMLHelper;
                 <div class="card-header">Meta-Informationen</div>
                 <div class="card-body">
                     <?php echo $this->form->renderField('meta_title'); ?>
-                    <?php echo $this->form->renderField('meta_keywords'); ?>
                     <?php echo $this->form->renderField('meta_description'); ?>
                 </div>
             </div>

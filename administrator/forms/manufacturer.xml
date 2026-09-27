@@ -40,15 +40,6 @@
             />
 
             <field
-                name="meta_keywords"
-                type="textarea"
-                label="Meta-Keywords"
-                rows="4"
-                cols="60"
-                filter="raw"
-            />
-
-            <field
                 name="meta_description"
                 type="textarea"
                 label="Meta-Beschreibung"

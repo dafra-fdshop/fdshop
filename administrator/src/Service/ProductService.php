@@ -814,7 +814,7 @@ class ProductService implements ProductServiceInterface
             'publish_up',
             'publish_down',
             'meta_title',
-            'meta_keywords',
+            'meta_product_type',
             'meta_description',
             'in_stock',
             'available_from',

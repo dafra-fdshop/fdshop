@@ -60,6 +60,63 @@ async function setRadio(page, field, value) {
   await expect(radio).toBeChecked();
 }
 
+test('product meta helper uses current unsaved values and protects manual content', async ({ page }) => {
+  await openView(page, 'product&layout=edit');
+  await page.getByRole('tab', { name: 'Beschreibung' }).click();
+  await expect(page.locator('#jform_meta_keywords')).toHaveCount(0);
+  await expect(page.locator('[data-fdshop-meta-counter="title"]')).toHaveText('0 Zeichen');
+
+  let message = '';
+  page.once('dialog', async dialog => { message = dialog.message(); await dialog.accept(); });
+  await page.getByRole('button', { name: 'Meta-Daten füllen' }).click();
+  expect(message).toBe('Bitte zuerst einen Produkttyp auswählen.');
+  await expect(page.locator('#jform_meta_title')).toHaveValue('');
+
+  await page.locator('#jform_meta_product_type').selectOption('fireworks_battery');
+  page.once('dialog', async dialog => { message = dialog.message(); await dialog.accept(); });
+  await page.getByRole('button', { name: 'Meta-Daten füllen' }).click();
+  expect(message).toBe('Bitte zuerst einen Produktnamen eingeben.');
+
+  await page.getByRole('tab', { name: 'Allgemein' }).click();
+  await page.locator('#jform_product_name').fill('Acryl');
+  await page.locator('#jform_manufacturer_id').selectOption('900001');
+  await page.getByRole('tab', { name: 'Beschreibung' }).click();
+  await page.locator('#jform_short_description').fill('<strong>Blauer</strong> Feuertopf mit   Sternen.');
+  await page.getByRole('tab', { name: 'Besondere Felder' }).click();
+  await page.locator('#jform_shot_count').fill('13');
+  await page.locator('#jform_caliber').fill('30 mm');
+  await page.locator('#jform_nem').fill('325');
+  await page.locator('#jform_burn_time').fill('21 s');
+  await page.getByRole('tab', { name: 'Beschreibung' }).click();
+  await page.getByRole('button', { name: 'Meta-Daten füllen' }).click();
+  await expect(page.locator('#jform_meta_title')).toHaveValue('E2E Hersteller Aktiv Acryl | Feuerwerksbatterie');
+  await expect(page.locator('#jform_meta_description')).toHaveValue('Acryl von E2E Hersteller Aktiv: Blauer Feuertopf mit Sternen. 13 Schuss · 30 mm · 325 g NEM · 21 s.');
+  await expect(page.locator('#jform_meta_description')).not.toHaveValue(/mm mm|g g|s s/);
+
+  await page.locator('#jform_meta_title').fill('Manuell optimiert');
+  await page.locator('#jform_meta_description').fill('Manuelle Beschreibung');
+  page.once('dialog', dialog => dialog.dismiss());
+  await page.getByRole('button', { name: 'Meta-Daten füllen' }).click();
+  await expect(page.locator('#jform_meta_title')).toHaveValue('Manuell optimiert');
+  await expect(page.locator('#jform_meta_description')).toHaveValue('Manuelle Beschreibung');
+  page.once('dialog', dialog => dialog.accept());
+  await page.getByRole('button', { name: 'Meta-Daten füllen' }).click();
+  await expect(page.locator('#jform_meta_title')).toHaveValue('E2E Hersteller Aktiv Acryl | Feuerwerksbatterie');
+
+  await page.locator('#jform_meta_title').fill('x'.repeat(61));
+  await expect(page.locator('[data-fdshop-meta-counter="title"]')).toContainText('61 Zeichen – möglicherweise zu lang');
+  await expect(page.locator('#jform_meta_title')).toBeEditable();
+
+  await page.locator('#jform_meta_product_type').evaluate(select => {
+    select.add(new Option('Manipuliert', 'invalid-type'));
+    select.value = 'invalid-type';
+  });
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await page.waitForLoadState('networkidle');
+  await expect(page.locator('#system-message-container')).toContainText('Ungültiger Produkttyp für Meta-Daten');
+  await expect(page.locator('#jform_id')).toHaveValue('0');
+});
+
 test('product invalid save, create, apply, save-close, mappings, stock, status and upload', async ({ page }, testInfo) => {
   await openView(page, 'products');
   await page.getByRole('button', { name: 'New' }).click();
@@ -104,7 +161,9 @@ test('product invalid save, create, apply, save-close, mappings, stock, status a
   await page.getByRole('tab', { name: 'Beschreibung' }).click();
   await page.locator('#jform_short_description').fill('CRUD initial short description');
   await page.locator('#jform_description').fill('CRUD initial product description');
+  await page.locator('#jform_meta_product_type').selectOption('fireworks_battery');
   await page.locator('#jform_meta_title').fill('CRUD initial meta title');
+  await page.locator('#jform_meta_description').fill('CRUD initial meta description');
 
   await page.getByRole('tab', { name: 'Besondere Felder' }).click();
   await expect(page.locator('#jform_bundle_eligible')).toBeHidden();
@@ -203,6 +262,9 @@ test('product invalid save, create, apply, save-close, mappings, stock, status a
   await expect(page.locator('#jform_unit_discount_value')).toHaveValue('5');
 
   await page.getByRole('tab', { name: 'Beschreibung' }).click();
+  await expect(page.locator('#jform_meta_title')).toHaveValue('CRUD initial meta title');
+  await expect(page.locator('#jform_meta_description')).toHaveValue('CRUD initial meta description');
+  await expect(page.locator('#jform_meta_product_type')).toHaveValue('fireworks_battery');
   await page.locator('#jform_meta_title').fill('CRUD meta title after save-close');
   await page.getByRole('button', { name: 'Save & Close' }).click();
   await page.waitForLoadState('networkidle');
@@ -216,6 +278,11 @@ test('product invalid save, create, apply, save-close, mappings, stock, status a
   await expect(page.locator('#jform_discount_price')).toHaveValue('27.5');
   await page.getByRole('tab', { name: 'Medien' }).click();
   await expect(page.getByText('Produktbilder', { exact: true })).toBeVisible();
+
+  await page.goto(`/index.php?option=com_fdshop&view=product&id=${createdId}`);
+  await expect(page).toHaveTitle('CRUD meta title after save-close');
+  await expect(page.locator('meta[name="description"]')).toHaveAttribute('content', 'CRUD initial meta description');
+  await expect(page.locator('meta[name="keywords"]')).toHaveCount(0);
 
   await searchProduct(page, productSku);
   let row = matchingRow(page, productName);

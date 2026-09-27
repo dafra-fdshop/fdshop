@@ -15,6 +15,12 @@ use Joomla\Database\DatabaseDriver;
 
 class ProductTable extends Table
 {
+    private const META_PRODUCT_TYPES = [
+        'fireworks_battery', 'compound_fireworks', 'rocket', 'rocket_assortment',
+        'single_shot', 'fountain', 'volcano', 'ground_fireworks', 'light_fireworks',
+        'sound_generator', 'firebirds', 'roman_candles', 'youth_fireworks',
+        'year_round_fireworks', 'accessories',
+    ];
     public function __construct(DatabaseDriver $db)
     {
         parent::__construct('#__fdshop_products', 'id', $db);
@@ -149,8 +155,11 @@ class ProductTable extends Table
         }
 
 
-        if (!isset($this->meta_keywords) || $this->meta_keywords === null) {
-            $this->meta_keywords = '';
+        $this->meta_product_type = trim((string) ($this->meta_product_type ?? ''));
+
+        if ($this->meta_product_type !== '' && !in_array($this->meta_product_type, self::META_PRODUCT_TYPES, true)) {
+            $this->setError('Ungültiger Produkttyp für Meta-Daten.');
+            return false;
         }
 
         if (!isset($this->meta_description) || $this->meta_description === null) {

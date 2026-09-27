@@ -7,6 +7,7 @@
 defined('_JEXEC') or die;
 
 use Joomla\CMS\HTML\HTMLHelper;
+use Joomla\CMS\Language\Text;
 use Joomla\CMS\Router\Route;
 use Joomla\CMS\Uri\Uri;
 
@@ -111,10 +112,29 @@ $this->getDocument()->getWebAssetManager()->useScript('com_fdshop.admin-product'
             <div class="col-12">
                 <div class="card mb-3">
                     <div class="card-header">Meta-Daten</div>
-                    <div class="card-body">
+                    <div class="card-body" data-fdshop-meta-generator
+                        data-message-type="<?php echo $this->escape(Text::_('COM_FDSHOP_META_GENERATOR_TYPE_REQUIRED')); ?>"
+                        data-message-name="<?php echo $this->escape(Text::_('COM_FDSHOP_META_GENERATOR_NAME_REQUIRED')); ?>"
+                        data-message-confirm="<?php echo $this->escape(Text::_('COM_FDSHOP_META_GENERATOR_CONFIRM')); ?>"
+                        data-counter-label="<?php echo $this->escape(Text::_('COM_FDSHOP_META_COUNTER_LABEL')); ?>"
+                        data-counter-warning="<?php echo $this->escape(Text::_('COM_FDSHOP_META_COUNTER_WARNING')); ?>">
+                        <?php echo $this->form->renderField('meta_product_type'); ?>
                         <?php echo $this->form->renderField('meta_title'); ?>
-                        <?php echo $this->form->renderField('meta_keywords'); ?>
+                        <div class="text-end small text-muted mb-3" data-fdshop-meta-counter="title" aria-live="polite"></div>
                         <?php echo $this->form->renderField('meta_description'); ?>
+                        <div class="text-end small text-muted mb-3" data-fdshop-meta-counter="description" aria-live="polite"></div>
+                        <button type="button" class="btn btn-primary mb-3" data-fdshop-meta-fill><?php echo Text::_('COM_FDSHOP_META_GENERATOR_BUTTON'); ?></button>
+                        <div class="alert alert-info mb-0">
+                            <strong><?php echo Text::_('COM_FDSHOP_META_TIPS_TITLE'); ?></strong>
+                            <ul class="mb-0 mt-2">
+                                <li><?php echo Text::_('COM_FDSHOP_META_TIP_TITLE'); ?></li>
+                                <li><?php echo Text::_('COM_FDSHOP_META_TIP_DESCRIPTION'); ?></li>
+                                <li><?php echo Text::_('COM_FDSHOP_META_TIP_NATURAL'); ?></li>
+                                <li><?php echo Text::_('COM_FDSHOP_META_TIP_SEARCH_ENGINE'); ?></li>
+                                <li><?php echo Text::_('COM_FDSHOP_META_TIP_MANUAL'); ?></li>
+                                <li><?php echo Text::_('COM_FDSHOP_META_TIP_SAVE'); ?></li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>

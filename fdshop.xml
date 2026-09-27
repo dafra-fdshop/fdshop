@@ -3,7 +3,7 @@
 	<name>com_fdshop</name>
 	<author>FDShop</author>
 	<creationDate>2026-03-19</creationDate>
-	<version>0.0.34</version>
+	<version>0.0.35</version>
 	<description>Neuer schneller Shop</description>
 
 	<namespace path="src">FDShop\Component\FDShop</namespace>
@@ -49,6 +49,10 @@
 			<filename>composer.lock</filename>
 			<filename>access.xml</filename>
 		</files>
+		<languages folder="administrator/language">
+			<language tag="de-DE">de-DE/com_fdshop.ini</language>
+			<language tag="en-GB">en-GB/com_fdshop.ini</language>
+		</languages>
 	</administration>
 
 	<install>

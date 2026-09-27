@@ -655,3 +655,9 @@ IMPLEMENTIERUNGSSTAND 0.0.33 - BESTELLBESTÄTIGUNG & PACKLISTE V1
 - Rechnung/Invoice-Engine, Rechnungsnummern, Paymentprovider und Käufergruppenfachlogik bleiben offen.
 - 0.0.34 / V1.1: Adminänderungen erzeugen unveränderliche _01/_02-Dokumente, Käufer- und Verkäuferänderungsmail nutzen den gemeinsamen Layoutpfad, und die aktuelle Packliste wird dem Verkäufer beigefügt.
 - PDF-/Mail-HTML ist aus den Services in Joomla-Layouts ausgelagert. Persistenter, geschützter Dokumentbereich und hashgeprüfte Legacyübernahme sind umgesetzt; Dompdf 3.1.6 bleibt paketierte Runtime.
+
+PRODUKT-META-DATEN V1 (0.0.35)
+--------------------------------
+- Meta-Titel und Meta-Beschreibung bleiben frei editierbar. Vorschläge werden ausschließlich durch den bewussten Adminbutton aus aktuellen Formularwerten erzeugt; normales Speichern verändert sie nicht.
+- Der sprachfähig beschriftete `meta_product_type` ist ein optional persistierter Einzelwert und für den Generator erforderlich. Meta-Keywords wurden aus Produkt, Hersteller und Frontendausgabe entfernt und werden nicht aus VirtueMart migriert.
+- JSON-LD ist ausdrücklich der direkte Folgeauftrag und wurde hier nicht vorweggenommen.
