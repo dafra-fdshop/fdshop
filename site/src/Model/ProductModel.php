@@ -57,6 +57,7 @@ final class ProductModel extends BaseDatabaseModel
                 $db->quoteName('m.id', 'manufacturer_id'),
                 $db->quoteName('m.manufacturer_name'),
                 $db->quoteName('m.alias', 'manufacturer_alias'),
+                $db->quoteName('d.sku'),
                 $db->quoteName('d.is_in_stock', 'physically_in_stock'),
                 $db->quoteName('d.stock_quantity'),
                 $db->quoteName('d.reserved_quantity'),

@@ -694,6 +694,15 @@ Korrektur Kategorie-Produktmodul V1.1 (Paket 0.0.32, Schema 0.0.31):
   bleibt das Schema 0.0.31; die Installationsprüfung vergleicht Joomla mit der
   höchsten tatsächlich vorhandenen SQL-Migration statt mit der Paketversion.
 
+Architekturnachtrag Product Structured Data / JSON-LD V1 (Paket 0.0.36, Schema 0.0.35):
+- Strukturierte Produktdaten sind eine dynamisch abgeleitete Ausgabeschicht der
+  Produktdetailseite. Es existiert keine parallele JSON-LD-Datenhaltung.
+- Product und ein fachlich zulässiges Offer verwenden bereits geladene Produkt-,
+  Hersteller-, Media-, Preis- und persistierte Bestandsdaten. Katalogmodus
+  unterdrückt das Offer; Platzhalterbilder werden nicht als Product.image ausgegeben.
+- Bei neuen fachlichen Produktfunktionen oder -daten ist im Rahmen ihrer
+  Implementierung zu prüfen, ob die strukturierte Produktausgabe anzupassen ist.
+
 =====================================================================
 ENDE DER QUELLE FDShop_Architektur_Struktur_Installation_V14
 =====================================================================

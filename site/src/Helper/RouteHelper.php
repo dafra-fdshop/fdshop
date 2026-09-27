@@ -10,6 +10,7 @@ namespace FDShop\Component\FDShop\Site\Helper;
 defined('_JEXEC') or die;
 
 use Joomla\CMS\Router\Route;
+use Joomla\CMS\Uri\Uri;
 
 final class RouteHelper
 {
@@ -23,6 +24,23 @@ final class RouteHelper
         return Route::_(
             'index.php?option=com_fdshop&view=product&id=' . $productId . '&catid=' . $categoryId
         );
+    }
+
+    public static function getProductCanonicalRoute(int $productId, int $categoryId = 0): string
+    {
+        $query = 'index.php?option=com_fdshop&view=product&id=' . $productId;
+
+        if ($categoryId > 0) {
+            $query .= '&catid=' . $categoryId;
+        }
+
+        $route = Route::_($query);
+
+        if (preg_match('~^https?://~i', $route) === 1) {
+            return $route;
+        }
+
+        return rtrim(Uri::root(), '/') . '/' . ltrim($route, '/');
     }
 
     public static function getManufacturerRoute(int $manufacturerId, string $alias = ''): string

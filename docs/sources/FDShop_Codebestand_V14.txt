@@ -689,3 +689,13 @@ PRODUKT-META-DATEN V1
 ---------------------
 - `administrator/forms/product.xml`, `administrator/tmpl/product/edit.php` und `media/js/admin-product.js`: optionaler SEO-Produkttyp, bewusster Vorschlagsbutton, Schutz vorhandener Inhalte und unverbindliche Live-Zähler.
 - `ProductTable` validiert die stabilen Typ-Keys; normales Speichern führt keine Meta-Ableitung aus. Die Site-Produktansicht setzt gespeicherten Titel und Description Joomla-konform und erzeugt keine Keywords.
+
+PRODUCT STRUCTURED DATA / JSON-LD V1
+------------------------------------
+- `site/src/Helper/ProductStructuredDataHelper.php` erzeugt und kodiert Product
+  und optional Offer ausschließlich aus bereits geladenen Produktdaten.
+- `site/src/View/Product/HtmlView.php` integriert den Block einmalig über das
+  Joomla-Dokument. `RouteHelper` liefert dafür eine absolute öffentliche URL;
+  `ProductModel` ergänzt die bereits gejointe Sales-SKU ohne Zusatzabfrage.
+- Die Admin-Hinweisbox erinnert daran, dass keine separate JSON-LD-Pflege
+  erforderlich ist und künftige Produktfunktionen auf Schema-Relevanz zu prüfen sind.

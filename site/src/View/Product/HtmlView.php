@@ -12,6 +12,7 @@ defined('_JEXEC') or die;
 use FDShop\Component\FDShop\Site\Helper\RouteHelper;
 use FDShop\Component\FDShop\Site\Helper\PurchaseHelper;
 use FDShop\Component\FDShop\Site\Helper\ProductVisualHelper;
+use FDShop\Component\FDShop\Site\Helper\ProductStructuredDataHelper;
 use Joomla\CMS\Factory;
 use Joomla\CMS\MVC\View\HtmlView as BaseHtmlView;
 use Joomla\CMS\Uri\Uri;
@@ -64,6 +65,11 @@ final class HtmlView extends BaseHtmlView
         if (trim((string) $item->meta_description) !== '') {
             $document->setDescription((string) $item->meta_description);
         }
+        $productUrl = RouteHelper::getProductCanonicalRoute((int) $item->id, $categoryId);
+        $structuredData = ProductStructuredDataHelper::build($item, $productUrl, $this->purchaseEnabled);
+        $document->addCustomTag(
+            '<script type="application/ld+json">' . ProductStructuredDataHelper::encode($structuredData) . '</script>'
+        );
         $document->getWebAssetManager()->useStyle('com_fdshop.site')->useScript('com_fdshop.site')->useScript('com_fdshop.purchase')->useScript('com_fdshop.bundle');
         parent::display($tpl);
     }

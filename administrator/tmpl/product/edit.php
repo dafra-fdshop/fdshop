@@ -134,6 +134,10 @@ $this->getDocument()->getWebAssetManager()->useScript('com_fdshop.admin-product'
                                 <li><?php echo Text::_('COM_FDSHOP_META_TIP_MANUAL'); ?></li>
                                 <li><?php echo Text::_('COM_FDSHOP_META_TIP_SAVE'); ?></li>
                             </ul>
+                            <hr>
+                            <strong><?php echo Text::_('COM_FDSHOP_STRUCTURED_DATA_TIPS_TITLE'); ?></strong>
+                            <p class="mb-1 mt-2"><?php echo Text::_('COM_FDSHOP_STRUCTURED_DATA_TIP_AUTOMATIC'); ?></p>
+                            <p class="mb-0"><?php echo Text::_('COM_FDSHOP_STRUCTURED_DATA_TIP_EXTENSIONS'); ?></p>
                         </div>
                     </div>
                 </div>

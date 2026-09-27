@@ -639,6 +639,16 @@ Korrektur Kategorie-Produktmodul V1.1 (Paket 0.0.32, Schema 0.0.31):
   angeordnete Headernavigation: umgesetzt; bestehende V1-Instanzen behalten
   anhand ihres bisherigen Boolean-Parameters ihre sichtbare Wirkung.
 
+PRODUCT STRUCTURED DATA / JSON-LD V1 (PAKET 0.0.36, SCHEMA 0.0.35)
+-------------------------------------------------------------------
+- Produktdetailseiten geben genau einen serverseitig erzeugten Product-Block
+  aus. Name und URL sind Pflicht; SKU, Beschreibung, echtes Hauptbild und Brand
+  werden nur aus vorhandenen Daten ergänzt.
+- Ein Offer verwendet den sichtbaren aktiven Preis, ISO-Währung und den
+  persistierten FDShop-Bestandsstatus. Katalogmodus erzeugt kein Offer.
+- Bewertungen, GTIN/EAN, Varianten, Versand- und Rückgabedaten bleiben mangels
+  entsprechender belastbarer Fachfunktion bewusst außerhalb dieser Version.
+
 =====================================================================
 ENDE DER QUELLE FDShop_Implementierungsstand_V14
 =====================================================================

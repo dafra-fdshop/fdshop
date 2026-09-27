@@ -7,6 +7,17 @@ async function openCategory(page) {
   await expect(page.locator('.fdshop-category')).toHaveAttribute('data-fdshop-category', '900010');
 }
 
+async function productStructuredData(page) {
+  const blocks = page.locator('script[type="application/ld+json"]');
+  const products = [];
+  for (let index = 0; index < await blocks.count(); index += 1) {
+    const value = JSON.parse(await blocks.nth(index).textContent());
+    if (value['@type'] === 'Product') products.push(value);
+  }
+  expect(products).toHaveLength(1);
+  return products[0];
+}
+
 test('menu category renders mapped visible products and complete cards', async ({ page, baseURL }) => {
   const diagnostics = await installDiagnostics(page, baseURL);
   await openCategory(page);
@@ -303,6 +314,75 @@ test('product detail renders gallery, video, manufacturer and public product inf
 
   await expect(product.locator('[class*="rating"], [class*="review"]')).toHaveCount(0);
   await expect(product).not.toContainText(/Vorheriges Produkt|Nächstes Produkt|PDF|Drucken|Freund empfehlen|Frage zu diesem Produkt|SKU|GTIN|Gewicht|Länge|Breite/);
+  diagnostics.expectClean();
+});
+
+test('product detail emits one derived and valid Product Offer JSON-LD block', async ({ page, baseURL }) => {
+  const diagnostics = await installDiagnostics(page, baseURL);
+  await page.route('https://i.ytimg.com/**', route => route.fulfill({ status: 200, contentType: 'image/svg+xml', body: '<svg xmlns="http://www.w3.org/2000/svg"/>' }));
+  await page.goto('/index.php?option=com_fdshop&view=product&id=900100&catid=900010');
+  const structured = await productStructuredData(page);
+  expect(structured).toMatchObject({
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: 'E2E Produkt Aktiv',
+    sku: 'E2E-PROD-ACTIVE',
+    description: 'Künstlich',
+    brand: { '@type': 'Brand', name: 'E2E Hersteller Aktiv' },
+    offers: {
+      '@type': 'Offer',
+      price: 19.99,
+      priceCurrency: 'EUR',
+      availability: 'https://schema.org/InStock',
+    },
+  });
+  expect(new URL(structured.url).origin).toBe(new URL(baseURL).origin);
+  expect(structured.offers.url).toBe(structured.url);
+  expect(new URL(structured.image).origin).toBe(new URL(baseURL).origin);
+  expect(structured.image).toMatch(/e2e-media-standard\.svg$/);
+  expect(structured.aggregateRating).toBeUndefined();
+  expect(structured.review).toBeUndefined();
+  expect(structured.gtin).toBeUndefined();
+  await expect(page.locator('[data-effective-price] strong')).toHaveText('19,99 EUR');
+  await expect(page.locator('.fdshop-stock')).toContainText('Verfügbar');
+
+  await page.goto('/batterien');
+  const productBlocks = await page.locator('script[type="application/ld+json"]').evaluateAll(blocks => blocks
+    .map(block => { try { return JSON.parse(block.textContent); } catch { return null; } })
+    .filter(value => value?.['@type'] === 'Product'));
+  expect(productBlocks).toEqual([]);
+  diagnostics.expectClean();
+});
+
+test('Product JSON-LD handles optional fields, discounts and stock states without invented data', async ({ page, baseURL }) => {
+  const diagnostics = await installDiagnostics(page, baseURL);
+  await page.route('https://i.ytimg.com/**', route => route.fulfill({ status: 200, contentType: 'image/svg+xml', body: '<svg xmlns="http://www.w3.org/2000/svg"/>' }));
+
+  await page.goto('/index.php?option=com_fdshop&view=product&id=900104&catid=900010');
+  const sparse = await productStructuredData(page);
+  expect(sparse.brand).toBeUndefined();
+  expect(sparse.image).toBeUndefined();
+  expect(sparse.description).toBeUndefined();
+
+  await page.goto('/index.php?option=com_fdshop&view=product&id=900105&catid=900010');
+  const discount = await productStructuredData(page);
+  expect(discount.offers.price).toBe(39.99);
+  await expect(page.locator('[data-effective-price] strong')).toHaveText('39,99 EUR');
+
+  await page.goto('/index.php?option=com_fdshop&view=product&id=900107&catid=900010');
+  expect((await productStructuredData(page)).offers.availability).toBe('https://schema.org/InStock');
+
+  await page.goto('/index.php?option=com_fdshop&view=product&id=900106&catid=900010');
+  expect((await productStructuredData(page)).offers.availability).toBe('https://schema.org/OutOfStock');
+
+  await page.goto('/index.php?option=com_fdshop&view=product&id=900108&catid=900010');
+  const special = await productStructuredData(page);
+  expect(special.name).toContain('"Anführungszeichen"');
+  expect(special.name.length).toBeGreaterThan(80);
+  expect(special.description).toBe('Glanz & Spaß');
+  const productBlock = await page.locator('script[type="application/ld+json"]').evaluateAll(blocks => blocks
+    .map(block => block.textContent).find(content => JSON.parse(content)['@type'] === 'Product'));
+  expect(productBlock).not.toContain('</script>');
   diagnostics.expectClean();
 });
 

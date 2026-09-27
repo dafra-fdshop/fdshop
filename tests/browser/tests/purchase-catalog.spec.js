@@ -14,4 +14,10 @@ test('catalog mode hides purchase actions and rejects a forged direct add reques
   }, { csrf });
   expect(payload.success).toBe(false);
   expect(payload.message).toContain('Katalogmodus');
+
+  await page.goto('/index.php?option=com_fdshop&view=product&id=900100&catid=900010');
+  const productData = await page.locator('script[type="application/ld+json"]').evaluateAll(blocks => blocks
+    .map(block => JSON.parse(block.textContent)).find(value => value['@type'] === 'Product'));
+  expect(productData).toBeTruthy();
+  expect(productData.offers).toBeUndefined();
 });

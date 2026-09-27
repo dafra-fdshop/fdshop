@@ -5,7 +5,8 @@ INSERT INTO `__PREFIX__fdshop_manufacturers`
 (`id`,`manufacturer_name`,`alias`,`description`,`meta_title`,`is_active`,`ordering`,`created`,`created_by`)
 VALUES
 (900003,'Argento','argento','Hersteller für den isolierten Filtertest','Argento',1,30,'2026-01-01 00:00:00',0),
-(900004,'Funke','funke','Hersteller für den isolierten Filtertest','Funke',1,40,'2026-01-01 00:00:00',0);
+(900004,'Funke','funke','Hersteller für den isolierten Filtertest','Funke',1,40,'2026-01-01 00:00:00',0),
+(900006,'E2E Hersteller Inaktiv','e2e-inactive-manufacturer','Nur für fehlenden öffentlichen Brand','E2E Hersteller Inaktiv',0,60,'2026-01-01 00:00:00',0);
 
 INSERT INTO `__PREFIX__fdshop_manufacturers`
 (`id`,`manufacturer_name`,`alias`,`description`,`meta_title`,`is_active`,`ordering`,`created`,`created_by`)
@@ -23,10 +24,20 @@ VALUES (904026,901026,900010,1);
 UPDATE `__PREFIX__fdshop_products`
 SET `manufacturer_id` = CASE
     WHEN `id` = 900103 THEN 900003
-    WHEN `id` IN (900104,900105) THEN 900004
+    WHEN `id` = 900104 THEN 900006
+    WHEN `id` = 900105 THEN 900004
     ELSE `manufacturer_id`
 END
 WHERE `id` IN (900103,900104,900105);
+
+UPDATE `__PREFIX__fdshop_products`
+SET `short_description` = '', `description` = ''
+WHERE `id` = 900104;
+
+UPDATE `__PREFIX__fdshop_products`
+SET `product_name` = 'E2E Produkt mit Umlauten, "Anführungszeichen" & sehr langem Namen für eine vollständige JSON-LD-Ausgabe',
+    `short_description` = '<p>Glanz &amp; Spaß</p><script>alert("nicht ausgeben")</script>'
+WHERE `id` = 900108;
 
 UPDATE `__PREFIX__fdshop_products`
 SET `in_stock` = CASE `id`
