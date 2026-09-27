@@ -1,0 +1,262 @@
+FDShop – Auftrag: Halbautomatische Produkt-Meta-Daten V1
+Datum: 27.09.2026
+
+ZIEL
+Im Admin-Produktformular halbautomatische SEO-Meta-Daten einführen:
+- Admin wählt einen Produkttyp.
+- bewusster Button „Meta-Daten füllen“ erzeugt Vorschläge für Meta-Titel und Meta-Beschreibung aus den AKTUELLEN Formularwerten.
+- Felder bleiben manuell editierbar.
+- normales Speichern generiert/überschreibt Meta-Daten NIEMALS.
+- Meta-Keywords vollständig aus FDShop entfernen und später NICHT aus VirtueMart migrieren.
+- JSON-LD ausdrücklich als separater direkter Folgeauftrag, nicht hier implementieren.
+
+Vor Beginn aktuellen feature-Stand, Projektquellen, Produktschema/Form/Model/Service/Table, Manufacturer, technische Felder, Site Product View/Document-Metadaten, Assets, Tests, Fixtures und Paket-/Updatepfad vollständig analysieren.
+
+1. META-KEYWORDS ENTFERNEN
+- Adminfeld entfernen.
+- zugehörige Persistenz/Verarbeitung entfernen.
+- eigene ausschließlich dafür vorhandene DB-Spalte projektkonform per Schemaupdate entfernen, sofern sicher.
+- Frontend kein Produkt-Meta-Keywords-Tag.
+- Fixtures/Tests/Doku bereinigen.
+- VM-/Legacy-Migration übernimmt Meta-Keywords ausdrücklich NICHT.
+Leitsatz: unnötige Altlasten nicht blind übernehmen.
+
+2. PRODUKTTYP FÜR META-DATEN
+Persistentes Select im Meta-Bereich:
+„Produkttyp für Meta-Daten“
+
+Kein Pflichtfeld fürs normale Produktspeichern, aber erforderlich für Generator.
+
+Auswahl:
+- – Bitte auswählen –
+- Feuerwerksbatterie
+- Verbundfeuerwerk
+- Rakete
+- Raketensortiment
+- Single Shot
+- Fontäne
+- Vulkan
+- Bodenfeuerwerk
+- Leuchtfeuerwerk
+- Schallerzeuger
+- Feuervögel
+- Römische Lichter
+- Jugendfeuerwerk
+- Ganzjahresfeuerwerk
+- Zubehör
+
+Genau ein Wert. NICHT aus Kategorien ableiten.
+Intern stabile Keys + sprachfähige Labels verwenden.
+Schema/Update projektkonform.
+
+3. ADMIN-UI
+Sinngemäß:
+
+Meta-Daten
+
+Produkttyp für Meta-Daten
+[ Feuerwerksbatterie ▼ ]
+
+Meta-Titel
+[ ... ]                         38 Zeichen
+
+Meta-Beschreibung
+[ ... ]
+                                126 Zeichen
+
+[ Meta-Daten füllen ]
+
+[ Hinweise & Tipps ... ]
+
+Meta-Titel/Description bleiben normale manuell editierbare Felder.
+Button darf Produktformular nicht speichern/submittieren.
+
+4. AKTUELLE FORMULARWERTE
+Generator muss auch bei einem NEUEN, noch nie gespeicherten Produkt funktionieren.
+Er verwendet Werte, die gerade im Formular stehen, nicht nur DB-Werte.
+Deterministische kleine Vanilla-JS-Lösung bevorzugt; kein AJAX/API/KI nötig.
+Hersteller-ID sauber in aktuell sichtbaren Herstellernamen auflösen.
+
+5. META-TITEL
+Standard:
+[Hersteller] [Produktname] | [Produkttyp]
+
+Beispiel:
+Argento Acryl | Feuerwerksbatterie
+
+Ohne Hersteller:
+[Produktname] | [Produkttyp]
+
+Fehlt Produktname: verständlicher Hinweis, keine sinnlose Generierung.
+Shopname NICHT automatisch ins gespeicherte Feld hängen, bevor Joomla-/Template-Titelverhalten geprüft ist.
+Kein pauschales „kaufen“.
+Keine automatische harte Kürzung.
+
+6. META-BESCHREIBUNG
+Grundform:
+[Produktname] von [Hersteller]: [Kurzbeschreibung]. [Technische Fakten]
+
+Beispiel:
+Acryl von Argento: Blauer Feuertopf mit blauen Sternen und orangenen Titaneffekten. 13 Schuss · 30 mm · 325 g NEM · 21 s.
+
+Ohne Hersteller sinnvoll anpassen.
+
+Technische Fakten nur wenn vorhanden, Reihenfolge:
+1 Schusszahl
+2 Kaliber
+3 NEM
+4 Laufzeit/Brenndauer
+
+Aktuelle Feldnamen/Einheiten analysieren. Keine doppelten Einheiten, keine leeren Platzhalter.
+Kurzbeschreibung ist primäre Textquelle; HTML zu sicherem Text normalisieren, Whitespace bereinigen.
+Keinen Langtext automatisch zerhacken, wenn Kurzbeschreibung fehlt; dann reduzierten Vorschlag aus vorhandenen Daten, nichts erfinden.
+Satzzeichen/Separatoren bei fehlenden Teilen sauber.
+
+7. LÄNGEN / LIVE-ZÄHLER
+Nur Orientierung, keine harte Validierung:
+- Titel ca. 50–60 Zeichen
+- Description ca. 140–160 Zeichen
+
+Generator schneidet NICHT still ab.
+Live-Zähler für beide Felder:
+„38 Zeichen“
+bei Überschreitung z.B. „68 Zeichen – möglicherweise zu lang“.
+Beim Laden, manuellen Tippen und nach Generator korrekt.
+Speichern nie blockieren.
+
+8. BUTTONLOGIK
+Text exakt: „Meta-Daten füllen“
+
+Produkttyp fehlt:
+„Bitte zuerst einen Produkttyp auswählen.“
+Keine Änderung, kein Submit.
+
+Produktname fehlt:
+verständlicher Hinweis.
+
+Zielfelder leer:
+direkt Vorschläge eintragen.
+
+Mindestens ein Zielfeld bereits befüllt:
+NICHT blind überschreiben.
+Bewusste Bestätigung erforderlich.
+Cancel = alles unverändert.
+Bestätigen = neue Vorschläge eintragen.
+
+Danach weiterhin manuell editierbar und noch NICHT gespeichert.
+
+9. NORMALES SPEICHERN
+Speichern / Speichern & Schließen / Apply erzeugt Meta-Daten NICHT neu.
+Preis-, Bestands-, Hersteller-, Beschreibungs-, Technik- oder Produkttypänderung überschreibt Meta-Texte NICHT.
+Neue Vorschläge nur durch erneuten bewussten Buttonklick.
+Manuelle SEO-Optimierung schützen.
+
+10. HINWEISE & TIPPS
+Dezente Joomla-Info-Box „Hinweise & Tipps“, Sprachstrings, kein Tutorial.
+
+Sinngemäß:
+- Meta-Titel: Produkt, Hersteller und Produkttyp prägnant; Orientierung ca. 50–60 Zeichen.
+- Meta-Beschreibung: natürlich und verständlich; Orientierung ca. 140–160 Zeichen.
+- Wichtige Begriffe natürlich verwenden, keine Suchwortkette.
+- Suchmaschinen können Titel/Beschreibung trotzdem abweichend darstellen.
+- automatisch erzeugte Angaben sind Vorschläge und manuell optimierbar.
+- normales Speichern erzeugt Meta-Daten nicht erneut und überschreibt keine manuelle Bearbeitung.
+
+11. FRONTEND
+Bestehende Product-Site-Ausgabe prüfen:
+- gespeicherter Meta-Titel Joomla-konform als Seitentitel,
+- Meta-Description korrekt,
+- kein Meta-Keywords,
+- kein doppelter Shop-/Seitentitel,
+- sichere Ausgabe,
+- manuelle und generierte Werte gleich behandeln.
+Leere Werte projektkonform, keine unnötige neue Fallbackengine.
+
+Browser-HTML real prüfen:
+<title>
+<meta name="description">
+kein FDShop <meta name="keywords">.
+
+12. VM-/LEGACY
+Wenn Mapping bereits existiert: Keywords nicht übernehmen; neuer Produkttyp bleibt leer, wenn keine sichere fachliche Zuordnung existiert; keine Kategorieheuristik.
+Wenn Migration noch nicht implementiert: Entscheidung in passender Projektdoku festhalten, keinen VM-Großauftrag vorziehen.
+
+13. JSON-LD – NICHT IMPLEMENTIEREN
+Direkter Folgeauftrag nach Realtest.
+Keine zweite SEO-Datenpflege vorbereiten.
+Später möglichst aus bestehenden strukturierten Daten: name, description, SKU, manufacturer/brand, image, offer/price/currency, availability/persistierter Bestandsstatus.
+Keine JSON-LD-Sonderfelder anlegen.
+
+14. PERFORMANCE / SICHERHEIT
+Kleines lokales Admin-JS, Joomla-konform als Asset, nur wo benötigt.
+Kein Framework/API/KI.
+Meta-Ausgabe escapen.
+Kurzbeschreibung darf kein Script/HTML in Description schleusen.
+Produkttyp serverseitig auf erlaubte Werte begrenzen.
+Keine SQL-/Controllerlogik im JS.
+
+15. TESTS
+Mindestens:
+- neues ungespeichertes Produkt,
+- gespeichertes Produkt,
+- Produkttyp fehlt,
+- Produktname fehlt,
+- Hersteller vorhanden/fehlend,
+- Kurzbeschreibung vorhanden/fehlend,
+- technische Werte vollständig/teilweise,
+- Einheiten nicht doppelt,
+- vorhandene Meta-Werte => Bestätigung,
+- Cancel unverändert,
+- Confirm ersetzt,
+- manuelle Nachbearbeitung,
+- normales Speichern überschreibt nicht,
+- Produkttyp persistiert,
+- Zähler initial/live/Warnung ohne Sperre,
+- Keywords Admin/Persistenz/Frontend entfernt,
+- Frontend Title/Description,
+- kein doppelter Seitentitel,
+- Product CRUD/Detail/List Regression,
+- Fresh Install + Update,
+- Fixtures/Smoke,
+- PHP-/JS-Prüfung soweit vorhanden,
+- git diff --check,
+- Logs sauber.
+
+Tests proportional; kein Full-Test-Epos ohne Risikogrund.
+
+16. VERSION / DOKU
+Produktcode + voraussichtliche Schemaänderung nach Projektstandard versionieren.
+Install/Update identisches Endschema.
+Dauerhaft dokumentieren:
+- Generator nur per Button,
+- Produkttyp/Persistenz,
+- Keywords entfernt/nicht VM-migriert,
+- Meta-Felder manuell editierbar,
+- normales Speichern überschreibt nichts,
+- JSON-LD als direkter Next Step.
+
+17. FREIGABEN
+Freigegeben:
+Docker/WSL/Sandbox, Fixtures/Testprodukte/Testhersteller, Browser/Admin/Frontendtests, kleine Schemaänderung, Form/XML/JS/Language/Service/Model/Table/View/Template, Paketbau, Fresh/Update, gezielte Korrekturzyklen, Doku, Commit, Push origin/feature, Windows-/Offline-Sync.
+
+Nicht freigegeben:
+IONOS verändern, main mergen, Force-Push, JSON-LD in diesem Auftrag, große VM-Migration, externe SEO-/KI-API.
+
+STOP nur bei echtem Grundsatzproblem: aktuelles Datenmodell widerspricht wesentlich, Keywords können wegen zwingender Joomla-Abhängigkeit nicht sicher entfernt werden, Produkttyp benötigt unerwartete große Architekturänderung, fremde Änderungen nicht sicher erhaltbar.
+Normale Detailentscheidungen selbstständig treffen.
+
+18. ABSCHLUSS
+Berichten:
+- Schema/Persistenz,
+- Keywords-Entfernung,
+- Produkttyp,
+- Generatorregeln,
+- UI/Zähler/Tipps,
+- Frontend-Metaausgabe,
+- Tests,
+- Paket-/Schemaversion + Paket-SHA,
+- Commit/Push/Sync,
+- offene Punkte.
+Bei grünem Stand technisch abschließen.
+
+ENDE DES AUFTRAGS
