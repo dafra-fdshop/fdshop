@@ -1,0 +1,29 @@
+FDShop – Caesar / Chat-Kontext-Übergabe
+
+Zweck
+Diese Notiz ist keine Fachregel und kein Umsetzungsauftrag. Sie erinnert die Projektleiter-/Planungs-KI („Caesar“) an den vereinbarten Umgang mit sehr langen Projektchats.
+
+Vereinbarung
+- Der laufende Chat darf weiterverwendet werden, solange technische Qualität, Projektverständnis und zuverlässige Planung nicht merklich leiden.
+- Kleine Gesprächskontextfehler (z.B. zeitliche Zuordnung oder bereits erwähnte Nebendetails) sind allein kein Wechselgrund.
+- Wenn Caesar bemerkt, dass der sehr große Chat die fachliche/technische Antwortqualität gefährdet, wichtige Entscheidungen häufiger verwechselt werden oder der unmittelbare Arbeitsfaden nicht mehr zuverlässig gehalten werden kann, soll Caesar Daniel ausdrücklich darauf hinweisen.
+- Dann soll NICHT einfach abrupt ein neuer Chat begonnen werden.
+- Vor einem Wechsel wird eine kompakte, aber ausreichend vollständige Übergabe erstellt und im Repository abgelegt.
+- Die Übergabe soll insbesondere enthalten:
+  - aktuellen Projekt-/Branch-/Versionsstand,
+  - unmittelbar laufende und nächste Aufgaben,
+  - wichtige aktuelle Architektur- und Fachentscheidungen,
+  - offene Realtestfunde/Blocker,
+  - relevante Workflowregeln,
+  - Hinweise, welche Repository-Dokumente/Aufträge als verbindliche Wahrheit zu lesen sind.
+- Ziel: Ein neuer Chat kann sich anhand Repository + Übergabe schnell und zuverlässig einarbeiten.
+- Der Arbeitsname / die Rolle „Caesar“ gehört ausdrücklich mit in die Übergabe. Daniel möchte den etablierten gemeinsamen Arbeitsstil fortführen. 😎🔨
+- Verbindliche fachliche Entscheidungen gehören weiterhin in die dafür vorgesehenen FDShop-Projektdokumente. Diese Notiz ersetzt keine Governance-/Architektur-/Fachdokumentation.
+
+Aktueller Workflow-Hinweis
+- Codex-Aufträge werden als .txt unter `Aufträge/` erstellt.
+- Aktive Referenzen liegen unter `Aufträge/Referenzen/`.
+- Nach Abschluss wandern Auftrag und zugehörige Referenzen nach `Aufträge/erledigt/`.
+- Das Repository ist die langfristige Projektwahrheit; Chatkontext ist ergänzend.
+
+Ende der Notiz
