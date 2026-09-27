@@ -1,0 +1,335 @@
+FDShop – Auftrag: Käuferberechtigung / F3 V1
+Datum: 27.09.2026
+
+ZIEL
+Vorhandene FDShop-Käufergruppenstruktur fachlich vereinfachen und vollständig durchziehen.
+
+Modell:
+- „Ohne Schein (Standard)“
+- „Mit Schein (F3-Berechtigung)“
+
+Intern stabile Keys, z.B. standard / permit_holder.
+Scheininhaber = Standardberechtigung PLUS F3.
+Jeder registrierte Kunde ist IMMER mindestens Standardkunde. Fehlendes/defektes Mapping darf normalen Kauf nie verhindern, aber NIEMALS F3-Rechte verleihen.
+F3 entsteht ausschließlich durch ausdrückliche manuelle Adminfreigabe.
+Kein Dokumentupload in V1.
+
+1. BESTAND ANALYSIEREN
+Aktuellen feature-Stand und Projektdoku vollständig analysieren, insbesondere:
+#__fdshop_buyer_groups
+#__fdshop_user_buyer_group_map
+#__fdshop_product_buyer_group_map
+products.buyer_group_id
+orders.buyer_group_id
+product.xml buyer_group_ids
+ProductService/Model/Table
+PurchaseHelper/ProductCardHelper
+Cart/Checkout
+Bundles/Saved Bundles/Cart Bundles
+Admin Order add/update item
+Coupons buyer-group mappings
+user plugin fdshopprofile
+Registration/Profile lifecycle
+Packliste
+Fixtures/Tests/Caches.
+
+Keine parallele zweite Käufergruppenarchitektur bauen. Vorhandene Vorarbeit bereinigen/fertigstellen.
+
+2. JOOMLA USER BLEIBT BENUTZERVERWALTUNG
+Keine eigene Kundenverwaltung.
+Joomla #__users bleibt Identity/User Management; FDShop speichert nur fachliche Zusatzberechtigung.
+Bestehendes Pluginprinzip erweitern oder kleines sauberes FDShop-User-Plugin nach aktueller Architektur.
+
+Joomla Admin → Benutzer bearbeiten:
+zusätzlicher Tab/Bereich „FDShop Käuferberechtigung“.
+
+Käuferstatus:
+- Ohne Schein (Standard)
+- Mit Schein (F3-Berechtigung)
+
+Hinweis:
+„Die F3-Berechtigung darf erst nach manueller Prüfung der erforderlichen Unterlagen vergeben werden.“
+
+Nur berechtigte Admins dürfen ändern.
+Keine Joomla User Group als F3-Wahrheit; Joomla-Gruppen bleiben ACL.
+
+3. REGISTRIERUNG / BASELINE
+Jeder ordentlich registrierte Benutzer ist mindestens Standard.
+Mapping bei Registrierung projektkonform initialisieren, wenn sinnvoll.
+Defensiv gilt immer:
+registrierter User ohne Mapping = Standard.
+Niemals automatisch permit_holder.
+Gastregeln nicht nebenbei neu definieren.
+
+4. PRODUKTFELD
+Produkt Edit → Allgemein:
+genau EIN Pflichtfeld „Käufergruppe“.
+
+Optionen:
+- – Bitte auswählen –
+- Ohne Schein (Standard)
+- Mit Schein (F3-Berechtigung)
+
+required=true.
+Für NEUE Produkte KEIN Default.
+Speichern ohne bewusste Auswahl muss scheitern.
+Keine Mehrfachauswahl, keine Kategorieheuristik.
+
+Aktuell redundante buyer_group_ids/product map/products.buyer_group_id-Struktur analysieren und für Purchase Eligibility auf EINE Single Source of Truth reduzieren. Nicht blind Tabellen droppen, falls anderweitig benötigt.
+
+5. BESTEHENDE PRODUKTE
+Fachlich bestätigt: alle aktuell vorhandenen Produkte sind Standardprodukte.
+Reguläres idempotentes Update-SQL setzt/migriert alle Bestandsprodukte auf „Ohne Schein (Standard)“.
+Daniel führt kein manuelles SQL aus.
+Fresh Install und Update identisches Endmodell.
+
+6. STAMMDATEN
+Stabile Gruppen:
+standard = Ohne Schein (Standard)
+permit_holder = Mit Schein (F3-Berechtigung)
+
+Keine hartcodierten zufälligen IDs.
+Fresh Install seed.
+Update idempotent und bestehende sinnvolle Daten sicher behandeln.
+
+7. ZENTRALE ELIGIBILITY-LOGIK
+Eine zentrale fachliche Service-/Helper-Wahrheit, sinngemäß:
+userHasF3Permission(userId)
+userBuyerStatus(userId)
+requiredBuyerStatus(productId)
+canPurchaseProduct(userId, productId)
+canPurchaseBundle(userId, bundleId)
+Batchvarianten wo nötig.
+
+Purchase Action, Cart, Checkout, Bundle und Admin Order dürfen keine jeweils eigene Berechtigungsdefinition/SQL bauen.
+
+8. PERFORMANCE
+Keine N+1-Abfragen.
+Userberechtigung requestlokal cachen.
+Produktanforderungen in Listen/Modulen gebündelt laden bzw. vorhandene Daten nutzen.
+Keine Query pro Karte/Modulinstanz.
+Checkout/Bundle gebündelt validieren.
+Gezielte Performance-/Queryprüfung.
+
+9. F3-RIBBON
+F3-Pflichtprodukt zeigt ALLEN Besuchern sichtbares Ribbon „F3“.
+Bestehende zentrale Ribbon/ProductCard-Architektur nutzen.
+Kategorie, Modul und Produktdetail konsistent, soweit Ribbons dort vorgesehen.
+Neu/Hot/etc. nicht regressieren.
+
+10. PURCHASE ACTION
+Standardprodukt:
+bestehende Regeln unverändert; Standard und Scheininhaber dürfen kaufen.
+
+F3 + Scheininhaber:
+normaler Warenkorbbutton, sofern Katalog/Bestand/Login etc. erlauben.
+
+F3 + nicht berechtigt:
+Produkt vollständig sichtbar inkl. Preis/Bild/Daten/F3-Ribbon, aber KEIN Add-to-Cart.
+An Stelle der runden Purchase Action erscheint optisch passend ein runder „!“-Infoauslöser.
+Kein Cart-Request.
+Zugänglich: button type=button o.ä., Desktop/Mobile/Tastatur, aria-label „Informationen zur F3-Kaufberechtigung“.
+
+11. F3-INFOMODAL
+Bestehende FDShop-Modalarchitektur wiederverwenden, keine neue Popup-Library.
+
+Titel:
+„F3 – Kauf nur mit entsprechender Berechtigung“
+
+Sinngemäßer Text:
+„Dieser Artikel gehört zur Kategorie F3 und kann nur von entsprechend berechtigten Scheininhabern bestellt werden.
+
+Wenn Sie über eine entsprechende Erlaubnis oder Befähigung verfügen, können Sie uns Ihren Nachweis zur Prüfung einreichen. Nach erfolgreicher Prüfung schalten wir die F3-Kaufberechtigung für Ihr Kundenkonto frei.
+
+Bitte kontaktieren Sie uns zur Freischaltung.“
+
+Schließen.
+Sprachstrings.
+Kein toter Uploadlink. Späterer Nachweis-Upload muss leicht ergänzbar sein.
+
+12. KATALOGMODUS
+Globaler Katalogmodus bleibt stärker: kein Add-to-Cart für niemanden.
+F3-Ribbon darf sichtbar bleiben.
+Infoauslöser im Katalogmodus nur wenn UX sinnvoll; keine widersprüchliche Kaufaufforderung.
+
+13. SERVERSEITIGER CART-SCHUTZ
+UI ist keine Sicherheit.
+Jeder Add-to-Cart-Pfad prüft Eligibility.
+Manipulierter Standarduser→F3 Request wird abgelehnt:
+„Sie sind für das Produkt „XYZ“ nicht berechtigt.“
+Kein Cart-Eintrag.
+Bestehende Mengen/Bestand/Katalogregeln erhalten.
+
+14. CHECKOUT-ENDPRÜFUNG
+Unmittelbar vor Ordererzeugung alle Produkte inkl. Bundle-Inhalte gegen AKTUELLE Userberechtigung prüfen.
+Bei unberechtigtem F3:
+KEINE Order, Reservierung, Coupon Consumption, Mail.
+Meldung:
+„Sie sind für das Produkt „XYZ“ nicht berechtigt. Bitte entfernen Sie es aus dem Warenkorb oder melden Sie sich bei uns.“
+Mehrere sinnvoll behandeln.
+Sicher in bestehender Transaktionsarchitektur.
+
+15. BUNDLES
+Enthält Bundle mindestens ein F3-Produkt → Bundle benötigt F3.
+Strengste enthaltene Anforderung gewinnt.
+Kein manuelles Buyer-Group-Feld am Bundle nötig.
+Darstellung/Add-to-cart/Checkout/Saved-Bundle-Pfade soweit relevant absichern.
+Kein Umgehen über Bundle.
+Keine N+1.
+
+16. ADMIN ORDER
+Beim Hinzufügen eines Produkts zur Bestellung Berechtigung des BESTELLKUNDEN prüfen, nicht Adminrechte.
+F3 + Kunde ohne F3:
+„Der Kunde ist für das Produkt „XYZ“ nicht berechtigt.“
+Keine Nebenwirkungen/halbe Speicherung.
+
+Mengenänderung bestehender F3-Position:
+historische Orderintegrität respektieren. Wurde Position rechtmäßig bestellt und User verliert später F3, alte Position nicht still entfernen. Eine NEUE Erhöhung/Hinzufügung soll aktuelle Berechtigung verlangen.
+Aktuellen Order-Change-Lifecycle sauber analysieren/testen.
+
+17. ORDER-SNAPSHOT – BESTEHENDEN FEHLER BEHEBEN
+Aktuell setzt CheckoutService order.buyer_group_id aus cart.items[0].buyer_group_id. Das ist fachlich falsch.
+
+Order.buyer_group_id muss USER-Berechtigung zum Bestellzeitpunkt snapshotten:
+Standard → standard
+Scheininhaber → permit_holder.
+Auch Bundle-only Orders korrekt.
+
+ORDER IS KING:
+spätere Useränderung ändert historischen Snapshot nicht.
+
+18. PACKLISTE
+Bestehenden Platzhalter in Versandinformationen ersetzen durch:
+„Berechtigung/Schein: Ja“
+oder
+„Berechtigung/Schein: Nein“
+
+Quelle ausschließlich historischer Order-Snapshot.
+Nicht aktuelle Userberechtigung bei Regeneration.
+Legacy/unklar defensiv „Nein“, niemals erfundenes Ja.
+
+19. COUPONS
+Vorhandene coupon buyer-group mappings gegen finales Modell prüfen.
+Scheininhaber besitzt Standard + F3; ein für Standardkunden fachlich allgemein erlaubter Gutschein darf nicht versehentlich nur wegen Zusatzberechtigung ausgeschlossen werden, sofern aktuelle allow-Semantik das so meint.
+Bestehende allow/exclude-Regeln nicht blind umdeuten.
+Nur notwendige kompatible Anpassung; kein Gutschein-Großumbau.
+STOP bei fundamentaler Semantikkollision.
+
+20. MANUELLE FREISCHALTUNG
+F3 ausschließlich Adminentscheidung.
+Späterer Kundenbereich darf Schein/Ausweis hochladen und Admin benachrichtigen, aber Upload darf NIEMALS automatisch freischalten.
+Diese Zukunftsregel knapp dokumentieren.
+Upload selbst NICHT implementieren.
+
+21. TESTS – USER/ADMIN
+Mindestens:
+- neuer registrierter User → Standard.
+- registrierter Legacyuser ohne Mapping → Standardkauf möglich.
+- fehlendes Mapping → niemals F3.
+- Admin User Edit zeigt FDShop-Tab.
+- Standard→F3 speichern/persistieren.
+- F3→Standard entziehen.
+- ACL.
+- manipulierte Buyer-Group-Werte serverseitig abweisen.
+
+22. TESTS – PRODUKT
+- neues Produkt ohne Auswahl → Save blockiert.
+- Standard/F3 speichern/persistieren.
+- Bestandsprodukte nach Update Standard.
+- kein Default bei Neuanlage.
+- F3-Ribbon überall relevant.
+- bestehende Ribbons weiterhin.
+
+23. TESTS – PURCHASE/CART/CHECKOUT
+- Standarduser + Standardprodukt → kaufbar.
+- F3-User + Standardprodukt → kaufbar.
+- Standarduser + F3 → ! statt Cart + Modal.
+- F3-User + F3 → Cart.
+- manipuliertes Add-to-cart Standard→F3 → serverseitig abgewiesen.
+- F3 im bestehenden Cart, Berechtigung danach entzogen → Checkout blockiert.
+- Checkoutfehler erzeugt keine Order/Reservierung/Coupon/Mail.
+- Katalogmodus weiterhin stärker.
+
+24. TESTS – BUNDLE
+- nur Standarditems → Standard kaufbar.
+- mindestens ein F3-Item → Standard gesperrt.
+- F3-User darf.
+- kein Umgehen über Saved/Cart Bundle.
+- Bundle-only Order snapshot korrekt.
+
+25. TESTS – ADMIN ORDER / SNAPSHOT / PACKLISTE
+- Standardorder snapshot Standard.
+- F3-user order snapshot F3.
+- Reihenfolge der Cartitems beeinflusst Snapshot NICHT.
+- Admin add F3 zu Standardkunde → blockiert.
+- Admin add F3 zu F3-Kunde → erlaubt.
+- Berechtigung später entzogen: historischer Snapshot bleibt F3.
+- Packliste aus alter F3-Order zeigt Ja.
+- Standardorder zeigt Nein.
+- Legacy unklar zeigt Nein.
+- bestehende rechtmäßige F3-Position wird durch späteren Entzug nicht beschädigt; Mengenerhöhung ohne aktuelle Berechtigung blockiert.
+
+26. PERFORMANCE/REGRESSION
+- Produktlisten/Module Querycount prüfen, kein N+1.
+- 1 vs mehrere Module sinnvoll prüfen.
+- Product/Card/Purchase Tests.
+- Cart/Checkout.
+- Orders CRUD.
+- Bundles.
+- Coupons angrenzend.
+- Profile/User Plugin.
+- Dokument/Packliste.
+- Fresh Install + Update.
+- PHP/JS-Syntax.
+- git diff --check.
+- Smoke/Fixtures.
+- Logs sauber.
+
+27. VERSION / DOKU
+Schemaänderung wahrscheinlich erforderlich; Paket/Schema nach Projektstandard.
+Install/Update identisches Endschema.
+Dauerhaft dokumentieren:
+- Standard als Baseline,
+- F3 nur manuelle Adminfreigabe,
+- zentrale Eligibility,
+- Produktpflichtfeld ohne Default,
+- Bestandsproduktmigration,
+- Order-Snapshot,
+- Bundle-Vererbung,
+- Packlistenregel,
+- späterer Dokumentupload = Antrag, niemals Auto-Freischaltung.
+
+28. FREIGABEN
+Freigegeben:
+Docker/WSL/Sandbox, Fixtures/Testuser/Testprodukte/Testbundles/Testorders, Joomla User-Plugin-Anpassung/Neuanlage, Schema/Migration, Services/Models/Tables/Forms/Views/Templates/Layouts/JS/CSS/Language, Cart/Checkout/Admin-Order, Packliste, Coupon-Kompatibilitätskorrektur, Performance-/Browsertests, Paketbau/Fresh/Update, Korrekturzyklen, Doku, Commit, Push origin/feature, Windows-/Offline-Sync.
+
+Nicht freigegeben:
+IONOS verändern, main mergen, Force-Push, echter Schein-/Ausweisupload, automatische Dokumentprüfung, automatische F3-Freischaltung, eigene Kundenverwaltung, Joomla ACL-Gruppen als F3-Wahrheit, große Coupon-Neuarchitektur.
+
+STOP nur bei:
+- vorhandene Buyer-Group/Coupon-Struktur kollidiert fundamental und braucht Fachentscheidung,
+- sichere Admin-User-Integration ohne unerwartet große Architekturänderung nicht möglich,
+- Lifecycle/Orderintegrität erfordert Breaking Change,
+- fremde Änderungen nicht sicher erhaltbar.
+
+Normale Detailentscheidungen selbstständig treffen.
+
+29. ABSCHLUSS
+Berichten:
+- finales Datenmodell / bereinigte Altstruktur
+- User-Admin-Integration
+- Registrierung/Baseline
+- Produktpflichtfeld
+- F3-Ribbon + Info-Modal
+- Cart/Checkout/Admin-Order-Schutz
+- Bundlebehandlung
+- Order-Snapshot
+- Packliste
+- Coupon-Kompatibilität
+- Performance/Querycount
+- Tests
+- Paket-/Schemaversion + SHA
+- Commit/Push/Sync
+- offene Punkte.
+
+ENDE DES AUFTRAGS
