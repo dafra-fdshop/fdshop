@@ -1,0 +1,293 @@
+FDShop – KORREKTURAUFTRAG FÜR CODEX
+
+PRODUKTEDITOR – WATCHLIST ZERSTÖRT JOOMLA-TOOLBAR-/FORM-ABLAUF
+
+Projekt: FDShop
+Branch: feature
+Ausgangsstand bei Auftragserstellung: Schema/Paket 0.0.41
+
+======================================================================
+1. FEHLERBILD
+======================================================================
+
+Im Joomla-Administrator wurde nach Umsetzung der Verfügbarkeits-Watchlist
+eine reproduzierbare Regression festgestellt.
+
+Beispiel aus dem Realbestand:
+
+Produkt:
+Babiarz
+SKU: FD1331
+ID: 2333
+
+Sobald für ein Produkt mindestens ein aktiver Eintrag unter
+
+„Verfügbarkeits-Watchlist“
+
+vorhanden ist, funktionieren im Produkteditor die Joomla-Toolbaraktionen
+
+- Speichern
+- Speichern & Schließen
+- Abbrechen
+
+nicht mehr korrekt.
+
+Bei Produkten OHNE Watchlist-Eintrag funktionieren dieselben Aktionen
+weiterhin.
+
+Der Fehler ist daher an das tatsächlich gerenderte Watchlist-Markup gekoppelt.
+
+======================================================================
+2. BEREITS NACHGEWIESENER TECHNISCHER BEFUND
+======================================================================
+
+Im aktuellen Repository-Code enthält
+
+administrator/tmpl/product/edit.php
+
+das äußere Joomla-Editformular:
+
+<form ... name="adminForm" id="adminForm" ...>
+
+Innerhalb dieses Formulars wird im Watchlist-Bereich NUR dann, wenn aktive
+Watchlist-Einträge vorhanden sind, zusätzlich ein weiteres
+
+<form method="post" action="...task=product.notifyWatchlist" ...>
+
+gerendert.
+
+Damit entsteht ein verschachteltes HTML-Formular.
+
+Dies ist ungültige Formularstruktur und steht unmittelbar mit dem beobachteten
+Fehlerbild in Zusammenhang, weil das innere Formular bei leerer Watchlist
+überhaupt nicht gerendert wird.
+
+Diesen Befund als primäre Fehlerursache prüfen und real verifizieren.
+
+Nicht lediglich blind den Auftragstext übernehmen: Browser-DOM und tatsächliche
+Joomla-Submitkette prüfen.
+
+======================================================================
+3. ZIEL
+======================================================================
+
+Die Watchlist-Adminaktion muss so integriert werden, dass
+
+- genau ein gültiger Joomla-Edit-Formularkontext erhalten bleibt,
+- Joomla Toolbar / adminForm nicht gestört werden,
+- Speichern funktioniert,
+- Speichern & Schließen funktioniert,
+- Abbrechen funktioniert,
+- die Watchlist weiterhin angezeigt wird,
+- „Kunden jetzt benachrichtigen“ weiterhin bewusst und separat ausführbar ist,
+- CSRF-Schutz erhalten bleibt,
+- keine unbeabsichtigte Produktspeicherung durch die Notify-Aktion erfolgt,
+- keine neue parallele Formular-/Requestlogik entsteht.
+
+======================================================================
+4. ARBEITSGRUNDLAGE
+======================================================================
+
+Vor Änderung prüfen:
+
+- Branch / HEAD / origin/feature / Working Tree
+- administrator/tmpl/product/edit.php
+- administrator/src/View/Product/HtmlView.php
+- administrator/src/Controller/ProductController.php
+- administrator/src/Model/ProductModel.php
+- administrator/src/Service/WatchlistService.php
+- administrator/src/Service/WatchlistServiceInterface.php
+- media/js/admin-product.js
+- Joomla Toolbar-/Form-Submitkette des Produkteditors
+- vorhandene Watchlist-/Produktinteraktionstests
+
+Bestehende Produkt- und Watchlistfunktionalität nicht unnötig refaktorieren.
+
+======================================================================
+5. UMSETZUNGSGRENZEN
+======================================================================
+
+Scope ist ausschließlich diese Regression und unmittelbar notwendige
+Absicherung.
+
+Keine PayPal-Arbeit.
+
+Keine neuen Watchlist-Funktionen.
+
+Keine neue Businessregel.
+
+Keine Änderung der Watchlist-Fachsemantik.
+
+Keine automatische Watchlist-Mail bei Bestandsänderung.
+
+Keine Änderung an F3-/Buyer-Eligibility-Regeln.
+
+Keine unnötige Schemaänderung.
+
+Wenn für diesen reinen Template-/Controller-/JS-Fix keine Schemaänderung
+erforderlich ist, Schema-/Manifestversion nicht allein aus Kosmetik erhöhen.
+
+Joomla-Standard vor Eigenlösung.
+
+Die bestehende Edit-Kette muss intakt bleiben:
+
+Toolbar
+-> adminForm
+-> task / Request
+-> ProductController
+-> ProductModel / Service
+-> Redirect
+-> erneutes Laden
+
+======================================================================
+6. BEVORZUGTE TECHNISCHE RICHTUNG
+======================================================================
+
+Keine verschachtelten <form>-Elemente.
+
+Die Notify-Watchlist-Aktion sauber in den bestehenden Joomla-Form-/Task-Kontext
+integrieren oder eine andere Joomla-konforme Lösung verwenden, die den
+adminForm-Kontext nicht beschädigt.
+
+Dabei sicherstellen:
+
+- notifyWatchlist erhält eindeutig die aktuelle Produkt-ID,
+- CSRF bleibt aktiv,
+- Bestätigungsdialog bleibt erhalten oder wird gleichwertig umgesetzt,
+- Notify löst nicht versehentlich product.save/product.apply aus,
+- Toolbaraktionen lösen nicht versehentlich notifyWatchlist aus,
+- bestehende Record-ID bleibt bei Apply/Save erhalten.
+
+Keine Businesslogik ins Template oder JavaScript verschieben.
+
+======================================================================
+7. VERBINDLICHE REALTESTS
+======================================================================
+
+Mindestens folgende Fälle im echten Joomla-Administrator automatisiert bzw.
+real über den Browser prüfen.
+
+A – PRODUKT MIT AKTIVER WATCHLIST
+
+Ein Produkt mit mindestens einem aktiven Watchlist-Eintrag vorbereiten.
+
+Prüfen:
+
+1. Produkteditor öffnet fehlerfrei.
+2. Watchlist wird angezeigt.
+3. Speichern / Apply funktioniert.
+4. aktuelle Produkt-ID bleibt erhalten.
+5. kein zweiter Produktdatensatz entsteht.
+6. Speichern & Schließen funktioniert und führt korrekt zurück.
+7. Produkt erneut öffnen.
+8. Abbrechen funktioniert ohne unbeabsichtigte Speicherung.
+9. „Kunden jetzt benachrichtigen“ ist weiterhin separat ausführbar.
+10. Bestätigungsdialog funktioniert.
+11. CSRF-Schutz vorhanden.
+12. erfolgreiche Benachrichtigung verändert nur den vorgesehenen
+    Watchlist-Zustand.
+13. keine unbeabsichtigte Produktspeicherung durch Notify.
+
+B – PRODUKT OHNE WATCHLIST
+
+Prüfen:
+
+- Speichern / Apply
+- Speichern & Schließen
+- Abbrechen
+
+Bestehendes Verhalten darf nicht regressieren.
+
+C – NEGATIV-/SICHERHEITSTEST
+
+- Notify ohne gültigen CSRF-Token darf nicht ausgeführt werden.
+- falsche/fremde Produkt-ID darf keinen unkontrollierten Effekt erzeugen.
+- ausverkauftes Produkt darf entsprechend der bestehenden Fachregel nicht
+  benachrichtigt werden.
+- keine automatische Mail durch normales Produktspeichern oder
+  Bestandsänderung.
+
+D – BROWSER / LOGS
+
+Prüfen:
+
+- keine relevante JavaScript-/Browserexception
+- keine relevante PHP-/Joomla-Exception
+- keine fehlerhafte Formverschachtelung im resultierenden DOM
+- keine relevante neue Logwarnung
+
+======================================================================
+8. REGRESSION
+======================================================================
+
+Gezielt vorhandene relevante Tests erneut ausführen:
+
+- Produkteditor / Produkt-CRUD
+- Watchlist-Service
+- Produktinteraktion
+- bestehende Purchase-/Packaging-Funktion soweit vom Produkteditor betroffen
+- geeigneter QUICK-/Smoke-Check
+
+Keine unnötige FULL-Suite nur wegen eines isolierten Fixes, sofern der
+tatsächliche Änderungsumfang klein bleibt.
+
+Falls die Korrektur unerwartet zentrale Controller-/Servicepfade verändert,
+Testumfang proportional erhöhen.
+
+======================================================================
+9. CODEQUALITÄT
+======================================================================
+
+Nach Änderung mindestens:
+
+- PHP-Syntax
+- git diff --check
+- gültige HTML-/Formstruktur im betroffenen Bereich
+- keine neue N+1-Abfrage
+- keine Secrets/Testdaten im Commit
+- keine Sicherungs-/Altdateien
+
+======================================================================
+10. GIT / ABSCHLUSS
+======================================================================
+
+Erst nach grüner Abnahme:
+
+- Commit auf feature
+- Push nach origin/feature
+- kein Merge nach main
+- kein Force Push
+
+Commitmessage sinngemäß:
+
+Fix product watchlist admin form regression
+
+Abschlussbericht muss enthalten:
+
+- nachgewiesene Ursache
+- geänderte Dateien
+- konkrete technische Korrektur
+- Testergebnis Produkt MIT Watchlist
+- Testergebnis Produkt OHNE Watchlist
+- Ergebnis Notify-Watchlist
+- Ergebnis CSRF-/Negativtest
+- Ergebnis Browser-/PHP-Logs
+- ausgeführte Regressionstests
+- Commit-SHA
+- feature/origin-feature-Status
+- Working-Tree-Status
+
+======================================================================
+11. STOP-REGEL
+======================================================================
+
+Falls sich bei realer Analyse herausstellt, dass die verschachtelte
+Formstruktur NICHT die tatsächliche Ursache ist oder zusätzlich ein
+grundlegender Fehler außerhalb dieses Scopes besteht:
+
+nicht spekulativ umbauen.
+
+Fehler reproduzieren, Ursache nachweisen und bei erforderlicher
+Grundsatz-/Scope-Erweiterung STOP mit Befund melden.
+
+ENDE DES KORREKTURAUFTRAGS
