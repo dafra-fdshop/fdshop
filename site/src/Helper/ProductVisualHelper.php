@@ -20,6 +20,10 @@ final class ProductVisualHelper
 
     public static function backgroundState(object $product): string
     {
+        if ((string) ($product->buyer_group_alias ?? '') === 'permit_holder') {
+            return 'f3';
+        }
+
         if ((int) ($product->discount_active ?? 0) === 1 && (float) ($product->discount_price ?? 0) > 0) {
             return 'action';
         }

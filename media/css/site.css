@@ -30,6 +30,7 @@
 .fdshop-product-visual--action { --fdshop-category-background: url('../images/product-backgrounds/category-action.webp'); --fdshop-product-background: url('../images/product-backgrounds/product-action.webp'); }
 .fdshop-product-visual--new { --fdshop-category-background: url('../images/product-backgrounds/category-new.webp'); --fdshop-product-background: url('../images/product-backgrounds/product-new.webp'); }
 .fdshop-product-visual--bundle { --fdshop-category-background: url('../images/product-backgrounds/category-bundle.webp'); --fdshop-product-background: url('../images/product-backgrounds/product-bundle.webp'); }
+.fdshop-product-visual--f3 { --fdshop-category-background: url('../images/product-backgrounds/category-f3.webp'); --fdshop-product-background: url('../images/product-backgrounds/product-f3.webp'); }
 .fdshop-card__visual { background-image: var(--fdshop-category-background); }
 .fdshop-card__media { position: relative; height: 10.5rem; background: transparent; }
 .fdshop-card__image-link { display: flex; width: 100%; height: 100%; justify-content: center; align-items: flex-end; }

@@ -61,7 +61,16 @@ test('guest purchase uses the central action, adds quantities and reports a stoc
 });
 
 test('F3 product stays visible but eligibility is enforced in UI and server-side cart', async ({ page }) => {
+  await page.goto('/index.php?option=com_fdshop&view=category&id=900011');
+  const f3Card = page.locator('[data-product-id="900109"]');
+  await expect(f3Card).toHaveAttribute('data-visual-state', 'f3');
+  expect(await f3Card.locator('.fdshop-card__visual').evaluate(element => getComputedStyle(element).backgroundImage)).toContain('category-f3.webp');
+  await expect(page.locator('[data-product-id="900103"]')).toHaveAttribute('data-visual-state', 'standard');
+
   await page.goto('/index.php?option=com_fdshop&view=product&id=900109&catid=900011');
+  const f3Stage = page.locator('[data-fdshop-main-stage]');
+  await expect(f3Stage).toHaveAttribute('data-visual-state', 'f3');
+  expect(await f3Stage.evaluate(element => getComputedStyle(element).backgroundImage)).toContain('product-f3.webp');
   await expect(page.locator('.fdshop-ribbon--f3')).toHaveText('F3');
   await expect(page.locator('[data-purchase-submit]')).toHaveCount(0);
   const info = page.getByRole('button', { name: 'Informationen zur F3-Kaufberechtigung' });
