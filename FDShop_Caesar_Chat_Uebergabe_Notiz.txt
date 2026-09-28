@@ -1,29 +1,86 @@
-FDShop – Caesar / Chat-Kontext-Übergabe
+FDShop – Caesar Chat-Uebergabe – 28.09.2026 17:20
+Grund: aktueller Chat hat maximale Laenge erreicht.
 
-Zweck
-Diese Notiz ist keine Fachregel und kein Umsetzungsauftrag. Sie erinnert die Projektleiter-/Planungs-KI („Caesar“) an den vereinbarten Umgang mit sehr langen Projektchats.
+ROLLE / WORKFLOW
+- Projektleiter-/Planungs-KI heisst Caesar; freundlichen direkten Arbeitsstil fortfuehren.
+- Repo ist Langzeitwahrheit. Codex-Auftraege als TXT unter Auftraege/, danach erledigt/.
+- feature ist Entwicklungsbranch; kein main-Merge ohne Freigabe.
+- Kleine Fixes proportional testen, keine unnoetigen Vollsuiten.
 
-Vereinbarung
-- Der laufende Chat darf weiterverwendet werden, solange technische Qualität, Projektverständnis und zuverlässige Planung nicht merklich leiden.
-- Kleine Gesprächskontextfehler (z.B. zeitliche Zuordnung oder bereits erwähnte Nebendetails) sind allein kein Wechselgrund.
-- Wenn Caesar bemerkt, dass der sehr große Chat die fachliche/technische Antwortqualität gefährdet, wichtige Entscheidungen häufiger verwechselt werden oder der unmittelbare Arbeitsfaden nicht mehr zuverlässig gehalten werden kann, soll Caesar Daniel ausdrücklich darauf hinweisen.
-- Dann soll NICHT einfach abrupt ein neuer Chat begonnen werden.
-- Vor einem Wechsel wird eine kompakte, aber ausreichend vollständige Übergabe erstellt und im Repository abgelegt.
-- Die Übergabe soll insbesondere enthalten:
-  - aktuellen Projekt-/Branch-/Versionsstand,
-  - unmittelbar laufende und nächste Aufgaben,
-  - wichtige aktuelle Architektur- und Fachentscheidungen,
-  - offene Realtestfunde/Blocker,
-  - relevante Workflowregeln,
-  - Hinweise, welche Repository-Dokumente/Aufträge als verbindliche Wahrheit zu lesen sind.
-- Ziel: Ein neuer Chat kann sich anhand Repository + Übergabe schnell und zuverlässig einarbeiten.
-- Der Arbeitsname / die Rolle „Caesar“ gehört ausdrücklich mit in die Übergabe. Daniel möchte den etablierten gemeinsamen Arbeitsstil fortführen. 😎🔨
-- Verbindliche fachliche Entscheidungen gehören weiterhin in die dafür vorgesehenen FDShop-Projektdokumente. Diese Notiz ersetzt keine Governance-/Architektur-/Fachdokumentation.
+HEUTE ABGESCHLOSSEN
+- 524 Bestandsprodukte per SQL auf Meta-V1 migriert: meta_product_type, meta_title, meta_description; Checks 0 Fehler, 5 Admin-Stichproben gruen. DB-Praefix aktuell pxfh_.
+- Alle damaligen 10 Testorders samt Items/Bundles/Allocations/History/Status-History/Documentrows/Coupon-Usage geloescht. 15 Reservierungen korrekt freigegeben; stock_quantity und sold_quantity NICHT veraendert. Checks 0. Alte Test-PDFs und alten physischen administrator/components/com_fdshop/documents Ordner manuell geloescht. Legacy-Migrationscode bleibt. Aktiver Dokumentpfad media/com_fdshop-private/documents.
+- F3 Buyer Eligibility V1 real abgenommen: standard/permit_holder, F3 manuell, UI/Cart/Checkout/Admin/Bundle/Order-Snapshot/Packliste funktionieren. Commit d20748ddf309dc5e272c27d02160bdfba9026225.
+- Kundenbereich Mein Konto V1: Codex Commit 188a42fb916c9798e559ee78cc7a3ec455a74341. Neue Tabellen user_history, user_email_changes, order_shipment_requests. Layout erster Realtest sehr gut. Routerwarnung wegen fehlender account-View-Registrierung entdeckt; Korrekturauftrag liegt im Repo, aktuellen Fixstatus im neuen Chat pruefen.
+- F3 Produkthintergrund fertig: category-f3.webp/product-f3.webp, zunaechst Standardkopien; Daniel tauscht Bilder. Prioritaet F3 > Aktion > Neu > Bundle > Standard. Paket 0.0.40, Commit 3c900e7b1a48bf0fc82ecc908c37988dc535fd9b.
+- Produktinteraktion Watchlist + Produktfrage Auftrag: Auftraege/FDShop_Auftrag_Produktinteraktion_Watchlist_Produktfrage_V1.txt, Auftrag-Commit eb67ada7f79d14a3b026382b8850b17f85d64cc5. Im neuen Chat zuerst pruefen, ob Codex bereits fertig ist.
 
-Aktueller Workflow-Hinweis
-- Codex-Aufträge werden als .txt unter `Aufträge/` erstellt.
-- Aktive Referenzen liegen unter `Aufträge/Referenzen/`.
-- Nach Abschluss wandern Auftrag und zugehörige Referenzen nach `Aufträge/erledigt/`.
-- Das Repository ist die langfristige Projektwahrheit; Chatkontext ist ergänzend.
+TESTORDER-RESET
+- Nach Kundenbereich alten Reset erweitern: order_shipment_requests gehoert beim vollstaendigen Order-Testreset dazu. user_history und user_email_changes NICHT pauschal mit Orders loeschen.
 
-Ende der Notiz
+PAYPAL – AKTUELLER ARBEITSFADEN
+- PayPal Developer Sandbox vorbereitet. Neue Merchant-App FDShop Sandbox. Business Sandbox = Haendler; vorhandener Personal Sandbox Account = Testkaeufer.
+- JavaScript SDK v6 aktiv. Expanded Checkout/Advanced Card ist PayPal-seitig gekoppelt; FDShop V1 nutzt trotzdem nur reines PayPal. Apple Pay/Google Pay/Fastlane/Vault/Subscriptions nicht implementieren.
+- Webhook im PayPal Dashboard NOCH NICHT anlegen. Erst Endpoint implementieren, dann echte URL + Webhook-ID eintragen.
+- Refunds bewusst NICHT in FDShop bauen. Rueckerstattungen selten und manuell im PayPal Account.
+
+PAYPAL – VERBINDLICHE ARCHITEKTUR
+1. Bestehender Checkout erzeugt aktuell sofort Order, reserviert Bestand, verbraucht Coupon, loescht Cart und sendet Mail. Fuer PayPal nicht vor Zahlung so verwenden.
+2. PayPal zweistufig: serverseitig voll validieren -> Payment Session/Snapshot -> PayPal Order serverseitig -> Kunde bestaetigt -> serverseitig Capture/verifizieren -> erst danach FDShop Order atomar finalisieren.
+3. Erfolgreiche PayPal-Order soll direkt bestehenden Status paid erhalten. PAYMENT bestaetigt Geld; ORDER besitzt Bestellung/Lager/Gutschein/History/Mail/PDF.
+4. Providerneutrale Architektur bevorzugt: fdshop_payment_sessions + fdshop_payment_transactions statt paypal_* Spalten in orders. provider, provider_order_id, capture/transaction_id, amount, currency, interne/provider Status, timestamps, spaeter order_id.
+5. Clientwerte niemals Preiswahrheit. Amount/Currency serverseitig aus FDShop berechnen und Capture dagegen pruefen.
+6. COMPLETED = erfolgreich/finalisieren; PENDING nicht bezahlt; DECLINED/FAILED keine bezahlte Order, Cart bleibt.
+7. Browser-Capture und Webhook auf denselben idempotenten Finalizer. Exakt eine FDShop Order pro Payment. Locks/Unique Constraints. Webhook strikt mit PayPal verifizieren.
+8. Capture COMPLETED aber FDShop-Finalisierung scheitert: niemals erneut capturen. Transaction merkt Capture; Orderfinalisierung retryfaehig.
+9. Cart erst nach erfolgreicher Orderfinalisierung loeschen.
+
+PAYPAL – 10-MINUTEN-RESERVIERUNG
+- Wegen kleiner Lagerbestaende und Lastspitzen wird beim tatsaechlichen Start der PayPal-Zahlung temporaer reserviert.
+- V1 10 Minuten, konfigurierbar (sinnvoll 5–30). Nicht schon beim normalen Warenkorb reservieren.
+- Payment Session speichert serverseitiges expires_at.
+- Browser zeigt Countdown aus SERVER-expires_at: 'Zeit fuer den Abschluss Ihrer Zahlung' / 'Bitte schliessen Sie den Bezahlvorgang innerhalb der verfuegbaren Zeit ab' / 09:47. NICHT erklaeren, dass Produkte 10 Minuten reserviert sind.
+- Bei 00:00: Vorgang abgelaufen; Zahlung erneut starten -> komplette Revalidierung, neue Session nur wenn moeglich.
+- Abgelaufene Sessions serverseitig bereinigen; bevorzugt Joomla Scheduled Task plus opportunistischer Cleanup. Browser ist nicht Cleanup-Wahrheit.
+- Zustandsmodell sinngemaess created/reserved/payment_in_progress/capturing/completed/expired/failed.
+- Sobald Capture beginnt: capturing; Cleaner darf Reservierung nicht freigeben. Race expiry vs capture atomar/gelockt loesen.
+- Erfolgreiche Zahlung: temporaere Reservierung moeglichst atomar in normale Orderreservierung uebernehmen, nicht erst -qty/+qty buchen.
+- Vorkasse/andere normale Zahlarten bleiben im bisherigen Orderflow.
+
+PAYPAL – CREDENTIALS
+- Sandbox-Credentials duerfen Codex lokal fuer Tests gegeben werden, aber NIE committen.
+- Docker .env: FDSHOP_PAYPAL_MODE=sandbox; FDSHOP_PAYPAL_SANDBOX_CLIENT_ID; FDSHOP_PAYPAL_SANDBOX_CLIENT_SECRET; FDSHOP_PAYPAL_SANDBOX_WEBHOOK_ID. .env.example nur leere Platzhalter.
+- Produktion spaeter analog LIVE. Secret nie in PHP/Repo oder sichtbarem DB-Feld.
+- Joomla Admin: Modus Sandbox/Live und nur Status Client-ID/Secret/Webhook konfiguriert ja/nein; keine Werte. Auffaellige Warnung PayPal SANDBOX aktiv.
+- IONOS Live-Credential-Ablage spaeter anhand Hostingmoeglichkeiten; bevorzugt Environment/ausserhalb Repo/Webroot.
+- Codex braucht keinen Login in Daniels echtes PayPal-Konto.
+
+PAYMENTMETHOD
+- administrator/forms/paymentmethod.xml hat bereits paypal_enabled Ja/Nein. Verwenden, keine hartcodierte Payment-ID. paypal_enabled=1 -> PayPal-Flow; andere Zahlarten -> bestehender Flow.
+
+PAYPAL TESTS NICHT VERGESSEN
+- aktuelle PayPal Orders REST API v2 + JS SDK v6; serverseitiges Create Order/Capture.
+- Amount/Currency verifizieren; Client kann nie paid behaupten.
+- duplicate/replay Webhooks, invalid signature, pending/declined/failed, browser cancel, popup/reload, expired countdown, expiry/capture race.
+- completed + DB-Finalizefehler -> Retry ohne Recapture.
+- temporaere Reservierung nach Ablauf freigeben; bei Erfolg sauber uebernehmen.
+- Coupon erst bei finaler Order atomar verbrauchen/revalidieren.
+- F3 Eligibility, Bestand, Bundles, physische Nachfrage erneut sicher pruefen.
+- Mail/PDF erst nach Orderfinalisierung.
+- Secrets/Access Tokens nicht loggen. Sandbox->Live ohne Codeumbau.
+
+NAECHSTER SCHRITT IM NEUEN CHAT
+1. Repo aktuellen feature-Stand lesen, insbesondere Status Routerfix und Watchlist/Produktfrage.
+2. PayPal-Plan aus dieser Uebergabe aufnehmen.
+3. Aktuellen Payment/Checkout/Order-Code gezielt lesen.
+4. Grossen PayPal-V1-Codex-Auftrag als TXT unter Auftraege/ erstellen.
+5. Webhook erst NACH Implementierung gemeinsam im PayPal Dashboard konfigurieren.
+
+LEITSAETZE
+- PRODUCT IS KING / ORDER IS KING.
+- Zentrale Lagerlogik, keine parallelen Bestandswahrheiten.
+- Payment bestaetigt Geld; Order entscheidet fachliche Folgen.
+- Joomla User bleibt Benutzerwahrheit.
+- Server-side first, Performance, keine N+1, Joomla-6-ready.
+
+ENDE DER UEBERGABE
