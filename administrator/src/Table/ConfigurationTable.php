@@ -38,6 +38,7 @@ class ConfigurationTable extends Table
 
         $this->account_withdrawal_days = max(1, min(365, (int) ($this->account_withdrawal_days ?? 14)));
         $this->account_f3_max_mb       = max(1, min(25, (int) ($this->account_f3_max_mb ?? 8)));
+        $this->paypal_reservation_minutes = max(5, min(30, (int) ($this->paypal_reservation_minutes ?? 10)));
 
         /*if (!isset($this->katalog_active) || $this->katalog_active === '' || $this->katalog_active === null) {
             $this->katalog_active = 0;

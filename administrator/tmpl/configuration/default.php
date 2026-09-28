@@ -86,6 +86,13 @@ $orderStatusSearchView = (object) [
 						<?php echo $configurationField($this->form->renderField('katalog_active')); ?>
 						<?php echo $configurationField($this->form->renderField('show_terms_checkbox')); ?>
 						<?php echo $configurationField($this->form->renderField('require_terms_checkbox')); ?>
+						<?php echo $configurationField($this->form->renderField('paypal_reservation_minutes')); ?>
+						<div class="alert <?php echo strtolower((string) getenv('FDSHOP_PAYPAL_MODE')) === 'live' ? 'alert-success' : 'alert-warning'; ?>">
+							<strong><?php echo strtolower((string) getenv('FDSHOP_PAYPAL_MODE')) === 'live' ? 'PayPal Live' : 'PAYPAL SANDBOX AKTIV'; ?></strong><br>
+							Client-ID konfiguriert: <?php echo getenv('FDSHOP_PAYPAL_' . (strtolower((string) getenv('FDSHOP_PAYPAL_MODE')) === 'live' ? 'LIVE' : 'SANDBOX') . '_CLIENT_ID') ? 'Ja' : 'Nein'; ?> ·
+							Secret konfiguriert: <?php echo getenv('FDSHOP_PAYPAL_' . (strtolower((string) getenv('FDSHOP_PAYPAL_MODE')) === 'live' ? 'LIVE' : 'SANDBOX') . '_CLIENT_SECRET') ? 'Ja' : 'Nein'; ?> ·
+							Webhook-ID konfiguriert: <?php echo getenv('FDSHOP_PAYPAL_' . (strtolower((string) getenv('FDSHOP_PAYPAL_MODE')) === 'live' ? 'LIVE' : 'SANDBOX') . '_WEBHOOK_ID') ? 'Ja' : 'Nein'; ?>
+						</div>
 					</div>
 				</div>
 			</div>

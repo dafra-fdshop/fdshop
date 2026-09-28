@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<extension type="plugin" group="task" method="upgrade">
+  <name>plg_task_fdshoppaymentcleanup</name><author>FDShop</author><creationDate>2026-09-28</creationDate><version>0.0.42</version>
+  <description>Bereinigt sicher abgelaufene FDShop-Zahlungsreservierungen.</description>
+  <namespace path="src">FDShop\Plugin\Task\PaymentCleanup</namespace>
+  <scriptfile>script.php</scriptfile>
+  <files><folder plugin="fdshoppaymentcleanup">services</folder><folder>src</folder><folder>language</folder><filename>script.php</filename></files>
+  <languages folder="language"><language tag="de-DE">de-DE/plg_task_fdshoppaymentcleanup.ini</language><language tag="en-GB">en-GB/plg_task_fdshoppaymentcleanup.ini</language></languages>
+</extension>

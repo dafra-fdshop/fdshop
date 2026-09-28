@@ -155,6 +155,7 @@ final class CartController extends BaseController
             'shipmentName' => (string) ($cart['shipment']->name ?? 'Keine aktive Abholstation'),
             'paymentId' => (int) ($cart['payment']->id ?? 0),
             'paymentName' => (string) ($cart['payment']->name ?? 'Keine aktive Zahlungsart'),
+            'paymentPayPalEnabled' => (int) ($cart['payment']->paypal_enabled ?? 0),
             'orderCreated' => (bool) ($cart['order_created'] ?? false),
         ];
         if (isset($cart['purchase'])) {

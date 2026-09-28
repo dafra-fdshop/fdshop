@@ -5,6 +5,9 @@ DELETE FROM `__PREFIX__menu` WHERE `alias` = 'batterien' AND `link` LIKE 'index.
 
 DELETE FROM `__PREFIX__fdshop_coupon_usage`;
 DELETE FROM `__PREFIX__fdshop_product_watchlist`;
+DELETE FROM `__PREFIX__fdshop_payment_transactions`;
+DELETE FROM `__PREFIX__fdshop_payment_reservations`;
+DELETE FROM `__PREFIX__fdshop_payment_sessions`;
 DELETE FROM `__PREFIX__fdshop_coupon_user_map`;
 DELETE FROM `__PREFIX__fdshop_coupon_buyer_group_map`;
 DELETE FROM `__PREFIX__fdshop_coupon_product_map`;
@@ -16,8 +19,8 @@ DELETE FROM `__PREFIX__fdshop_order_history`;
 DELETE FROM `__PREFIX__fdshop_order_bundle_items`;
 DELETE FROM `__PREFIX__fdshop_order_bundles`;
 DELETE FROM `__PREFIX__fdshop_order_items`;
-DELETE FROM `__PREFIX__fdshop_orders`;
 DELETE FROM `__PREFIX__fdshop_order_shipment_requests`;
+DELETE FROM `__PREFIX__fdshop_orders`;
 DELETE FROM `__PREFIX__fdshop_user_email_changes`;
 DELETE FROM `__PREFIX__fdshop_user_history`;
 DELETE FROM `__PREFIX__fdshop_order_statuses`;
@@ -147,9 +150,9 @@ INSERT INTO `__PREFIX__fdshop_coupon_user_map` (id,coupon_id,user_id,created,cre
 INSERT INTO `__PREFIX__fdshop_shipments` (id,shipment_name,shipment_description,shipment_color,shipment_price,published,is_default,ordering,created,created_by) VALUES
 (900600,'E2E Versand Standard','Eindeutig künstlich','#112233',4.99,1,1,10,'2026-01-01 00:00:00',0),(900603,'E2E Abholstation Alternativ','Eindeutig künstlich','#667788',0,1,0,15,'2026-01-01 00:00:00',0),(900601,'E2E Versand Inaktiv','Eindeutig künstlich','#445566',9.99,0,0,20,'2026-01-01 00:00:00',0);
 INSERT INTO `__PREFIX__fdshop_payment_methods` (id,payment_name,payment_description,payment_fee,paypal_enabled,published,is_default,ordering,created,created_by) VALUES
-(900610,'E2E Zahlung Rechnung','Eindeutig künstlich',0,0,1,1,10,'2026-01-01 00:00:00',0),(900611,'E2E Zahlung Inaktiv','Eindeutig künstlich',2.5,0,0,0,20,'2026-01-01 00:00:00',0);
+(900610,'E2E Zahlung Rechnung','Eindeutig künstlich',0,0,1,1,10,'2026-01-01 00:00:00',0),(900612,'E2E PayPal Sandbox','Eindeutig künstlich',0,1,1,0,15,'2026-01-01 00:00:00',0),(900611,'E2E Zahlung Inaktiv','Eindeutig künstlich',2.5,0,0,0,20,'2026-01-01 00:00:00',0);
 INSERT INTO `__PREFIX__fdshop_order_statuses` (id,status_code,status_name,description,notify_seller,notify_buyer,create_invoice,stock_action,seller_email_mode,buyer_email_mode,is_active,ordering,created,created_by) VALUES
-(900700,'e2e-ordered','E2E Bestellt','Künstlich',1,1,0,'reserve','config','account',1,10,'2026-01-01 00:00:00',0),(900701,'e2e-shipped','E2E Versendet','Künstlich',0,1,0,'deduct','config','account',1,20,'2026-01-01 00:00:00',0),(900702,'e2e-inactive','E2E Status Inaktiv','Künstlich',0,0,0,'none','config','account',0,30,'2026-01-01 00:00:00',0),(900703,'ordered','Bestellt','Initialstatus für Checkout',1,1,0,'reserve','config','account',1,5,'2026-01-01 00:00:00',0),(900705,'cancelled','Storniert','Zentraler Stornostatus für Widerrufstests',1,1,0,'available','config','account',1,25,'2026-01-01 00:00:00',0);
+(900700,'e2e-ordered','E2E Bestellt','Künstlich',1,1,0,'reserve','config','account',1,10,'2026-01-01 00:00:00',0),(900701,'e2e-shipped','E2E Versendet','Künstlich',0,1,0,'deduct','config','account',1,20,'2026-01-01 00:00:00',0),(900702,'e2e-inactive','E2E Status Inaktiv','Künstlich',0,0,0,'none','config','account',0,30,'2026-01-01 00:00:00',0),(900703,'ordered','Bestellt','Initialstatus für Checkout',1,1,0,'reserve','config','account',1,5,'2026-01-01 00:00:00',0),(900706,'paid','Zahlung erhalten','Erfolgreich bezahlte Bestellung',1,1,1,'reserve','config','account',1,15,'2026-01-01 00:00:00',0),(900705,'cancelled','Storniert','Zentraler Stornostatus für Widerrufstests',1,1,0,'available','config','account',1,25,'2026-01-01 00:00:00',0);
 
 INSERT INTO `__PREFIX__fdshop_orders` (id,order_number,user_id,buyer_group_id,payment_method_id,shipment_id,order_status,order_status_id,state,currency,grand_total,has_bundle,customer_name,customer_email,customer_first_name,customer_last_name,customer_company,customer_street,customer_postal_code,customer_city,customer_country,customer_phone,payment_method_name,payment_fee,shipment_name,shipment_fee,subtotal,stock_state,created) VALUES
 (900800,'E2E-ORDER-NORMAL',__JOOMLA_USER_ID__,900020,900610,900600,'e2e-ordered',900700,1,'EUR',24.98,0,'Erika Mustermann','erika@example.invalid','Erika','Mustermann','E2E Handel GmbH','Teststraße 12','12345','Teststadt','Deutschland','+49 30 123456','E2E Zahlung Rechnung',0,'E2E Versand Standard',4.99,19.99,'reserved','2026-01-02 10:00:00'),(900801,'E2E-ORDER-BUNDLE',__JOOMLA_USER_ID__,900021,900610,900600,'e2e-shipped',900701,1,'EUR',71.02,1,'Erika Mustermann','erika@example.invalid','Erika','Mustermann','E2E Handel GmbH','Teststraße 12','12345','Teststadt','Deutschland','+49 30 123456','E2E Zahlung Rechnung',0,'E2E Versand Standard',4.99,66.03,'none','2026-01-03 10:00:00');

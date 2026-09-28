@@ -455,7 +455,9 @@ final class CartService implements CartServiceInterface
         $shipment = $table === 'shipments';
         $name = $shipment ? 'shipment_name' : 'payment_name';
         $fee = $shipment ? 'shipment_price' : 'payment_fee';
-        $query = $this->db->getQuery(true)->select([$this->db->quoteName('id'), $this->db->quoteName($name, 'name'), $this->db->quoteName($fee, 'fee'), $this->db->quoteName('is_default')])
+        $fields = [$this->db->quoteName('id'), $this->db->quoteName($name, 'name'), $this->db->quoteName($fee, 'fee'), $this->db->quoteName('is_default')];
+        $fields[] = $shipment ? '0 AS paypal_enabled' : $this->db->quoteName('paypal_enabled');
+        $query = $this->db->getQuery(true)->select($fields)
             ->from($this->db->quoteName('#__fdshop_' . $table))
             ->where($this->db->quoteName('published') . ' = 1')
             ->order($this->db->quoteName('ordering') . ' ASC, ' . $this->db->quoteName('id') . ' ASC');

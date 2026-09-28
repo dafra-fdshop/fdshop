@@ -14,7 +14,13 @@ final class CheckoutService implements CheckoutServiceInterface
 {
     public function __construct(private readonly DatabaseInterface $db, private readonly CartServiceInterface $cartService, private readonly OrderNotificationService $notifications, private readonly ProductServiceInterface $products, private readonly BuyerEligibilityServiceInterface $eligibility) {}
 
-    public function createOrder(int $userId, string $sessionId, int $shipmentId, int $paymentId, string $couponCode, string $note, bool $termsAccepted, string $submissionId): array
+    public function assertCustomerReady(int $userId): void
+    {
+        if ($userId < 1) throw new \DomainException('Bitte melden Sie sich an oder registrieren Sie sich, um die Bestellung abzuschließen.');
+        $this->customerSnapshot($userId);
+    }
+
+    public function createOrder(int $userId, string $sessionId, int $shipmentId, int $paymentId, string $couponCode, string $note, bool $termsAccepted, string $submissionId, ?string $paymentSessionToken = null, string $statusCode = 'ordered'): array
     {
         if ($userId < 1) throw new \DomainException('Bitte melden Sie sich an oder registrieren Sie sich, um die Bestellung abzuschließen.');
         if (!preg_match('/^[0-9a-f-]{36}$/i', $submissionId)) throw new \DomainException('Die Bestellanfrage ist ungültig. Bitte laden Sie den Warenkorb neu.');
@@ -29,11 +35,13 @@ final class CheckoutService implements CheckoutServiceInterface
             if (!$config || (int)$config->katalog_active === 1) throw new \DomainException('Bestellungen sind im Katalogmodus nicht möglich.');
             $required = (int)$config->require_terms_checkbox === 1;
             if ($required && !$termsAccepted) throw new \DomainException('Bitte bestätigen Sie die AGB und die Widerrufsbelehrung.');
-            $status = $this->lockOne('#__fdshop_order_statuses', "status_code = 'ordered' AND is_active = 1");
-            if (!$status) throw new \RuntimeException('Der Bestellstatus ordered ist nicht aktiv verfügbar.');
+            if (!in_array($statusCode, ['ordered', 'paid'], true)) throw new \RuntimeException('Der Bestellstatus ist für den Checkout nicht zulässig.');
+            $status = $this->lockOne('#__fdshop_order_statuses', 'status_code = '.$this->db->quote($statusCode).' AND is_active = 1');
+            if (!$status) throw new \RuntimeException('Der Bestellstatus '.$statusCode.' ist nicht aktiv verfügbar.');
             $cart = $this->cartService->getCart($userId, $sessionId, $shipmentId, $paymentId, $couponCode);
             if ($cart['items'] === [] && ($cart['bundles'] ?? []) === []) throw new \DomainException('Der Warenkorb ist leer.');
             if (!$cart['shipment'] || !$cart['payment']) throw new \DomainException('Versand- und Zahlungsart müssen ausgewählt sein.');
+            if ((int) ($cart['payment']->paypal_enabled ?? 0) === 1 && $paymentSessionToken === null) throw new \DomainException('Diese Zahlungsart muss über den PayPal-Zahlungsablauf abgeschlossen werden.');
             if ($couponCode !== '' && ($cart['coupon_code'] ?? '') === '') throw new \DomainException('Der Gutschein ist nicht mehr gültig. Bitte prüfen Sie den Warenkorb erneut.');
 
             $eligibilityIds=array_map(static fn($item)=>(int)$item->product_id,$cart['items']);foreach(($cart['bundles']??[]) as $bundle)foreach($bundle->items as $item)$eligibilityIds[]=(int)$item->product_id;
@@ -43,9 +51,12 @@ final class CheckoutService implements CheckoutServiceInterface
             foreach ($cart['items'] as $item) $demand[(int)$item->product_id] = ($demand[(int)$item->product_id] ?? 0) + (float)$item->physical_quantity;
             foreach (($cart['bundles'] ?? []) as $bundle) foreach ($bundle->items as $item) $demand[(int)$item->product_id] = ($demand[(int)$item->product_id] ?? 0) + (float)$item->quantity;
             ksort($demand);
+            $paymentSession = $paymentSessionToken ? $this->paymentSession($paymentSessionToken, $userId) : null;
+            $ownedReservations = $paymentSession ? $this->paymentReservations((int) $paymentSession->id) : [];
             foreach ($demand as $productId => $quantity) {
                 $stock = $this->lockOne('#__fdshop_products_details', 'product_id = '.(int)$productId);
-                if (!$stock || ((float)$stock->stock_quantity - (float)$stock->reserved_quantity) + 0.0001 < $quantity) throw new \DomainException('Mindestens ein Produkt ist nicht mehr in ausreichender Menge verfügbar.');
+                $owned = (float) ($ownedReservations[$productId] ?? 0);
+                if (!$stock || ((float)$stock->stock_quantity - (float)$stock->reserved_quantity + $owned) + 0.0001 < $quantity || ($paymentSession && abs($owned - $quantity) > 0.0001)) throw new \DomainException('Mindestens ein Produkt ist nicht mehr in ausreichender Menge verfügbar.');
             }
             if ($couponCode !== '') $this->lockOne('#__fdshop_coupons', 'coupon_code = '.$this->db->quote(strtoupper(trim($couponCode))));
 
@@ -53,7 +64,7 @@ final class CheckoutService implements CheckoutServiceInterface
             $row = (object)[
                 'order_number'=>$this->orderNumber(), 'user_id'=>$userId, 'buyer_group_id'=>$this->eligibility->groupId($this->eligibility->userStatus($userId)),
                 'payment_method_id'=>(int)$cart['payment']->id, 'shipment_id'=>(int)$cart['shipment']->id,
-                'order_status'=>'ordered', 'order_status_id'=>(int)$status->id, 'state'=>1, 'currency'=>(string)$cart['currency'],
+                'order_status'=>$statusCode, 'order_status_id'=>(int)$status->id, 'state'=>1, 'currency'=>(string)$cart['currency'],
                 'grand_total'=>(float)$cart['total'], 'has_bundle'=>empty($cart['bundles'])?0:1,
                 'customer_name'=>$customer['name'], 'customer_email'=>$customer['email'],
                 'customer_first_name'=>$customer['first_name'], 'customer_last_name'=>$customer['last_name'],
@@ -79,7 +90,7 @@ final class CheckoutService implements CheckoutServiceInterface
                 foreach($bundle->items as $item){$document=$this->documentSnapshot((int)$item->product_id,(int)($config->document_special_category_id??0));$bi=(object)['order_bundle_id'=>$orderBundleId,'product_id'=>(int)$item->product_id,'product_name'=>(string)$item->product_name,'sku'=>(string)$item->sku,'quantity'=>(float)$item->quantity,'regular_price_gross'=>(float)$item->unit_price_gross,'unit_price_net'=>round((float)$item->unit_price_gross/(1+$tax/100),4),'unit_price_gross'=>(float)$item->unit_price_gross,'tax_rate'=>$tax,'total_net'=>round((float)$item->total_gross/(1+$tax/100),4),'total_gross'=>(float)$item->total_gross,'currency'=>(string)$bundle->currency,'is_removed'=>0,'document_image_path'=>$document['image'],'packing_group'=>$document['group'],'created'=>$date];$this->db->insertObject('#__fdshop_order_bundle_items',$bi);}
             }
             foreach($demand as $productId=>$quantity){$allocation=(object)['order_id'=>$orderId,'product_id'=>$productId,'physical_quantity'=>$quantity,'stock_state'=>'none','created'=>$date];$this->db->insertObject('#__fdshop_order_stock_allocations',$allocation);}
-            $this->applyStockAction($orderId,(string)$status->stock_action,$demand,$date);
+            $this->applyStockAction($orderId,(string)$status->stock_action,$demand,$date,$paymentSession !== null);
             if (($cart['coupon_code']??'') !== '') $this->consumeCoupon($orderId,$userId,(string)$cart['coupon_code'],(float)$cart['coupon_discount'],$tax,$date);
             $statusHistory=(object)['order_id'=>$orderId,'old_status_id'=>null,'new_status_id'=>(int)$status->id,'comment'=>'Bestellung durch Kunden erzeugt','is_system_change'=>1,'changed_at'=>$date,'changed_by'=>$userId];
             $this->db->insertObject('#__fdshop_order_status_history',$statusHistory);
@@ -101,8 +112,10 @@ final class CheckoutService implements CheckoutServiceInterface
         return ['order'=>$order,'items'=>(array)$this->db->loadObjectList()];
     }
 
-    private function applyStockAction(int $orderId,string $action,array $demand,string $date):void
-    {if(!in_array($action,['none','reserve','deduct','available'],true))throw new \RuntimeException('Ungültige Lageraktion.'); if($action==='none')return;$affected=[]; foreach($demand as $id=>$qty){if($action==='reserve'){$set='reserved_quantity = reserved_quantity + '.(float)$qty;$state='reserved';}elseif($action==='deduct'){$set='stock_quantity = stock_quantity - '.(float)$qty;$state='deducted';}else{$state='available';continue;}$q=$this->db->getQuery(true)->update($this->db->quoteName('#__fdshop_products_details'))->set($set)->where('product_id='.(int)$id);$this->db->setQuery($q)->execute();$affected[]=(int)$id;$q=$this->db->getQuery(true)->update($this->db->quoteName('#__fdshop_order_stock_allocations'))->set('stock_state='.$this->db->quote($state))->set('modified='.$this->db->quote($date))->where('order_id='.$orderId)->where('product_id='.(int)$id);$this->db->setQuery($q)->execute();}if($affected!==[])$this->products->recalculateStockStatus($affected);$q=$this->db->getQuery(true)->update($this->db->quoteName('#__fdshop_orders'))->set('stock_state='.$this->db->quote($state))->where('id='.$orderId);$this->db->setQuery($q)->execute();}
+    private function applyStockAction(int $orderId,string $action,array $demand,string $date,bool $preReserved=false):void
+    {if(!in_array($action,['none','reserve','deduct','available'],true))throw new \RuntimeException('Ungültige Lageraktion.'); if($action==='none')return;$affected=[]; foreach($demand as $id=>$qty){if($action==='reserve'){$set=$preReserved?null:'reserved_quantity = reserved_quantity + '.(float)$qty;$state='reserved';}elseif($action==='deduct'){$set=$preReserved?'reserved_quantity=GREATEST(0,reserved_quantity-'.(float)$qty.'), stock_quantity=stock_quantity-'.(float)$qty:'stock_quantity = stock_quantity - '.(float)$qty;$state='deducted';}else{$state='available';continue;}if($set!==null){$q=$this->db->getQuery(true)->update($this->db->quoteName('#__fdshop_products_details'))->set($set)->where('product_id='.(int)$id);$this->db->setQuery($q)->execute();}$affected[]=(int)$id;$q=$this->db->getQuery(true)->update($this->db->quoteName('#__fdshop_order_stock_allocations'))->set('stock_state='.$this->db->quote($state))->set('modified='.$this->db->quote($date))->where('order_id='.$orderId)->where('product_id='.(int)$id);$this->db->setQuery($q)->execute();}if($affected!==[])$this->products->recalculateStockStatus($affected);$q=$this->db->getQuery(true)->update($this->db->quoteName('#__fdshop_orders'))->set('stock_state='.$this->db->quote($state))->where('id='.$orderId);$this->db->setQuery($q)->execute();}
+    private function paymentSession(string $token,int $userId):object{$row=$this->lockOne('#__fdshop_payment_sessions','session_token='.$this->db->quote($token).' AND user_id='.(int)$userId);if(!$row||!in_array((string)$row->status,['captured','completed'],true))throw new \DomainException('Die PayPal-Zahlung ist nicht finalisierbar.');return $row;}
+    private function paymentReservations(int $sessionId):array{$q=$this->db->getQuery(true)->select(['product_id','quantity'])->from($this->db->quoteName('#__fdshop_payment_reservations'))->where('payment_session_id='.$sessionId)->where('status='.$this->db->quote('reserved'))->order('product_id ASC');$this->db->setQuery((string)$q.' FOR UPDATE');$out=[];foreach($this->db->loadObjectList() as $row)$out[(int)$row->product_id]=(float)$row->quantity;return $out;}
     private function consumeCoupon(int $orderId,int $userId,string $code,float $gross,float $tax,string $date):void
     {
         $coupon=$this->lockOne('#__fdshop_coupons','coupon_code='.$this->db->quote($code));
