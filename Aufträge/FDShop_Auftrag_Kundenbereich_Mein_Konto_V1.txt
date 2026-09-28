@@ -1,0 +1,369 @@
+FDShop – Auftrag: Kundenbereich / Mein Konto V1
+Datum: 28.09.2026
+
+ZIEL
+Vollständiger sicherer responsiver Kundenbereich für eingeloggte Joomla-User:
+- Dashboard
+- Kontaktdaten
+- Konto/Sicherheit
+- Passwort
+- Benutzername gemäß Joomla-Konfiguration
+- E-Mail-Änderung nur nach Verifikation
+- eigene Orders read-only
+- Abholstationsänderung nur als Mail-Anfrage
+- elektronischer Widerruf + Adminentscheidung
+- F3-Schein/Ausweis temporär hochladen und per Mail übermitteln, NICHT dauerhaft online speichern
+- sinnvolle User-History
+- Config-Tab „User-Bereich“.
+
+Keine eigene Kundenverwaltung. Joomla bleibt Identity/User Management. FDShop ergänzt Fachworkflows.
+
+Layout: Codex darf aktuelle Account-Dashboard-UX als Inspiration recherchieren, nichts kopieren, an FDShop-Optik anpassen. Responsive/server-side-first, keine unnötige SPA.
+
+1. BASIS ANALYSIEREN
+Aktuellen feature-Stand + Projektdoku, Joomla User/Profile APIs/Config, fdshopprofile, Registration/Login, F3 Eligibility, Orders/Items/Bundles/History/Status, Admin Orders, Mailservice, Shipments/Checkout-Verfügbarkeit, zentralen Orderstatus/Stock-Actions, Config, Routing/CSS, CSRF/ACL, Tests/Fixtures vollständig analysieren. Bestehende Services wiederverwenden.
+
+2. STRUKTUR
+Sinngemäß:
+Mein Konto
+- Übersicht (Begrüßung, letzte Order, F3-Status, Schnellzugriffe)
+- Persönliche Daten
+- Konto & Sicherheit
+- Meine Bestellungen
+- F3-Berechtigung
+
+Tabs/Cards/Unterseiten frei nach sauberer UX.
+Nur eingeloggte User; Gäste projektkonform Login.
+Jede Order-/Request-Aktion serverseitig Ownership user_id=current user prüfen. IDs/URLs dürfen fremde Orders nie öffnen.
+
+3. PERSÖNLICHE DATEN
+Bestehende FDShop-Profilfelder als Wahrheit:
+Vorname, Nachname, Firma/Adresse/PLZ/Ort/Land/Telefon entsprechend fdshopprofile aktiv/optional/pflicht.
+Keine neue Customer-Tabelle.
+Joomla-konform validieren, CSRF.
+History nur sinnvoll „Kontaktdaten geändert“, keine unnötigen sensiblen Altdaten.
+
+4. PASSWORT
+Joomla User/Auth API, aktuelle Passwortregeln. Keine eigene Hashlogik. Keine Passwortwerte/Hashes in History/Logs/Mails. History höchstens „Passwort geändert“.
+
+5. BENUTZERNAME
+Nur änderbar, wenn Joomla Benutzeroptionen dies erlauben. Sonst read-only/keine Editaktion. Joomla Unique/Validation nutzen. Keine widersprechende FDShop-Konfiguration.
+
+6. E-MAIL-ÄNDERUNG
+Neue Adresse NICHT sofort in #__users schreiben.
+Workflow:
+- neue Mail validieren/unique
+- Pending Change
+- kryptografischer einmaliger zeitlich begrenzter Token, nur Hash persistieren
+- Verifikationsmail an NEUE Adresse
+- Link validiert Token/User/Ablauf/Pending
+- erst dann Joomla email ändern
+- Pending verbrauchen
+- alte Mail bleibt bis dahin aktiv
+- erneute Anfrage ersetzt/invalidiert alte sauber
+History: angefordert/bestätigt. Keine Tokens loggen.
+Mailtemplate projektkonform.
+
+7. USER-HISTORY
+Nur fachlich sinnvolle Events:
+Kontaktdaten geändert; Username geändert; Passwort geändert; Mailänderung angefordert/bestätigt; F3-Unterlagen eingereicht; F3 erteilt/entzogen soweit integrierbar; Abholstationsanfrage gestellt/erledigt; Widerruf erklärt/akzeptiert/abgelehnt.
+Keine Seitenaufrufe/Leseaktionen/Dokumentbytes/Tokens/Passwörter.
+Bestehende geeignete History nutzen oder schlanke Tabelle.
+
+8. BESTELLUNGEN
+Liste neueste zuerst, Pagination, kein N+1.
+Zeige Bestellnummer, Datum, Status, Betrag, Abholstation, Zahlungsart soweit sinnvoll, Widerrufsstatus, Aktionen.
+
+Detail read-only aus ORDER-SNAPSHOTS:
+Nummer, bestellt/geändert, Status, Items, Bundles, Mengen, Preise/Rabatte/Gutschein/Summen, Zahlung, Abholstation, Bemerkung, Widerruf/Anfragestatus.
+KEINE direkte Mengen-/Produkt-/Status-/Shipmentänderung.
+
+9. ABHOLSTATION ÄNDERN – NUR ANFRAGE
+Button „Abholstation ändern“.
+Modal Info:
+„Hiermit können Sie uns eine Mail senden, mit der Bitte um Änderung der Abholstation in der ausgewählten Bestellung.“
+Bestellnummer + aktuelle Station + Dropdown gewünschte Station.
+Dropdown nur aktuell im Checkout verfügbare/aktive Stationen aus bestehender Versandlogik.
+Buttons „Abbrechen“ / „Änderungs-Mail abschicken“.
+
+Server:
+Ownership/geeignete Order/Shipment validieren.
+Alt=Neu ablehnen.
+Order NICHT verändern.
+Mail an zentrale Firmenadresse.
+History + persistenter Requeststatus.
+
+Pro Order maximal EINE offene Shipment-Anfrage, unabhängig vom Ziel. Solange offen:
+„Für diese Bestellung liegt bereits eine Änderungsanfrage zur Abholstation vor.“
+Admin kann im Orderdetail „Anfrage erledigt“ markieren. Dies ändert Shipment NICHT. Danach neue Anfrage möglich.
+Keine eigene Request-Verwaltungsseite.
+
+10. WIDERRUF – FACHSTATUS
+Getrennt vom Orderstatus:
+none / declared / accepted / rejected
+plus declared_at, decided_at, decided_by, rejection_reason/decision text.
+
+„erklärt“ storniert NICHT automatisch.
+accepted löst über BESTEHENDEN zentralen Orderstatusworkflow Status „Storniert“ aus. Keine eigene Stocklogik.
+
+11. KUNDEN-WIDERRUF
+Button „Vertrag widerrufen“.
+Modal: Name, E-Mail, Bestellnummer.
+Buttons „Widerruf abbrechen“ / „Widerruf bestätigen“.
+
+Widerrufsfrist konfigurierbar (Initial 14 Tage). Wenn überschritten, zusätzliche konfigurierbare Infobox, initial sinngemäß:
+„Sehr geehrter Kunde, ihre gesetzliche Widerrufsfrist gem. §312g I, 355 I, II BGB i.v.m. den allgemeinen Geschäftsbedingungen Frank Daniel's Pyrodesign, von 14 Tagen ab Vertragsschluss, ist verstrichen. Selbstverständlich prüfen wir Ihr Anliegen dennoch und werden uns mit Ihnen zeitnah in Verbindung setzen um eine einvernehmliche Lösung zu finden. Ihre Erklärung wird an uns weiter geleitet und Sie erhalten eine Empfangsbestätigung.“
+
+Text/Frist NICHT hartcodieren.
+Überschrittene Frist blockiert Erklärung NICHT.
+
+Bestätigung:
+Ownership + Idempotenz
+status=declared, timestamp
+History
+Empfangsbestätigung Kunde
+Benachrichtigung Firma
+Orderstatus unverändert.
+Retry/Mehrfachklick keine Doppelmail.
+
+12. ADMIN ORDER LIST – LAYOUT
+Bestehende Spalte „Datum (geändert)“ in „Datum (bestellt)“ als zweite Zeile integrieren, analog zweizeilige Kunde/E-Mail bzw. Bestellnummer/Rechnungsnummer.
+Freie Spalte wird „Widerruf“:
+none „–“
+declared deutlich „Widerruf erklärt“
+accepted „Akzeptiert“
+rejected „Abgelehnt“
+Declared auffälliger Badge.
+Projekt-Screenshot „Screenshot layout änderung.png“ als Intention, Admin List Standard respektieren.
+
+13. ADMIN ORDER DETAIL – WIDERRUF
+Deutlich sichtbarer Bereich.
+Bei declared:
+Zeitpunkt + relevante Infos
+„Widerruf bestätigen“
+„Widerruf ablehnen“
+Ablehnung verlangt individuelle Begründung.
+
+Bestätigen:
+accepted + decided metadata
+zentraler Statuswechsel „Storniert“
+bestehende Stock-/Reservierungsfolgen
+Kundenmail
+History.
+
+Ablehnen:
+Begründung Pflicht
+rejected
+Orderstatus unverändert
+Kundenmail mit Begründung
+History.
+Idempotent.
+
+Kundenbereich zeigt none/erklärt-in Bearbeitung/akzeptiert/abgelehnt, ggf. Ablehnungsbegründung. Nach Entscheidung keine blind doppelte Erklärung.
+
+14. F3-BEREICH
+Status aus zentraler Eligibility:
+Ohne Schein (Standard)
+Mit Schein (F3-Berechtigung)
+
+Standarduser: Upload zur manuellen Prüfung.
+F3-User: Freischaltung klar anzeigen, Upload nicht prominent erneut anbieten.
+Upload ändert NIEMALS Buyer Permission.
+
+15. F3-UPLOAD
+Deutlich sagen: Für Prüfung werden Schein UND Ausweis benötigt.
+Technisch NICHT beide erzwingen. Mindestens eine zulässige Datei reicht; fehlende Unterlagen werden manuell nachgefordert.
+
+Slots:
+- Schein/Nachweis
+- Ausweis
+je optional, Gesamtaktion mindestens eine Datei.
+
+V1 Typen: PDF, JPG/JPEG, PNG.
+Serverseitige MIME-Prüfung, nicht nur Extension.
+Größenlimit.
+Authentifiziert + CSRF.
+Sichere zufällige Tempnamen.
+Tempbereich NICHT öffentlich.
+Keine ausführbaren Uploads.
+
+Projektentscheidung:
+Dokumente werden NICHT dauerhaft im Webshop gespeichert.
+UI-Hinweis:
+„Die hochgeladenen Unterlagen werden von FDShop ausschließlich zur Übermittlung verwendet und nicht dauerhaft auf dem Webserver gespeichert.“
+
+Mail mit Anhängen an Firmenadresse.
+Nach Versand sofort löschen; auch Fehlerpfade/finally Cleanup.
+Keine Bytes in DB/History/Logs; Originalnamen nicht unnötig langfristig speichern.
+Mailfehler => keine falsche Erfolgsmeldung, sichere Löschung, Retry möglich.
+
+Metadatenstatus:
+keine Unterlagen
+„Unterlagen am <Datum> zur Prüfung übermittelt“
+F3 freigeschaltet aus zentralem Status.
+History nur „F3-Unterlagen zur Prüfung eingereicht“ + Zeit.
+Upload niemals Auto-Freischaltung.
+
+16. MAILS
+Bestehende Mail-Infrastruktur/Templates:
+- Mailverifikation neue Adresse
+- Shipment-Anfrage Firma
+- Widerruf Empfang Kunde
+- Widerruf Firma
+- Widerruf akzeptiert Kunde
+- Widerruf abgelehnt + individuelle Begründung Kunde
+- F3-Unterlagen + Anhänge Firma.
+Betreff eindeutig.
+Zentrale Firmenadresse wiederverwenden.
+Keine Retry-Mailflut.
+
+17. CONFIG TAB „USER-BEREICH“
+Neuer Tab, sinnvoll gruppiert:
+
+Widerruf:
+- Frist Tage, Initial 14
+- Hinweistext überschrittene Frist
+- ggf. Empfangs-/Info-Text, soweit sinnvoll
+
+Abholstationsänderung:
+- Infotext Modal
+
+F3:
+- Infotext
+- erlaubte Uploadtypen, sofern sicher konfigurierbar
+- max Dateigröße
+
+Benachrichtigungen:
+- bestehende zentrale Standard-Mailadresse referenzieren statt duplizieren; nur Override wenn Architektur dies bereits vorsieht.
+
+Nicht jeden UI-Satz konfigurierbar machen. Sprachstrings für normale UI.
+
+18. SICHERHEIT
+Konsequent:
+- Ownership
+- CSRF
+- ACL Admin
+- Input validation/escaping
+- Upload MIME/size/temp isolation/cleanup
+- keine PII in Logs unnötig
+- Token hashing/expiry/single-use
+- keine offenen Redirects
+- keine Ordermutation aus Shipment-Anfrage
+- Withdrawalstatus serverseitig validieren
+- Statuswechsel nur zentraler Workflow
+- Mail Header/Attachment sicher.
+
+19. PERFORMANCE
+Keine N+1 Orders/Items/Status/Shipments.
+Pagination.
+Dashboard keine unnötigen Vollabfragen.
+Requestlokale Wiederverwendung.
+Keine externen Dienste.
+
+20. TESTS – ACCOUNT
+Mindestens:
+- Gastzugriff/Login
+- eigene Daten lesen/speichern
+- Pflicht/optional Pluginconfig
+- Passwort Joomla-konform
+- Username erlaubt/verboten
+- E-Mail pending, falscher/abgelaufener/reused Token, erfolgreiche Änderung
+- fremde User-/Orderzugriffe blockiert
+- History ohne Secrets.
+
+21. TESTS – ORDERS/SHIPMENT
+- Liste/Detail own only
+- Items/Bundles/Snapshots
+- Pagination
+- verfügbare Shipmentliste
+- Anfrage sendet Mail, Order unverändert
+- offene Anfrage blockiert zweite (auch anderes Ziel)
+- Admin erledigt
+- danach neue möglich
+- manipulierte Shipment-ID blockiert.
+
+22. TESTS – WITHDRAWAL
+- innerhalb Frist
+- außerhalb Frist zeigt Hinweis, blockiert nicht
+- declared Mails exakt
+- Retry idempotent
+- Admin accepted → zentral storniert + korrekte Stockwirkung + Mail
+- rejected braucht Begründung, Orderstatus bleibt
+- Kunde sieht Status
+- Admin List neue Widerrufsspalte + Datum zweizeilig
+- keine Doppelentscheidung/Doppelmail.
+
+23. TESTS – F3 UPLOAD
+- PDF/JPG/PNG
+- nur Schein erlaubt
+- nur Ausweis erlaubt
+- beide erlaubt
+- keine Datei blockiert
+- falscher MIME/Extension/zu groß blockiert
+- Mailanhänge korrekt
+- Tempdatei nach Erfolg weg
+- Tempdatei nach Fehler weg
+- keine dauerhafte Web-/DB-Ablage
+- Upload ändert F3 NICHT
+- F3-User Status korrekt.
+
+24. REGRESSION
+Registration/Login/Profile
+F3 Eligibility/Purchase
+Cart/Checkout
+Orders Admin
+Order status/Stock snapshot
+Mails
+Config
+Fixtures/Smoke
+PHP/JS syntax
+git diff --check
+Logs
+Fresh Install + Update
+Package Scope/Lifecycle proportional.
+
+25. VERSION / DOKU
+Schema/Paket nach Projektstandard.
+Install/Update identisches Endschema.
+Dauerhaft dokumentieren:
+- Joomla User bleibt Wahrheit
+- Account read-only Orders
+- Shipmentänderung nur Anfrage
+- Withdrawal eigener Status + zentraler Storno
+- F3 Upload temporär/mail-only, keine permanente Webspeicherung, keine Auto-Freigabe
+- E-Mail Änderung verifiziert
+- History nur sinnvolle Events.
+
+26. FREIGABEN
+Freigegeben:
+WSL/Docker/Sandbox, Testuser/Testorders/Testshipments/Testmails/Mailpit, temporäre Testuploads ohne echte Personaldokumente, Schema, Userplugin/Profile, Frontend MVC/Layouts/CSS/JS, Admin Orders, Config, Mailtemplates, Browsertests, Paketbau/Fresh/Update/Lifecycle, Korrekturzyklen, Doku, Commit, Push origin/feature, Windows-/Offline-Sync, UX-Recherche öffentlich zugänglicher Accountbereiche.
+
+Nicht freigegeben:
+IONOS ändern, main merge, Force-Push, echte Kunden-/Ausweis-/Scheindokumente verwenden, dauerhafte Dokumentablage, automatische F3-Freischaltung, echte Zahlungsaktionen, neue Kundenverwaltung.
+
+STOP:
+- Joomla API erlaubt erforderlichen Username/Mail/Auth-Workflow nicht sicher wie vorgesehen,
+- zentraler Orderstatus kann Widerrufs-Storno nicht korrekt/atomar ausführen,
+- sichere temporäre Attachmentübermittlung ist in paketierter Hostingumgebung nicht realisierbar,
+- bestehende fremde Änderungen nicht sicher erhaltbar,
+- Grundsatzkollision mit Governance/Fachregeln.
+Normale Detailentscheidungen selbstständig treffen.
+
+27. ABSCHLUSSBERICHT
+Berichten:
+- UX/Views
+- User/Profile/Security
+- E-Mail-Verifikation
+- Orderportal
+- Shipment Requests/Dedupe
+- Withdrawal Datenmodell/Admin/Mails/Stockworkflow
+- F3 Upload/Sicherheits-Cleanup
+- History
+- Config
+- Performance
+- Tests
+- Paket/Schema/SHA
+- Git/Sync
+- offene Punkte.
+
+ENDE DES AUFTRAGS
