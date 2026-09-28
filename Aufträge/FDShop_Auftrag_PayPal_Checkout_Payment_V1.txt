@@ -1,0 +1,249 @@
+FDShop – CODEX-AUFTRAG: PAYPAL CHECKOUT / PAYMENT-INTEGRATION V1
+Projekt: FDShop | Branch: feature
+Ausgangsstand: 0.0.41 | HEAD: 4fac3be9b76ff5bc41881c2913c321827ec3cf14
+Ziel: Joomla 6.1.x / bestehende WSL2-Docker-Sandbox
+
+1. ZIEL / SCOPE
+FDShop erhält eine robuste einmalige PayPal-Zahlung im bestehenden Warenkorb.
+Nicht Scope: Advanced Card, Apple Pay, Google Pay, Fastlane, Vaulting,
+Subscriptions, Refund-Funktion, weitere Provider.
+Leitsatz: PAYMENT bestätigt Geld. ORDER besitzt Bestellung, Lager, Gutschein,
+History, Mail und Dokumente. PRODUCT IS KING / ORDER IS KING. Server-side first.
+
+2. VORHER ANALYSIEREN
+Branch/HEAD/origin/feature/Working Tree, aktuelle Projektquellen und Repository.
+Insbesondere CartController, CartModel, CartService(+Interface),
+CheckoutService(+Interface), site/tmpl/cart/default.php, media/js/cart.js,
+joomla.asset.json, paymentmethod.xml, configuration.xml, OrderService,
+BuyerEligibilityService, ProductService, Coupon-/Notification-/Document-Code,
+DI provider.php, SQL, fdshop.xml, .env.example, scripts/fdshop und Tests.
+Repository-Code ist Wahrheit; keine Umsetzung nur nach diesem Text.
+
+3. BESTEHENDER FLOW
+Aktuell erzeugt CartController::checkout()->CheckoutService::createOrder()
+unmittelbar die Order. Für normale Zahlarten muss das funktional erhalten
+bleiben. Vorhandenes payment_methods.paypal_enabled verwenden:
+0 = bestehender Flow; 1 = PayPal-Flow. Keine hardcodierte Payment-ID, kein
+zweiter Warenkorb.
+
+4. PAYPAL-FLOW
+PayPal zwingend zweistufig:
+a) Kauf serverseitig vollständig revalidieren.
+b) interne Payment Session/Snapshot erzeugen.
+c) Ware temporär reservieren.
+d) PayPal Order serverseitig erzeugen.
+e) Käufer genehmigt bei PayPal.
+f) Capture serverseitig durchführen/verifizieren.
+g) nur nach nachweislich erfolgreichem Capture FDShop-Order atomar finalisieren.
+h) erst danach Cart löschen.
+i) Mail/PDF/Dokumente erst nach Orderfinalisierung.
+Vor Capture keine normale FDShop-Order.
+
+5. PROVIDERNEUTRALES DATENMODELL
+Keine paypal_* Paymentarchitektur in orders. Mindestens sinngemäß:
+#__fdshop_payment_sessions und #__fdshop_payment_transactions.
+Session: eindeutige ID/Token, user_id, provider, payment_method_id, sicherer
+serverseitiger Kaufsnapshot, amount, currency, interner Status,
+provider_order_id, expires_at, created/modified, spätere order_id,
+Idempotenz/Finalisierung.
+Transaction: session_id, provider, provider_order_id, capture/transaction_id,
+Providerstatus, amount/currency, Capture-/Verifikationszeit,
+Finalisierungszustand, sinnvolle Fehler-/Retryinfo, created/modified.
+UNIQUE Constraints/Locks gegen Doppelverarbeitung.
+Neue Update-SQL + vollständiges Install-/Uninstall-SQL + Schema/Manifest hoch.
+Alte veröffentlichte Update-SQLs nicht ändern.
+
+6. REVALIDIERUNG / SNAPSHOT
+Beim tatsächlichen PayPal-Start serverseitig neu prüfen: User/Eigentümer,
+Katalogmodus, AGB, Zahlart/paypal_enabled, Abhol-/Versandart, Cart nicht leer,
+Produktstatus/Publikation, F3 Buyer Eligibility, Bundles, physische Nachfrage,
+Bestand, Preise/Aktionspreise, Verpackung, Gebühren, Gutschein/Gültigkeit/
+Limits, Währung, Gesamtsumme. Clientwerte für Preis/amount/currency/Rabatt/
+Lagerbedarf niemals als Wahrheit übernehmen. Snapshot muss spätere sichere
+Finalisierung ermöglichen und bestehende FDShop-Snapshotregeln wiederverwenden.
+
+7. TEMPORÄRE RESERVIERUNG
+Keine Reservierung durch normalen Warenkorb, Zahlungsartauswahl oder Seitenaufruf.
+Erst beim tatsächlichen Start der PayPal-Zahlung: revalidieren, betroffene
+Bestände in stabiler Reihenfolge sperren, Verfügbarkeit prüfen, temporär atomar
+reservieren, serverseitiges expires_at speichern.
+Standard 10 Minuten; Admin-konfigurierbar, zulässig 5–30 Minuten.
+Reservierung eindeutig Session zuordnen; keine parallele Bestandswahrheit.
+Bei erfolgreicher Finalisierung möglichst atomar in normalen Order-Lagerzustand
+überführen, ohne unnötige Freigabelücke durch -qty/+qty.
+
+8. COUNTDOWN / EXPIRY / CLEANUP
+Browser zeigt SERVER-expires_at, z.B. 09:47.
+Texte sinngemäß: „Zeit für den Abschluss Ihrer Zahlung“ und
+„Bitte schließen Sie den Bezahlvorgang innerhalb der verfügbaren Zeit ab.“
+Nicht erklären, dass Produkte 10 Minuten reserviert sind.
+00:00: Vorgang abgelaufen; erneuter Start = vollständige Revalidierung/neue
+Session nur wenn möglich. Browser ist nie Cleanup-Wahrheit.
+Zustände sinngemäß created/reserved/payment_in_progress/capturing/completed/
+expired/failed. Sobald Capture beginnt atomar -> capturing. Cleaner darf
+capturing nie freigeben. Race expiry vs capture mit Locks/atomaren Übergängen.
+Expired ohne Capture: Reservierung genau einmal frei; Cart bleibt; kein Coupon,
+keine Order/Mail/Dokumente.
+Cleanup bevorzugt Joomla Scheduled Task + opportunistisch an sicheren Stellen.
+
+9. PAYPAL API / JS SDK V6
+Aktuelle offizielle PayPal-Dokumentation verwenden. Orders REST API v2,
+JavaScript SDK v6, intent CAPTURE. Create Order serverseitig, Capture
+serverseitig. SDK v6 nicht wie v5 implementieren; aktuelle Callbacks und
+Return-Shapes prüfen. Für normalen einmaligen PayPal-v6-Checkout darf die
+öffentliche Client-ID gemäß PayPal-Doku im Browser zur SDK-Initialisierung
+verwendet werden. Client Secret ausschließlich serverseitig. Keinen
+Fastlane-spezifischen Client-Token-Flow einführen, da Fastlane out of scope,
+sofern aktuelle Doku für den tatsächlich verwendeten normalen PayPal-Flow
+keinen verlangt. Provider-HTTP in eigenem Service; keine PayPal-Businesslogik
+in Template/JS. Access Tokens/Secrets nie loggen. Timeouts/kontrollierte Fehler.
+
+10. STATUS / GELD
+Capture COMPLETED = Zahlungsnachweis -> amount/currency prüfen -> Transaction
+persistieren -> Finalizer.
+PENDING = nicht bezahlt, keine bezahlte Order.
+DECLINED/FAILED/endgültiger Fehler = keine Order, Cart bleibt, kein Coupon,
+keine Mail/Dokumente, Reservierung kontrolliert freigeben wenn sicher.
+Vor Finalisierung internen erwarteten Betrag/Währung gegen PayPal Order/Capture
+prüfen. Abweichung = keine Finalisierung. Keine Preisangleichung. Geldwerte
+ohne Float-Rundungsfehler vergleichen.
+
+11. EIN IDEMPOTENTER FINALIZER
+Browser und Webhook dürfen keine getrennten Ordererzeugungswege haben.
+Beide -> derselbe Finalizer. Garantieren: exakt eine Order, Coupon-Nutzung,
+Lagerübernahme, History, Mail/Dokumenterzeugung. Locks + UNIQUE Constraints.
+Bestehende submission_id-/Idempotenzlogik sinnvoll integrieren.
+
+12. CAPTURE OK, LOKALE FINALISIERUNG FEHLER
+Nach erfolgreichem Capture NIEMALS erneut capturen. Transaction merkt Capture
+dauerhaft. Lokale Finalisierung retryfähig. Späterer Browserrequest oder
+verifizierter Webhook erkennt Capture und versucht nur fehlende FDShop-
+Finalisierung erneut. Diagnose ohne Secrets/Tokens.
+
+13. ORDERFINALISIERUNG
+Erfolgreiche PayPal-Order direkt mit bestehendem aktiven Status „paid“
+erzeugen/finalisieren; Status vorher real prüfen, keinen neuen erfinden.
+Bestehende Checkout-/Orderlogik sinnvoll refaktorieren und gemeinsame
+Ordererzeugung wiederverwenden; createOrder()-Logik NICHT komplett kopieren.
+Finalisierung prüft Session/Eigentümer, Capture, amount/currency, Idempotenz,
+F3, Gutschein, Lager/Reservierung. Coupon erst atomar bei erfolgreicher Order
+verbrauchen. Post-Capture-Fachkonflikt: Capture/Transaction erhalten, kein
+Recapture, retryfähig/diagnostizierbar; nötige neue Businessentscheidung = STOP.
+
+14. CART / UX
+Cart bleibt bei Popup schließen, Reload, Cancel, PENDING, DECLINED/FAILED,
+Expiry und API-Fehler vor Capture. Erst nach erfolgreicher Finalisierung Cart
+und passende Sessionwerte bereinigen.
+Bestehenden Warenkorb nutzen. paypal_enabled=1: „Zahlungspflichtig bestellen“
+startet PayPal statt sofort Order. SDK v6 Joomla-konform/WebAssetManager.
+Eligibility, Loading/Fehler, Popup-Blocker/Abbruch sauber. Reload laufender
+Session sicher wieder aufnehmen oder kontrolliert auflösen.
+
+15. WEBHOOK
+Endpoint vollständig implementieren, aber Webhook im PayPal Dashboard NOCH
+NICHT anlegen. Keine echte Webhook-ID/Produktiv-URL erfinden. Webhook strikt
+über offiziellen PayPal-Verifikationsmechanismus prüfen. Invalid signature:
+keine Mutation/Finalisierung. Duplicate/Replay idempotent. Webhook + Browser
+gleicher Finalizer. Nur notwendige Events. Dokumentieren, welche reale URL und
+Events Daniel nach Implementierung im Dashboard eintragen muss.
+
+16. sandbox_paypal.txt / SECRETS
+Daniel stellt Codex im Chat sandbox_paypal.txt bereit. Sie enthält lokale
+Sandbox-Testdaten (Merchant Client ID/Secret und ggf. Personal-Sandbox-
+Testkäufer Login).
+Codex darf daraus Werte in die lokale NICHT VERSIONIERTE .env übernehmen.
+sandbox_paypal.txt und Inhalte NIEMALS committen/pushen/ins Repo kopieren,
+in Reports/Logs ausgeben, Screenshots/Traces sichtbar machen oder Fixtures
+übernehmen. Vor Commit Secret-/Git-Prüfung.
+.env.example nur leere Platzhalter:
+FDSHOP_PAYPAL_MODE=sandbox
+FDSHOP_PAYPAL_SANDBOX_CLIENT_ID=
+FDSHOP_PAYPAL_SANDBOX_CLIENT_SECRET=
+FDSHOP_PAYPAL_SANDBOX_WEBHOOK_ID=
+Live analog, soweit für sauberen Moduswechsel nötig. Webhook-ID zunächst leer.
+Kein echtes PayPal-Konto/keine Live-Zahlung.
+
+17. ADMIN-KONFIGURATION
+Mindestens anzeigen: Sandbox/Live; Client-ID konfiguriert Ja/Nein; Secret
+konfiguriert Ja/Nein; Webhook-ID konfiguriert Ja/Nein; Reservierungsdauer
+Standard 10, zulässig 5–30. Keine Secretwerte/zweite Secret-DB-Wahrheit.
+Bei Sandbox auffällig „PAYPAL SANDBOX AKTIV“. IONOS-Live-Secrets später,
+nicht Scope.
+
+18. SCHEDULED TASK
+Joomla-6.1-konformen Scheduled Task für Expiry-Cleanup verwenden, sofern Core-
+Mechanismus passend. Keine Cron-Parallelarchitektur. Nur sicher abgelaufene
+Sessions; capturing respektieren; genau einmal freigeben; idempotent; Fehler
+nachvollziehbar; keine fremden Ressourcen.
+
+19. VERBINDLICHE TESTS
+Integration ist breit/risikoreich; Testinfrastruktur angemessen erweitern.
+A Normaler Checkout paypal_enabled=0: unverändert, Order/Snapshot/Lager/Coupon/
+History/Mail/Dokumente korrekt.
+B PayPal Happy Path: Session, 10-min-Reservierung, Create, Käuferfreigabe,
+Capture COMPLETED, Betrag/Währung, paid Order, Snapshot, Lagerübernahme,
+Coupon genau einmal, History, Cart erst danach weg, Mail/Dokumente erst danach.
+C Security: manipulierte Clientbeträge, falsche Currency, fremde Session/User,
+CSRF, keine Secrets/Tokens in Logs, invalid Webhook signature.
+D Idempotenz: doppelter Browsercallback, duplicate/replay Webhook, Browser+
+Webhook; exakt eine Order/Coupon-/Lager-/Mailwirkung.
+E Status/Abbruch: PENDING, DECLINED, FAILED, Cancel, Popup zu, Reload.
+F Expiry: Countdown, Serverablauf, Reservierung genau einmal frei, Cart bleibt,
+Neustart revalidiert.
+G Race: expiry vs capture; Cleaner darf capturing nicht freigeben.
+H Capture+Finalizerfehler: erfolgreichen Capture-Zustand herstellen,
+lokalen Finalisierungsfehler kontrolliert erzeugen, Retry ohne zweiten Capture.
+I Fachregression: F3, Produkte, Bundles, Verpackung, Aktionspreise, Bestand,
+Gutscheine, physische Nachfrage.
+J Schema/Lifecycle: Fresh Install, Upgrade 0.0.41->neu, Uninstall, Paket, Logs.
+Externe Tests nur PayPal Sandbox, nie Live.
+
+20. TESTRESET
+Beim vollständigen Order-Testreset gehört order_shipment_requests dazu.
+user_history und user_email_changes NICHT pauschal mit Orders löschen.
+Neue Payment-Testdaten referenzgerecht entfernen, keine fremden Daten.
+
+21. DOKUMENTATION
+Repo-Doku: Architektur Session/Transaction, Zustände, Reservierung/Expiry,
+Finalizer/Idempotenz, Browser/Webhook, Environment, Sandbox/Live, Cleanup,
+Fehler/Retry, Tests sowie genaue Dashboard-Schritte für Daniel nach
+Implementierung. Keine Secrets.
+
+22. SELBSTKORREKTUR / STOP
+Codex darf innerhalb dieses Scopes eigene Implementierungs-/Testfehler
+analysieren, korrigieren, erneut testen und notwendige zusammenhängende Ebenen
+DB/Service/Controller/Model/View/Template/JS/DI/Installer/Task/Test bearbeiten.
+STOP statt stiller Entscheidung bei neuer Businessregel, grundlegender
+Architekturabweichung, unklarer Payment-Sicherheit, Scope-Erweiterung,
+Konflikt mit PRODUCT/ORDER IS KING oder unauflösbarem Post-Capture-Konflikt.
+
+23. NICHT TUN
+Kein main-Merge/Force Push; keine Secrets; keine Live-Zahlung; keine Refunds;
+kein Apple/Google Pay/Fastlane/Card/Vault/Subscription; keine hardcodierte
+Payment-ID; keine Client-Preiswahrheit; keine FDShop-Order vor Capture; kein
+zweiter Capture; kein unverifizierter Webhook; keine automatischen Watchlist-
+Mails aus Lageränderung; keine F3-Umgehung; keine parallele Bestandswahrheit;
+keine Businesslogik in Template/JS; keine N+1-Lösung wenn gebündelt möglich.
+
+24. ABNAHME / GIT
+Vor Fertigmeldung: Branch/Remote/Working Tree, passende QUICK/STANDARD/FULL-
+Prüfungen, Schema/Lifecycle, Browser-/Paymenttests, Logs, reproduzierbares
+Paket, Secret-Scan, Regression normaler Zahlarten. Wegen zentraler Payment-,
+Schema-, Service- und Checkoutänderung ist am Ende FULL vorgesehen.
+Erst bei Grün Commit+Push origin/feature. Kein main-Merge.
+Auftragsdatei danach gemäß Workflow nach Aufträge/erledigt verschieben.
+
+Abschlussbericht muss enthalten: Architektur/Dateien/Schema, API/SDK,
+Reservierung/Expiry, Finalizer/Idempotenz, Webhook-Verifikation, reale bzw.
+simulierte Sandboxprüfungen klar getrennt, Regressionen, offene Punkte,
+PayPal-Dashboard-Schritte für Daniel, Commit-SHA, feature/origin-feature und
+Working Tree.
+
+WICHTIG: Wenn ein echter End-to-End-Test wegen noch nicht eingerichteter
+öffentlich erreichbarer Webhook-URL nicht möglich ist, NICHT als PASS
+ausgeben. Implementierung und lokal/sandboxseitig prüfbare Teile vollständig
+testen, verbleibenden externen Webhook-Schritt klar als offen dokumentieren.
+Die fehlende Webhook-Konfiguration ist kein Grund, sichere Implementierung
+anderer Teile abzubrechen.
+
+ENDE DES AUFTRAGS
