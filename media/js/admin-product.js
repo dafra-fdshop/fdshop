@@ -98,6 +98,11 @@
       Joomla.submitbutton(tasks[action]);
     });
   });
+  document.querySelector('[data-fdshop-watchlist-notify]')?.addEventListener('click', event => {
+    const button = event.currentTarget;
+    if (!window.confirm(button.dataset.confirmMessage || 'Kunden jetzt benachrichtigen?')) return;
+    Joomla.submitbutton('product.notifyWatchlist');
+  });
   const type = document.querySelector('#jform_unit_type');
   const quantity = document.querySelector('#jform_unit_quantity');
   const discountType = document.querySelector('#jform_unit_discount_type');
