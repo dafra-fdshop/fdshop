@@ -1,0 +1,42 @@
+FDShop – Korrekturauftrag: Account-Routerregistrierung
+Datum: 28.09.2026
+
+Hallo mein bester Programmierer 😊
+
+zuerst: Der neue Kundenbereich sieht im ersten Realtest wirklich sehr gut aus. Die gestalterische Freiheit war gut genutzt; bitte am Layout für diese Korrektur nichts Grundsätzliches umbauen.
+
+Beim ersten IONOS-Realtest wurde ein kleiner Routingfehler gefunden.
+
+SYMPTOM
+Beim Aufruf bzw. Rendern des neuen Menüpunktes „Mein Konto“ erscheinen:
+Warning: Undefined array key "account" in libraries/src/Component/Router/Rules/StandardRules.php line 197
+Warning: Attempt to read property "key" on null in libraries/src/Component/Router/Rules/StandardRules.php line 199
+
+ANALYSE
+Im aktuellen site/src/Service/Router.php sind category, product, manufacturer und cart als RouterViewConfiguration registriert. Die neue View „account“ fehlt dort, obwohl site/src/View/Account und site/tmpl/account/default.xml vorhanden sind.
+
+AUFTRAG
+1. Prüfe diese Diagnose kurz am aktuellen feature-Stand.
+2. Wenn bestätigt, registriere die Account-View projekt-/Joomla-konform im FDShop Router. Da Account keine ID-/Parent-Segmente benötigt, keine künstlichen Keys/Routen hinzufügen.
+3. Stelle sicher, dass der Joomla-Menüpunkt „FDShop Mein Konto“ mit StandardRules/MenuRules ohne diese Warnings funktioniert.
+4. Keine Layout-/UX-Neugestaltung.
+5. Nur proportionale Tests:
+   - PHP-Syntax der betroffenen Datei(en)
+   - gezielter Router-/Account-Menü-/SEF-Test bzw. kleinster vorhandener Browserregressionstest, der den Fehler sicher abdeckt
+   - git diff --check
+   - kurze Logprüfung, sofern ohne Vollsuite möglich.
+   KEIN test-full, KEIN kompletter Lifecycle/Fresh-Install und keine stundenlange breite Regression für diese isolierte Korrektur, sofern die Änderung tatsächlich nur die fehlende Routerregistrierung betrifft.
+6. Falls die Diagnose wider Erwarten falsch ist oder mehr als eine kleine Routerkorrektur nötig wird: STOP und kurz berichten.
+7. Bei erfolgreicher kleiner Korrektur Paketversion nur dann anheben, wenn dies nach unserem Projektstandard für den auslieferbaren Fix erforderlich ist; kein No-op-Schemaupdate.
+8. Commit + Push nach origin/feature und Windows-/Offline-Sync wie üblich. Kein main-Merge, kein Force-Push.
+
+Bitte im Abschluss kurz nennen:
+- Ursache
+- Änderung
+- gezielte Tests
+- ggf. Paketversion
+- Commit/Push/Sync.
+
+Danke – und nochmal: Der Kundenbereich macht optisch bereits einen sehr guten ersten Eindruck. 😊
+
+ENDE DES KORREKTURAUFTRAGS
