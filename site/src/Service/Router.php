@@ -36,6 +36,9 @@ final class Router extends RouterView
         $cart = new RouterViewConfiguration('cart');
         $this->registerView($cart);
 
+        $account = new RouterViewConfiguration('account');
+        $this->registerView($account);
+
         parent::__construct($app, $menu);
         $this->attachRule(new MenuRules($this));
         $this->attachRule(new StandardRules($this));
