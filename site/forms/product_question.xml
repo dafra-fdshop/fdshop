@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<form>
+  <fieldset name="question">
+    <field name="name" type="text" label="COM_FDSHOP_QUESTION_NAME" required="true" maxlength="120" autocomplete="name" />
+    <field name="email" type="email" label="COM_FDSHOP_QUESTION_EMAIL" required="true" maxlength="254" autocomplete="email" />
+    <field name="question" type="textarea" label="COM_FDSHOP_QUESTION_TEXT" required="true" minlength="10" maxlength="3000" rows="7" />
+    <field name="website" type="text" label="Website" maxlength="0" class="fdshop-honeypot" autocomplete="off" />
+    <field name="captcha" type="captcha" label="CAPTCHA" validate="captcha" namespace="fdshop_product_question" />
+  </fieldset>
+</form>

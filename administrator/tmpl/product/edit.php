@@ -93,6 +93,12 @@ $this->getDocument()->getWebAssetManager()->useScript('com_fdshop.admin-product'
                         </p>
                     </div>
                 </div>
+                <div class="card mb-3">
+                    <div class="card-header">Verfügbarkeits-Watchlist</div>
+                    <div class="card-body">
+                        <?php if (empty($this->watchlist)) : ?><p class="mb-0 text-muted">Keine aktiven Vormerkungen.</p><?php else : ?><ul><?php foreach ($this->watchlist as $watch) : ?><li><?php echo htmlspecialchars((string)$watch->name,ENT_QUOTES,'UTF-8'); ?> &lt;<?php echo htmlspecialchars((string)$watch->email,ENT_QUOTES,'UTF-8'); ?>&gt; · <?php echo htmlspecialchars((string)$watch->created,ENT_QUOTES,'UTF-8'); ?></li><?php endforeach; ?></ul><p><?php echo count($this->watchlist); ?> Kunde(n) warten auf Verfügbarkeit.</p><form method="post" action="index.php?option=com_fdshop&task=product.notifyWatchlist" onsubmit="return confirm('<?php echo count($this->watchlist); ?> Kunden jetzt benachrichtigen?');"><input type="hidden" name="id" value="<?php echo (int)($this->item->id ?? 0); ?>"><button class="btn btn-primary" type="submit"<?php echo (string)($this->item->in_stock ?? '') === 'Ausverkauft' ? ' disabled' : ''; ?>>Kunden jetzt benachrichtigen</button><?php echo HTMLHelper::_('form.token'); ?></form><?php endif; ?>
+                    </div>
+                </div>
             </div>
         </div>
     <?php echo HTMLHelper::_('uitab.endTab'); ?>

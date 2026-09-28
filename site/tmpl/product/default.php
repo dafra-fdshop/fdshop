@@ -6,6 +6,8 @@ use FDShop\Component\FDShop\Site\Helper\PurchaseHelper;
 use Joomla\CMS\Layout\LayoutHelper;
 use Joomla\CMS\HTML\HTMLHelper;
 use Joomla\CMS\Router\Route;
+use Joomla\CMS\Factory;
+use Joomla\CMS\Language\Text;
 
 $item = $this->item;
 $mainImage = $this->images[0] ?? $this->placeholderImage;
@@ -71,10 +73,12 @@ $factIcons = ['NEM' => 'icon_nem.svg', 'Schusszahl' => 'icon_anzahl.svg', 'Kalib
                     </div>
                 <?php endif; ?>
             </div>
+            <button type="button" class="fdshop-product__question-link" data-product-question-open><i class="fa-solid fa-comment-dots" aria-hidden="true"></i> <?php echo Text::_('COM_FDSHOP_QUESTION_OPEN'); ?></button>
         </section>
     </div>
     <?php if (trim((string) $item->description) !== '') : ?><section class="fdshop-product__description" aria-labelledby="fdshop-product-description-heading"><h2 id="fdshop-product-description-heading">Produktbeschreibung</h2><div><?php echo \Joomla\CMS\HTML\HTMLHelper::_('content.prepare', (string) $item->description); ?></div></section><?php endif; ?>
     <dialog class="fdshop-video" data-fdshop-detail-video-dialog aria-labelledby="fdshop-detail-video-title"><div class="fdshop-video__header"><h2 id="fdshop-detail-video-title" data-fdshop-detail-video-title>Produktvideo</h2><button type="button" class="fdshop-video__close" data-fdshop-detail-video-close aria-label="Video schließen">×</button></div><div class="fdshop-video__content" data-fdshop-detail-video-content></div></dialog>
+    <dialog class="fdshop-question-dialog" data-product-question-dialog aria-labelledby="fdshop-question-title"><form method="post" action="<?php echo Route::_('index.php?option=com_fdshop&task=interaction.question'); ?>"><button type="button" class="fdshop-question-dialog__close" data-product-question-close aria-label="<?php echo Text::_('COM_FDSHOP_WATCH_CLOSE'); ?>">×</button><h2 id="fdshop-question-title"><?php echo Text::sprintf('COM_FDSHOP_QUESTION_TITLE',$this->escape((string)$item->product_name)); ?></h2><p><?php echo Text::_('COM_FDSHOP_QUESTION_NOTE'); ?></p><?php echo $this->questionForm->renderField('name'); ?><?php echo $this->questionForm->renderField('email'); ?><?php echo $this->questionForm->renderField('question'); ?><div class="fdshop-honeypot" aria-hidden="true"><?php echo $this->questionForm->renderField('website'); ?></div><?php echo $this->questionForm->renderField('captcha'); ?><input type="hidden" name="product_id" value="<?php echo (int)$item->id; ?>"><input type="hidden" name="catid" value="<?php echo (int)Factory::getApplication()->getInput()->getInt('catid'); ?>"><button type="submit" class="btn btn-primary"><?php echo Text::_('COM_FDSHOP_QUESTION_SEND'); ?></button><?php echo HTMLHelper::_('form.token'); ?></form></dialog>
     <?php if ($this->purchaseEnabled && PurchaseHelper::claimModal()) : ?><?php echo LayoutHelper::render('purchase.modal', [], JPATH_COMPONENT_SITE . '/layouts'); ?><?php endif; ?>
     <?php if (!empty($item->bundles)) : ?>
         <dialog class="fdshop-bundle-dialog" data-fdshop-bundle-dialog data-builder-url="<?php echo $this->escape(Route::_('index.php?option=com_fdshop&task=bundle.builder&format=json', false)); ?>" data-calculate-url="<?php echo $this->escape(Route::_('index.php?option=com_fdshop&task=bundle.calculate&format=json', false)); ?>" data-save-url="<?php echo $this->escape(Route::_('index.php?option=com_fdshop&task=bundle.save&format=json', false)); ?>" data-delete-url="<?php echo $this->escape(Route::_('index.php?option=com_fdshop&task=bundle.deleteSaved&format=json', false)); ?>" data-cart-url="<?php echo $this->escape(Route::_('index.php?option=com_fdshop&task=bundle.addToCart&format=json', false)); ?>">

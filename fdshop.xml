@@ -3,7 +3,7 @@
 	<name>com_fdshop</name>
 	<author>FDShop</author>
 	<creationDate>2026-09-28</creationDate>
-	<version>0.0.40</version>
+	<version>0.0.41</version>
 	<description>Neuer schneller Shop</description>
 
 	<namespace path="src">FDShop\Component\FDShop</namespace>
@@ -13,6 +13,7 @@
 		<folder>src</folder>
 		<folder>tmpl</folder>
 		<folder>layouts</folder>
+		<folder>forms</folder>
 	</files>
 	
 	<media destination="com_fdshop" folder="media">

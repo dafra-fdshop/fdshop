@@ -13,6 +13,7 @@ final class PurchaseHelper
     private static ?bool $shopEnabled = null;
     private static bool $modalRendered = false;
     private static bool $f3ModalRendered = false;
+    private static bool $watchModalRendered = false;
 
     public static function isShopEnabled(): bool
     {
@@ -54,4 +55,5 @@ final class PurchaseHelper
         return true;
     }
     public static function claimF3Modal(): bool { if(self::$f3ModalRendered)return false;self::$f3ModalRendered=true;return true; }
+    public static function claimWatchModal(): bool { if(self::$watchModalRendered)return false;self::$watchModalRendered=true;return true; }
 }

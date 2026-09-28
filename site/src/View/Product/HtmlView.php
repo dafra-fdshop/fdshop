@@ -14,6 +14,7 @@ use FDShop\Component\FDShop\Site\Helper\PurchaseHelper;
 use FDShop\Component\FDShop\Site\Helper\ProductVisualHelper;
 use FDShop\Component\FDShop\Site\Helper\ProductStructuredDataHelper;
 use Joomla\CMS\Factory;
+use Joomla\CMS\Form\Form;
 use Joomla\CMS\MVC\View\HtmlView as BaseHtmlView;
 use Joomla\CMS\Uri\Uri;
 
@@ -24,6 +25,7 @@ final class HtmlView extends BaseHtmlView
     public array $images = [];
     public string $placeholderImage;
     public bool $purchaseEnabled = false;
+    public Form $questionForm;
 
     public function display($tpl = null): void
     {
@@ -34,7 +36,11 @@ final class HtmlView extends BaseHtmlView
         }
 
         $this->item = $item;
+        Factory::getApplication()->getLanguage()->load('com_fdshop', JPATH_ADMINISTRATOR);
         $this->purchaseEnabled = PurchaseHelper::isShopEnabled();
+        $this->questionForm = Form::getInstance('com_fdshop.product_question', JPATH_COMPONENT_SITE . '/forms/product_question.xml', ['control' => 'jform']);
+        $identity = Factory::getApplication()->getIdentity();
+        if (!$identity->guest) $this->questionForm->bind(['name' => $identity->name, 'email' => $identity->email]);
         $categoryId = max(0, Factory::getApplication()->getInput()->getInt('catid'));
         $this->categoryUrl = $categoryId > 0 ? RouteHelper::getCategoryRoute($categoryId) : '';
         $root = rtrim(Uri::root(true), '/');

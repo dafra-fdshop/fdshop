@@ -4,6 +4,7 @@ defined('_JEXEC') or die;
 
 use FDShop\Component\FDShop\Administrator\Service\BuyerEligibilityServiceInterface;
 use FDShop\Component\FDShop\Administrator\Service\OrderServiceInterface;
+use FDShop\Component\FDShop\Administrator\Service\WatchlistServiceInterface;
 use Joomla\CMS\Component\ComponentHelper;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Plugin\PluginHelper;
@@ -14,7 +15,7 @@ use Joomla\Registry\Registry;
 
 final class AccountService implements AccountServiceInterface
 {
-    public function __construct(private readonly DatabaseInterface $db, private readonly BuyerEligibilityServiceInterface $eligibility, private readonly OrderServiceInterface $orders) {}
+    public function __construct(private readonly DatabaseInterface $db, private readonly BuyerEligibilityServiceInterface $eligibility, private readonly OrderServiceInterface $orders, private readonly WatchlistServiceInterface $watchlist) {}
 
     public function dashboard(int $userId, int $page = 1, ?int $orderId = null): array
     {
@@ -27,8 +28,10 @@ final class AccountService implements AccountServiceInterface
         $q=$this->db->getQuery(true)->select('*')->from($this->db->quoteName('#__fdshop_config'))->where('id=1');$this->db->setQuery($q);$config=$this->db->loadObject();
         $q=$this->db->getQuery(true)->select(['event_type','event_title','created'])->from($this->db->quoteName('#__fdshop_user_history'))->where('user_id='.(int)$userId)->order('created DESC');$this->db->setQuery($q,0,8);$history=(array)$this->db->loadObjectList();
         $lastF3Submission=null;foreach($history as $entry)if((string)$entry->event_type==='f3_documents_submitted'){$lastF3Submission=$entry->created;break;}
-        return compact('orders','total','page','limit','selected','items','bundles','shipments','config','history','lastF3Submission')+['profile'=>$this->profile($userId),'profile_config'=>$this->profileConfiguration(),'user'=>$this->user($userId),'buyer_status'=>$this->eligibility->userStatus($userId),'username_change_allowed'=>(bool)ComponentHelper::getParams('com_users')->get('change_login_name',0)];
+        return compact('orders','total','page','limit','selected','items','bundles','shipments','config','history','lastF3Submission')+['profile'=>$this->profile($userId),'profile_config'=>$this->profileConfiguration(),'user'=>$this->user($userId),'buyer_status'=>$this->eligibility->userStatus($userId),'username_change_allowed'=>(bool)ComponentHelper::getParams('com_users')->get('change_login_name',0),'watchlist'=>$this->watchlist->forUser($userId)];
     }
+
+    public function removeWatch(int $userId, int $watchId): void { $this->watchlist->remove($userId, $watchId); }
 
     public function saveProfile(int $userId,array $profile):void
     {

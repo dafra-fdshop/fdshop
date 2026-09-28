@@ -1,8 +1,8 @@
 {
-  "schemaVersion": "0.0.37",
+  "schemaVersion": "0.0.41",
   "counts": {
     "manufacturers": 2, "categories": 4, "buyer_groups": 2,
-    "products": 10, "products_details": 10,
+    "products": 10, "products_details": 10, "product_watchlist": 0,
     "product_category_map": 11, "product_buyer_group_map": 10,
     "user_buyer_group_map": 1,
     "media": 1, "bundles": 2, "bundle_items": 2,

@@ -281,3 +281,14 @@
 @media(max-width:800px){.fdshop-account{padding:.5rem}.fdshop-account__layout{grid-template-columns:1fr}.fdshop-account__nav{position:static;display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.fdshop-account__nav a:last-child{grid-column:1/-1}.fdshop-account__quickgrid{grid-template-columns:1fr}.fdshop-account__facts{grid-template-columns:repeat(2,minmax(0,1fr))}.fdshop-account__orderline,.fdshop-account__orders article{grid-template-columns:1fr auto}.fdshop-account__orderline .fdshop-account__button,.fdshop-account__orders article .fdshop-account__button{grid-column:1/-1}.fdshop-account__fields{grid-template-columns:1fr}.fdshop-account__fields .is-wide{grid-column:auto}}
 @media(max-width:480px){.fdshop-account__hero{align-items:start;flex-direction:column}.fdshop-account__nav{grid-template-columns:1fr}.fdshop-account__nav a:last-child{grid-column:auto}.fdshop-account__facts{grid-template-columns:1fr}.fdshop-account__history li{flex-direction:column;gap:.2rem}}
 .fdshop-account__totals{margin:1.25rem 0 0 auto;max-width:420px}.fdshop-account__totals>div{display:flex;justify-content:space-between;gap:1rem;padding:.35rem 0}.fdshop-account__totals dd{margin:0}.fdshop-account__totals .is-total{margin-top:.4rem;padding-top:.75rem;border-top:2px solid #9aa5af;font-weight:700}
+
+.fdshop-purchase--watch .fdshop-purchase__button{display:inline-flex;align-items:center;justify-content:center}
+.fdshop-watch-dialog,.fdshop-question-dialog{border:0;border-radius:.65rem;padding:0;max-width:min(34rem,calc(100vw - 2rem));box-shadow:0 1rem 3rem rgba(0,0,0,.3)}
+.fdshop-watch-dialog::backdrop,.fdshop-question-dialog::backdrop{background:rgba(0,0,0,.55)}
+.fdshop-watch-dialog__content,.fdshop-question-dialog form{position:relative;padding:1.5rem;min-width:min(30rem,calc(100vw - 3rem))}
+.fdshop-watch-dialog__close,.fdshop-question-dialog__close{position:absolute;right:.75rem;top:.5rem;border:0;background:transparent;font-size:1.8rem}
+.fdshop-watch-dialog__actions{display:flex;gap:.65rem;flex-wrap:wrap;margin-top:1rem}
+.fdshop-watch-dialog__message{font-weight:700;color:#198754}
+.fdshop-product__question-link{border:0;background:none;color:var(--link-color,#b96f00);text-decoration:underline;padding:.5rem 0;cursor:pointer}
+.fdshop-question-dialog .control-group{margin-bottom:1rem}.fdshop-question-dialog label{display:block;font-weight:700}.fdshop-question-dialog input,.fdshop-question-dialog textarea{width:100%}
+.fdshop-honeypot{position:absolute!important;left:-10000px!important;width:1px!important;height:1px!important;overflow:hidden!important}

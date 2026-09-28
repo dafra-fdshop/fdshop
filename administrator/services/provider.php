@@ -27,12 +27,16 @@ use FDShop\Component\FDShop\Administrator\Service\FilterService;
 use FDShop\Component\FDShop\Administrator\Service\FilterServiceInterface;
 use FDShop\Component\FDShop\Administrator\Service\BuyerEligibilityService;
 use FDShop\Component\FDShop\Administrator\Service\BuyerEligibilityServiceInterface;
+use FDShop\Component\FDShop\Administrator\Service\WatchlistService;
+use FDShop\Component\FDShop\Administrator\Service\WatchlistServiceInterface;
 use FDShop\Component\FDShop\Site\Service\CartService;
 use FDShop\Component\FDShop\Site\Service\CartServiceInterface;
 use FDShop\Component\FDShop\Site\Service\CheckoutService;
 use FDShop\Component\FDShop\Site\Service\CheckoutServiceInterface;
 use FDShop\Component\FDShop\Site\Service\AccountService;
 use FDShop\Component\FDShop\Site\Service\AccountServiceInterface;
+use FDShop\Component\FDShop\Site\Service\ProductQuestionService;
+use FDShop\Component\FDShop\Site\Service\ProductQuestionServiceInterface;
 use FDShop\Component\FDShop\Site\Service\BundleService as SiteBundleService;
 use FDShop\Component\FDShop\Site\Service\BundleServiceInterface as SiteBundleServiceInterface;
 use Joomla\CMS\Dispatcher\ComponentDispatcherFactoryInterface;
@@ -122,6 +126,10 @@ return new class () implements ServiceProviderInterface {
         $container->set(FilterService::class, fn (Container $container): FilterService => $container->get(FilterServiceInterface::class));
         $container->set(BuyerEligibilityServiceInterface::class, fn (Container $container): BuyerEligibilityServiceInterface => new BuyerEligibilityService($container->get(DatabaseInterface::class)));
         $container->set(BuyerEligibilityService::class, fn (Container $container): BuyerEligibilityService => $container->get(BuyerEligibilityServiceInterface::class));
+        $container->set(WatchlistServiceInterface::class, fn (Container $container): WatchlistServiceInterface => new WatchlistService($container->get(DatabaseInterface::class)));
+        $container->set(WatchlistService::class, fn (Container $container): WatchlistService => $container->get(WatchlistServiceInterface::class));
+        $container->set(ProductQuestionServiceInterface::class, fn (Container $container): ProductQuestionServiceInterface => new ProductQuestionService($container->get(DatabaseInterface::class)));
+        $container->set(ProductQuestionService::class, fn (Container $container): ProductQuestionService => $container->get(ProductQuestionServiceInterface::class));
 
         $container->set(
             ProductServiceInterface::class,
@@ -218,7 +226,7 @@ return new class () implements ServiceProviderInterface {
 
         $container->set(CheckoutServiceInterface::class, fn (Container $container): CheckoutServiceInterface => new CheckoutService($container->get(DatabaseInterface::class), $container->get(CartServiceInterface::class), $container->get(OrderNotificationService::class), $container->get(ProductServiceInterface::class), $container->get(BuyerEligibilityServiceInterface::class)));
         $container->set(CheckoutService::class, fn (Container $container): CheckoutService => $container->get(CheckoutServiceInterface::class));
-        $container->set(AccountServiceInterface::class, fn (Container $container): AccountServiceInterface => new AccountService($container->get(DatabaseInterface::class), $container->get(BuyerEligibilityServiceInterface::class), $container->get(OrderServiceInterface::class)));
+        $container->set(AccountServiceInterface::class, fn (Container $container): AccountServiceInterface => new AccountService($container->get(DatabaseInterface::class), $container->get(BuyerEligibilityServiceInterface::class), $container->get(OrderServiceInterface::class), $container->get(WatchlistServiceInterface::class)));
         $container->set(AccountService::class, fn (Container $container): AccountService => $container->get(AccountServiceInterface::class));
 
         $container->set(

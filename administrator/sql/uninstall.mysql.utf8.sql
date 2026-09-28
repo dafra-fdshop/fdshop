@@ -36,6 +36,7 @@ DROP TABLE IF EXISTS `#__fdshop_bundle_items`;
 DROP TABLE IF EXISTS `#__fdshop_bundles`;
 DROP TABLE IF EXISTS `#__fdshop_media`;
 DROP TABLE IF EXISTS `#__fdshop_product_buyer_group_map`;
+DROP TABLE IF EXISTS `#__fdshop_product_watchlist`;
 DROP TABLE IF EXISTS `#__fdshop_product_category_map`;
 DROP TABLE IF EXISTS `#__fdshop_product_prices_research`;
 DROP TABLE IF EXISTS `#__fdshop_product_prices`;

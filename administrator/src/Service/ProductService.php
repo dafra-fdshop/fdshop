@@ -25,6 +25,7 @@ class ProductService implements ProductServiceInterface
         '#__fdshop_product_buyer_group_map',
         '#__fdshop_media',
         '#__fdshop_cart',
+        '#__fdshop_product_watchlist',
     ];
 
     public function __construct(

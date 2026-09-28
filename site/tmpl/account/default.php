@@ -21,6 +21,7 @@ $nav = [
     'profile'  => ['icon-user', 'Persönliche Daten'],
     'security' => ['icon-lock', 'Konto & Sicherheit'],
     'orders'   => ['icon-box', 'Bestellungen'],
+    'watchlist'=> ['icon-bell', 'Verfügbarkeits-Watchlist'],
     'f3'       => ['icon-shield', 'F3-Berechtigung'],
 ];
 ?>
@@ -45,6 +46,7 @@ $nav = [
                 <a class="fdshop-account__quick" href="<?php echo Route::_($base . '&section=profile'); ?>"><span class="icon-user" aria-hidden="true"></span><strong>Persönliche Daten</strong><span>Liefer- und Kontaktdaten pflegen</span></a>
                 <a class="fdshop-account__quick" href="<?php echo Route::_($base . '&section=security'); ?>"><span class="icon-lock" aria-hidden="true"></span><strong>Konto & Sicherheit</strong><span>E-Mail und Zugangsdaten</span></a>
                 <a class="fdshop-account__quick" href="<?php echo Route::_($base . '&section=f3'); ?>"><span class="icon-shield" aria-hidden="true"></span><strong>F3-Berechtigung</strong><span><?php echo $a['buyer_status'] === 'permit_holder' ? 'Aktiv' : 'Nicht aktiv'; ?></span></a>
+                <a class="fdshop-account__quick" href="<?php echo Route::_($base . '&section=watchlist'); ?>"><span class="icon-bell" aria-hidden="true"></span><strong>Watchlist</strong><span><?php echo count($a['watchlist']); ?> aktive Vormerkung<?php echo count($a['watchlist']) === 1 ? '' : 'en'; ?></span></a>
             </div>
             <?php if (!empty($a['orders'])) : $last = $a['orders'][0]; ?>
             <section class="fdshop-account__panel"><div class="fdshop-account__panelhead"><h2>Letzte Bestellung</h2><a href="<?php echo Route::_($base . '&section=orders'); ?>">Alle anzeigen</a></div>
@@ -91,6 +93,12 @@ $nav = [
             <?php elseif (empty($a['orders'])) : ?><div class="fdshop-account__empty"><span class="icon-box" aria-hidden="true"></span><h3>Noch keine Bestellungen</h3><p>Sobald Sie bestellt haben, finden Sie hier den aktuellen Stand.</p></div>
             <?php else : ?><div class="fdshop-account__orders"><?php foreach ($a['orders'] as $order) : ?><article><div><strong><?php echo $this->escape((string)$order->order_number); ?></strong><span><?php echo $date($order->created); ?></span><span><?php echo $this->escape((string)$order->shipment_name); ?> · <?php echo $this->escape((string)$order->payment_method_name); ?></span><?php if(!empty($order->open_shipment_request_id)):?><span>Änderungsanfrage zur Abholstation offen</span><?php endif; ?><?php if((string)$order->withdrawal_status!=='none'):?><span>Widerruf: <?php echo $status($order->withdrawal_status); ?></span><?php endif; ?></div><span class="fdshop-account__badge"><?php echo $this->escape((string)($order->status_name ?: $order->order_status)); ?></span><strong><?php echo $money($order->grand_total,$order->currency); ?></strong><a class="fdshop-account__button fdshop-account__button--quiet" href="<?php echo Route::_($base.'&section=orders&order_id='.(int)$order->id); ?>">Details</a></article><?php endforeach; ?></div>
                 <?php $pages=(int)ceil($a['total']/$a['limit']);if($pages>1):?><nav class="fdshop-account__pagination" aria-label="Bestellseiten"><?php for($i=1;$i<=$pages;$i++):?><a class="<?php echo $i===$a['page']?'is-active':''; ?>" href="<?php echo Route::_($base.'&section=orders&page='.$i); ?>"><?php echo $i; ?></a><?php endfor;?></nav><?php endif;?>
+            <?php endif; ?>
+
+        <?php elseif ($section === 'watchlist') : ?>
+            <section class="fdshop-account__heading"><h2>Verfügbarkeits-Watchlist</h2><p>Wir informieren Sie einmalig, wenn ein vorgemerktes Produkt wieder verfügbar ist.</p></section>
+            <?php if (empty($a['watchlist'])) : ?><div class="fdshop-account__empty"><span class="icon-bell" aria-hidden="true"></span><h3>Keine aktiven Vormerkungen</h3><p>Bei ausverkauften Produkten können Sie die Benachrichtigung direkt am Produkt aktivieren.</p></div><?php else : ?>
+                <div class="fdshop-account__orders"><?php foreach ($a['watchlist'] as $watch) : ?><article><div><strong><?php echo $this->escape((string)$watch->product_name); ?></strong><span>Wartet auf Verfügbarkeit · vorgemerkt am <?php echo $date($watch->created); ?></span></div><a class="fdshop-account__button fdshop-account__button--quiet" href="<?php echo Route::_(\FDShop\Component\FDShop\Site\Helper\RouteHelper::getProductRoute((int)$watch->product_id,(int)$watch->category_id)); ?>">Produkt ansehen</a><form method="post" action="<?php echo Route::_('index.php?option=com_fdshop&task=account.removeWatch'); ?>"><input type="hidden" name="watch_id" value="<?php echo (int)$watch->id; ?>"><button class="fdshop-account__button fdshop-account__button--danger" type="submit">Entfernen</button><?php echo HTMLHelper::_('form.token'); ?></form></article><?php endforeach; ?></div>
             <?php endif; ?>
 
         <?php elseif ($section === 'f3') : ?>

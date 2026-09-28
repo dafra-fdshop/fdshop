@@ -20,6 +20,7 @@ assert_sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_product_prices;" 0 'p
 assert_sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_product_prices_research;" 0 'price research not reset'
 assert_sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_coupon_usage;" 0 'coupon usage not reset'
 assert_sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_cart;" 0 'cart not reset'
+assert_sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_product_watchlist;" 0 'watchlist not reset'
 
 assert_sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_products_details WHERE sku LIKE 'E2E-PROD-%';" 10 'stable product SKUs'
 assert_sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_products_details WHERE bundle_eligible=1;" 3 'bundle-eligible products'

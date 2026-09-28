@@ -34,7 +34,7 @@ final class RouteHelper
             $query .= '&catid=' . $categoryId;
         }
 
-        $route = Route::_($query);
+        $route = (string) Route::_($query);
 
         if (preg_match('~^https?://~i', $route) === 1) {
             return $route;

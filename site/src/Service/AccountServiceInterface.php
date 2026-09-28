@@ -6,6 +6,7 @@ interface AccountServiceInterface
     public function dashboard(int $userId, int $page = 1, ?int $orderId = null): array;
     public function saveProfile(int $userId, array $profile): void;
     public function saveCredentials(int $userId, ?string $username, ?string $password): void;
+    public function removeWatch(int $userId, int $watchId): void;
     public function requestEmailChange(int $userId, string $email): void;
     public function verifyEmail(string $token): void;
     public function requestShipment(int $userId, int $orderId, int $shipmentId): void;

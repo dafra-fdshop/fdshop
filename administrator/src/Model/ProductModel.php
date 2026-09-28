@@ -12,6 +12,7 @@ use Joomla\CMS\Factory;
 use Joomla\CMS\Form\Form;
 use Joomla\CMS\MVC\Model\AdminModel;
 use FDShop\Component\FDShop\Administrator\Service\ProductServiceInterface;
+use FDShop\Component\FDShop\Administrator\Service\WatchlistServiceInterface;
 
 class ProductModel extends AdminModel
 {
@@ -183,6 +184,12 @@ class ProductModel extends AdminModel
         return $this->getProductService()->getFilterOptionGroups(
             (int) Factory::getApplication()->getInput()->getInt('id')
         );
+    }
+
+    public function getWatchlist(int $productId): array
+    {
+        if ($productId < 1) return [];
+        return $this->bootComponent('com_fdshop')->getContainer()->get(WatchlistServiceInterface::class)->forProduct($productId);
     }
 
     private function runDeleteAction(callable $action, array $pks): bool

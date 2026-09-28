@@ -6,6 +6,36 @@
   const f3Modal = document.querySelector('[data-f3-info-modal]');
   document.querySelectorAll('[data-f3-info-open]').forEach(button => button.addEventListener('click', () => f3Modal?.showModal()));
   f3Modal?.querySelectorAll('[data-f3-info-close]').forEach(button => button.addEventListener('click', () => f3Modal.close()));
+  const watchModal = document.querySelector('[data-watch-dialog]');
+  let watchProductId = 0;
+  document.querySelectorAll('[data-watch-open]').forEach(button => button.addEventListener('click', () => {
+    if (!watchModal) return;
+    watchProductId = Number(button.dataset.watchProductId || 0);
+    const product = watchModal.querySelector('[data-watch-product]');
+    if (product) product.textContent = button.dataset.watchProductName || '';
+    const message = watchModal.querySelector('[data-watch-message]');
+    if (message) message.textContent = '';
+    watchModal.showModal();
+  }));
+  watchModal?.querySelectorAll('[data-watch-close]').forEach(button => button.addEventListener('click', () => watchModal.close()));
+  watchModal?.querySelector('[data-watch-activate]')?.addEventListener('click', async event => {
+    const button = event.currentTarget;
+    const tokenInput = watchModal.querySelector('[data-watch-token] input');
+    const message = watchModal.querySelector('[data-watch-message]');
+    if (!tokenInput || !watchProductId) return;
+    button.disabled = true;
+    const body = new FormData(); body.append(tokenInput.name, '1'); body.append('product_id', String(watchProductId));
+    try {
+      const response = await fetch(watchModal.dataset.watchUrl, {method:'POST', body, headers:{'X-Requested-With':'XMLHttpRequest'}});
+      const payload = await response.json();
+      if (!response.ok || payload.success === false) throw new Error(payload.message || 'Die Benachrichtigung konnte nicht aktiviert werden.');
+      message.textContent = payload.message || 'Benachrichtigung wurde aktiviert.';
+    } catch (reason) { message.textContent = reason.message || 'Die Benachrichtigung konnte nicht aktiviert werden.'; }
+    finally { button.disabled = false; }
+  });
+  const questionDialog = document.querySelector('[data-product-question-dialog]');
+  document.querySelectorAll('[data-product-question-open]').forEach(button => button.addEventListener('click', () => questionDialog?.showModal()));
+  questionDialog?.querySelectorAll('[data-product-question-close]').forEach(button => button.addEventListener('click', () => questionDialog.close()));
   const token = document.querySelector('[data-purchase-token] input');
   const touchCapable = navigator.maxTouchPoints > 0;
   let returnFocus = null;

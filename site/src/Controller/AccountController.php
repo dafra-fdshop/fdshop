@@ -11,6 +11,7 @@ final class AccountController extends BaseController
     protected $default_view='account';
     public function saveProfile():void{$this->post(fn($s,$u)=>$s->saveProfile($u,(array)$this->input->post->get('profile',[],'array')),'Kontaktdaten wurden gespeichert.','profile');}
     public function saveCredentials():void{$this->post(function($s,$u){$password=$this->input->post->getString('password')?:null;$confirmation=$this->input->post->getString('password2')?:null;if($password!==null&&$password!==$confirmation)throw new \DomainException('Die Passwortbestätigung stimmt nicht überein.');$s->saveCredentials($u,$this->input->post->getString('username')?:null,$password);},'Kontodaten wurden gespeichert.','security');}
+    public function removeWatch():void{$this->post(fn($s,$u)=>$s->removeWatch($u,$this->input->post->getInt('watch_id')),'Benachrichtigung wurde entfernt.','watchlist');}
     public function requestEmail():void{$this->post(fn($s,$u)=>$s->requestEmailChange($u,$this->input->post->getString('email')),'Bitte bestätigen Sie die neue Adresse über die zugesandte E-Mail.','security');}
     public function requestShipment():void{$this->post(fn($s,$u)=>$s->requestShipment($u,$this->input->post->getInt('order_id'),$this->input->post->getInt('shipment_id')),'Die Änderungsanfrage wurde versendet.','orders');}
     public function withdraw():void{$this->post(fn($s,$u)=>$s->declareWithdrawal($u,$this->input->post->getInt('order_id')),'Der Eingang Ihres Widerrufs wurde bestätigt.','orders');}

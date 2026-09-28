@@ -13,6 +13,10 @@ $format = static fn (float $value): string => rtrim(rtrim(number_format($value, 
 $eligible = (bool) ($displayData['eligible'] ?? true);
 
 if ((string) $item->in_stock === 'Ausverkauft') {
+    ?><div class="fdshop-purchase fdshop-purchase--watch"><button type="button" class="btn btn-primary fdshop-purchase__button" data-watch-open data-watch-product-id="<?php echo (int)$item->id; ?>" data-watch-product-name="<?php echo htmlspecialchars((string)$item->product_name,ENT_QUOTES,'UTF-8'); ?>" aria-label="Benachrichtigen, wenn <?php echo htmlspecialchars((string)$item->product_name,ENT_QUOTES,'UTF-8'); ?> wieder verfügbar ist" title="Benachrichtigen, wenn wieder verfügbar"><i class="fa-solid fa-bell" aria-hidden="true"></i></button></div><?php
+    if (\FDShop\Component\FDShop\Site\Helper\PurchaseHelper::claimWatchModal()) {
+        echo \Joomla\CMS\Layout\LayoutHelper::render('purchase.watchmodal', [], JPATH_ROOT . '/components/com_fdshop/layouts');
+    }
     return;
 }
 if (!$eligible) {
