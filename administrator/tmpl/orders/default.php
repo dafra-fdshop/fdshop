@@ -67,11 +67,9 @@ $statusOptions = $this->statusOptions ?? [];
 						<?php echo HTMLHelper::_('searchtools.sort', 'Versandart', 's.shipment_name', $listDirn, $listOrder); ?>
 					</th>
 					<th scope="col" class="align-top">
-						<?php echo HTMLHelper::_('searchtools.sort', 'Datum (bestellt)', 'a.created', $listDirn, $listOrder); ?>
+						<?php echo HTMLHelper::_('searchtools.sort', 'Datum', 'a.created', $listDirn, $listOrder); ?><br><span class="small text-muted">bestellt / geändert</span>
 					</th>
-					<th scope="col" class="align-top">
-						<?php echo HTMLHelper::_('searchtools.sort', 'Datum (geändert)', 'a.modified', $listDirn, $listOrder); ?>
-					</th>
+					<th scope="col" class="align-top"><?php echo HTMLHelper::_('searchtools.sort', 'Widerruf', 'a.withdrawal_status', $listDirn, $listOrder); ?></th>
 					<th scope="col" class="align-top">
 						Bezahlt
 					</th>
@@ -157,13 +155,9 @@ $statusOptions = $this->statusOptions ?? [];
 								</span>
 							</td>
 
-							<td>
-								<?php echo !empty($item->created) ? HTMLHelper::_('date', $item->created, 'Y-m-d H:i') : ''; ?>
-							</td>
+							<td><strong><?php echo !empty($item->created) ? HTMLHelper::_('date', $item->created, 'Y-m-d H:i') : ''; ?></strong><br><span class="small text-muted"><?php echo !empty($item->modified) ? HTMLHelper::_('date', $item->modified, 'Y-m-d H:i') : '–'; ?></span></td>
 
-							<td>
-								<?php echo !empty($item->modified) ? HTMLHelper::_('date', $item->modified, 'Y-m-d H:i') : ''; ?>
-							</td>
+							<td><?php $withdrawalLabels=['none'=>'–','declared'=>'Widerruf erklärt','accepted'=>'Akzeptiert','rejected'=>'Abgelehnt'];$withdrawal=(string)($item->withdrawal_status??'none'); ?><span class="badge <?php echo $withdrawal==='declared'?'bg-warning text-dark':($withdrawal==='accepted'?'bg-success':($withdrawal==='rejected'?'bg-danger':'bg-secondary')); ?>"><?php echo $withdrawalLabels[$withdrawal]??$this->escape($withdrawal); ?></span></td>
 
 							<td class="text-center">
 								<?php echo !empty($item->is_paid) ? '✔' : '✘'; ?>

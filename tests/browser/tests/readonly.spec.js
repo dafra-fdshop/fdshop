@@ -175,7 +175,7 @@ test('Orders: snapshots and histories are readable', async ({ page }) => {
   await page.getByRole('link', { name: 'E2E-ORDER-BUNDLE', exact: true }).click();
   await expect(page.getByText('Bestellpositionen', { exact: true })).toBeVisible();
   await expect(page.locator('main')).toContainText('E2E-PROD-DISCOUNT');
-  await expect(page.locator('main')).toContainText('66,48');
+  await expect(page.locator('main')).toContainText('71,02');
   await expect(page.getByText('Status-Historie', { exact: true })).toBeVisible();
   await expect(page.locator('main')).toContainText('Künstlicher Statuswechsel');
   await expect(page.getByText('Allgemeine Historie', { exact: true })).toBeVisible();

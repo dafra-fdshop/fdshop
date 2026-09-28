@@ -92,6 +92,14 @@ $orderStatusSearchView = (object) [
 		</div>
 	<?php echo HTMLHelper::_('uitab.endTab'); ?>
 
+	<?php echo HTMLHelper::_('uitab.addTab', 'fdshopConfigurationTabs', 'customer-account', 'User-Bereich'); ?>
+		<div class="row"><div class="col-12 col-xl-8"><div class="card mb-3">
+			<div class="card-header">Mein Konto</div><div class="card-body">
+				<?php foreach (['account_withdrawal_days','account_withdrawal_expired_text','account_shipment_request_text','account_f3_text','account_f3_max_mb'] as $field) echo $configurationField($this->form->renderField($field)); ?>
+			</div>
+		</div></div></div>
+	<?php echo HTMLHelper::_('uitab.endTab'); ?>
+
 	<?php echo HTMLHelper::_('uitab.addTab', 'fdshopConfigurationTabs', 'documents-email', 'Dokumente &amp; E-Mail'); ?>
 		<div class="row"><div class="col-12 col-xl-8">
 			<div class="card mb-3"><div class="card-header">Firmendaten</div><div class="card-body">

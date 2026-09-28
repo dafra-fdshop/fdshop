@@ -25,6 +25,7 @@ class HtmlView extends BaseHtmlView
 
     public $availableProducts = [];
     public $availableShipments = [];
+    public $openShipmentRequest;
 
     public function display($tpl = null)
     {
@@ -37,6 +38,7 @@ class HtmlView extends BaseHtmlView
         $this->customerDocuments = $model->getCustomerDocuments();
         $this->availableProducts = $model->getAvailableProducts();
         $this->availableShipments = $model->getAvailableShipments();
+        $this->openShipmentRequest = $model->getOpenShipmentRequest();
 
         $title = 'FDShop - Bestellung';
 

@@ -2,8 +2,8 @@
 <extension type="component" method="upgrade">
 	<name>com_fdshop</name>
 	<author>FDShop</author>
-	<creationDate>2026-03-19</creationDate>
-	<version>0.0.37</version>
+	<creationDate>2026-09-28</creationDate>
+	<version>0.0.38</version>
 	<description>Neuer schneller Shop</description>
 
 	<namespace path="src">FDShop\Component\FDShop</namespace>

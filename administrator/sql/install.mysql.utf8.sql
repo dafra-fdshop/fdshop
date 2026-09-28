@@ -467,6 +467,11 @@ CREATE TABLE IF NOT EXISTS `#__fdshop_orders` (
   `mail_warning` TEXT NULL,
   `confirmation_pdf_path` VARCHAR(255) NULL,
   `confirmation_pdf_sha256` CHAR(64) NULL,
+  `withdrawal_status` VARCHAR(16) NOT NULL DEFAULT 'none',
+  `withdrawal_declared_at` DATETIME NULL,
+  `withdrawal_decided_at` DATETIME NULL,
+  `withdrawal_decided_by` INT UNSIGNED NULL,
+  `withdrawal_decision_text` TEXT NULL,
 
   `created` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `modified` DATETIME NULL DEFAULT NULL,
@@ -483,6 +488,30 @@ CREATE TABLE IF NOT EXISTS `#__fdshop_orders` (
   KEY `idx_fdshop_orders_state` (`state`),
   KEY `idx_fdshop_orders_has_bundle` (`has_bundle`),
   KEY `idx_fdshop_orders_created` (`created`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `#__fdshop_user_history` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, `user_id` INT UNSIGNED NOT NULL,
+  `event_type` VARCHAR(50) NOT NULL, `event_title` VARCHAR(255) NOT NULL,
+  `reference_type` VARCHAR(50) NULL, `reference_id` BIGINT UNSIGNED NULL,
+  `created` DATETIME NOT NULL, PRIMARY KEY (`id`), KEY `idx_fdshop_user_history_user` (`user_id`,`created`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `#__fdshop_user_email_changes` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, `user_id` INT UNSIGNED NOT NULL,
+  `new_email` VARCHAR(255) NOT NULL, `token_hash` CHAR(64) NOT NULL, `expires_at` DATETIME NOT NULL,
+  `consumed_at` DATETIME NULL, `created` DATETIME NOT NULL,
+  `pending_user_id` INT UNSIGNED AS (CASE WHEN `consumed_at` IS NULL THEN `user_id` ELSE NULL END) STORED,
+  PRIMARY KEY (`id`), UNIQUE KEY `uk_fdshop_email_change_token` (`token_hash`),
+  UNIQUE KEY `uk_fdshop_email_change_pending_user` (`pending_user_id`), KEY `idx_fdshop_email_change_user` (`user_id`,`consumed_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `#__fdshop_order_shipment_requests` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT, `order_id` BIGINT UNSIGNED NOT NULL, `user_id` INT UNSIGNED NOT NULL,
+  `current_shipment_id` BIGINT UNSIGNED NOT NULL, `requested_shipment_id` BIGINT UNSIGNED NOT NULL,
+  `status` VARCHAR(16) NOT NULL DEFAULT 'open', `created` DATETIME NOT NULL, `resolved_at` DATETIME NULL, `resolved_by` INT UNSIGNED NULL,
+  `open_order_id` BIGINT UNSIGNED AS (CASE WHEN `status` = 'open' THEN `order_id` ELSE NULL END) STORED,
+  PRIMARY KEY (`id`), UNIQUE KEY `uk_fdshop_shipment_request_open_order` (`open_order_id`), KEY `idx_fdshop_shipment_request_order` (`order_id`,`status`), KEY `idx_fdshop_shipment_request_user` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -985,6 +1014,11 @@ CREATE TABLE `#__fdshop_config` (
   `document_special_category_id` BIGINT UNSIGNED NOT NULL DEFAULT 0,
   `document_collection_one_title` VARCHAR(255) NOT NULL DEFAULT 'Sammlung: Batterien, Raketen, Single Shots etc.',
   `document_collection_two_title` VARCHAR(255) NOT NULL DEFAULT 'Sammlung: Verbünde',
+  `account_withdrawal_days` INT UNSIGNED NOT NULL DEFAULT 14,
+  `account_withdrawal_expired_text` TEXT NULL,
+  `account_shipment_request_text` TEXT NULL,
+  `account_f3_text` TEXT NULL,
+  `account_f3_max_mb` INT UNSIGNED NOT NULL DEFAULT 8,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -1023,6 +1057,13 @@ WHERE NOT EXISTS (
   FROM `#__fdshop_config`
   WHERE `id` = 1
 );
+
+UPDATE `#__fdshop_config`
+SET
+  `account_withdrawal_expired_text` = COALESCE(`account_withdrawal_expired_text`, 'Sehr geehrter Kunde, Ihre gesetzliche Widerrufsfrist von 14 Tagen ab Vertragsschluss ist verstrichen. Selbstverständlich prüfen wir Ihr Anliegen dennoch und melden uns zeitnah bei Ihnen. Ihre Erklärung wird an uns weitergeleitet und Sie erhalten eine Empfangsbestätigung.'),
+  `account_shipment_request_text` = COALESCE(`account_shipment_request_text`, 'Hiermit können Sie uns eine Mail senden, mit der Bitte um Änderung der Abholstation in der ausgewählten Bestellung.'),
+  `account_f3_text` = COALESCE(`account_f3_text`, 'Laden Sie Ihre Nachweise zur manuellen Prüfung hoch. Die Übermittlung schaltet keine Berechtigung automatisch frei.')
+WHERE `id` = 1;
 
 -- --------------------------------------------------------
 -- #__fdshop_media

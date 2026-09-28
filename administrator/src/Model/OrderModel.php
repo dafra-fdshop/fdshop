@@ -66,6 +66,11 @@ class OrderModel extends BaseDatabaseModel
             $db->quoteName('a.mail_warning'),
             $db->quoteName('a.confirmation_pdf_path'),
             $db->quoteName('a.confirmation_pdf_sha256'),
+            $db->quoteName('a.withdrawal_status'),
+            $db->quoteName('a.withdrawal_declared_at'),
+            $db->quoteName('a.withdrawal_decided_at'),
+            $db->quoteName('a.withdrawal_decided_by'),
+            $db->quoteName('a.withdrawal_decision_text'),
             $db->quoteName('os.status_name'),
             $db->quoteName('u.name', 'current_customer_name'),
             $db->quoteName('u.username', 'customer_username'),
@@ -241,6 +246,13 @@ class OrderModel extends BaseDatabaseModel
     public function getAvailableShipments(): array
     {
         $db=$this->getDatabase();$q=$db->getQuery(true)->select(['id','shipment_name','shipment_price'])->from($db->quoteName('#__fdshop_shipments'))->where('published=1')->order('ordering ASC')->order('id ASC');$db->setQuery($q);return $db->loadObjectList()?:[];
+    }
+
+    public function getOpenShipmentRequest($pk = null): ?object
+    {
+        $orderId = $this->resolveOrderId($pk);
+        if ($orderId <= 0) { return null; }
+        $db=$this->getDatabase();$q=$db->getQuery(true)->select(['r.*','old.shipment_name AS current_shipment_name','requested.shipment_name AS requested_shipment_name'])->from($db->quoteName('#__fdshop_order_shipment_requests','r'))->leftJoin($db->quoteName('#__fdshop_shipments','old').' ON old.id=r.current_shipment_id')->leftJoin($db->quoteName('#__fdshop_shipments','requested').' ON requested.id=r.requested_shipment_id')->where('r.order_id='.(int)$orderId)->where("r.status='open'")->order('r.created DESC');$db->setQuery($q,0,1);return $db->loadObject()?:null;
     }
 
     private function resolveOrderId($pk = null): int

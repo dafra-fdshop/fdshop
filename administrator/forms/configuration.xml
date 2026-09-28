@@ -121,5 +121,12 @@
             <field name="document_collection_one_title" type="text" label="Titel Sammlung 1" default="Sammlung: Batterien, Raketen, Single Shots etc." filter="string" />
             <field name="document_collection_two_title" type="text" label="Titel Sammlung 2" default="Sammlung: Verbünde" filter="string" />
         </fieldset>
+        <fieldset name="customer_account" label="Kundenbereich">
+            <field name="account_withdrawal_days" type="number" label="Hinweisfrist für Widerruf (Tage)" description="Dient ausschließlich der Anzeige im Kundenbereich. Die fachliche Entscheidung trifft weiterhin der Administrator." default="14" min="1" max="365" required="true" />
+            <field name="account_withdrawal_expired_text" type="textarea" label="Hinweis bei überschrittener Widerrufsfrist" filter="safehtml" rows="6" />
+            <field name="account_shipment_request_text" type="textarea" label="Hinweis zur Änderung der Abholstation" filter="safehtml" rows="4" />
+            <field name="account_f3_text" type="textarea" label="Hinweis zur F3-Prüfung" filter="safehtml" rows="4" />
+            <field name="account_f3_max_mb" type="number" label="Maximale Dateigröße je F3-Nachweis (MB)" default="8" min="1" max="25" required="true" />
+        </fieldset>
     </fields>
 </form>

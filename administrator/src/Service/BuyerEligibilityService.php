@@ -1,6 +1,7 @@
 <?php
 namespace FDShop\Component\FDShop\Administrator\Service;
 defined('_JEXEC') or die;
+use Joomla\CMS\Factory;
 use Joomla\Database\DatabaseInterface;
 
 final class BuyerEligibilityService implements BuyerEligibilityServiceInterface
@@ -45,8 +46,8 @@ final class BuyerEligibilityService implements BuyerEligibilityServiceInterface
     public function setUserStatus(int $userId,string $status):void
     {
         if($userId<1||!in_array($status,[self::STANDARD,self::PERMIT_HOLDER],true))throw new \InvalidArgumentException('Ungültige FDShop-Käuferberechtigung.');
-        $q=$this->db->getQuery(true)->delete($this->db->quoteName('#__fdshop_user_buyer_group_map'))->where('user_id='.(int)$userId);$this->db->setQuery($q)->execute();
-        $q=$this->db->getQuery(true)->insert($this->db->quoteName('#__fdshop_user_buyer_group_map'))->columns($this->db->quoteName(['user_id','buyer_group_id']))->values((int)$userId.','.$this->groupId($status));$this->db->setQuery($q)->execute();$this->userCache[$userId]=$status;
+        $previous=$this->userStatus($userId);if($previous===$status)return;$this->db->transactionStart();try{$q=$this->db->getQuery(true)->delete($this->db->quoteName('#__fdshop_user_buyer_group_map'))->where('user_id='.(int)$userId);$this->db->setQuery($q)->execute();
+        $q=$this->db->getQuery(true)->insert($this->db->quoteName('#__fdshop_user_buyer_group_map'))->columns($this->db->quoteName(['user_id','buyer_group_id']))->values((int)$userId.','.$this->groupId($status));$this->db->setQuery($q)->execute();$history=(object)['user_id'=>$userId,'event_type'=>$status===self::PERMIT_HOLDER?'f3_granted':'f3_revoked','event_title'=>$status===self::PERMIT_HOLDER?'F3-Berechtigung erteilt':'F3-Berechtigung entzogen','created'=>Factory::getDate()->toSql()];$this->db->insertObject('#__fdshop_user_history',$history);$this->db->transactionCommit();$this->userCache[$userId]=$status;}catch(\Throwable $e){$this->db->transactionRollback();throw $e;}
     }
     public function groupId(string $status):int
     {

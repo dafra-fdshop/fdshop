@@ -10,6 +10,7 @@ defined('_JEXEC') or die;
 
 use FDShop\Component\FDShop\Administrator\Service\OrderServiceInterface;
 use FDShop\Component\FDShop\Administrator\Service\OrderDocumentService;
+use FDShop\Component\FDShop\Site\Service\AccountServiceInterface;
 use Joomla\CMS\Factory;
 use Joomla\CMS\MVC\Controller\BaseController;
 
@@ -104,6 +105,30 @@ class OrderController extends BaseController
         $document=$this->getDocumentService()->archivedCustomerDocument($this->input->getInt('id'),$this->input->getInt('document_id')?:null);
         if(!$document)throw new \RuntimeException('Für diese Bestellung liegt keine archivierte Kunden-Bestellbestätigung vor.');
         $this->sendPdf($document);
+    }
+
+    public function withdrawalAccept(): bool
+    {
+        return $this->accountAction(function (AccountServiceInterface $service, int $orderId, int $adminId): void {$service->decideWithdrawal($orderId, true, '', $adminId);}, 'Der Widerruf wurde akzeptiert.');
+    }
+
+    public function withdrawalReject(): bool
+    {
+        $reason=$this->input->post->getString('withdrawal_reason');
+        return $this->accountAction(function (AccountServiceInterface $service, int $orderId, int $adminId) use ($reason): void {$service->decideWithdrawal($orderId, false, $reason, $adminId);}, 'Der Widerruf wurde abgelehnt.');
+    }
+
+    public function resolveShipmentRequest(): bool
+    {
+        return $this->accountAction(function (AccountServiceInterface $service, int $orderId, int $adminId): void {$service->resolveShipmentRequest($orderId, $adminId);}, 'Die Abholstationsanfrage wurde als erledigt markiert.');
+    }
+
+    private function accountAction(callable $callback, string $message): bool
+    {
+        if (!$this->authoriseMutation()) { return false; }
+        $orderId=$this->input->post->getInt('id');
+        try {$service=Factory::getApplication()->bootComponent('com_fdshop')->getContainer()->get(AccountServiceInterface::class);$callback($service,$orderId,(int)Factory::getApplication()->getIdentity()->id);$this->setMessage($message);}catch(\Throwable $e){$this->setMessage($e->getMessage(),'error');}
+        $this->setRedirect($this->getOrderRedirect($orderId));return true;
     }
 
     public function downloadPackingList(): void

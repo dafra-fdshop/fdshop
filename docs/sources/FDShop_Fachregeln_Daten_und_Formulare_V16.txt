@@ -2813,3 +2813,16 @@ ENDE DER QUELLE
 FDShop_Fachregeln_Daten_und_Formulare_V16
 
 Status: VERBINDLICHE PROJEKTQUELLE Version: V16
+KUNDENBEREICH / MEIN KONTO V1
+------------------------------
+- Kontaktdaten folgen Aktiv-/Pflicht-/Optional-Konfiguration des bestehenden
+  `fdshopprofile`; Vor- und Nachname bleiben Pflichtfelder.
+- Kunden dürfen nur Orders mit ihrer aktuellen Joomla-User-ID lesen. Eine
+  Shipment-Anfrage ändert keinen Snapshot und pro Order ist höchstens eine
+  offene Anfrage zulässig.
+- Eine Widerrufserklärung bleibt auch nach der konfigurierten Hinweisfrist
+  möglich. declared ändert keinen Orderstatus; accepted storniert ausschließlich
+  über den zentralen Status-/Lagerworkflow, rejected verlangt eine Begründung.
+- F3-Uploads benötigen mindestens eine zulässige Datei. Für die fachliche
+  Prüfung werden Schein und Ausweis erwartet, fehlende Unterlagen werden jedoch
+  manuell nachgefordert. Der Upload selbst ändert keine Käuferberechtigung.

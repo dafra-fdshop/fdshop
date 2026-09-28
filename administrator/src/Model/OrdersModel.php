@@ -47,6 +47,8 @@ class OrdersModel extends ListModel
                 'a.created',
                 'modified',
                 'a.modified',
+                'withdrawal_status',
+                'a.withdrawal_status',
             ];
         }
 
@@ -101,6 +103,7 @@ class OrdersModel extends ListModel
             $db->quoteName('a.grand_total'),
             $db->quoteName('a.created'),
             $db->quoteName('a.modified'),
+            $db->quoteName('a.withdrawal_status'),
             $db->quoteName('u.name', 'customer_name'),
             $db->quoteName('u.email', 'customer_email'),
             $db->quoteName('os.status_name'),

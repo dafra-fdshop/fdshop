@@ -661,6 +661,20 @@ KÄUFERBERECHTIGUNG / F3 V1 (0.0.37 / SCHEMA 0.0.36)
   Schutz neuer oder erhöhter Admin-Orderpositionen verwenden denselben Service.
 - Order-Snapshot und Packliste bleiben historisch; Standard-Coupons gelten auch
   für Scheininhaber, weil deren F3-Status die Standardberechtigung erweitert.
+
+KUNDENBEREICH / MEIN KONTO V1 (PAKET 0.0.38, SCHEMA 0.0.37)
+-------------------------------------------------------------------
+- Responsives Dashboard, konfigurationsgerechte Profilpflege, Joomla-basierte
+  Zugangsdaten und verifizierte E-Mail-Änderung sind umgesetzt.
+- Eigene Orders werden paginiert, ownership-geprüft und read-only samt Items,
+  Bundles, Snapshotkosten, Bemerkung sowie Anfrage-/Widerrufsstatus angezeigt.
+- Deduplizierte Abholstationsanfragen und der getrennte Widerrufsworkflow mit
+  Adminentscheidung, Kunden-/Firmenmail und zentralem Stornoweg sind umgesetzt.
+- F3-Status nutzt die zentrale Käuferberechtigung. PDF/JPG/PNG-Nachweise werden
+  nur temporär zur Mailübermittlung gehalten, sicher gelöscht und schalten
+  niemals automatisch frei.
+- Die User-History enthält ausschließlich fachlich sinnvolle Ereignisse und
+  keine Tokens, Passwörter, Dokumentbytes oder Leseaktionen.
 IMPLEMENTIERUNGSSTAND 0.0.33 - BESTELLBESTÄTIGUNG & PACKLISTE V1
 ----------------------------------------------------------------
 - ordered-Käufermail: HTML-Bestellbestätigung plus dauerhaft archiviertes Kunden-PDF.

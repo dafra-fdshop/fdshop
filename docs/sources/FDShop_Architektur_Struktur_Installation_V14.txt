@@ -718,6 +718,24 @@ ARCHITEKTURREGEL KÄUFERBERECHTIGUNG / F3 V1 (PAKET 0.0.37, SCHEMA 0.0.36)
   zum Bestellzeitpunkt und steuert die Packlistenangabe Ja/Nein.
 - Ein späterer Dokumentupload ist nur ein Antrag zur manuellen Prüfung und darf
   niemals automatisch F3 freischalten.
+
+ARCHITEKTURREGEL KUNDENBEREICH / MEIN KONTO V1 (PAKET 0.0.38, SCHEMA 0.0.37)
+-------------------------------------------------------------------------------
+- Joomla User und `fdshopprofile` bleiben die einzige Identitäts-, Login- und
+  Kontaktdatenquelle. FDShop führt keine parallele Kundentabelle.
+- Der Kundenbereich zeigt Bestellungen ausschließlich ownership-geprüft und
+  read-only aus ihren historischen Order-/Positions-/Bundle-Snapshots.
+- Eine gewünschte Abholstationsänderung ist eine persistente, deduplizierte
+  Mailanfrage. Sie verändert die Bestellung niemals automatisch.
+- Ein Widerruf besitzt den getrennten Fachstatus none/declared/accepted/rejected.
+  Erst accepted verwendet den zentralen OrderService für den Status Storniert
+  und damit dessen bestehende Lagerwirkung.
+- E-Mail-Änderungen werden erst nach Prüfung eines gehashten, ablaufenden und
+  einmalig verwendbaren Tokens in Joomla übernommen.
+- F3-Nachweise werden ausschließlich mit zufälligem Namen in einem nicht
+  öffentlichen System-Tempbereich gehalten, als Mailanhang übertragen und in
+  jedem Ergebnisfall gelöscht. Sie werden weder dauerhaft gespeichert noch
+  führen sie zu einer automatischen Käuferfreigabe.
 BESTELLDOKUMENTE V1 (0.0.33)
 -----------------------------
 - OrderDocumentService erzeugt serverseitig DIN-A4-Bestellbestätigungen und Packlisten mit Dompdf 3.1.6.

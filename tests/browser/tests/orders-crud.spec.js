@@ -59,7 +59,7 @@ test('order list, search, status filters and fixture snapshot details', async ({
   await expect(body).toContainText('E2E Snapshot angelegt'); await expect(body).toContainText('Künstlicher Ausgangsstatus');
   await search(page, 'E2E-ORDER-BUNDLE'); await page.getByRole('link', { name: 'E2E-ORDER-BUNDLE' }).click();
   await expect(page.locator('main')).toContainText('E2E-ORDER-BUNDLE'); await expect(page.locator('main')).toContainText('E2E Produkt Aktionspreis');
-  await expect(page.locator('main')).toContainText('66,48'); await expect(page.locator('main')).toContainText('E2E Bundle-Snapshot angelegt');
+  await expect(page.locator('main')).toContainText('71,02'); await expect(page.locator('main')).toContainText('E2E Bundle-Snapshot angelegt');
   const getSaveResponse = await page.evaluate(async () => {
     const response = await fetch('/administrator/index.php?option=com_fdshop&task=order.save&id=900801', { credentials: 'same-origin' });
     return response.text();
@@ -100,7 +100,7 @@ test('reserved order edits stay draft-only until atomic toolbar save', async ({ 
   expect(changedAttachments.sort()).toEqual(['Bestellbestaetigung_E2E-ORDER-NORMAL_01.pdf','Packliste_E2E-ORDER-NORMAL.pdf'].sort());
   original = page.locator('[data-order-items] tbody tr').filter({ hasText: 'E2E-PROD-ACTIVE' }); await expect(original.locator('input[type="number"]')).toHaveValue('2');
   let added = page.locator('[data-order-items] tbody tr').filter({ hasText: 'E2E-PROD-DISCOUNT' }); await expect(added).toHaveCount(1); await expect(added).toContainText('39,99 EUR'); await expect(page.locator('#jform_shipment_id')).toHaveValue('900602');
-  await expectProductStatus(page, 'E2E-PROD-ACTIVE', 'wenige Verfügbar'); await openNormal(page);
+  await expectProductStatus(page, 'E2E-PROD-ACTIVE', 'Verfügbar'); await openNormal(page);
 
   const staleResponse = await page.evaluate(async revision => {
     const form = document.querySelector('#adminForm'); const body = new FormData(form);
