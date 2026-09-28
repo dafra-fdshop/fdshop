@@ -1,0 +1,246 @@
+FDShop – Auftrag: Produktinteraktion V1 – Watchlist & Produktfrage
+Datum: 28.09.2026
+
+ZIEL
+A) Verfügbarkeits-Watchlist für ausverkaufte Produkte.
+B) „Frage zum Produkt“ auf Produktdetailseiten.
+
+Bestehende Purchase Action, Joomla User, Mein Konto, Admin Dashboard, Mail-Infrastruktur, Joomla Standard-CAPTCHA und zentrale Bestandslogik wiederverwenden. Keine parallelen Wahrheiten/externe SaaS.
+
+1. WATCHLIST UI
+Wenn Produkt nach zentraler Bestands-/Purchase-Logik wegen „Ausverkauft“ nicht kaufbar ist, an Stelle der fehlenden Warenkorbaction eine runde Glocken-Action anzeigen. Kategorie/Product Cards/Module/Detail zentral und konsistent, soweit Purchase Action vorhanden.
+Kein Add-to-cart.
+Bestehende Katalog-/F3-Regeln nicht widersprüchlich umgehen.
+
+Gast klickt Glocke:
+Modal „Verfügbarkeitsbenachrichtigung“ mit Hinweis, dass Funktion registrierten Kunden vorbehalten ist.
+Buttons/Links Joomla-konform:
+- Anmelden
+- Registrieren
+- Schließen
+wenn sinnvoll Return-URL zurück zum Produkt.
+
+Eingeloggter User:
+Modal „Benachrichtigen, wenn wieder verfügbar“ mit Produktname.
+Abbrechen / Benachrichtigung aktivieren.
+Serverseitig Auth, CSRF, Produktzustand prüfen; user_id nie vom Client vertrauen.
+Keine doppelten aktiven Einträge.
+
+2. DATENMODELL
+Schlanke Tabelle sinngemäß #__fdshop_product_watchlist:
+id, product_id, user_id, created, notified_at bzw. geeigneter Status.
+Effiziente Indizes.
+Aktive user+product-Zuordnung eindeutig.
+Nach erfolgreicher Benachrichtigung historisch markiert; wenn Produkt später erneut ausverkauft ist, erneute Vormerkung ermöglichen (Reaktivierung oder sauberes Historienmodell).
+Joomla User ist Quelle aktueller E-Mail.
+User-/Produktlöschung ohne problematische Waisen.
+
+3. KEINE AUTOMATISCHE MAIL
+Verbindlich:
+Bestandsänderung sendet NIEMALS automatisch Watchlist-Mails.
+Grund: versehentliche Lagerkorrekturen dürfen keine falschen Kundenmails auslösen.
+Versand ausschließlich durch bewusste Adminaktion.
+
+4. PRODUKT EDIT → LAGER → WATCHLIST
+Eigener kleiner Bereich „Watchlist“.
+Ohne Wartende: sinnvoller Leerzustand.
+Mit Wartenden:
+- Anzahl
+- Name
+- E-Mail
+- ggf. Vormerkdatum
+- „Jetzt benachrichtigen“.
+
+Button nur aktiv/sinnvoll, wenn aktive Wartende UND Produkt aktuell wieder kaufbar.
+Vor Versand Bestätigung „X Kunden jetzt benachrichtigen?“
+Serverseitig Verfügbarkeit erneut prüfen.
+
+5. MANUELLER MAILVERSAND
+Mail:
+Betreff sinngemäß „[Produktname] ist wieder verfügbar“
+Text: gewünschtes Produkt wieder verfügbar
+Link/Button „Produkt ansehen“.
+
+Empfänger robust EINZELN verarbeiten:
+Jeder erfolgreiche Versand wird unmittelbar/atomar notified.
+Wenn Mail 7/12 fehlschlägt, erfolgreiche 1–6 bleiben erledigt; offene/fehlgeschlagene bleiben retryfähig.
+Nächster Versuch darf bereits erfolgreiche Empfänger nicht doppelt mailen.
+Admin erhält Zusammenfassung Erfolg/Fehler.
+
+6. ADMIN-HINWEIS BEI LAGERAUFFÜLLUNG – NICE TO HAVE
+Wenn ohne fragile neue Architektur möglich:
+vorher ausverkauft/nicht kaufbar → nach Speichern kaufbar + aktive Watches:
+Joomla-Systemmeldung:
+„Dieses Produkt ist wieder verfügbar. X Kunden warten auf eine Benachrichtigung.“
+KEINE Mail.
+Keine automatische Watchliständerung.
+Wenn unverhältnismäßig: weglassen und berichten.
+
+7. ADMIN DASHBOARD
+Kompakter Bereich:
+„Offene Verfügbarkeitsbenachrichtigungen“
+aggregiert pro Produkt, NICHT jeder Kunde:
+Acryl (4)
+Leviathan (12)
+Produktname Link zum Produkt Edit.
+Nur aktive Watches, keine N+1.
+
+8. MEIN KONTO
+Bereich/Unterpunkt „Verfügbarkeitsbenachrichtigungen“.
+Nur eigene aktiven Watches:
+Produktname + Link, Status „Wartet auf Verfügbarkeit“, optional Datum, „Benachrichtigung entfernen“.
+Ownership + CSRF + idempotent.
+Nach erfolgreicher Adminmail nicht mehr aktiv anzeigen.
+Später erneute Vormerkung möglich.
+
+9. WATCHLIST + F3
+Watchlist ist keine Kaufberechtigung.
+Standardkunde darf sichtbares F3-Produkt vormerken.
+Dadurch niemals F3-Rechte.
+Späterer Kauf bleibt vollständig durch Buyer Eligibility geschützt.
+F3 Ribbon/Hintergrund/Info nicht regressieren.
+
+10. PRODUKTFRAGE
+Nur Produktdetailseite.
+Button „Frage zum Produkt“, passendes vorhandenes Sprechblasen-/Fragezeichenicon.
+FDShop-konformes Modal.
+
+Felder:
+- Produktname sichtbar
+- Name
+- E-Mail
+- Ihre Frage
+
+Eingeloggt: Name/Mail sinnvoll vorausfüllen.
+Gast: Name/Mail Pflicht.
+product_id serverseitig laden; Produktname/SKU/URL NICHT aus manipulierbaren Clienttexten vertrauen.
+Abbrechen / Frage absenden.
+Nach Erfolg klare Meldung.
+
+11. PRODUKTFRAGE MAIL
+An bestehende zentrale Firmenadresse.
+Enthält:
+Produktname, SKU, Produkt-ID, direkte Produkt-URL, Name, E-Mail, Frage, optional user_id.
+Betreff „Produktfrage: [Produktname]“.
+Wenn Joomla Mailer sicher unterstützt: validierte Kundenmail als Reply-To.
+Header Injection verhindern.
+Keine allgemeine Nachrichtenverwaltung V1.
+Bei eingeloggtem User höchstens Historyevent „Produktfrage gesendet“, nicht zwingend Fragetext dauerhaft speichern.
+
+12. KEIN DOUBLE-OPT-IN PRODUKTFRAGE
+Kein DOI.
+Einzelne nutzerinitiierte Kontaktanfrage, kein Abonnement/Marketingworkflow.
+
+13. JOOMLA STANDARD-CAPTCHA
+Für Produktfrage Joomla Standard-CAPTCHA-Infrastruktur verwenden.
+Aktuell Testinstallation: „CAPTCHA - Proof of Work“.
+NICHT hart auf dieses Plugin programmieren.
+Joomla Standard-Captcha API/Events verwenden, sodass später anderes Standardcaptcha ohne FDShop-Codeänderung funktioniert.
+Serverseitig validieren.
+Wenn kein Standardcaptcha konfiguriert: sauberer Joomla-konformer Fallback, kein Fatal.
+Zusätzlich Rate Limit/Honeypot.
+
+14. SPAMSCHUTZ
+- CSRF bei sessionbasierten Requests
+- Honeypot
+- serverseitiges Rate Limit pro IP und/oder User
+- Inputlängen
+- E-Mail-Validierung
+- Escaping/Sanitizing
+- Mail Header Injection verhindern
+- keine externe Anti-Spam-SaaS.
+Klare neutrale Rate-Limit-Meldung.
+
+15. DATENSCHUTZ
+Keine unnötigen PII/Fragetexte in Logs.
+Watchlist nur notwendige Zuordnung.
+Produktfrage primär Mail, nicht unnötig DB.
+Rate-Limit-Daten minimal/zeitlich sinnvoll.
+
+16. ROUTING/KONFIG
+Bestehende Firmen-Mailadresse nutzen, keine unnötige Doppelkonfiguration.
+Sprachstrings.
+Keine hartcodierte Domain; RouteHelper/Joomla Routes.
+Kein neuer Config-Tab nur dafür, sofern nicht wirklich erforderlich.
+
+17. PERFORMANCE
+Keine Watchlist-Query pro Produktkarte.
+Dashboard aggregierte Query.
+Produkt Edit gezielt.
+Mein Konto gezielt/paginiert.
+Keine N+1.
+
+18. SCHEMA/LIFECYCLE
+Schemaänderung nach Projektstandard.
+Fresh Install/Update identisches Endschema.
+Uninstall vollständig.
+Keine No-op-Migration.
+
+19. TESTS WATCHLIST
+Mindestens:
+- ausverkauft → Glocke
+- kaufbar → keine Glocke
+- Gast → Login/Registrierung, kein Eintrag
+- User aktiviert
+- Doppelaktivierung kein Duplikat
+- F3 Standarduser darf Watch, bekommt keine F3-Rechte
+- Mein Konto own-only/remove
+- Produkt Lager zeigt Wartende
+- bei ausverkauft keine Adminmail
+- wieder kaufbar manueller Versand
+- partieller Mailfehler ohne Doppelmail beim Retry
+- erneute Vormerkung nach erneutem Ausverkauf
+- Dashboard Aggregation
+- optionaler Lagerhinweis falls implementiert
+- Purchase/Cart/F3 Regression.
+
+20. TESTS PRODUKTFRAGE
+- Gast
+- eingeloggter User vorausgefüllt
+- Produktdaten serverseitig
+- Joomla Standardcaptcha rendern/validieren
+- ungültiges Captcha blockiert
+- kein Captcha sauberer Fallback
+- Honeypot
+- Rate Limit
+- ungültige Mail/Input
+- Mailpit: Produktname/SKU/ID/URL/Frage
+- Reply-To sicher
+- kein DOI
+- kein unnötiger Fragetext in DB
+- Mobile/Accessibility.
+
+21. REGRESSION
+Angemessen, nicht blind übertesten:
+Product category/detail/module, Purchase Action, F3, Mein Konto, Admin Product, Dashboard, Mailpit, PHP/JS Syntax, git diff --check, Smoke/Fixtures, Logs, Fresh/Update/Uninstall proportional zur Schemaänderung.
+
+22. DOKU
+Festhalten:
+- Watchlist nur registrierte User; Gäste bekommen Login/Registration
+- Versand ausschließlich manuell
+- notified/retry-Semantik
+- Mein Konto/Admin Dashboard
+- F3 unabhängig
+- Produktfrage für Gast+User
+- kein DOI
+- Joomla Standardcaptcha + Rate Limit.
+
+23. FREIGABEN
+Freigegeben:
+WSL/Docker/Sandbox, synthetische Testuser/-produkte/-mails, Schema, Frontend/Admin MVC/Service/Layout/CSS/JS, Mein Konto/Dashboard, Joomla Captcha-Integration, Mailpit, Tests, Paketbau, Doku, Korrekturzyklen, Commit, Push origin/feature, Windows-/Offline-Sync.
+
+Nicht:
+IONOS ändern, main merge, Force-Push, externe Captcha/SaaS, echte Kundenmails, automatische Watchlist-Mail, F3-Rechte ändern.
+
+STOP:
+- Joomla Standardcaptcha lässt sich im Komponentenformular nicht sicher generisch verwenden,
+- bestehende Purchase-Action-Prioritäten kollidieren fachlich,
+- robuste partielle Mailverarbeitung erfordert unerwartet große Queuearchitektur,
+- fremde Änderungen nicht sicher erhaltbar.
+Normale Detailentscheidungen selbstständig.
+
+24. ABSCHLUSS
+Berichten:
+Datenmodell, UI, Watchlist Admin/Konto/Dashboard, manueller Versand/Retry, Produktfrage/Captcha/Rate Limit, Performance, Tests, Version/Schema/SHA, Git/Sync, offene Punkte.
+
+ENDE DES AUFTRAGS
