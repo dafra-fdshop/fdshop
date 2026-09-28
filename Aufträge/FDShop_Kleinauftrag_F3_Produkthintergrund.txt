@@ -1,0 +1,69 @@
+FDShop – Kleinauftrag: eigener F3-Produkthintergrund
+Datum: 28.09.2026
+
+Hallo mein bester Programmierer 😊
+
+nach dem großen Kundenbereich kommt bewusst nur eine kleine visuelle Ergänzung.
+
+ZIEL
+F3-Produkte („Mit Schein (F3-Berechtigung)“ / buyer_group_alias=permit_holder) sollen zusätzlich zum bereits vorhandenen F3-Ribbon einen eigenen Produkthintergrund erhalten – sowohl in Kategorie-/Produktkarten als auch in der Produktdetailansicht.
+
+BESTAND
+Aktuell existieren unter media/images/product-backgrounds u.a.:
+- category-standard.webp
+- category-action.webp
+- category-new.webp
+- category-bundle.webp
+- product-standard.webp
+- product-action.webp
+- product-new.webp
+- product-bundle.webp
+
+ProductVisualHelper::backgroundState() liefert aktuell action/new/bundle/standard.
+F3-Ribbon/Buyer-Group-Erkennung ist bereits vorhanden.
+
+UMSETZUNG
+1. Standardhintergründe jeweils 1:1 kopieren und als neue F3-Platzhalterdateien ins Paket aufnehmen:
+   - category-f3.webp = zunächst exakte Kopie von category-standard.webp
+   - product-f3.webp = zunächst exakte Kopie von product-standard.webp
+
+   Daniel ersetzt diese beiden Bilddateien anschließend selbst durch das endgültige F3-Design. Bitte deshalb NICHT selbst grafisch verändern.
+
+2. ProductVisualHelper / zentrale Visual-State-Logik so erweitern, dass ein F3-Produkt den Visual State „f3“ erhält und dadurch die neuen Dateien verwendet werden.
+
+3. Priorität bewusst prüfen:
+   F3 ist eine grundlegende Käuferberechtigungs-/Produktkennzeichnung und soll für ein F3-Produkt den F3-Hintergrund bestimmen, auch wenn zusätzlich New/Bundle/Aktion gesetzt ist. Die bestehenden Ribbons bleiben davon unabhängig sichtbar.
+   Falls die bestehende CSS-/Background-Architektur eine andere klare Prioritätsregel voraussetzt, kurz prüfen; Ziel ist jedoch eindeutig: permit_holder => F3-Hintergrund.
+
+4. Kategorieansicht, zentrale Product Cards/Module und Produktdetail sollen dieselbe zentrale Zustandslogik nutzen; keine doppelte Sonderlogik pro View.
+
+5. Bestehende Standard/Action/New/Bundle-Hintergründe für Nicht-F3-Produkte nicht verändern.
+
+TESTS – PROPORTIONAL
+Dies ist absichtlich ein Kleinauftrag.
+Bitte KEINE test-full-/Lifecycle-/Fresh-Install-Orgie, sofern es bei dieser isolierten Änderung bleibt.
+Nur:
+- gezielte Prüfung F3 Produktkarte/Kategorie
+- gezielte Prüfung F3 Produktdetail
+- ein Nicht-F3-Regressionsfall
+- ggf. Modulkarte, falls sie denselben Helper nutzt und schnell prüfbar ist
+- PHP-Syntax
+- git diff --check
+- kurze Logprüfung.
+
+Wenn unerwartet eine größere Architekturänderung nötig wäre: STOP und berichten.
+
+Paketversion nach Projektstandard nur falls für auslieferbaren Asset-/Code-Fix nötig; KEIN Schema-/No-op-Update.
+
+Danach Commit, Push origin/feature und Windows-/Offline-Sync wie üblich. Kein main-Merge, kein Force-Push.
+
+ABSCHLUSS
+Kurz berichten:
+- neue Dateien
+- Visual-State-Priorität
+- betroffene Ansichten
+- Tests
+- ggf. Paketversion
+- Commit/Push/Sync.
+
+Danke! 😊
