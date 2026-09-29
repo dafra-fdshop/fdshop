@@ -1,0 +1,254 @@
+FDShop – PAYPAL DIAGNOSE-/HOTFIXAUFTRAG
+BUYER APPROVED, ABER KEIN CAPTURE-AUFRUF
+
+Projekt: FDShop
+Branch: feature
+Basis: aktueller veröffentlichter feature
+Priorität: PayPal-Blocker
+Scope: eng – Übergang PayPal Buyer Approval -> FDShop payment.capture
+
+======================================================================
+1. NEUER REALBEFUND
+======================================================================
+
+Der COOP-Fehler wurde real identifiziert und behoben:
+
+Joomla System – HTTP Headers:
+Cross-Origin-Opener-Policy
+same-origin -> same-origin-allow-popups
+
+Danach funktioniert der echte PayPal-Sandbox-Buyer-Login aus FDShop.
+
+Realer Test auf IONOS:
+
+- FDShop Checkout 0,50 EUR
+- PayPal Sandbox
+- Create Order erfolgreich
+- PayPal Order-ID:
+  9AF35683BN788635J
+- PayPal API:
+  POST /v2/checkout/orders -> HTTP 201
+- Orderstatus nach Create:
+  CREATED
+- Buyer-Login erscheint
+- Sandbox Personal Buyer meldet sich an
+- Buyer bestätigt die Zahlung
+- Rückkehr zu FDShop erfolgt
+- FDShop zeigt:
+  „PayPal konnte die Zahlung nicht abschließen. Ihr Warenkorb bleibt erhalten.“
+- KEINE FDShop-Bestellung erzeugt
+- Warenkorb bleibt erhalten
+- Reservierung bleibt zunächst bestehen
+
+Entscheidender PayPal-Event-Log-Befund:
+
+Für Order 9AF35683BN788635J existiert KEIN:
+POST /v2/checkout/orders/{ORDER-ID}/capture
+
+Damit wurde PayPal serverseitig überhaupt nicht zum Capture aufgerufen.
+
+Der Fehler liegt daher vor dem tatsächlichen PayPal-Capture-API-Request:
+zwischen erfolgreicher Buyer-Freigabe / SDK-Rückgabe und dem Aufruf des
+FDShop-Endpunkts payment.capture bzw. dessen Übergang zum PayPalClient.
+
+======================================================================
+2. ZIEL
+======================================================================
+
+Belastbar feststellen:
+
+Warum führt eine erfolgreiche Buyer-Freigabe im PayPal Web SDK v6 nicht zu
+einem FDShop payment.capture-Aufruf?
+
+Danach nur die kleinstmögliche nachgewiesene Korrektur umsetzen.
+
+Keine neue PayPal-Architektur entwerfen.
+
+======================================================================
+3. ZUERST DIAGNOSE
+======================================================================
+
+Aktuellen cart.js / PayPal-v6-Flow gegen aktuelle offizielle PayPal-v6-
+Dokumentation für createPayPalOneTimePaymentSession prüfen.
+
+Insbesondere untersuchen:
+
+- tatsächlicher Rückgabewert von await session.start(...)
+- Status-/State-Werte des SDK bei erfolgreicher Buyer-Freigabe
+- welche Property/Struktur unser FDShop-Code erwartet
+- ob FDShop nach erfolgreicher Approval fälschlich in Fehlerpfad läuft
+- ob ein erwarteter String/Status nicht der aktuellen SDK-v6-API entspricht
+- ob result/orderId/session state falsch ausgewertet wird
+- ob Promise/Callback-/Return-Semantik falsch behandelt wird
+- ob ein JS-Fehler unmittelbar nach Rückkehr aus dem Popup entsteht
+- ob payment.capture überhaupt aufgerufen wird
+- falls ja: ob Request bereits im Browser vor Serverkontakt scheitert
+- CSRF/session_token/order_id Übergabe
+- keine Annahme aus älteren PayPal-SDK-Versionen ungeprüft übernehmen
+
+Den funktionierenden lokalen Minimalflow als Vergleich verwenden, soweit er
+für den Rückgabewert von session.start() erweitert werden kann, OHNE echten
+Capture auszuführen.
+
+Wenn nötig eine gezielte Test-/Diagnoseinstrumentierung verwenden, aber keine
+Secrets/Tokens loggen.
+
+======================================================================
+4. PAYPAL-DOKUMENTATION
+======================================================================
+
+Aktuelle offizielle PayPal Web SDK v6 Dokumentation für:
+- createPayPalOneTimePaymentSession()
+- session.start()
+- erfolgreicher Buyer Approval
+- Rückgabewert / state
+- anschließenden serverseitigen Capture
+
+prüfen.
+
+Im Abschlussbericht konkret benennen, welche dokumentierte Semantik maßgeblich
+ist und wie der bisherige FDShop-Code davon abwich.
+
+Keine Client-Token-Diskussion neu eröffnen:
+Der funktionierende Minimalflow hat clientId für unsere Sandbox-App real bis
+zum Buyer-Login bestätigt.
+
+======================================================================
+5. WEBHOOK
+======================================================================
+
+Webhook-ID ist weiterhin nicht konfiguriert.
+
+Das ist NICHT als Ursache dieses Befunds anzunehmen:
+Der PayPal-API-Event-Log zeigt, dass überhaupt kein Capture-Request ausgelöst
+wurde.
+
+Webhook-Fachlogik in diesem Auftrag nicht ändern.
+
+======================================================================
+6. COOP
+======================================================================
+
+Die reale Joomla-Testinstallation funktioniert beim Buyer-Login nach:
+Cross-Origin-Opener-Policy: same-origin-allow-popups
+
+Diese Erkenntnis ist verbindlich.
+
+Im Rahmen dieses Auftrags:
+- PayPal-Dokumentation um diese Installationsvoraussetzung ergänzen
+- geeignete zentrale Installations-/Betriebsdokumentation ergänzen
+- NICHT versuchen, Joomla-Core-/HTTP-Headers-Plugin automatisch umzubauen
+- dokumentieren, dass der effektive Response-Header geprüft werden muss
+
+Kein weiterer COOP-Umbau.
+
+======================================================================
+7. FIX-GRENZEN
+======================================================================
+
+Wenn Ursache eindeutig im Browserübergang / Ergebnis von session.start /
+Aufruf payment.capture liegt:
+
+kleinstmöglichen Fix umsetzen.
+
+Nicht ändern:
+- Payment Session Datenmodell
+- 10-Minuten-Reservierungsmodell
+- Cleanup
+- Scheduled Task
+- Order-Finalizer-Fachregel
+- Lagerlogik
+- Gutscheine
+- F3
+- normale Zahlungsarten
+- Schema
+- Webhook-Fachlogik
+- Credential Resolver
+- clientId-Strategie
+
+Capture-Service selbst nur ändern, wenn der Fehler nachweislich dort liegt.
+Aktueller PayPal-Event-Log spricht dafür, dass der Fehler davor liegt.
+
+======================================================================
+8. GEZIELTE TESTS – KEIN MARATHON
+======================================================================
+
+Daniel/Caesar werden danach erneut real auf IONOS testen und es folgen weitere
+PayPal-Arbeiten. Deshalb klein halten.
+
+Mindestens:
+- Browser-/Unit-Test für dokumentierten erfolgreichen session.start-Rückgabewert
+- nach Approval exakt ein Aufruf von payment.capture
+- korrekte session_token/order_id Übergabe
+- Fehler/Cancel -> kein Capture
+- kein doppelter Capture
+- Warenkorb bleibt bei Fehler erhalten
+- bestehender Create-Order-Smoke
+- JS/PHP Syntax
+- git diff --check
+- kurzer relevanter Payment-Smoke
+
+KEIN test-full.
+KEINE breite Regression.
+
+Keinen echten Capture automatisiert erzwingen, wenn nicht nötig.
+Der nächste echte Capture erfolgt in Daniels IONOS-Realtest.
+
+======================================================================
+9. AUFRÄUMEN DER DIAGNOSEARTEFAKTE
+======================================================================
+
+Aktuell existiert aus vorheriger Diagnose:
+
+- isolierter WIP-Stash:
+  wip/paypal-client-token-ab-stopped-2026-09-29
+  in beiden Arbeitskopien
+- lokale ignorierte Minimaldiagnose:
+  .docker/paypal-v6-minimal
+
+Der Client-Token-Weg ist nach funktionierendem clientId-Minimalflow für den
+aktuellen Standard-One-Time-Payment-Pfad nicht weiterzuverfolgen.
+
+Nach erfolgreicher Diagnose/Fix und wenn die Artefakte nicht mehr benötigt
+werden:
+- Client-Token-WIP-Stash in beiden Arbeitskopien sauber verwerfen
+- temporäre Minimaldiagnose entfernen, sofern sie keinen weiteren
+  Diagnosewert besitzt
+- KEINE WIP-Änderungen versehentlich committen
+
+Falls Minimaldiagnose noch für einen unmittelbaren Vergleich benötigt wird,
+bis Abschluss behalten und danach entfernen.
+
+======================================================================
+10. ABSCHLUSS
+======================================================================
+
+Wenn Ursache eindeutig und kleiner Fix möglich:
+- Fix implementieren
+- gezielte Tests
+- Dokumentation COOP ergänzen
+- Commit feature
+- Push origin/feature
+- kein main-Merge
+- Working Trees sauber
+- Auftrag archivieren
+- Diagnoseartefakte gemäß Abschnitt 9 aufräumen
+
+Abschlussbericht:
+1. nachgewiesene Ursache
+2. dokumentierte PayPal-v6-Semantik
+3. alter FDShop-Ablauf vs. korrigierter Ablauf
+4. geänderte Dateien
+5. gezielte Tests
+6. COOP-Dokumentation
+7. Status WIP-Stash / Minimaldiagnose
+8. was Daniel auf IONOS real testen soll
+9. Commit-SHA / feature=origin/feature / Working Trees
+
+Wenn Ursache NICHT eindeutig nachweisbar:
+STOP mit Diagnosebefund, kein spekulativer Fix.
+
+Commitmessage sinngemäß:
+Fix PayPal approval to capture transition
+
+ENDE DES AUFTRAGS
