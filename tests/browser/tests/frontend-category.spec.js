@@ -27,7 +27,7 @@ test('menu category renders mapped visible products and complete cards', async (
   expect(await categoryDescription.evaluate(element => element.innerHTML)).toContain('<br>');
   await expect(categoryDescription.locator('script')).toHaveCount(0);
   expect(await page.evaluate(() => window.categoryPlainTextFailed)).toBeUndefined();
-  await expect(page.locator('[data-fdshop-results]')).toHaveText('1–24 von 30');
+  await expect(page.locator('[data-fdshop-results]')).toHaveText('1–24 von 53');
   await expect(page.locator('.fdshop-card')).toHaveCount(24);
   const defaultNames = await page.locator('.fdshop-card__title').allTextContents();
   expect(defaultNames).toEqual([...defaultNames].sort((a, b) => a.localeCompare(b, 'de')));
@@ -425,15 +425,15 @@ test('product detail rejects unpublished products and handles fallback and disco
   diagnostics.expectClean();
 });
 
-test('sorting, limits, pagination and invalid inputs are server-side constrained', async ({ page, baseURL }) => {
+test('sorting, limits, pagination state and invalid inputs are server-side constrained', async ({ page, baseURL }) => {
   const diagnostics = await installDiagnostics(page, baseURL);
   await page.goto('/batterien?sort=name&dir=desc&limit=12');
   await expect(page.locator('.fdshop-card')).toHaveCount(12);
   const namesDesc = await page.locator('.fdshop-card__title').allTextContents();
   expect(namesDesc).toEqual([...namesDesc].sort((a, b) => b.localeCompare(a, 'de')));
-  await expect(page.locator('[data-fdshop-results]')).toHaveText('1–12 von 30');
+  await expect(page.locator('[data-fdshop-results]')).toHaveText('1–12 von 53');
 
-  for (const [limit, expected] of [[12, 12], [24, 24], [36, 30], [48, 30]]) {
+  for (const [limit, expected] of [[12, 12], [24, 24], [36, 36], [48, 48]]) {
     await page.goto(`/batterien?sort=name&dir=asc&limit=${limit}`);
     await expect(page.locator('[name="limit"]')).toHaveValue(String(limit));
     await expect(page.locator('.fdshop-card')).toHaveCount(expected);
@@ -442,20 +442,74 @@ test('sorting, limits, pagination and invalid inputs are server-side constrained
   await page.goto('/batterien?sort=price&dir=asc&limit=48');
   const pricesAsc = (await page.locator('.fdshop-card').evaluateAll(cards => cards.map(card => Number(card.dataset.price))));
   expect(pricesAsc).toEqual([...pricesAsc].sort((a, b) => a - b));
-  await expect(page.locator('.fdshop-card')).toHaveCount(30);
+  await expect(page.locator('.fdshop-card')).toHaveCount(48);
 
   await page.goto('/batterien?sort=price&dir=desc&limit=24&limitstart=24');
   const pricesDesc = await page.locator('.fdshop-card').evaluateAll(cards => cards.map(card => Number(card.dataset.price)));
   expect(pricesDesc).toEqual([...pricesDesc].sort((a, b) => b - a));
-  await expect(page.locator('.fdshop-card')).toHaveCount(6);
-  await expect(page.locator('[data-fdshop-results]')).toHaveText('25–30 von 30');
+  await expect(page.locator('.fdshop-card')).toHaveCount(24);
+  await expect(page.locator('[data-fdshop-results]')).toHaveText('25–48 von 53');
   await expect(page.locator('.fdshop-pagination--top')).toBeVisible();
   await expect(page.locator('.fdshop-pagination--bottom')).toBeVisible();
 
   await page.goto('/batterien?sort=DROP_TABLE&dir=sideways&limit=999&limitstart=-5');
   await expect(page.locator('[data-fdshop-sort]')).toHaveValue('name:asc');
   await expect(page.locator('[name="limit"]')).toHaveValue('24');
-  await expect(page.locator('[data-fdshop-results]')).toHaveText('1–24 von 30');
+  await expect(page.locator('[data-fdshop-results]')).toHaveText('1–24 von 53');
+  diagnostics.expectClean();
+});
+
+test('pagination preserves the complete catalog state and state changes reset to page one', async ({ page, baseURL }) => {
+  const diagnostics = await installDiagnostics(page, baseURL);
+  const pageTwo = page.locator('.fdshop-pagination--top a.page-link').filter({ hasText: '2' }).first();
+  const categoryUrl = '/index.php?option=com_fdshop&view=category&id=900010';
+
+  await page.goto(`${categoryUrl}&sort=name&dir=asc&limit=48`);
+  const firstPageNames = await page.locator('.fdshop-card__title').allTextContents();
+  await expect(pageTwo).toHaveAttribute('href', /limit=48/);
+  await pageTwo.click();
+  await expect(page.locator('[name="limit"]')).toHaveValue('48');
+  await expect(page.locator('[data-fdshop-results]')).toHaveText('49–53 von 53');
+  const allNames = firstPageNames.concat(await page.locator('.fdshop-card__title').allTextContents());
+  expect(allNames).toEqual([...allNames].sort((a, b) => a.localeCompare(b, 'de')));
+
+  const manufacturer = '900001';
+  const manufacturerQuery = `fd_filter%5Bmanufacturer%5D%5B%5D=${manufacturer}`;
+  await page.goto(`${categoryUrl}&${manufacturerQuery}&sort=name&dir=asc&limit=24`);
+  const filteredTotal = Number((await page.locator('[data-fdshop-results]').textContent()).match(/von\s+(\d+)/)?.[1]);
+  expect(filteredTotal).toBeGreaterThan(24);
+  await expect(page.locator('.fdshop-filter-chip')).toContainText(['E2E Hersteller Aktiv']);
+  await pageTwo.click();
+  await expect(page.locator('.fdshop-filter-chip')).toContainText(['E2E Hersteller Aktiv']);
+  await expect(page.locator('[data-fdshop-results]')).toContainText(`von ${filteredTotal}`);
+  await expect(page).toHaveURL(/fd_filter\[manufacturer\]\[0\]=900001/);
+  await expect(page.locator('[data-product-id="900103"]')).toHaveCount(0);
+
+  await page.goto(`${categoryUrl}&${manufacturerQuery}&sort=name&dir=asc&limit=48`);
+  await pageTwo.click();
+  await expect(page.locator('[name="limit"]')).toHaveValue('48');
+  await expect(page.locator('.fdshop-filter-chip')).toContainText(['E2E Hersteller Aktiv']);
+
+  await page.goto(`${categoryUrl}&${manufacturerQuery}&fd_filter%5Bavailability%5D%5B%5D=available&sort=price&dir=desc&limit=12`);
+  await expect(page.locator('.fdshop-filter-chip')).toHaveCount(2);
+  const pricesOne = await page.locator('.fdshop-card').evaluateAll(cards => cards.map(card => Number(card.dataset.price)));
+  await pageTwo.click();
+  await expect(page.locator('.fdshop-filter-chip')).toHaveCount(2);
+  await expect(page).toHaveURL(/sort=price/);
+  await expect(page).toHaveURL(/dir=desc/);
+  const pricesTwo = await page.locator('.fdshop-card').evaluateAll(cards => cards.map(card => Number(card.dataset.price)));
+  expect(pricesOne.concat(pricesTwo)).toEqual([...pricesOne, ...pricesTwo].sort((a, b) => b - a));
+
+  await page.locator('[name="limit"]').selectOption('24');
+  await page.waitForLoadState('networkidle');
+  await expect(page).not.toHaveURL(/(?:limitstart|start)=/);
+  await expect(page.locator('[data-fdshop-results]')).toContainText(/^1–/);
+  await expect(page.locator('.fdshop-filter-chip')).toHaveCount(2);
+
+  await page.locator('[data-fdshop-filter-remove]').filter({ hasText: 'Auf Lager' }).click();
+  await expect(page).not.toHaveURL(/(?:limitstart|start)=/);
+  await expect(page.locator('[data-fdshop-results]')).toContainText(/^1–/);
+  await expect(page.locator('.fdshop-filter-chip')).toHaveCount(1);
   diagnostics.expectClean();
 });
 

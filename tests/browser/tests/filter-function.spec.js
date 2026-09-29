@@ -33,7 +33,8 @@ test('direct filter URL is server-rendered and validated', async ({ page, baseUR
   const diagnostics = await installDiagnostics(page, baseURL);
   const response = await page.goto('/batterien?fd_filter%5Bavailability%5D%5B%5D=available');
   expect(response?.status()).toBe(200);
-  await expect(page.locator('.fdshop-card')).toHaveCount(15);
+  await expect(page.locator('.fdshop-card')).toHaveCount(24);
+  await expect(page.locator('[data-fdshop-results]')).toHaveText('1–24 von 26');
   await expect(page.locator('.fdshop-filter-chip')).toContainText(['Auf Lager']);
   await expect(page.locator('[data-fdshop-filter-module] input[name="fd_filter[availability][]"][value="available"]')).toBeChecked();
   await page.goto('/batterien?fd_filter%5Bavailability%5D%5B%5D=manipulated&fd_filter%5Bnem%5D%5B%5D=999999');

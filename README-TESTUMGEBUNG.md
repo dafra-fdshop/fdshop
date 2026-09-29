@@ -83,9 +83,10 @@ Auftrag analysieren → unverbindliche Zeitschätzung → Implementierung → QU
 
 Neue Businessregeln, Architektur-, Datenmodell- und Governance-Entscheidungen bleiben bei der Projektleitung. GitHub Actions/CI und eine PHP-8.5-Zweitumgebung sind nicht Teil von Phase 2.
 
+Für die Kategorieansicht gilt: Ein Pagination-Klick verändert ausschließlich die Seitenposition. Aktive Filter, Sortierung und Seitengröße werden als validierter GET-State in den Joomla-Pagination-Links erhalten. Änderungen an Filter, Sortierung oder Seitengröße entfernen dagegen die bisherige Seitenposition und beginnen wieder auf Seite 1. Die Frontend-Kategorie-Fixture enthält dafür mehr als 48 sichtbare Produkte und deckt kombinierte Query-States ab.
+
 ## Bewusste Grenzen (SKIPPED, nicht PASS)
 
-- Pagination mit Basis-Fixtures
 - Produktbild löschen
 - Versandart löschen
 - Zahlungsart löschen

@@ -110,16 +110,19 @@ SELECT 901000+n,900001,CONCAT('E2E Seitenprodukt ',LPAD(n,2,'0')),CONCAT('e2e-pa
        CASE WHEN n=23 THEN '2035-01-01 00:00:00' ELSE NULL END,
        CASE WHEN n=24 THEN '2020-01-01 00:00:00' ELSE NULL END,
        CONCAT('E2E Seitenprodukt ',n),CASE WHEN MOD(n,2)=0 THEN 'Verfügbar' ELSE 'Bestellbar' END,'Stück'
-FROM (WITH RECURSIVE sequence AS (SELECT 1 n UNION ALL SELECT n+1 FROM sequence WHERE n<25) SELECT n FROM sequence) numbers;
+FROM (WITH RECURSIVE sequence AS (SELECT 1 n UNION ALL SELECT n+1 FROM sequence WHERE n<49) SELECT n FROM sequence) numbers
+WHERE n<>26;
 
 INSERT INTO `__PREFIX__fdshop_products_details`
 (`id`,`product_id`,`sku`,`gtin`,`stock_quantity`,`low_stock`,`reserved_quantity`,`sold_quantity`,`is_in_stock`,`created`,`created_by`,`weight`,`length`,`width`,`height`,`unit_quantity`,`unit_discount_type`,`unit_discount_value`)
 SELECT 902000+n,901000+n,CONCAT('E2E-PAGE-',LPAD(n,2,'0')),CONCAT('9910000000',LPAD(n,3,'0')),20,5,0,0,IF(MOD(n,2)=0,1,0),'2026-01-01 00:00:00',0,1,10,10,10,1,'none',0
-FROM (WITH RECURSIVE sequence AS (SELECT 1 n UNION ALL SELECT n+1 FROM sequence WHERE n<25) SELECT n FROM sequence) numbers;
+FROM (WITH RECURSIVE sequence AS (SELECT 1 n UNION ALL SELECT n+1 FROM sequence WHERE n<49) SELECT n FROM sequence) numbers
+WHERE n<>26;
 
 INSERT INTO `__PREFIX__fdshop_product_category_map` (`id`,`product_id`,`category_id`,`is_primary`)
 SELECT 904000+n,901000+n,900010,1
-FROM (WITH RECURSIVE sequence AS (SELECT 1 n UNION ALL SELECT n+1 FROM sequence WHERE n<25) SELECT n FROM sequence) numbers;
+FROM (WITH RECURSIVE sequence AS (SELECT 1 n UNION ALL SELECT n+1 FROM sequence WHERE n<49) SELECT n FROM sequence) numbers
+WHERE n<>26;
 
 DELETE FROM `__PREFIX__menu` WHERE `alias` = 'batterien' AND `link` LIKE 'index.php?option=com_fdshop&view=category%';
 INSERT INTO `__PREFIX__menu`

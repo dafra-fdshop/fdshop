@@ -41,6 +41,19 @@ final class HtmlView extends BaseHtmlView
         $this->items = $model->getItems();
         $this->pagination = $model->getPagination();
         $this->state = $model->getState();
+        $paginationState = [
+            'option' => 'com_fdshop',
+            'view' => 'category',
+            'id' => (int) $category->id,
+            'sort' => (string) $this->state->get('filter.sort', 'name'),
+            'dir' => (string) $this->state->get('filter.direction', 'asc'),
+            'limit' => (int) $this->state->get('list.limit', 24),
+            'fd_filter' => (array) $this->state->get('filter.fdshop', []),
+        ];
+
+        foreach ($paginationState as $key => $value) {
+            $this->pagination->setAdditionalUrlParam($key, $value);
+        }
         $this->purchaseEnabled = PurchaseHelper::isShopEnabled();
         $this->filterFacets = $model->getFilterFacets();
         $this->activeFilters = (array) $this->state->get('filter.fdshop', []);

@@ -8,6 +8,7 @@
             if (!category || !form) return;
             var url = new URL(window.location.href);
             url.searchParams.delete('limitstart');
+            url.searchParams.delete('start');
             Array.from(url.searchParams.keys()).forEach(function (key) { if (key.indexOf('fd_filter[') === 0) url.searchParams.delete(key); });
             new FormData(form).forEach(function (value, key) { if (!['option', 'view', 'id'].includes(key) && value !== '') url.searchParams.append(key, value); });
             if (filterRequest) filterRequest.abort();
