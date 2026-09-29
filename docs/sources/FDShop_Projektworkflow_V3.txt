@@ -259,6 +259,11 @@ GitHub Actions / CI ist derzeit kein verbindlicher Bestandteil.
 Die lokale WSL2-/Docker-Sandbox ist die primäre automatisierte
 Testumgebung.
 
+Manuelle Real-/Abnahmetests von Daniel und Caesar erfolgen dagegen mit dem
+installierbaren FDShop-Paket auf der online bei IONOS gehosteten
+Joomla-Testinstallation. Sie sind keine lokalen Docker-Tests und dürfen in
+Aufträgen oder Abschlussberichten nicht als solche behandelt werden.
+
 Eine zusätzliche externe PHP-8.5-/Hosting-Abnahme kann separat erfolgen
 und ersetzt die primäre Sandbox nicht.
 

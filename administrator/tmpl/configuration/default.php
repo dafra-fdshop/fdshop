@@ -9,11 +9,13 @@ defined('_JEXEC') or die;
 use Joomla\CMS\HTML\HTMLHelper;
 use Joomla\CMS\Layout\LayoutHelper;
 use Joomla\CMS\Router\Route;
+use FDShop\Component\FDShop\Site\Service\CredentialResolver;
 
 HTMLHelper::_('bootstrap.tooltip');
 $this->getDocument()->getWebAssetManager()->useScript('form.validate');
 
 $user = $this->getCurrentUser();
+$paypalCredentials = new CredentialResolver();
 
 $shipmentListOrder = $this->shipmentState->get('list.ordering');
 $shipmentListDirn  = $this->shipmentState->get('list.direction');
@@ -87,11 +89,11 @@ $orderStatusSearchView = (object) [
 						<?php echo $configurationField($this->form->renderField('show_terms_checkbox')); ?>
 						<?php echo $configurationField($this->form->renderField('require_terms_checkbox')); ?>
 						<?php echo $configurationField($this->form->renderField('paypal_reservation_minutes')); ?>
-						<div class="alert <?php echo strtolower((string) getenv('FDSHOP_PAYPAL_MODE')) === 'live' ? 'alert-success' : 'alert-warning'; ?>">
-							<strong><?php echo strtolower((string) getenv('FDSHOP_PAYPAL_MODE')) === 'live' ? 'PayPal Live' : 'PAYPAL SANDBOX AKTIV'; ?></strong><br>
-							Client-ID konfiguriert: <?php echo getenv('FDSHOP_PAYPAL_' . (strtolower((string) getenv('FDSHOP_PAYPAL_MODE')) === 'live' ? 'LIVE' : 'SANDBOX') . '_CLIENT_ID') ? 'Ja' : 'Nein'; ?> ·
-							Secret konfiguriert: <?php echo getenv('FDSHOP_PAYPAL_' . (strtolower((string) getenv('FDSHOP_PAYPAL_MODE')) === 'live' ? 'LIVE' : 'SANDBOX') . '_CLIENT_SECRET') ? 'Ja' : 'Nein'; ?> ·
-							Webhook-ID konfiguriert: <?php echo getenv('FDSHOP_PAYPAL_' . (strtolower((string) getenv('FDSHOP_PAYPAL_MODE')) === 'live' ? 'LIVE' : 'SANDBOX') . '_WEBHOOK_ID') ? 'Ja' : 'Nein'; ?>
+						<div class="alert <?php echo $paypalCredentials->paypalMode() === 'live' ? 'alert-success' : 'alert-warning'; ?>">
+							<strong><?php echo $paypalCredentials->paypalMode() === 'live' ? 'PayPal Live' : 'PAYPAL SANDBOX AKTIV'; ?></strong><br>
+							Client-ID konfiguriert: <?php echo $paypalCredentials->paypalConfigured('client_id') ? 'Ja' : 'Nein'; ?> ·
+							Secret konfiguriert: <?php echo $paypalCredentials->paypalConfigured('client_secret') ? 'Ja' : 'Nein'; ?> ·
+							Webhook-ID konfiguriert: <?php echo $paypalCredentials->paypalConfigured('webhook_id') ? 'Ja' : 'Nein'; ?>
 						</div>
 					</div>
 				</div>

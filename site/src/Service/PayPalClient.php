@@ -6,13 +6,14 @@ use Joomla\CMS\Http\HttpFactory;
 
 final class PayPalClient implements PayPalClientInterface
 {
+    public function __construct(private readonly CredentialResolverInterface $credentials) {}
+
     private function value(string $suffix): string
     {
-        $mode = $this->mode() === 'live' ? 'LIVE' : 'SANDBOX';
-        return trim((string) getenv('FDSHOP_PAYPAL_' . $mode . '_' . $suffix));
+        return $this->credentials->paypal(strtolower($suffix));
     }
 
-    public function mode(): string { return strtolower((string) getenv('FDSHOP_PAYPAL_MODE')) === 'live' ? 'live' : 'sandbox'; }
+    public function mode(): string { return $this->credentials->paypalMode(); }
     public function clientId(): string { return $this->value('CLIENT_ID'); }
     public function configured(): bool { return $this->clientId() !== '' && $this->value('CLIENT_SECRET') !== ''; }
     private function base(): string { return $this->mode() === 'live' ? 'https://api-m.paypal.com' : 'https://api-m.sandbox.paypal.com'; }

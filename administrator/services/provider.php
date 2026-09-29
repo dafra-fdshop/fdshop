@@ -37,6 +37,8 @@ use FDShop\Component\FDShop\Site\Service\PaymentService;
 use FDShop\Component\FDShop\Site\Service\PaymentServiceInterface;
 use FDShop\Component\FDShop\Site\Service\PayPalClient;
 use FDShop\Component\FDShop\Site\Service\PayPalClientInterface;
+use FDShop\Component\FDShop\Site\Service\CredentialResolver;
+use FDShop\Component\FDShop\Site\Service\CredentialResolverInterface;
 use FDShop\Component\FDShop\Site\Service\AccountService;
 use FDShop\Component\FDShop\Site\Service\AccountServiceInterface;
 use FDShop\Component\FDShop\Site\Service\ProductQuestionService;
@@ -230,7 +232,9 @@ return new class () implements ServiceProviderInterface {
 
         $container->set(CheckoutServiceInterface::class, fn (Container $container): CheckoutServiceInterface => new CheckoutService($container->get(DatabaseInterface::class), $container->get(CartServiceInterface::class), $container->get(OrderNotificationService::class), $container->get(ProductServiceInterface::class), $container->get(BuyerEligibilityServiceInterface::class)));
         $container->set(CheckoutService::class, fn (Container $container): CheckoutService => $container->get(CheckoutServiceInterface::class));
-        $container->set(PayPalClientInterface::class, fn (): PayPalClientInterface => new PayPalClient());
+        $container->set(CredentialResolverInterface::class, fn (): CredentialResolverInterface => new CredentialResolver());
+        $container->set(CredentialResolver::class, fn (Container $container): CredentialResolver => $container->get(CredentialResolverInterface::class));
+        $container->set(PayPalClientInterface::class, fn (Container $container): PayPalClientInterface => new PayPalClient($container->get(CredentialResolverInterface::class)));
         $container->set(PayPalClient::class, fn (Container $container): PayPalClient => $container->get(PayPalClientInterface::class));
         $container->set(PaymentServiceInterface::class, fn (Container $container): PaymentServiceInterface => new PaymentService($container->get(DatabaseInterface::class),$container->get(CartServiceInterface::class),$container->get(CheckoutServiceInterface::class),$container->get(PayPalClientInterface::class),$container->get(BuyerEligibilityServiceInterface::class),$container->get(ProductServiceInterface::class)));
         $container->set(PaymentService::class, fn (Container $container): PaymentService => $container->get(PaymentServiceInterface::class));

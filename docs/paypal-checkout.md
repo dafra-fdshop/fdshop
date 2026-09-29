@@ -16,9 +16,46 @@ Der Warenkorb lädt ausschließlich bei einer Zahlart mit `paypal_enabled=1` das
 
 Im PayPal-Dashboard muss Daniel später für die jeweilige Live-/Sandbox-App einen Webhook mit mindestens `PAYMENT.CAPTURE.COMPLETED` anlegen und dessen Webhook-ID als Environment-Variable hinterlegen. Ohne Webhook-ID lehnt FDShop jede Webhookmutation ab. Signaturen werden über PayPals offiziellen `verify-webhook-signature`-Endpunkt geprüft; Replays laufen durch denselben idempotenten Finalizer.
 
-## Environment
+## Credentials in Docker und auf IONOS
 
-Siehe `.env.example`. Client Secret und Webhook-ID sind ausschließlich serverseitige Environment-Werte. Sandbox und Live sind strikt getrennt. Geheimnisse gehören niemals in Datenbank, Repository, Logs, Screenshots oder Traces. Die Reservierungsdauer wird im FDShop-Admin zwischen 5 und 30 Minuten konfiguriert (Standard: 10).
+FDShop löst PayPal-Zugangsdaten zentral in dieser Reihenfolge auf:
+
+1. nichtleere Environment-Variable für den aktiven Modus,
+2. externer Secret-File-Eintrag,
+3. nicht konfiguriert.
+
+Ein Environment-Wert hat immer Vorrang und wird niemals durch die Datei überschrieben. Die WSL2-/Docker-Testumgebung verwendet weiterhin die Variablen aus `.env.example`. Optional kann `FDSHOP_SECRET_FILE` einen absoluten, serverseitigen Dateipfad vorgeben.
+
+Auf IONOS liegt die Datei außerhalb des Joomla-DocumentRoots. Ohne explizites `FDSHOP_SECRET_FILE` wird sie installationsunabhängig relativ zum aktuellen Joomla-Root als Geschwisterpfad aufgelöst:
+
+`dirname(JPATH_ROOT)/fdshop-data/secrets/fdshop-secrets.php`
+
+Damit wird insbesondere kein Ordnername wie `Joomla6` hardcodiert. Bei einem Umzug muss entweder `fdshop-data` mit derselben Geschwisterstruktur übernommen oder `FDSHOP_SECRET_FILE` serverseitig auf den neuen absoluten Pfad gesetzt werden.
+
+Die externe, nicht paketierte und nicht versionierte Datei muss ausschließlich dieses Datenarray zurückgeben:
+
+```php
+<?php
+return [
+    'paypal' => [
+        'mode' => 'sandbox', // oder 'live'
+        'sandbox' => [
+            'client_id' => 'SANDBOX_CLIENT_ID_HIER',
+            'client_secret' => 'SANDBOX_CLIENT_SECRET_HIER',
+            'webhook_id' => 'SANDBOX_WEBHOOK_ID_HIER',
+        ],
+        'live' => [
+            'client_id' => 'LIVE_CLIENT_ID_HIER',
+            'client_secret' => 'LIVE_CLIENT_SECRET_HIER',
+            'webhook_id' => 'LIVE_WEBHOOK_ID_HIER',
+        ],
+    ],
+];
+```
+
+Das Format wird defensiv validiert. Fehlende, unlesbare, unvollständige oder ungültige Dateien gelten ohne Frontend-Warnung als nicht beziehungsweise nur teilweise konfiguriert. Die Datei erzeugt bei direkter Ausführung keine Ausgabe. Client Secret und Webhook-ID bleiben ausschließlich serverseitig; Geheimnisse gehören niemals in Datenbank, Paket, Repository, Logs, Screenshots oder Traces. Der Admin zeigt weiterhin nur Ja/Nein-Zustände. Die Reservierungsdauer wird im FDShop-Admin zwischen 5 und 30 Minuten konfiguriert (Standard: 10).
+
+Die manuelle Realabnahme erfolgt auf der online bei IONOS installierten Paketversion. Sie ist von der lokalen WSL2-/Docker-Automatiktestumgebung zu unterscheiden.
 
 ## Cleanup und Betrieb
 
