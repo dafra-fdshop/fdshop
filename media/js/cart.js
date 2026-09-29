@@ -82,7 +82,7 @@
             }
             if (button.matches('[data-cart-open]')) cart.querySelector('[data-cart-dialog="' + button.dataset.cartOpen + '"]').showModal();
             if (button.matches('[data-cart-select-shipment]')) request('selectShipment', { shipment_id: button.dataset.cartSelectShipment }).then(function () { button.closest('dialog').close(); notify('Abholstation wurde geändert.', false); }).catch(function (error) { notify(error.message, true); });
-            if (button.matches('[data-cart-select-payment]')) request('selectPayment', { payment_id: button.dataset.cartSelectPayment }).then(function () { cart.dataset.paypalEnabled = button.dataset.paypalEnabled || '0'; if(cart.dataset.paypalEnabled==='1')loadPayPal().catch(function(error){notify(error.message,true);}); button.closest('dialog').close(); notify('Zahlungsart wurde geändert.', false); }).catch(function (error) { notify(error.message, true); });
+            if (button.matches('[data-cart-select-payment]')) request('selectPayment', { payment_id: button.dataset.cartSelectPayment }).then(function () { cart.dataset.paypalEnabled = button.dataset.paypalEnabled || '0'; setPayPalReady(cart.dataset.paypalEnabled!=='1'||Boolean(paypalSession)); if(cart.dataset.paypalEnabled==='1')loadPayPal().catch(function(error){notify(error.message,true);}); button.closest('dialog').close(); notify('Zahlungsart wurde geändert.', false); }).catch(function (error) { notify(error.message, true); });
             if (button.matches('[data-cart-apply-coupon]')) request('applyCoupon', { coupon_code: cart.querySelector('[data-cart-coupon-code]').value }).catch(function (error) { notify(error.message, true); });
             if (button.matches('[data-cart-order]')) {
                 var terms = cart.querySelector('[data-cart-terms]');
@@ -99,6 +99,13 @@
         var paypalSession;
         var paypalState;
         var paypalLoading;
+        // PayPal start() must remain in the direct click activation; never await SDK readiness there.
+        function setPayPalReady(ready) {
+            var button=cart.querySelector('[data-cart-order]');
+            if(cart.dataset.paypalEnabled!=='1'){button.disabled=false;button.removeAttribute('aria-busy');return;}
+            button.disabled=!ready;
+            if(ready)button.removeAttribute('aria-busy');else button.setAttribute('aria-busy','true');
+        }
         async function postPayment(task, values) {
             var body = new FormData(); body.append(token.name, '1');
             Object.keys(values || {}).forEach(function (key) { body.append(key, values[key]); });
@@ -113,16 +120,18 @@
         }
         async function loadPayPal() {
             if(paypalSession)return paypalSession;if(paypalLoading)return paypalLoading;
+            setPayPalReady(false);
             paypalLoading=(async function(){
             var config=await postPayment('config',{});if(!config.configured)throw new Error('PayPal ist noch nicht vollständig konfiguriert.');
             if(!window.paypal){await new Promise(function(resolve,reject){var script=document.createElement('script');script.src=config.sdk_url;script.async=true;script.onload=resolve;script.onerror=function(){reject(new Error('PayPal konnte nicht geladen werden.'));};document.head.appendChild(script);});}
             var sdk=await window.paypal.createInstance({clientId:config.client_id,components:['paypal-payments'],pageType:'checkout'});var eligible=await sdk.findEligibleMethods({currencyCode:'EUR'});if(!eligible.isEligible('paypal'))throw new Error('PayPal ist für diese Zahlung nicht verfügbar.');
             paypalSession=sdk.createPayPalOneTimePaymentSession({onApprove:async function(data){var result=await postPayment('capture',{session_token:paypalState.session_token,provider_order_id:data.orderId});window.location.assign(result.confirmation_url);},onCancel:function(){notify('Die PayPal-Zahlung wurde abgebrochen. Ihr Warenkorb bleibt erhalten.',true);},onError:function(){notify('PayPal konnte die Zahlung nicht abschließen. Ihr Warenkorb bleibt erhalten.',true);}});
+            setPayPalReady(true);
             return paypalSession;
-            }());try{return await paypalLoading;}finally{paypalLoading=null;}
+            }());try{return await paypalLoading;}catch(error){setPayPalReady(false);throw error;}finally{paypalLoading=null;}
         }
         async function startPayPal(values) {
-            if(!paypalSession)await loadPayPal();
+            if(!paypalSession)throw new Error('PayPal wird noch geladen. Bitte versuchen Sie es gleich erneut.');
             var createPromise=postPayment('start',values).then(function(state){paypalState=state;countdown(state.expires_at);return {orderId:state.order_id};});
             await paypalSession.start({presentationMode:'auto'},createPromise);
         }
