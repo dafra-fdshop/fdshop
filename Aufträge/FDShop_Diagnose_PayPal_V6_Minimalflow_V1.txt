@@ -1,0 +1,285 @@
+FDShop – DIAGNOSEAUFTRAG FÜR CODEX
+PAYPAL V6 SANDBOX BUYER-FLOW ISOLIEREN – MINIMALINTEGRATION VS. FDSHOP
+
+Projekt: FDShop
+Branch: feature
+Basis Remote: 7e5b6349ca385451c01d6cc20ceab6686a0959e9
+Art: reine Diagnose / temporäre Testinfrastruktur
+Ziel: Fehlerursache einkreisen, NICHT neuen Produktcode-Hotfix raten
+
+======================================================================
+1. AUSGANGSLAGE
+======================================================================
+
+Der reale IONOS-PayPal-Sandbox-Flow hängt reproduzierbar im PayPal-Popup bei:
+
+„Sie werden zu PayPal weitergeleitet“
+
+Getestet mit:
+- Edge normal
+- Edge InPrivate
+- Chrome
+- Mobilgerät
+
+Damit ist ein einzelnes Browserprofil/Cookieproblem sehr unwahrscheinlich.
+
+Real bereits bestätigt:
+- Credential Resolver funktioniert
+- OAuth funktioniert
+- payment.start HTTP 200
+- serverseitige Revalidierung funktioniert
+- Payment Session wird erstellt
+- 10-Minuten-Reservierung funktioniert
+- PayPal Create Order funktioniert
+- echte Sandbox Order-ID wird geliefert
+- Betrag/Währung korrekt
+- PayPal-Popup öffnet
+- PayPal-interne Requests überwiegend 200
+- Firebase WebSockets 101
+- PayPal-Popup zeigt wiederholt interne Firebase-Warnungen:
+  "Provided authentication credentials ... are invalid"
+- kein Capture ausgelöst
+
+Hotfix zur transienten Browseraktivierung wurde umgesetzt und real getestet,
+hat den Hänger NICHT beseitigt.
+
+Danach wurde ein Client-Token-A/B-Test begonnen.
+Der offizielle Token-Request wurde von PayPal nicht erfolgreich beantwortet.
+Codex hat korrekt STOP ausgelöst.
+
+======================================================================
+2. WICHTIGER WORKTREE-ZUSTAND
+======================================================================
+
+Remote feature/origin feature stehen weiterhin auf:
+7e5b6349ca385451c01d6cc20ceab6686a0959e9
+
+In beiden Codex-Arbeitskopien liegen UNCOMMITTED Änderungen des gestoppten
+Client-Token-A/B-Versuchs.
+
+Diese Änderungen:
+- NICHT committen
+- NICHT pushen
+- NICHT weiterentwickeln
+- NICHT mit der Diagnose vermischen
+
+Vor Beginn sauber sichern/stashen oder anderweitig reversibel isolieren, sodass
+die Diagnose gegen den veröffentlichten feature-Stand erfolgen kann.
+
+Nichts verlieren, aber Produktcode für diesen Auftrag nicht verändern.
+
+======================================================================
+3. DIAGNOSEZIEL
+======================================================================
+
+Eine minimale, temporäre PayPal-v6-Sandbox-Integration bauen, die so wenig wie
+möglich mit FDShop zu tun hat.
+
+Frage:
+
+A) Hängt auch eine minimale offizielle PayPal-v6-One-Time-Integration mit
+   derselben Sandbox-App / denselben Merchant-Credentials?
+
+ODER
+
+B) Funktioniert die Minimalintegration und nur der FDShop-Flow hängt?
+
+Damit trennen wir:
+- PayPal Sandbox / App / SDK / Merchant-Konfiguration
+von
+- FDShop-spezifischer Browser-/Checkout-Integration.
+
+======================================================================
+4. MINIMALINTEGRATION
+======================================================================
+
+Nur in Tests/temporärer Diagnoseinfrastruktur.
+NICHT Bestandteil des installierbaren FDShop-Produktcodes.
+
+So nah wie möglich an der AKTUELLEN offiziellen PayPal-v6-Dokumentation für
+Standard One-Time PayPal Payment bleiben.
+
+Minimal benötigt:
+
+Server:
+- dieselben Sandbox Merchant Client-ID/Secret aus lokaler sicherer Testquelle
+- OAuth
+- Create Order
+- fixer Testbetrag, z.B. 0.50 EUR
+- KEIN FDShop Cart
+- KEINE FDShop Payment Session
+- KEINE Reservierung
+- KEIN Order-Finalizer
+- KEIN Webhook
+- KEIN Gutschein
+- KEIN F3
+- KEINE FDShop-Lagerlogik
+
+Browser:
+- offizielles PayPal JS SDK v6
+- Standard-One-Time-PayPal-Komponente
+- nach aktueller offizieller Doku empfohlene Standard-Authentifizierung
+- Eligibility nur soweit offiziell erforderlich
+- createPayPalOneTimePaymentSession
+- session.start unmittelbar aus Benutzeraktion
+- Create-Order-Promise gemäß offizieller Doku
+
+WICHTIG:
+Für die erste Minimalprobe KEIN clientToken-Experiment erzwingen.
+Zuerst exakt den offiziell dokumentierten Standard-One-Time-Flow möglichst
+unverändert nachbauen.
+
+Keinen echten Capture nötig, solange das Diagnoseziel bereits beim sichtbaren
+Buyer-Login erreicht wird.
+
+======================================================================
+5. ZWEITE DIAGNOSEEBENE – DIFFERENZANALYSE
+======================================================================
+
+Wenn Minimalintegration den Buyer-Login korrekt erreicht:
+
+Dann Minimalflow gegen aktuellen FDShop-Flow technisch diffen, insbesondere:
+- SDK-Ladescript / Version / Queryparameter
+- createInstance-Argumente
+- components
+- pageType
+- Eligibility
+- Payment-Session-Erzeugung
+- Zeitpunkt der Initialisierung
+- Zeitpunkt von session.start
+- presentationMode
+- Create-Order-Promise
+- Origin/Domain
+- Routing/URLs
+- Popup-Kontext
+- Browser User Activation
+- mehrfaches Initialisieren / doppelte SDK-Instanzen
+- Eventhandler
+- DOM/Overlay
+- CSP/CORS/Headers soweit relevant
+
+Nur Diagnose.
+Noch KEIN Produktcode-Fix, außer ein trivialer eindeutiger Fehler wird
+zweifelsfrei nachgewiesen; selbst dann zuerst im Bericht benennen.
+
+Wenn Minimalintegration genauso hängt:
+
+Dann FDShop zunächst als Ursache zurückstellen und konkret dokumentieren:
+- verwendete Sandbox-App
+- SDK-Version
+- Auth-Methode
+- PayPal-Endpunkte
+- beobachteter letzter erfolgreicher Schritt
+- Browser-/PayPal-Konsole
+- Netzwerkstatus
+- relevante PayPal Request-/Debug-IDs, sofern ohne Secrets verfügbar
+- welche Dashboard-/App-Konfiguration laut offizieller PayPal-Doku für diesen
+  Standardflow erforderlich ist
+
+Dann STOP. Kein weiterer FDShop-Umbau.
+
+======================================================================
+6. PAYPAL-DASHBOARD / APP-KONFIGURATION
+======================================================================
+
+Daniel konnte in der aktuellen PayPal-Developer-Dashboard-Oberfläche keine
+sichtbare Sektion "Features / Accept payments" finden.
+
+Nicht behaupten, dass ein bestimmter Schalter existieren MUSS, wenn die
+aktuelle Oberfläche/Dokumentation das nicht belastbar hergibt.
+
+Bitte aktuelle offizielle PayPal-Dokumentation für Standard-One-Time-Payment
+prüfen und konkret auflisten:
+- welche App-Fähigkeiten tatsächlich erforderlich sind
+- ob zusätzliche Freischaltungen/Berechtigungen nötig sind
+- ob Webhook-Konfiguration für das Öffnen des Buyer-Login erforderlich ist
+  (Erwartung: nein; bitte dokumentarisch verifizieren)
+- ob Sandbox Business Account/App-Zuordnung relevant ist
+- ob bestimmte App-/Account-Zustände den Buyer-Flow blockieren können
+
+Keine Dashboardänderungen durchführen.
+
+======================================================================
+7. CLIENT-TOKEN-VERSUCH
+======================================================================
+
+Die uncommitted Client-Token-Implementierung ist NICHT Gegenstand der ersten
+Diagnose.
+
+Erst wenn die Minimalintegration oder aktuelle PayPal-Dokumentation einen
+belastbaren Grund liefert, den Client-Token-Weg weiterzuverfolgen:
+- Befund berichten
+- nicht automatisch weiterbauen
+- STOP für Entscheidung Daniel/Caesar
+
+Den bisherigen fehlgeschlagenen Token-Request nicht einfach wiederholen.
+
+======================================================================
+8. TESTUMFANG – KLEIN
+======================================================================
+
+KEIN test-full.
+KEINE breite FDShop-Regression.
+KEIN Paketmarathon.
+
+Nur:
+- Minimalintegration syntaktisch/technisch prüfen
+- echter Sandbox OAuth/Create Order soweit nötig
+- Browserprobe bis Buyer-Login / Hänger
+- relevante Console-/Network-Befunde sichern
+- Vergleich mit FDShop
+- git diff --check nur falls Dateien angelegt/geändert werden
+
+Temporäre Diagnoseartefakte dürfen nach Erkenntnis wieder entfernt werden.
+
+======================================================================
+9. SICHERHEIT
+======================================================================
+
+- keine Secrets im Repo
+- keine Secrets in Reports
+- keine Access Tokens ausgeben
+- keine Client Tokens ausgeben
+- keine Testbuyer-Passwörter ausgeben
+- PayPal Debug-/Request-IDs nur wenn nicht geheim
+- keine echten Live-Zahlungen
+- Sandbox only
+- kein Capture erforderlich
+
+======================================================================
+10. ABSCHLUSS / KEIN NORMALER FEATURE-COMMIT
+======================================================================
+
+Dieser Auftrag ist primär Diagnose.
+
+Am Ende Bericht mit genau einer der Kategorien:
+
+A) MINIMALFLOW FUNKTIONIERT
+   -> FDShop-spezifische Abweichungen konkret benennen.
+
+B) MINIMALFLOW HÄNGT IDENTISCH
+   -> PayPal/App/Sandbox als Hauptverdacht; konkrete nächste Diagnosepunkte.
+
+C) MINIMALFLOW KANN NICHT BELASTBAR AUSGEFÜHRT WERDEN
+   -> technische Grenze und benötigten nächsten Realtest nennen.
+
+Keinen Produktcode committen/pushen.
+
+Nur falls ausschließlich sinnvolle dauerhafte Testinfrastruktur/Dokumentation
+entsteht, vor Commit erst STOP und Freigabe einholen.
+
+Uncommitted Client-Token-Änderungen am Ende weiterhin sicher/reversibel
+isoliert halten.
+
+Abschlussbericht:
+- Kategorie A/B/C
+- exakter Minimalflow
+- letzte erfolgreiche Stufe
+- Unterschiede zum FDShop-Flow
+- relevante HTTP-/SDK-/Console-Befunde
+- aktuelle offizielle PayPal-Doku, die zugrunde gelegt wurde
+- konkrete nächste Handlung
+- Git-/Worktree-Zustand
+- Bestätigung: kein Produktcode gepusht
+
+ENDE DES DIAGNOSEAUFTRAGS
