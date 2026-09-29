@@ -12,6 +12,12 @@ Der bestehende `CheckoutService` bleibt alleiniger Finalizer für Order, Snapsho
 
 Der Warenkorb lädt ausschließlich bei einer Zahlart mit `paypal_enabled=1` das offizielle PayPal Web SDK v6. Create Order und Capture laufen serverseitig. Browserpreise werden ignoriert. Der Webhook-Endpunkt lautet:
 
+Redirect- und Payment-Handler-Rückläufe werden nach dem erneuten Seitenaufbau mit `paymentSession.hasReturned()` erkannt und durch `paymentSession.resume()` fortgesetzt. Erst dadurch löst das SDK den registrierten `onApprove`-Callback aus. Der dafür benötigte interne Payment-Session-Bezug wird ausschließlich im tabgebundenen `sessionStorage` bis Approval, Cancel, Fehler oder Ablauf gehalten.
+
+### Erforderlicher Joomla-HTTP-Header
+
+Für die Kommunikation zwischen FDShop und dem PayPal-Popup muss der effektive Response-Header der Warenkorbseite `Cross-Origin-Opener-Policy: same-origin-allow-popups` lauten. Joomlas Standardwert `same-origin` trennt das fremde PayPal-Popup vom öffnenden Browsing Context und verhindert den Buyer-Flow. Die Einstellung erfolgt im Joomla-Plugin **System – HTTP Headers**; FDShop verändert weder Joomla-Core noch das Plugin automatisch. Nach Installation beziehungsweise Serverumzug muss der tatsächlich ausgelieferte Header im Browser-Netzwerk oder per HTTP-HEAD geprüft werden. Mehrfach gesetzte, widersprüchliche COOP-Header sind zu vermeiden.
+
 `https://IHRE-DOMAIN/index.php?option=com_fdshop&task=payment.webhook&format=json`
 
 Im PayPal-Dashboard muss Daniel später für die jeweilige Live-/Sandbox-App einen Webhook mit mindestens `PAYMENT.CAPTURE.COMPLETED` anlegen und dessen Webhook-ID als Environment-Variable hinterlegen. Ohne Webhook-ID lehnt FDShop jede Webhookmutation ab. Signaturen werden über PayPals offiziellen `verify-webhook-signature`-Endpunkt geprüft; Replays laufen durch denselben idempotenten Finalizer.

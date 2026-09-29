@@ -17,6 +17,8 @@ scripts/fdshop test-reset
 
 Joomla und Mailpit sind nur an `127.0.0.1` gebunden; MariaDB hat keinen Host-Port. Resets betreffen ausschließlich das Compose-Projekt `fdshop`.
 
+Für PayPal Web SDK v6 muss im Joomla-Plugin **System – HTTP Headers** die `Cross-Origin-Opener-Policy` auf `same-origin-allow-popups` stehen. Der Joomla-Standard `same-origin` trennt das PayPal-Popup vom Warenkorb. Entscheidend ist der effektiv ausgelieferte Response-Header der Warenkorbseite; Details stehen in `docs/paypal-checkout.md`.
+
 ## QUICK, STANDARD und FULL
 
 QUICK ist ein nicht destruktiver Gesundheitscheck einer vorbereiteten Sandbox:

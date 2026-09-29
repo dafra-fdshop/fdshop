@@ -97,8 +97,18 @@
         });
 
         var paypalSession;
-        var paypalState;
+        var paypalStorageKey='fdshop.paypal.state';
+        var paypalState=restorePayPalState();
         var paypalLoading;
+        function restorePayPalState() {
+            try {
+                var state=JSON.parse(sessionStorage.getItem(paypalStorageKey)||'null');
+                if(!state||!state.session_token||!state.order_id||!state.expires_at||new Date(state.expires_at).getTime()<=Date.now()){sessionStorage.removeItem(paypalStorageKey);return null;}
+                return state;
+            } catch(error){sessionStorage.removeItem(paypalStorageKey);return null;}
+        }
+        function storePayPalState(state){paypalState=state;sessionStorage.setItem(paypalStorageKey,JSON.stringify(state));}
+        function clearPayPalState(){paypalState=null;sessionStorage.removeItem(paypalStorageKey);}
         // PayPal start() must remain in the direct click activation; never await SDK readiness there.
         function setPayPalReady(ready) {
             var button=cart.querySelector('[data-cart-order]');
@@ -116,7 +126,7 @@
         }
         function countdown(expiresAt) {
             var panel=cart.querySelector('[data-paypal-progress]');var output=cart.querySelector('[data-paypal-countdown]');panel.hidden=false;
-            clearInterval(cart._paypalTimer);var tick=function(){var seconds=Math.max(0,Math.floor((new Date(expiresAt).getTime()-Date.now())/1000));output.textContent=String(Math.floor(seconds/60)).padStart(2,'0')+':'+String(seconds%60).padStart(2,'0');if(seconds===0){clearInterval(cart._paypalTimer);cart.querySelector('[data-cart-submission]').value=crypto.randomUUID();paypalState=null;notify('Der Zahlungsvorgang ist abgelaufen. Bitte starten Sie ihn erneut.',true);}};tick();cart._paypalTimer=setInterval(tick,1000);
+            clearInterval(cart._paypalTimer);var tick=function(){var seconds=Math.max(0,Math.floor((new Date(expiresAt).getTime()-Date.now())/1000));output.textContent=String(Math.floor(seconds/60)).padStart(2,'0')+':'+String(seconds%60).padStart(2,'0');if(seconds===0){clearInterval(cart._paypalTimer);cart.querySelector('[data-cart-submission]').value=crypto.randomUUID();clearPayPalState();notify('Der Zahlungsvorgang ist abgelaufen. Bitte starten Sie ihn erneut.',true);}};tick();cart._paypalTimer=setInterval(tick,1000);
         }
         async function loadPayPal() {
             if(paypalSession)return paypalSession;if(paypalLoading)return paypalLoading;
@@ -125,14 +135,15 @@
             var config=await postPayment('config',{});if(!config.configured)throw new Error('PayPal ist noch nicht vollständig konfiguriert.');
             if(!window.paypal){await new Promise(function(resolve,reject){var script=document.createElement('script');script.src=config.sdk_url;script.async=true;script.onload=resolve;script.onerror=function(){reject(new Error('PayPal konnte nicht geladen werden.'));};document.head.appendChild(script);});}
             var sdk=await window.paypal.createInstance({clientId:config.client_id,components:['paypal-payments'],pageType:'checkout'});var eligible=await sdk.findEligibleMethods({currencyCode:'EUR'});if(!eligible.isEligible('paypal'))throw new Error('PayPal ist für diese Zahlung nicht verfügbar.');
-            paypalSession=sdk.createPayPalOneTimePaymentSession({onApprove:async function(data){var result=await postPayment('capture',{session_token:paypalState.session_token,provider_order_id:data.orderId});window.location.assign(result.confirmation_url);},onCancel:function(){notify('Die PayPal-Zahlung wurde abgebrochen. Ihr Warenkorb bleibt erhalten.',true);},onError:function(){notify('PayPal konnte die Zahlung nicht abschließen. Ihr Warenkorb bleibt erhalten.',true);}});
+            paypalSession=sdk.createPayPalOneTimePaymentSession({onApprove:async function(data){if(!paypalState)throw new Error('Der PayPal-Zahlungsvorgang konnte nicht wiederhergestellt werden.');var result=await postPayment('capture',{session_token:paypalState.session_token,provider_order_id:data.orderId});clearPayPalState();window.location.assign(result.confirmation_url);},onCancel:function(){clearPayPalState();notify('Die PayPal-Zahlung wurde abgebrochen. Ihr Warenkorb bleibt erhalten.',true);},onError:function(){clearPayPalState();notify('PayPal konnte die Zahlung nicht abschließen. Ihr Warenkorb bleibt erhalten.',true);}});
+            if(paypalSession.hasReturned()){if(!paypalState)throw new Error('Der PayPal-Zahlungsvorgang konnte nicht wiederhergestellt werden.');countdown(paypalState.expires_at);await paypalSession.resume();return paypalSession;}
             setPayPalReady(true);
             return paypalSession;
             }());try{return await paypalLoading;}catch(error){setPayPalReady(false);throw error;}finally{paypalLoading=null;}
         }
         async function startPayPal(values) {
             if(!paypalSession)throw new Error('PayPal wird noch geladen. Bitte versuchen Sie es gleich erneut.');
-            var createPromise=postPayment('start',values).then(function(state){paypalState=state;countdown(state.expires_at);return {orderId:state.order_id};});
+            var createPromise=postPayment('start',values).then(function(state){storePayPalState(state);countdown(state.expires_at);return {orderId:state.order_id};});
             await paypalSession.start({presentationMode:'auto'},createPromise);
         }
         if(cart.dataset.paypalEnabled==='1')loadPayPal().catch(function(error){notify(error.message,true);});
