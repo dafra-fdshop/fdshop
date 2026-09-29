@@ -1,0 +1,227 @@
+FDShop – PAYPAL A/B-HOTFIX FÜR CODEX
+JS SDK V6: CLIENT-ID VS. BROWSER-SAFE CLIENT TOKEN
+
+Projekt: FDShop
+Branch: feature
+Basis: aktueller feature nach Commit 8ebadceff8167a1b3652ddc1b5d513503175dd72
+Zweck: kleiner kontrollierter Realtest, KEIN umfassender Umbau
+Priorität: PayPal-Blocker
+
+======================================================================
+1. NEUER REALBEFUND
+======================================================================
+
+Der vorherige Hotfix zur transienten Browseraktivierung ist technisch sinnvoll,
+hat den realen IONOS-Fehler aber NICHT behoben.
+
+Nach Installation des Hotfixes hängt das PayPal-Sandbox-Popup weiterhin
+reproduzierbar bei:
+
+„Sie werden zu PayPal weitergeleitet“
+
+Gegenproben mit:
+- Edge normal
+- Edge InPrivate
+- Chrome
+- Mobilgerät
+
+Alle zeigen dasselbe Verhalten.
+
+Damit ist ein einzelnes Browserprofil/Cookieproblem sehr unwahrscheinlich.
+
+Real bestätigt:
+- payment.start HTTP 200
+- gültige interne Payment Session
+- gültige PayPal Sandbox Order-ID
+- Betrag/Währung korrekt
+- Reservierung korrekt
+- PayPal OAuth/Create Order erfolgreich
+- PayPal Popup wird geöffnet
+- PayPal-interne Requests überwiegend HTTP 200
+- Firebase WebSockets 101 Switching Protocols
+
+Im PayPal-Popup selbst erscheinen wiederholt PayPal-interne Firebase-Warnungen
+über ungültige Authentication Credentials. Keine offensichtlichen 4xx/5xx
+wurden im Popup-Network beobachtet.
+
+Kein Capture wurde ausgelöst.
+
+======================================================================
+2. ZIEL DIESES AUFTRAGS
+======================================================================
+
+Kontrollierter A/B-Test:
+
+Bisher:
+window.paypal.createInstance({ clientId: ... })
+
+Jetzt testweise:
+browser-safe clientToken serverseitig gemäß aktueller offizieller PayPal-v6-
+Dokumentation erzeugen und createInstance damit initialisieren.
+
+Nur diese Authentifizierungsvariante ändern.
+
+Wenn clientToken den realen Buyer-Flow behebt, kann diese Variante beibehalten
+werden.
+
+Wenn der Flow damit ebenfalls hängt:
+- NICHT weitere Checkoutbereiche spekulativ umbauen
+- Befund sauber berichten
+- nächster Schritt wird eine isolierte PayPal-Minimalintegration/App-
+  Konfigurationsprüfung außerhalb der FDShop-Fachlogik.
+
+======================================================================
+3. DOKUMENTATIONSLAGE
+======================================================================
+
+Die aktuelle offizielle PayPal-v6-Dokumentation ist widersprüchlich:
+
+- Quickstart / Teile der v5→v6-Doku zeigen clientId für Standard-One-Time-
+  Payments.
+- Andere aktuelle Setup-/Upgrade-Seiten zeigen bzw. verlangen browser-safe
+  clientToken für createInstance.
+
+Daher ist dieser Auftrag ausdrücklich ein A/B-Realtest und keine Behauptung,
+dass clientId grundsätzlich ungültig ist.
+
+Bitte vor Implementierung aktuelle offizielle PayPal-Dokumentation noch einmal
+prüfen und den tatsächlich verwendeten Endpoint/Parameter daraus ableiten.
+
+======================================================================
+4. CLIENT-TOKEN-IMPLEMENTIERUNG
+======================================================================
+
+Falls gemäß aktueller PayPal-Doku technisch möglich:
+
+- Token ausschließlich serverseitig mit Client-ID + Client-Secret erzeugen.
+- Sandbox/Live korrekt trennen.
+- Offiziellen PayPal-Endpunkt und erforderliche Parameter verwenden.
+- Domainbindung/Domainparameter korrekt auf den aufrufenden Shop beziehen,
+  soweit von PayPal für den Token vorgesehen.
+- Secret niemals an Browser.
+- normaler serverseitiger OAuth Access Token niemals versehentlich als
+  ungeeigneter Browserwert exponieren.
+- ausschließlich den browser-safe Wert zurückgeben, den PayPal für
+  createInstance(clientToken) vorsieht.
+- Ablaufzeit respektieren.
+- kein DB-Persistieren nötig, sofern nicht zwingend.
+- keine Tokens/Secrets loggen.
+- Fehler sauber und ohne Credential-Leak behandeln.
+- vorhandenen zentralen Credential Resolver verwenden.
+
+Frontend:
+- Client Token vor Freigabe der PayPal-Bestellaktion beschaffen.
+- SDK/Eligibility/Payment Session weiterhin vollständig vorbereiten, bevor
+  Button aktiv wird.
+- session.start() weiterhin unmittelbar im echten Benutzerklick.
+- createOrder-Promise NICHT vor start() awaiten.
+- presentationMode auto beibehalten.
+- serverseitiges payment.start/Create Order unverändert lassen.
+
+======================================================================
+5. WEBHOOK / PAYPAL-APP-EINSTELLUNGEN
+======================================================================
+
+Webhook-ID ist aktuell bewusst NICHT konfiguriert.
+
+Das ist NICHT Gegenstand dieses Hotfixes und soll nicht als Voraussetzung für
+das Öffnen des Buyer-Popups eingebaut werden.
+
+Webhook-Fachlogik nicht verändern.
+
+Falls die aktuelle PayPal-Dokumentation für die Client-Token-Erzeugung oder den
+Standard-One-Time-Flow zwingende Sandbox-App-Einstellungen/Features nennt, die
+bei unserer App relevant sein könnten:
+- NICHT eigenmächtig raten
+- im Abschlussbericht konkret nennen
+- Daniel/Caesar prüfen sie anschließend im PayPal Developer Dashboard.
+
+Keine Dashboard-Einstellungen erfinden.
+
+======================================================================
+6. NICHT ÄNDERN
+======================================================================
+
+Unverändert lassen:
+- Payment Sessions
+- Payment Transactions
+- 10-Minuten-Reservierung
+- Expiry/Cleanup/Scheduled Task
+- Capture-Fachlogik
+- Finalizer
+- Orders
+- Lager
+- Gutscheine
+- F3
+- normale Zahlungsarten
+- Schema
+- Webhook-Fachlogik
+- Refunds
+- Fastlane
+- Cards
+- Apple Pay / Google Pay / Venmo
+
+Kein Schema-/Versionssprung, sofern für diesen isolierten Hotfix nicht zwingend.
+
+======================================================================
+7. TESTUMFANG – AUSDRÜCKLICH KLEIN
+======================================================================
+
+Daniel/Caesar werden danach ohnehin weitere PayPal-Änderungen und eine
+umfassendere Gesamtabnahme durchführen.
+
+Daher KEIN Testmarathon.
+
+Gezielt mindestens:
+- Token-Endpunkt/PayPal-Request erfolgreich
+- browser-safe Token wird geliefert
+- Secret/OAuth-Servercredential bleibt serverseitig
+- createInstance erhält clientToken
+- Eligibility funktioniert
+- Button erst nach Bereitschaft aktiv
+- session.start direkt im Benutzerklick
+- payment.start/Create Order weiterhin genau einmal
+- Cancel erhält Cart
+- kein Capture im automatisierten Test
+- keine Token-/Secret-Leaks
+- JS/PHP Syntax
+- git diff --check
+- kurzer relevanter Payment-Smoke
+
+KEIN test-full.
+KEINE breite Regression, solange Scope eingehalten wird.
+
+Ein echter interaktiver Buyer-Login muss NICHT künstlich automatisiert werden,
+wenn die Umgebung das nicht zuverlässig zulässt. Nicht als bestanden melden,
+wenn er nicht real durchgeführt wurde.
+
+======================================================================
+8. ABSCHLUSS
+======================================================================
+
+Nach gezielten grünen Tests:
+- Commit feature
+- Push origin/feature
+- kein main-Merge
+- Working Tree sauber
+- Auftrag archivieren
+
+Bericht kurz:
+- verwendeter offizieller Token-Endpunkt / Auth-Variante
+- geänderte Dateien
+- was technisch bewiesen wurde
+- was NICHT bewiesen wurde
+- ggf. konkrete PayPal-App-Einstellungen, die Daniel/Caesar prüfen sollten
+- Hinweis: IONOS-Realtest muss entscheiden, ob Variante B den Popup-Hänger
+  behebt
+- Commit-SHA / feature=origin/feature
+
+WICHTIG:
+Wenn clientToken technisch nicht mit unserem Standard-One-Time-Flow vereinbar
+ist oder PayPal den Token-Request ablehnt, STOP mit konkretem Befund statt
+weiterem Umbau.
+
+Commitmessage sinngemäß:
+Test PayPal v6 browser-safe client token
+
+ENDE DES A/B-HOTFIX-AUFTRAGS
