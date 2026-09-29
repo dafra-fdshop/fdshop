@@ -67,13 +67,20 @@ Die manuelle Realabnahme erfolgt auf der online bei IONOS installierten Paketver
 
 Das mitgelieferte Joomla-Task-Plugin `FDShop: Abgelaufene Zahlungsreservierungen bereinigen` sollte im Joomla Scheduler regelmäßig (empfohlen: jede Minute) ausgeführt werden. Zusätzlich bereinigt ein sicherer Payment-Start opportunistisch abgelaufene Sessions. Der Browser-Countdown ist nur Anzeige und niemals Cleanup-Wahrheit.
 
+### Technisches Zeitmodell
+
+Alle technischen Zeitpunkte der Payment Sessions, Reservierungen und PayPal-Transaktionen werden als semantische UTC-Werte gespeichert und ausschließlich gegen UTC verglichen. `DATETIME` enthält selbst keine Zeitzoneninformation; FDShop interpretiert diese Felder deshalb ausdrücklich als UTC und gibt Ablaufwerte an den Browser nur im ISO-8601-Format mit explizitem UTC-Offset aus. Die PHP-, Joomla-, Datenbank- oder Hosting-Zeitzone darf keine Ablaufentscheidung beeinflussen.
+
+Die konfigurierte Reservierungsdauer ist eine echte Dauer: 10 Minuten entsprechen immer 600 Sekunden. Das gilt in Sommer- und Winterzeit sowie über beide Zeitumstellungen hinweg. Eine Session ist bis unmittelbar vor `expires_at` capturefähig und gilt ab `expires_at` als abgelaufen. Der Cleanup berücksichtigt nur `created`, `reserved` und `payment_in_progress`, gibt jede zugehörige Reservierung transaktional und idempotent frei und lässt `capturing`, `captured` und `completed` unangetastet. Lokale Zeitzonen dürfen ausschließlich zur menschlichen Darstellung verwendet werden.
+
 ## Fehler und Retry
 
 Cancel, Popup-Schließen, PENDING und Fehler vor Capture lassen Warenkorb und – bis Ablauf – Reservierung bestehen. Endgültige Fehler/Expiry geben sie kontrolliert frei. Betrag oder Währung müssen exakt dem serverseitigen Erwartungswert entsprechen. Capture-Erfolg mit lokaler Finalisierungsstörung bleibt als `captured` diagnostizierbar und retryfähig.
 
 ## Tests
 
-- `tests/paypal/payment-service-regression.php`: Reservierung, Capture, Finalizerfehler/Retry, Idempotenz, Webhook-Replay, Expiry und Race-Schutz.
+- `tests/paypal/payment-time-regression.php`: UTC-Roundtrip, exakt 600 Sekunden sowie Sommerzeit, Winterzeit und beide Europe/Berlin-DST-Übergänge.
+- `tests/paypal/payment-service-regression.php`: Reservierung, Capture vor/nach Ablauf, Finalizerfehler/Retry, Idempotenz, Webhook-Replay, selektiver Multi-Session-Cleanup und Race-Schutz mit kontrollierter UTC-Uhr.
 - `tests/paypal/sandbox-smoke.php`: echte Sandbox-Authentifizierung und Create Order ohne Capture.
 - `tests/browser/tests/paypal-checkout.spec.js`: v6-Browserintegration und Cancel/Cart-Erhalt.
 - `tests/paypal/migration.sh`: Upgrade `0.0.41 → 0.0.42`.

@@ -15,6 +15,7 @@ use FDShop\Component\FDShop\Administrator\Service\ProductServiceInterface;
 use FDShop\Component\FDShop\Site\Service\CartServiceInterface;
 use FDShop\Component\FDShop\Site\Service\CheckoutServiceInterface;
 use FDShop\Component\FDShop\Site\Service\PaymentService;
+use FDShop\Component\FDShop\Site\Service\PaymentClockInterface;
 use FDShop\Component\FDShop\Site\Service\PayPalClientInterface;
 use Joomla\CMS\Application\SiteApplication;use Joomla\CMS\Factory;use Joomla\Database\DatabaseInterface;use Joomla\Session\SessionInterface;
 
@@ -26,9 +27,19 @@ final class FakePayPal implements PayPalClientInterface{
  public function verifyWebhook(array $headers,string $body):bool{return ($headers['x-test-valid']??'')==='1';}
 }
 
+final class FakePaymentClock implements PaymentClockInterface{
+ private readonly DateTimeZone $utc;
+ public function __construct(private DateTimeImmutable $current){$this->utc=new DateTimeZone('UTC');$this->current=$this->current->setTimezone($this->utc);}
+ public function set(string $value):void{$this->current=new DateTimeImmutable($value,$this->utc);}
+ public function now():DateTimeImmutable{return $this->current;}
+ public function parseSql(string $value):DateTimeImmutable{$date=DateTimeImmutable::createFromFormat('!Y-m-d H:i:s',$value,$this->utc);if(!$date)throw new UnexpectedValueException('Invalid test SQL timestamp.');return $date;}
+ public function toSql(DateTimeInterface $value):string{return DateTimeImmutable::createFromInterface($value)->setTimezone($this->utc)->format('Y-m-d H:i:s');}
+ public function toAtom(DateTimeInterface $value):string{return DateTimeImmutable::createFromInterface($value)->setTimezone($this->utc)->format(DATE_ATOM);}
+}
+
 $_SERVER['HTTP_HOST']='localhost';$_SERVER['REQUEST_URI']='/';$_SERVER['SCRIPT_NAME']='/index.php';
 $container=Factory::getContainer();$container->alias(SessionInterface::class,'session.web.site');$app=$container->get(SiteApplication::class);Factory::$application=$app;$db=$container->get(DatabaseInterface::class);$services=$app->bootComponent('com_fdshop')->getContainer();
-$fake=new FakePayPal();$payment=new PaymentService($db,$services->get(CartServiceInterface::class),$services->get(CheckoutServiceInterface::class),$fake,$services->get(BuyerEligibilityServiceInterface::class),$services->get(ProductServiceInterface::class));$cart=$services->get(CartServiceInterface::class);
+$fake=new FakePayPal();$clock=new FakePaymentClock(new DateTimeImmutable('2026-07-15 10:00:00',new DateTimeZone('UTC')));$payment=new PaymentService($db,$services->get(CartServiceInterface::class),$services->get(CheckoutServiceInterface::class),$fake,$services->get(BuyerEligibilityServiceInterface::class),$services->get(ProductServiceInterface::class),$clock);$cart=$services->get(CartServiceInterface::class);
 $assert=static function(bool $ok,string $message):void{if(!$ok)throw new RuntimeException($message);};$scalar=static function(string $sql)use($db){$db->setQuery($sql);return $db->loadResult();};$user=(int)$scalar('SELECT id FROM #__users ORDER BY id LIMIT 1');
 $db->setQuery("SELECT user_id,profile_key,profile_value,ordering FROM #__user_profiles WHERE user_id={$user} AND profile_key LIKE 'fdshop_customer.%'");$oldProfiles=$db->loadObjectList();
 $profiles=['first_name'=>'PayPal','last_name'=>'Tester','street'=>'Testweg 1','postal_code'=>'12345','city'=>'Teststadt','country'=>'Deutschland'];
@@ -39,6 +50,9 @@ try{
  try{$services->get(CheckoutServiceInterface::class)->createOrder($user,$session,900600,900610,'','',true,'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa');throw new RuntimeException('PayPal method bypassed the payment flow.');}catch(DomainException $e){if($e->getMessage()==='PayPal method bypassed the payment flow.')throw $e;}
  $before=(float)$scalar('SELECT reserved_quantity FROM #__fdshop_products_details WHERE product_id=900100');
  $started=$payment->start($user,$session,900600,900610,'','Regression',true,$submission);
+ $created=(string)$scalar("SELECT created FROM #__fdshop_payment_sessions WHERE session_token=".$db->quote($started['session_token']));$expires=(string)$scalar("SELECT expires_at FROM #__fdshop_payment_sessions WHERE session_token=".$db->quote($started['session_token']));
+ $assert($clock->parseSql($expires)->getTimestamp()-$clock->parseSql($created)->getTimestamp()===600,'Payment reservation lifetime was not exactly 600 seconds.');
+ $assert($started['expires_at']==='2026-07-15T10:10:00+00:00','Payment expiry was not serialized with an explicit UTC offset.');
  try{$payment->capture($user+99999,$started['session_token'],$started['order_id']);throw new RuntimeException('Foreign user accessed payment session.');}catch(DomainException $e){if($e->getMessage()==='Foreign user accessed payment session.')throw $e;}
  $assert((int)$scalar("SELECT COUNT(*) FROM #__fdshop_orders WHERE submission_id='{$submission}'")===0,'Order existed before capture.');
  $assert((float)$scalar('SELECT reserved_quantity FROM #__fdshop_products_details WHERE product_id=900100')===$before+1.0,'Temporary reservation missing.');
@@ -56,9 +70,13 @@ try{
  $assert((int)$scalar("SELECT COUNT(*) FROM #__fdshop_orders WHERE submission_id='{$submission}' AND order_status='paid'")===1,'Exactly one paid order was not created.');
  $assert((int)$scalar("SELECT COUNT(*) FROM #__fdshop_cart WHERE user_id={$user}")===0,'Cart was not removed after finalization.');
 
- $session2='paypal-expiry-regression';$submission2='22222222-2222-4222-8222-222222222222';$cart->addItem($user,$session2,900100,1,'piece');$started2=$payment->start($user,$session2,900600,900610,'','',true,$submission2);$db->setQuery("UPDATE #__fdshop_payment_sessions SET expires_at='2000-01-01 00:00:00' WHERE session_token=".$db->quote($started2['session_token']))->execute();$assert($payment->cleanupExpired()===1,'Expired reservation was not cleaned exactly once.');$assert($payment->cleanupExpired()===0,'Expired reservation was released twice.');$assert((int)$scalar("SELECT COUNT(*) FROM #__fdshop_cart WHERE user_id={$user}")===1,'Expiry removed the cart.');
+ $clock->set('2026-07-15 11:00:00');$session2='paypal-expiry-regression';$submission2='22222222-2222-4222-8222-222222222222';$cart->addItem($user,$session2,900100,1,'piece');$started2=$payment->start($user,$session2,900600,900610,'','',true,$submission2);$clock->set('2026-07-15 11:09:59');$assert($payment->cleanupExpired()===0,'Active reservation was released before expiry.');$clock->set('2026-07-15 11:10:00');$assert($payment->cleanupExpired()===1,'Reservation was not released exactly at expiry.');$assert($payment->cleanupExpired()===0,'Expired reservation was released twice.');$assert((int)$scalar("SELECT COUNT(*) FROM #__fdshop_cart WHERE user_id={$user}")===1,'Expiry removed the cart.');
 
- $db->setQuery('DELETE FROM #__fdshop_cart WHERE user_id='.$user)->execute();$session3='paypal-race-regression';$submission3='33333333-3333-4333-8333-333333333333';$cart->addItem($user,$session3,900100,1,'piece');$started3=$payment->start($user,$session3,900600,900610,'','',true,$submission3);$db->setQuery("UPDATE #__fdshop_payment_sessions SET status='capturing',expires_at='2000-01-01 00:00:00' WHERE session_token=".$db->quote($started3['session_token']))->execute();$reserved=(float)$scalar('SELECT reserved_quantity FROM #__fdshop_products_details WHERE product_id=900100');$assert($payment->cleanupExpired()===0,'Cleaner released a capturing payment.');$assert((float)$scalar('SELECT reserved_quantity FROM #__fdshop_products_details WHERE product_id=900100')===$reserved,'Capturing reservation changed during cleanup.');
+ $db->setQuery('DELETE FROM #__fdshop_cart WHERE user_id='.$user)->execute();$clock->set('2026-07-15 12:00:00');$sessionExpiredCapture='paypal-expired-capture';$submissionExpiredCapture='44444444-4444-4444-8444-444444444444';$cart->addItem($user,$sessionExpiredCapture,900100,1,'piece');$expiredCapture=$payment->start($user,$sessionExpiredCapture,900600,900610,'','',true,$submissionExpiredCapture);$captureCalls=$fake->captureCalls;$clock->set('2026-07-15 12:10:00');try{$payment->capture($user,$expiredCapture['session_token'],$expiredCapture['order_id']);throw new RuntimeException('Capture at expiry was accepted.');}catch(DomainException $e){$assert($e->getMessage()==='Der Zahlungsvorgang ist abgelaufen.','Unexpected expired capture error.');}$assert($fake->captureCalls===$captureCalls,'PayPal capture was called for an expired session.');
+
+ $db->setQuery('DELETE FROM #__fdshop_cart WHERE user_id='.$user)->execute();$clock->set('2026-07-15 13:00:00');$cart->addItem($user,'paypal-multi-old',900100,1,'piece');$old=$payment->start($user,'paypal-multi-old',900600,900610,'','',true,'55555555-5555-4555-8555-555555555555');$clock->set('2026-07-15 13:05:00');$cart->addItem($user,'paypal-multi-active',900100,1,'piece');$active=$payment->start($user,'paypal-multi-active',900600,900610,'','',true,'66666666-6666-4666-8666-666666666666');$clock->set('2026-07-15 13:10:00');$assert($payment->cleanupExpired()===1,'Cleanup did not release exactly the individually expired session.');$assert((string)$scalar("SELECT status FROM #__fdshop_payment_sessions WHERE session_token=".$db->quote($old['session_token']))==='expired','Expired session kept its reservation.');$assert((string)$scalar("SELECT status FROM #__fdshop_payment_sessions WHERE session_token=".$db->quote($active['session_token']))==='payment_in_progress','Cleanup released a different active session.');
+
+ $db->setQuery('DELETE FROM #__fdshop_cart WHERE user_id='.$user)->execute();$clock->set('2026-07-15 14:00:00');$session3='paypal-race-regression';$submission3='33333333-3333-4333-8333-333333333333';$cart->addItem($user,$session3,900100,1,'piece');$started3=$payment->start($user,$session3,900600,900610,'','',true,$submission3);$db->setQuery("UPDATE #__fdshop_payment_sessions SET status='capturing',expires_at='2000-01-01 00:00:00' WHERE session_token=".$db->quote($started3['session_token']))->execute();$reserved=(float)$scalar('SELECT reserved_quantity FROM #__fdshop_products_details WHERE product_id=900100');$assert($payment->cleanupExpired()===0,'Cleaner released a capturing payment.');$assert((float)$scalar('SELECT reserved_quantity FROM #__fdshop_products_details WHERE product_id=900100')===$reserved,'Capturing reservation changed during cleanup.');
  echo "PayPal payment service regression: PASS\n";
 }finally{
  $db->setQuery("UPDATE #__fdshop_order_statuses SET is_active=1 WHERE status_code='paid'")->execute();
