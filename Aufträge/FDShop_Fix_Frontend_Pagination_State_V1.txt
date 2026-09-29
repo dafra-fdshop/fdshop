@@ -1,0 +1,399 @@
+FDShop – FIXAUFTRAG
+FRONTEND KATEGORIE: PAGINATION MUSS FILTER-/SORTIER-/LIMIT-STATE ERHALTEN
+
+Projekt: FDShop
+Branch: feature
+Priorität: hoch – realer Mitarbeiter-/Kundenfehler
+Scope: Frontend Kategorie-/Produktliste, Pagination und Query-State
+PayPal: NICHT Bestandteil dieses Auftrags
+
+======================================================================
+1. AUSGANGSLAGE
+======================================================================
+
+Der PayPal-Blocker ist auf der realen IONOS-Testinstallation inzwischen
+erfolgreich beseitigt. Ein vollständiger Sandbox-E2E-Kauf einschließlich
+Buyer Approval, Capture, FDShop-Bestellung und Bestellmail ist real grün.
+Auch der Abbruchpfad wurde erneut ohne Fehler geprüft.
+
+Die restliche PayPal-Abnahme (Webhook, Admin-UX, Gesamtabnahme etc.) wird
+bewusst erst morgen fortgesetzt.
+
+HEUTE KEINE PAYPAL-ÄNDERUNGEN.
+
+Stattdessen muss ein für laufende Produktpflege und Kundenbenutzung wichtiger
+Frontendfehler behoben werden.
+
+======================================================================
+2. FEHLERBILD
+======================================================================
+
+Betroffen ist die Kategorie-/Produktlistenansicht mit:
+
+- Filter
+- Sortierung
+- "Produkte pro Seite"
+- Pagination
+
+Die Filterung bzw. Seitengrößenänderung selbst funktioniert.
+
+Der Fehler tritt beim anschließenden Wechsel auf eine andere Pagination-Seite
+auf.
+
+REALFALL A – PRODUKTE PRO SEITE
+
+Ausgang:
+Kategorie Batterien
+Standard: 24 Produkte pro Seite
+Gesamt: 231 Produkte
+
+Nutzer stellt:
+Produkte pro Seite = 48
+
+Ergebnis Seite 1:
+- 48 Produkte werden korrekt angezeigt
+- Anzeige: 1–48 von 231
+- Pagination basiert korrekt auf 48er-Seitengröße
+
+Dann Klick auf Seite 2.
+
+FEHLER:
+- Offset entspricht noch der 48er-Pagination
+- erstes Produkt ist korrekt das 49. Produkt ("Blitz Rums 25")
+- "Produkte pro Seite" fällt aber wieder auf 24 zurück
+- es werden nur 24 Produkte dargestellt
+- Pagination/Seitenanzeige ist dadurch inkonsistent
+
+Wenn Nutzer anschließend erneut 48 auswählt:
+- Formularänderung funktioniert
+- aber Ergebnis springt wieder auf Seite 1
+
+REALFALL B – FILTER
+
+Kategorie Batterien.
+
+Nutzer aktiviert Hersteller:
+Argento
+
+Seite 1 korrekt:
+- Filterchip Argento
+- 57 Treffer
+- 1–24 von 57
+- ausschließlich Argento-Produkte
+- Facettenzahlen passen zum gefilterten Ergebnis
+
+Dann Klick auf Seite 2.
+
+FEHLER:
+- Seitennavigation wechselt
+- Herstellerfilter geht verloren
+- Ergebnis zeigt wieder alle Hersteller / 231 Produkte
+- Filterzustand ist verworfen
+
+Damit ist Filterung über mehrere Seiten praktisch unbrauchbar.
+
+REALFALL C – KOMBINIERTER STATE
+
+Bekannter Hinweis:
+Wenn zuerst ein Filter gesetzt und danach "Produkte pro Seite" geändert wird,
+bleibt der Filter beim normalen Formular-Submit erhalten.
+
+Das spricht dafür, dass der Fehler primär beim Erzeugen/Verarbeiten der
+Pagination-Links bzw. deren Query-State liegt, nicht in der eigentlichen
+Filterlogik.
+
+======================================================================
+3. ZIELVERHALTEN
+======================================================================
+
+Pagination darf ausschließlich die Seite ändern.
+
+Beim Wechsel Seite 1 -> 2 -> 3 usw. müssen ALLE aktuell wirksamen
+katalogrelevanten Zustände erhalten bleiben, insbesondere:
+
+- aktive Filter / Facetten
+- mehrere gleichzeitig aktive Filter
+- Herstellerfilter
+- technische Filter
+- Verfügbarkeitsfilter
+- Sortierung
+- Produkte pro Seite / limit
+- Such-/Queryparameter, soweit Teil dieser Ansicht
+- weitere vorhandene katalogrelevante Parameter
+
+Nur der Pagination-Offset / limitstart bzw. die fachlich entsprechende
+Seitenposition darf sich ändern.
+
+Beispiele:
+
+Argento + 24 + Name aufsteigend:
+Seite 1 -> Seite 2
+bleibt Argento + 24 + Name aufsteigend.
+
+Argento + 48 + Name aufsteigend:
+Seite 1 -> Seite 2
+bleibt Argento + 48 + Name aufsteigend.
+
+Mehrere Filter:
+Filter A + Filter B + Sortierung + Limit
+müssen über alle Pagination-Seiten erhalten bleiben.
+
+======================================================================
+4. BEWUSSTE GEGENREGEL
+======================================================================
+
+Wenn der Nutzer den Ergebnisraum selbst verändert, soll die Pagination auf
+Seite 1 zurückgesetzt werden.
+
+Das gilt insbesondere bei:
+
+- Filter hinzufügen
+- Filter entfernen
+- alle Filter zurücksetzen
+- Produkte pro Seite ändern
+- ggf. Sortierung ändern, sofern das bestehende FDShop-Verhalten dies bereits
+  vorsieht bzw. fachlich konsistent so umgesetzt ist
+
+Grund:
+Die bisherige Seitenposition ist für die neu zusammengesetzte Ergebnismenge
+nicht zuverlässig sinnvoll.
+
+Also:
+
+PAGINATION-KLICK:
+State behalten, nur Seite ändern.
+
+FILTER/LIMIT-ÄNDERUNG:
+State entsprechend Änderung behalten, Pagination auf Anfang zurücksetzen.
+
+======================================================================
+5. ANALYSE VOR FIX
+======================================================================
+
+Aktuellen feature-Stand direkt analysieren.
+
+Insbesondere prüfen:
+
+- Category-/Products-View
+- Category-/Products-Model
+- Pagination-Erzeugung
+- Joomla Pagination API
+- getPagination()
+- list.start / list.limit
+- Router/SEF-Einfluss
+- Form action / GET-Parameter
+- aktive Filterparameter
+- Arrays/mehrwertige Queryparameter
+- Sortierungsparameter
+- Limitparameter
+- Pagination-Link-Building
+- ggf. JS, falls State dort manipuliert wird
+
+Belastbar feststellen, WO der State verloren geht.
+
+Nicht einfach einzelne bekannte Parameter wie manufacturer und limit
+hart an Pagination-URLs anhängen.
+
+Die Lösung soll den vorhandenen vollständigen Katalog-State robust erhalten.
+
+======================================================================
+6. JOOMLA-KONFORMITÄT
+======================================================================
+
+Joomla-konforme Pagination verwenden.
+
+Keine fragile URL-String-Bastelei, wenn Joomla dafür vorhandene Mechanismen
+bereitstellt.
+
+SEF-fähig bleiben.
+
+Keine Session als Ersatz für URL-/Request-State einführen.
+
+Wichtiger Grund:
+Filter-/Sortierzustände sollen nachvollziehbar und reproduzierbar bleiben und
+dürfen nicht unbemerkt zwischen Tabs/Kategorien über Sessionzustand leaken.
+
+GET-/Query-State soll die Quelle für die aktuelle Katalogansicht bleiben,
+soweit dies der bestehende FDShop-Ansatz ist.
+
+======================================================================
+7. PERFORMANCE
+======================================================================
+
+Keine zusätzlichen Produkt-N+1-Abfragen.
+
+Pagination-State-Fix darf keine neue Query pro Produkt erzeugen.
+
+Bestehende performante Filter-/Listenlogik beibehalten.
+
+Keine fachfremde Cache-Architektur in diesem Fix umbauen.
+
+======================================================================
+8. REGRESSIONSTESTS – VERBINDLICH
+======================================================================
+
+Browser-/Integrationstests mindestens für:
+
+A) LIMIT
+- Kategorie mit >48 Produkten
+- limit 48 setzen
+- Seite 1 zeigt 1–48
+- Pagination Seite 2
+- limit bleibt 48
+- Seite 2 beginnt beim 49. Produkt
+- korrekte Range / Gesamtzahl
+
+B) HERSTELLERFILTER
+- Herstellerfilter mit >1 Seite setzen
+- Seite 1 nur gefilterte Produkte
+- Seite 2
+- Filter bleibt aktiv
+- Filterchip bleibt
+- Gesamtzahl bleibt gefiltert
+- nur passende Produkte
+
+C) FILTER + LIMIT
+- Herstellerfilter setzen
+- limit 48
+- Seite 2
+- Filter UND limit bleiben erhalten
+
+D) MEHRERE FILTER
+- mindestens zwei Filterdimensionen kombinieren
+- Pagination
+- beide Filter bleiben aktiv
+
+E) SORTIERUNG
+- Nicht-Default-Sortierung wählen
+- Pagination
+- Sortierung bleibt erhalten
+- Reihenfolge über Seitengrenze konsistent
+
+F) STATE-ÄNDERUNG RESET
+- auf Seite >1 sein
+- Filter ändern oder limit ändern
+- Ergebnis startet wieder auf Seite 1
+
+G) FILTER ENTFERNEN
+- Filter auf Seite >1 bzw. gefiltertem Zustand
+- Filter entfernen
+- neuer Ergebnisraum startet korrekt auf Seite 1
+
+H) DEFAULT
+- keine Filter
+- Standardlimit
+- normale Pagination weiterhin korrekt
+
+Wenn vorhandene Tests ähnliche Fälle bereits abdecken, sinnvoll erweitern statt
+unnötig duplizieren.
+
+======================================================================
+9. REALBEFUNDE AUS IONOS
+======================================================================
+
+Die real beobachteten Beispiele sollen als Regression nachvollzogen werden:
+
+1.
+231 Produkte
+limit 48
+Seite 2 muss Produkt 49 ff. zeigen UND limit 48 behalten.
+
+2.
+Hersteller Argento
+57 Treffer
+24 pro Seite
+Seite 2 muss weiterhin ausschließlich Argento zeigen und gefilterte
+Gesamtzahl 57 behalten.
+
+3.
+Argento + limit 48
+Pagination muss beide Zustände erhalten.
+
+Screenshots liegen Daniel/Caesar vor; die fachlichen Werte oben sind
+verbindlicher Realbefund.
+
+======================================================================
+10. NICHT ANFASSEN
+======================================================================
+
+Keine Änderungen an:
+
+- PayPal
+- Payment Services
+- Reservierungen
+- UTC-Zeitmodell
+- Orders
+- Checkout
+- Warenkorb-Fachlogik
+- Gutscheinen
+- F3
+- Produktdaten
+- Filter-Fachdefinitionen, sofern nicht für den State-Fix zwingend
+- Adminbereich
+
+Kein Schema-Update, sofern nicht völlig unerwartet zwingend erforderlich.
+Für diesen Fehler ist keine Schemaänderung zu erwarten.
+
+======================================================================
+11. TESTUMFANG
+======================================================================
+
+Gezielt, aber ordentlich:
+
+- relevante Category-/Filter-/Pagination-Browsertests
+- responsive Gegenprobe soweit bestehende Paginationdarstellung betroffen
+- PHP-/JS-Syntax für geänderte Dateien
+- Paketbau/Installation
+- kurzer Frontend-Smoke
+- Logs
+- git diff --check
+
+Kein unnötiger kompletter Shop-Testmarathon, sofern Scope eng bleibt.
+
+======================================================================
+12. DOKUMENTATION
+======================================================================
+
+Wenn das Verhalten bereits in Frontend-/Katalogdokumentation beschrieben ist,
+entsprechend aktualisieren.
+
+Verbindliche Frontendregel festhalten:
+
+"Pagination verändert ausschließlich die Seitenposition. Aktive Filter,
+Sortierung und Seitengröße bleiben erhalten. Änderungen am Ergebnisraum setzen
+die Seitenposition auf den Anfang zurück."
+
+Keine neue Dokumentdatei nur für diesen kleinen Fix erzeugen, wenn eine
+bestehende passende Quelle vorhanden ist.
+
+======================================================================
+13. ABSCHLUSS
+======================================================================
+
+Wenn Ursache nachgewiesen und Fix grün:
+
+- Commit feature
+- Push origin/feature
+- kein Merge nach main
+- Working Trees sauber/synchron
+- Auftrag nach Aufträge/erledigt
+- keine PayPal-Arbeit durchführen
+
+Abschlussbericht kurz und konkret:
+
+1. Ursache
+2. Fix
+3. wie Query-/Pagination-State jetzt erhalten wird
+4. Verhalten bei Filter-/Limit-Änderung
+5. Regressionstests
+6. geänderte Dateien
+7. Commit-SHA
+8. feature = origin/feature
+9. Working Trees sauber
+10. Bestätigung: PayPal unangetastet
+
+Commitmessage sinngemäß:
+
+Fix catalog pagination state preservation
+
+ENDE DES AUFTRAGS
