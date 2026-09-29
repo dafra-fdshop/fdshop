@@ -1,0 +1,295 @@
+FDShop – CAESAR FORTSETZUNGSNOTIZ
+PayPal Realabnahme – Stand 29.09.2026 nach erfolgreichem IONOS-E2E-Test
+
+Zweck:
+Verbindliche Übergabe für die Fortsetzung der PayPal-Abnahme am nächsten
+Arbeitstag. Diese Notiz verhindert Kontextverlust nach Chatwechseln.
+
+======================================================================
+1. TESTUMGEBUNG / PROJEKTWAHRHEIT
+======================================================================
+
+- Codex Entwicklung/Automatiktests: WSL2 + Docker.
+- Daniels/Caesars manuelle Real-/Abnahmetests: installierbares FDShop-Paket
+  auf der online bei IONOS gehosteten Joomla-Testinstallation.
+- PayPal-E2E wurde real auf IONOS mit PayPal Sandbox durchgeführt.
+- Sandbox Merchant Credentials liegen auf IONOS extern unter
+  /clickandbuilds/fdshop-data/secrets/fdshop-secrets.php
+  außerhalb des Joomla-DocumentRoots.
+- Environment bleibt erste Credential-Quelle für Docker/Codex.
+- IONOS externe Secret-Datei ist Fallback.
+- Keine Secrets im Repo/DB/Admin.
+
+======================================================================
+2. AKTUELLER GRÜNER CODESTAND
+======================================================================
+
+Commit:
+ff40a132ae92d8812b23cd4772764147e1101cf4
+
+Commitmessage:
+Normalize payment expiry handling to UTC
+
+Dieser Stand wurde auf IONOS installiert und real erfolgreich getestet.
+
+======================================================================
+3. HEUTE REAL GEFUNDENE PAYPAL-FEHLER UND LÖSUNGEN
+======================================================================
+
+A) PAYPAL POPUP HING BEI "SIE WERDEN ZU PAYPAL WEITERGELEITET"
+
+Ursache:
+Joomla lieferte
+Cross-Origin-Opener-Policy: same-origin
+
+Dadurch wurde die notwendige Beziehung zwischen Shop und bewusst geöffnetem
+PayPal-Popup getrennt.
+
+Realer Nachweis:
+Eine isolierte PayPal-v6-Minimalintegration mit denselben Sandbox-Credentials
+erreichte den Buyer-Login; FDShop/Joomla nicht.
+
+Lösung / verbindliche Installationsvoraussetzung:
+Joomla -> System -> Plugins -> System – HTTP Headers
+
+Cross-Origin-Opener-Policy:
+same-origin-allow-popups
+
+Der effektive Response-Header ist zu prüfen.
+Nicht den COOP-Schutz vollständig deaktivieren.
+
+B) BUYER APPROVAL FÜHRTE NICHT ZUM CAPTURE
+
+Ursache:
+PayPal Web SDK v6 paymentSession.start() liefert Promise<void>.
+Approval kommt über onApprove(data).
+Für Redirect-Rückkehr muss hasReturned()/resume() verarbeitet werden.
+
+FDShop hatte den Resume-/Rückkehrpfad nicht vollständig behandelt.
+
+Lösung:
+- interner Sessionbezug tabgebunden in sessionStorage
+- Rückkehr erkennen
+- resume()
+- onApprove({orderId})
+- exakt ein payment.capture
+- State bei Approval/Cancel/Fehler/Ablauf entfernen
+
+C) PAYMENT.CAPTURE MELDETE SOFORT "ZAHLUNGSVORGANG ABGELAUFEN"
+
+Realer DB-Nachweis:
+
+created:
+2026-09-29 14:40:16
+
+expires_at:
+2026-09-29 14:50:16
+
+reservation_released_at:
+2026-09-29 14:40:47
+
+Lifetime:
+600 Sekunden
+
+IONOS MariaDB:
+NOW()            = 2026-09-29 16:57:53
+UTC_TIMESTAMP()  = 2026-09-29 14:57:53
+Offset           = +02:00
+
+Ursache:
+Payment-Zeitpunkte wurden korrekt als UTC gespeichert.
+strtotime($session->expires_at) interpretierte den zonenlosen SQL-DATETIME
+jedoch als lokale PHP-Zeit.
+Dadurch erschien die Session bei UTC+2 rund zwei Stunden älter und wurde
+vorzeitig freigegeben.
+
+Lösung:
+- zentrale injizierbare Payment-UTC-Uhr
+- Payment-Zeitpunkte konsistent UTC
+- SQL-DATETIME explizit als UTC parsen
+- Browserwerte ISO 8601 mit +00:00
+- vor expires_at gültig
+- exakt ab expires_at abgelaufen
+- Cleanup unabhängig von DB-/Server-Lokalzeit
+- capturing/captured/completed vom normalen Expiry-Cleanup unberührt
+- DST Sommer/Winter + beide Zeitumstellungen getestet
+
+Verbindliche Fachregel:
+Technische Payment-Zeitpunkte und Ablaufentscheidungen = UTC.
+Lokale Zeitzone ausschließlich Darstellung.
+10-Minuten-Reservierung bleibt bestehen und entspricht echten 600 Sekunden.
+
+======================================================================
+4. HEUTE REAL ERFOLGREICHER PAYPAL-E2E
+======================================================================
+
+Nach Installation von Commit ff40a132...:
+
+Realer PayPal-Sandbox-Kauf auf IONOS erfolgreich.
+
+Bestätigt:
+- Warenkorb
+- PayPal-Zahlungsart
+- 10-Minuten-Reservierung
+- PayPal Buyer-Login
+- Buyer Approval
+- Rückkehr/Approval-Verarbeitung
+- echter PayPal Capture
+- FDShop-Finalisierung
+- FDShop-Bestellung erzeugt
+- Warenkorb abgeschlossen/geleert
+- Bestellmail ausgelöst
+
+Zusätzlich real getestet:
+- PayPal-Abbruchpfad
+- keine fehlerhafte Bestellung bei Abbruch
+- keine beobachteten Fehler
+
+Die Bestellmail ist inhaltlich/gestalterisch noch nicht final wie gewünscht.
+Das ist ein separates späteres Mail-/Order-Thema und kein PayPal-Blocker.
+
+======================================================================
+5. CLEANUP / RESERVIERUNG
+======================================================================
+
+Joomla Task-Plugin:
+FDShop: Abgelaufene Zahlungsreservierungen bereinigen
+
+Manueller Cleanup wurde real erfolgreich getestet.
+
+Der UTC-Audit hat Cleanup-Sicherheit automatisiert geprüft:
+- nur tatsächlich abgelaufene Sessions
+- mehrere Sessions getrennt
+- idempotent
+- capturing/captured/completed unberührt
+- DST-unabhängig
+
+IONOS automatische Scheduler-/Cron-Ausführung ist ein separater
+Betriebs-/Infrastrukturpunkt und aktuell NICHT PayPal-Blocker.
+Nicht mit PayPal-Browserdebugging vermischen.
+
+10-Minuten-Reservierung bleibt fachlich erforderlich, damit während externem
+Paymentflow kein anderer Kunde denselben letzten Bestand z.B. per
+Banküberweisung bestellen kann.
+
+======================================================================
+6. PAYPAL WEBHOOK – NOCH OFFEN
+======================================================================
+
+Aktuell:
+Client-ID konfiguriert: Ja
+Secret konfiguriert: Ja
+Webhook-ID konfiguriert: Nein
+
+Webhook-ID war NICHT Ursache der bisherigen Buyer-/Capture-Probleme.
+
+Morgen als einer der ersten PayPal-Fortsetzungspunkte:
+
+1. öffentlichen FDShop Webhook im PayPal Sandbox Developer Dashboard anlegen
+2. Endpoint gemäß aktueller FDShop-Dokumentation verwenden
+3. mindestens PAYMENT.CAPTURE.COMPLETED aktivieren
+4. erhaltene Sandbox Webhook-ID in externer IONOS Secret-Datei eintragen
+5. Adminstatus Ja/Ja/Ja prüfen
+6. echte Webhook-Zustellung testen
+7. Idempotenz Browser-Capture + Webhook real prüfen
+8. Replay/Retry-/Finalizer-Verhalten soweit sinnvoll abnehmen
+
+Keine Live-Credentials verwenden.
+
+======================================================================
+7. PAYPAL ADMIN-UX – NOCH OFFEN
+======================================================================
+
+Beschlossene spätere Verbesserung:
+
+PayPal-spezifische Konfiguration soll nicht dauerhaft unter
+Konfiguration -> Allgemein stehen.
+
+Ziel:
+Zahlungsart besitzt providerbezogenen Typ / Provider.
+Bei PayPal erscheint ein eigener Tab "Konfiguration".
+
+Dort sinnvoll:
+- Sandbox/Live
+- Reservierungsdauer
+- Client-ID konfiguriert Ja/Nein
+- Secret konfiguriert Ja/Nein
+- Webhook-ID konfiguriert Ja/Nein
+- Webhook-URL lesbar/kopierbar
+- Sandbox-Warnung
+- ggf. später Verbindung prüfen
+
+Keine VM-artige Überkonfiguration.
+Keine Secrets in DB/Admin.
+Providerneutral vorbereiten, Launch zunächst nur PayPal.
+
+======================================================================
+8. CLIENT-TOKEN-DIAGNOSE – ABGESCHLOSSEN / NICHT WEITERVERFOLGEN
+======================================================================
+
+Client-Token-A/B-Versuch war nicht die Lösung.
+
+Die isolierte PayPal-v6-Minimaldiagnose bewies:
+clientId + dieselbe Sandbox-App/Credentials -> Buyer-Login funktioniert.
+
+Codex hat den Client-Token-WIP-Stash und temporäre Minimaldiagnose nach
+erfolgreicher Ursachenklärung aufgeräumt.
+
+Für aktuellen Standard-One-Time-PayPal-Flow clientId beibehalten.
+
+======================================================================
+9. MORGEN FRÜH – EMPFOHLENE REIHENFOLGE
+======================================================================
+
+PayPal zuerst wieder aufnehmen:
+
+1. aktuellen grünen Stand ff40a132... bestätigen
+2. Webhook im PayPal Sandbox Dashboard einrichten
+3. Webhook-ID extern auf IONOS konfigurieren
+4. Adminstatus Ja/Ja/Ja
+5. echter Sandbox-Kauf mit Webhook
+6. Payment Transaction / Order / History / Bestand / Reservierung / Cart /
+   Mail/PDF kontrollieren
+7. Idempotenz Browser-Capture + Webhook prüfen
+8. danach PayPal Admin-UX-Folgeauftrag
+9. abschließende PayPal-Gesamtabnahme
+
+Separat:
+- automatischer Joomla Scheduler/Cron auf IONOS betrieblich sauber festzurren
+- Bestellmail später fachlich/gestalterisch überarbeiten
+
+======================================================================
+10. HEUTIGE NEBENARBEIT – VM VIDEO-MIGRATION
+======================================================================
+
+Für spätere VM->FDShop-Migrationen verbindlich merken:
+
+Population:
+nur VM-SKUs exakt ^FD[0-9]{4}$
+
+FDXXXX-... nicht als eigene Migrationsprodukte verwenden.
+
+WICHTIG:
+SKU ist NICHT die Produktidentität und nicht garantiert eindeutig.
+
+Produktidentität:
+virtuemart_product_id -> FDShop product_id 1:1
+
+Die bekannten doppelten Hauptprodukt-SKUs bestätigen dies.
+
+Videoquelle VM:
+uidkp_virtuemart_product_customfields
+virtuemart_custom_id = 32 ("Video")
+
+Ziel FDShop:
+pxfh_fdshop_media
+media_type = youtube
+external_url = extrahierte https://www.youtube.com/embed/... URL
+
+Realer Videoimport:
+490 Videos korrekt über VM-ID -> FDShop-ID zugeordnet.
+Ca. 20 Produkte manuell quergeprüft: jeweils korrektes Video.
+
+======================================================================
+ENDE – STAND 29.09.2026
+======================================================================
