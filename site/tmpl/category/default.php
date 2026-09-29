@@ -98,7 +98,7 @@ $filterData = ['facets' => $this->filterFacets, 'active' => $this->activeFilters
                     </div>
                     <div class="fdshop-card__body">
                         <h2 class="fdshop-card__title"><a href="<?php echo $this->escape($item->detail_url); ?>"><?php echo $this->escape((string) $item->product_name); ?></a></h2>
-                        <?php if (trim((string) $item->short_description) !== '') : ?><p class="fdshop-card__description"><?php echo $this->escape((string) $item->short_description); ?></p><?php endif; ?>
+                        <?php if (trim((string) $item->short_description) !== '') : ?><p class="fdshop-card__description"><?php echo nl2br($this->escape((string) $item->short_description)); ?></p><?php endif; ?>
                         <div class="fdshop-card__actions">
                             <a class="btn btn-primary btn-sm" href="<?php echo $this->escape($item->detail_url); ?>">Details</a>
                             <?php if ($item->media['video'] !== null) : ?><button class="btn btn-dark btn-sm" type="button" data-fdshop-video="<?php echo $this->escape($item->media['video']); ?>" data-product-name="<?php echo $this->escape((string) $item->product_name); ?>" aria-label="Produktvideo zu <?php echo $this->escape((string) $item->product_name); ?> ansehen" title="Produktvideo ansehen"><i class="fa-solid fa-video" aria-hidden="true"></i></button><?php endif; ?>

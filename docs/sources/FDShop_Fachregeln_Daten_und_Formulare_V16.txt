@@ -2808,6 +2808,19 @@ Reservierung, Niedrigbestandsschwelle und physische Verfügbarkeit. Mengen- und
 Statusänderung werden gemeinsam committed oder gemeinsam zurückgerollt.
 
 =====================================================================
+NACHTRAG PLAIN-TEXT-BESCHREIBUNGEN
+=====================================================================
+
+Normale redaktionelle Beschreibungsfelder für Produkte, Kategorien,
+Hersteller und Bundles sind Plain Text. Zeilenumbrüche werden als Text
+gespeichert und bei der Frontend-HTML-Ausgabe sicher escaped und sichtbar
+gemacht. Mitarbeiter verwenden keine HTML-Tags zur Formatierung.
+
+Diese Regel gilt nicht pauschal für Meta-Felder, bewusst definierte
+Safe-HTML-Felder, Mail-/Dokumenttexte, AGB oder technische Inhalte; deren
+jeweilige Fach- und Sicherheitsregeln bleiben unverändert.
+
+=====================================================================
 ENDE DER QUELLE
 
 FDShop_Fachregeln_Daten_und_Formulare_V16

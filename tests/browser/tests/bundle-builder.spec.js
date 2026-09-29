@@ -3,11 +3,16 @@ const { authenticateSiteUser, installDiagnostics } = require('../support/browser
 
 test('configurable bundle validates, calculates, snapshots and removes atomically', async ({ page, baseURL }) => {
   const diagnostics = await installDiagnostics(page, baseURL);
+  await page.route('https://i.ytimg.com/**', route => route.fulfill({ status: 200, contentType: 'image/svg+xml', body: '<svg xmlns="http://www.w3.org/2000/svg"/>' }));
   await page.goto('/index.php?option=com_fdshop&view=product&id=900100');
   await page.getByRole('button', { name: 'Bundle zusammenstellen' }).click();
   const dialog = page.locator('[data-fdshop-bundle-dialog]');
   await expect(dialog).toBeVisible();
   await expect(dialog.getByRole('heading', { name: 'E2E Bundle Aktiv' })).toBeVisible();
+  const description = dialog.locator('.fdshop-bundle__description');
+  await expect(description).toContainText('Bundlebeschreibung Zeile 2 <b>bleibt Text</b>');
+  await expect(description).toHaveCSS('white-space', 'pre-line');
+  await expect(description.locator('b')).toHaveCount(0);
   await expect(dialog.locator('[data-bundle-quantity]')).toHaveCount(2);
   await expect(dialog.getByRole('button', { name: 'Speichern' })).toBeDisabled();
 

@@ -70,7 +70,7 @@
         var b = data.bundle; var selected = {};
         (data.selection || []).forEach(function (row) { selected[row.product_id] = row.quantity; });
         var header = document.createElement('header'); header.innerHTML = '<h2></h2><p></p>';
-        header.querySelector('h2').textContent = b.bundle_name; header.querySelector('p').textContent = b.description || '';
+        header.querySelector('h2').textContent = b.bundle_name; var description = header.querySelector('p'); description.className = 'fdshop-bundle__description'; description.textContent = b.description || '';
         var info = document.createElement('div'); info.className = 'fdshop-bundle__info'; info.textContent = 'Wählen Sie mindestens zwei verschiedene Produkte. Maximal ' + b.max_quantity_per_product + ' Stück je Produkt.';
         var rules = document.createElement('p'); rules.className = 'fdshop-bundle__rules'; rules.textContent = (data.rules || []).map(function (r) { return 'ab ' + Number(r.min_quantity) + ' Stk. −' + Number(r.discount_percent).toLocaleString('de-DE') + ' %'; }).join(' · ');
         if (data.is_authenticated && data.saved && data.saved.length) {

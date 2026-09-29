@@ -198,6 +198,7 @@
 .fdshop-bundle-dialog__content { position: relative; padding: 1.25rem; }
 .fdshop-bundle-dialog__close { position: absolute; top: .5rem; right: .75rem; border: 0; background: transparent; font-size: 2rem; }
 .fdshop-bundle__info { padding: .75rem; border: 1px solid #d3a341; background: #f2cf86; }
+.fdshop-bundle__description { white-space: pre-line; }
 .fdshop-bundle__rules { font-size: .9rem; }
 .fdshop-bundle__grid { display: grid; grid-template-columns: minmax(18rem, 1fr) minmax(18rem, 1.5fr); gap: 1rem; }
 .fdshop-bundle__pool, .fdshop-bundle__chosen { min-height: 20rem; padding: 1rem; border: 1px solid #adb5bd; }

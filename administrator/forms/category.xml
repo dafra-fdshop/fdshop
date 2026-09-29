@@ -39,7 +39,7 @@
                 label="Beschreibung"
                 rows="6"
                 cols="60"
-                filter="raw"
+                filter="string"
             />
 
             <field

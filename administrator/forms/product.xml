@@ -78,7 +78,7 @@
                 label="Kurzbeschreibung"
                 rows="4"
                 cols="60"
-                filter="raw"
+                filter="string"
             />
 
             <field
@@ -87,7 +87,7 @@
                 label="Produktbeschreibung"
                 rows="8"
                 cols="60"
-                filter="raw"
+                filter="string"
             />
         </fieldset>
 

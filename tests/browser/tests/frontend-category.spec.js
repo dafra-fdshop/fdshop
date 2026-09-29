@@ -22,7 +22,11 @@ test('menu category renders mapped visible products and complete cards', async (
   const diagnostics = await installDiagnostics(page, baseURL);
   await openCategory(page);
   await expect(page.locator('h1')).toHaveText('E2E Hauptkategorie');
-  await expect(page.locator('.fdshop-category__description')).toContainText('Künstliche Hauptkategorie');
+  const categoryDescription = page.locator('.fdshop-category__description');
+  await expect(categoryDescription).toContainText('Kategoriebeschreibung Zeile 1');
+  expect(await categoryDescription.evaluate(element => element.innerHTML)).toContain('<br>');
+  await expect(categoryDescription.locator('script')).toHaveCount(0);
+  expect(await page.evaluate(() => window.categoryPlainTextFailed)).toBeUndefined();
   await expect(page.locator('[data-fdshop-results]')).toHaveText('1–24 von 30');
   await expect(page.locator('.fdshop-card')).toHaveCount(24);
   const defaultNames = await page.locator('.fdshop-card__title').allTextContents();
@@ -35,6 +39,10 @@ test('menu category renders mapped visible products and complete cards', async (
   await expect(page.locator('[data-product-id="900109"]')).toHaveCount(0);
 
   const product = page.locator('[data-product-id="900100"]');
+  const cardDescription = product.locator('.fdshop-card__description');
+  expect(await cardDescription.evaluate(element => element.innerHTML)).toContain('<br>');
+  await expect(cardDescription.locator('script')).toHaveCount(0);
+  expect(await page.evaluate(() => window.plainTextFailed)).toBeUndefined();
   await expect(product).toContainText('Verfügbar');
   await expect(product).toContainText('125,5 g');
   await expect(product.locator('.fdshop-card__fact')).toHaveCount(5);
@@ -299,7 +307,14 @@ test('product detail renders gallery, video, manufacturer and public product inf
   await expect(product.locator('.fdshop-product__price')).toHaveCSS('background-color', 'rgb(240, 244, 251)');
   await expect(product.locator('.fdshop-product__regular-price')).toHaveCount(0);
   await expect(product.locator('[data-effective-price] small')).toHaveText('inkl. MwSt.');
-  await expect(product.locator('.fdshop-product__description')).toContainText('Aktiv mit Bestand');
+  const shortDescription = product.locator('.fdshop-product__short-description');
+  expect(await shortDescription.evaluate(element => element.innerHTML)).toContain('<br>');
+  await expect(shortDescription.locator('script')).toHaveCount(0);
+  const longDescription = product.locator('.fdshop-product__description');
+  await expect(longDescription).toContainText('Langbeschreibung Zeile 2 <p>bleibt Text</p>');
+  expect(await longDescription.evaluate(element => element.innerHTML)).toContain('<br>');
+  await expect(longDescription.locator('p')).toHaveCount(0);
+  expect(await page.evaluate(() => window.plainTextFailed)).toBeUndefined();
   await expect(product.locator('iframe')).toHaveCount(0);
   await expect(product.locator('.fdshop-product__video-play img')).toHaveAttribute('src', /i\.ytimg\.com\/vi\/aqz-KE-bpKQ\/hqdefault\.jpg/);
   await expect(product.locator('[data-fdshop-detail-video]')).toHaveCount(2);
@@ -327,7 +342,7 @@ test('product detail emits one derived and valid Product Offer JSON-LD block', a
     '@type': 'Product',
     name: 'E2E Produkt Aktiv',
     sku: 'E2E-PROD-ACTIVE',
-    description: 'Künstlich',
+    description: 'Kurzbeschreibung Zeile 1 Kurzbeschreibung Zeile 2',
     brand: { '@type': 'Brand', name: 'E2E Hersteller Aktiv' },
     offers: {
       '@type': 'Offer',

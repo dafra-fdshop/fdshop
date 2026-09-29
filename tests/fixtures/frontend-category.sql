@@ -31,6 +31,19 @@ END
 WHERE `id` IN (900103,900104,900105);
 
 UPDATE `__PREFIX__fdshop_products`
+SET `short_description` = CONCAT('Kurzbeschreibung Zeile 1', CHAR(10), 'Kurzbeschreibung Zeile 2 <script>window.plainTextFailed=1</script>'),
+    `description` = CONCAT('Langbeschreibung Zeile 1', CHAR(10), 'Langbeschreibung Zeile 2 <p>bleibt Text</p>')
+WHERE `id` = 900100;
+
+UPDATE `__PREFIX__fdshop_categories`
+SET `description` = CONCAT('Kategoriebeschreibung Zeile 1', CHAR(10), 'Kategoriebeschreibung Zeile 2 <script>window.categoryPlainTextFailed=1</script>')
+WHERE `id` = 900010;
+
+UPDATE `__PREFIX__fdshop_bundles`
+SET `description` = CONCAT('Bundlebeschreibung Zeile 1', CHAR(10), 'Bundlebeschreibung Zeile 2 <b>bleibt Text</b>')
+WHERE `id` = 900400;
+
+UPDATE `__PREFIX__fdshop_products`
 SET `short_description` = '', `description` = ''
 WHERE `id` = 900104;
 

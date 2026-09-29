@@ -38,7 +38,7 @@
                 label="Beschreibung"
                 rows="6"
                 cols="60"
-                filter="raw"
+                filter="string"
             />
 
             <field name="image_path" type="media" label="Bundle-Bild" directory="images/fdshop/bundles" />
