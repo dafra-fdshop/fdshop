@@ -1,0 +1,304 @@
+FDShop – PAYPAL PAYMENT-ZEITAUDIT UND UTC-FIX
+
+Projekt: FDShop
+Branch: feature
+Basis: aktueller feature nach PayPal Approval→Capture-Fix
+Priorität: PayPal-Blocker / fachlich vollständiger Zeitaudit
+Scope: Payment-/Reservierungs-Zeitmodell
+
+======================================================================
+1. REAL NACHGEWIESENER FEHLER
+======================================================================
+
+Der aktuelle IONOS-Realtest erreicht inzwischen:
+
+- PayPal Buyer-Login
+- Buyer Approval
+- onApprove
+- FDShop payment.capture
+
+Der FDShop-Endpunkt payment.capture wird real aufgerufen und antwortet HTTP 200,
+aber fachlich mit:
+
+{"success":false,"message":"Der Zahlungsvorgang ist abgelaufen.","messages":null,"data":null}
+
+Payload war korrekt:
+- gültiger CSRF-Kontext
+- session_token vorhanden
+- provider_order_id vorhanden
+
+PayPal selbst erhält deshalb weiterhin keinen /capture-Aufruf.
+
+Realer Payment-Session-Datensatz:
+
+created:
+2026-09-29 14:40:16
+
+expires_at:
+2026-09-29 14:50:16
+
+reservation_released_at:
+2026-09-29 14:40:47
+
+configured lifetime:
+600 Sekunden
+
+IONOS MariaDB zum Diagnosezeitpunkt:
+
+NOW():
+2026-09-29 16:57:53
+
+UTC_TIMESTAMP():
+2026-09-29 14:57:53
+
+Offset:
++02:00
+
+Damit wurde eine auf 10 Minuten konfigurierte Reservierung bereits 31 Sekunden
+nach Erstellung freigegeben.
+
+Die gespeicherten technischen Payment-Zeitpunkte entsprechen UTC, während
+mindestens ein Ablaufpfad offenbar lokale DB-/Serverzeit dagegen vergleicht.
+
+======================================================================
+2. VERBINDLICHE FACHENTSCHEIDUNG
+======================================================================
+
+Die 10-Minuten-Payment-Reservierung BLEIBT bestehen.
+
+Grund:
+Während PayPal/externem Zahlungsfluss muss Bestand temporär geschützt werden,
+damit ein anderer Kunde – z.B. mit Banküberweisung – nicht denselben letzten
+verfügbaren Bestand bestellen kann.
+
+Verbindliches Zeitmodell:
+
+1. Persistierte technische Zeitpunkte in FDShop Payment/Reservation werden in
+   UTC geführt.
+
+2. Sämtliche fachlichen Ablaufentscheidungen und Zeitvergleiche erfolgen auf
+   derselben UTC-Basis.
+
+3. Konfigurierte Laufzeiten sind echte Dauern.
+   Beispiel:
+   10 Minuten = 600 Sekunden unabhängig von Zeitzone, Sommer-/Winterzeit,
+   IONOS-Serverzeit oder DB-Session-Zeitzone.
+
+4. Lokale Zeitzonen wie Europe/Berlin dienen ausschließlich der Darstellung
+   für Menschen im Admin/Frontend.
+
+5. Sommer-/Winterzeit darf technische Laufzeiten niemals verlängern,
+   verkürzen oder sofort ablaufen lassen.
+
+6. Lösung muss portabel für Docker, IONOS und spätere Hostingumgebungen sein.
+
+======================================================================
+3. AUFTRAG: ZUERST ZEITAUDIT
+======================================================================
+
+Nicht nur die aktuell sichtbare Capture-Prüfung flicken.
+
+Den gesamten Payment-Zeitpfad analysieren und dokumentieren.
+
+Mindestens prüfen:
+
+- Erstellung Payment Session
+- created / modified
+- Berechnung expires_at
+- Prüfung expires_at beim Capture
+- PaymentService
+- PaymentSession-/Repository-/DB-Zugriffe
+- Reservierungserstellung
+- reservation created / modified
+- Freigabe abgelaufener Reservierungen
+- Scheduled Task / Payment Cleanup
+- Retry-Pfade
+- Transaction created / modified
+- captured_at
+- finalized_at
+- Webhook-Zeitpfade soweit sie dieselben technischen Zeithelfer nutzen
+- Idempotenz-/Finalizer-Prüfungen mit Zeitbezug
+- sonstige PayPal-/Payment-Expiry-Prüfungen
+
+Gezielt suchen nach Mischungen aus:
+- SQL NOW()
+- CURRENT_TIMESTAMP
+- UTC_TIMESTAMP()
+- PHP date()
+- DateTime / DateTimeImmutable
+- Joomla Date
+- Factory::getDate()
+- lokale PHP-Zeitzone
+- DB-Session-Zeitzone
+- impliziten Stringvergleichen
+- Unix timestamps
+- unterschiedlichen UTC-/Local-Konvertierungen
+
+Auch Install-/Update-SQL und Tests prüfen, soweit Zeitdefaults/DB-Funktionen
+relevant sind.
+
+======================================================================
+4. ARCHITEKTURZIEL
+======================================================================
+
+Keine wahllose Ersetzung "NOW() -> UTC_TIMESTAMP()" als Einzelpatch.
+
+Eine konsistente Strategie herstellen.
+
+Bevorzugt vorhandene zentrale Joomla-/FDShop-Zeitabstraktion nutzen oder eine
+kleine zentrale UTC-Hilfe schaffen, falls nötig, statt in mehreren Services
+unterschiedliche Zeitquellen zu verwenden.
+
+Für fachliche Vergleiche müssen beide Seiten derselben Zeitbasis entsprechen.
+
+Wenn DATETIME verwendet wird:
+- semantisch UTC behandeln
+- UTC-Werte schreiben
+- UTC-Werte vergleichen
+
+DB-Server-/Session-Zeitzone darf die fachliche Korrektheit nicht bestimmen.
+
+======================================================================
+5. CLEANUP-SICHERHEIT
+======================================================================
+
+Cleanup darf nur tatsächlich abgelaufene und freigabefähige Sessions /
+Reservierungen bearbeiten.
+
+Nachweisen:
+
+- aktive Session vor expires_at -> NICHT freigeben
+- aktive Session exakt/nach expires_at -> gemäß Fachregel freigeben
+- captured/finalisierte Session -> niemals durch normalen Expiry-Cleanup
+  fachlich zurückrollen
+- bereits freigegebene Reservierung -> idempotent
+- mehrere gleichzeitig abgelaufene Sessions -> jeweils korrekt ihrer eigenen
+  Payment Session / Reservierung zugeordnet
+- keine pauschale Bestandsreduktion
+- kein Einfluss auf fremde Reservierungen
+
+======================================================================
+6. SOMMER-/WINTERZEIT-TESTS
+======================================================================
+
+Explizite Regressionstests für Zeitzonen-/DST-Grenzen ergänzen.
+
+Mindestens:
+
+A) Europe/Berlin Sommerzeit:
+lokale Server-/DB-Zeit UTC+2, technische UTC-Laufzeit bleibt exakt 600 Sekunden.
+
+B) Europe/Berlin Winterzeit:
+UTC+1, technische UTC-Laufzeit bleibt exakt 600 Sekunden.
+
+C) Rückstellung Sommer -> Winter:
+lokale Uhr springt zurück; Payment-Reservierung bleibt trotzdem exakt anhand
+realer 600 Sekunden gültig.
+
+D) Umstellung Winter -> Sommer:
+lokale Uhr springt vor; Session darf dadurch nicht sofort ablaufen.
+
+Tests dürfen Zeit kontrolliert/fakebar machen; keine echten 10 Minuten warten.
+
+======================================================================
+7. AKTUELLER PAYPAL-FLOW
+======================================================================
+
+Die bereits erreichten PayPal-Fixes nicht zurückbauen:
+
+- COOP same-origin-allow-popups ist Installationsvoraussetzung
+- clientId bleibt
+- Buyer Popup funktioniert
+- Approval→Capture-Transition mit onApprove / Redirect-resume bleibt
+- payment.capture wird real erreicht
+
+Dieser Auftrag soll ausschließlich verhindern, dass die gültige Session dort
+fälschlich als abgelaufen bewertet wird.
+
+Webhook-ID ist weiterhin nicht Ursache dieses Fehlers.
+
+======================================================================
+8. TESTUMFANG
+======================================================================
+
+Diesmal darf gründlicher geprüft werden als bei den vorherigen Hotfixes.
+
+Mindestens:
+
+- Zeitmodell-/Unit-/Service-Tests
+- 600-Sekunden-Lifetime
+- UTC vs. lokale DB-Zeit
+- Sommer-/Winterzeitfälle
+- Cleanup vor/nach Ablauf
+- mehrere Sessions
+- Capture vor Ablauf akzeptiert
+- Capture nach Ablauf abgewiesen
+- captured/finalized nicht fälschlich freigegeben
+- Reservation Release korrekt/idempotent
+- bestehende Payment-Service-Regression
+- PayPal-Browserflow bis payment.capture mock/fixture
+- Scheduled-Task-Cleanup
+- PHP-/JS-Syntax
+- git diff --check
+- Paketinstallation
+- relevanter Smoke
+- Logs
+
+Breite fachfremde Shop-Suite nur wenn Änderungen an zentralen allgemeinen
+Zeithelfern Auswirkungen außerhalb Payment haben könnten.
+
+Keinen echten Sandbox-Capture automatisiert erzwingen.
+Der nächste echte Capture erfolgt durch Daniel/Caesar auf IONOS.
+
+======================================================================
+9. DOKUMENTATION
+======================================================================
+
+Dokumentieren:
+
+- technische Payment-Zeitbasis UTC
+- lokale Zeit ausschließlich Darstellung
+- Reservierungsdauer als Dauer
+- DST-Unabhängigkeit
+- Hosting-/DB-Zeitzone darf Ablauf nicht verändern
+- Cleanup-Semantik
+- COOP-Anforderung bleibt dokumentiert
+
+Falls bestehende Governance-/Architektur-/Fachregeln dadurch ergänzt werden
+müssen, gemäß Dokumentationsstandard aktualisieren.
+
+======================================================================
+10. ABSCHLUSS
+======================================================================
+
+Wenn Audit + Fix vollständig und Tests grün:
+
+- Commit feature
+- Push origin/feature
+- kein main-Merge
+- Working Trees sauber
+- Auftrag nach erledigt
+- Paket reproduzierbar bauen, falls projektüblich
+
+Abschlussbericht:
+
+1. alle gefundenen Zeitquellen
+2. konkrete Ursache des IONOS-Fehlers
+3. vereinheitlichte UTC-Strategie
+4. betroffene Dateien
+5. Cleanup-Sicherheitsnachweis
+6. DST-/Zeitzonentests
+7. sonstige gefundene Zeitfehler im Payment-Bereich
+8. Testumfang
+9. was Daniel auf IONOS real prüfen soll
+10. Commit-SHA / feature=origin/feature / Working Trees
+
+WICHTIG:
+Falls das Audit zeigt, dass die Ursache NICHT aus einer gemischten
+UTC/Lokalzeit-Basis stammt, STOP mit Befund statt die Zeitarchitektur unnötig
+umzubauen.
+
+Commitmessage sinngemäß:
+Normalize payment expiry handling to UTC
+
+ENDE DES AUFTRAGS
