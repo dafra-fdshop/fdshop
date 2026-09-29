@@ -1,0 +1,254 @@
+FDShop – KLEINAUFTRAG FÜR CODEX
+EINHEITLICHE PLAIN-TEXT-BESCHREIBUNGEN UND ZEILENUMBRÜCHE
+
+Projekt: FDShop
+Branch: feature
+Ausgangsstand: aktueller feature nach IONOS Credential Resolver
+Priorität: akut wegen laufender manueller Datenpflege
+Scope: klein und shopweit konsistent
+
+======================================================================
+1. FEHLERBILD
+======================================================================
+
+Mitarbeiter pflegen aktuell reale Shopdaten ein.
+
+Bei redaktionellen Mehrzeilentexten wurde festgestellt:
+- Im Backend werden normale Zeilenumbrüche per Enter eingegeben.
+- Bei einigen Frontend-Ausgaben verschwinden diese Umbrüche.
+- Mitarbeiter haben deshalb begonnen, manuell HTML-Tags wie <p> einzutragen,
+  damit Absätze im Frontend sichtbar werden.
+
+Das ist NICHT gewünscht.
+
+Beispiel Produkt-Langbeschreibung:
+
+Backend gewünscht:
+Klassische Knallerbsen
+50 Stk. pro Packung | 25 Packungen pro Display (25x0,40€ | 20% Rabatt)
+
+Frontend soll denselben sichtbaren Umbruch zeigen, ohne dass Mitarbeiter
+HTML-Tags eingeben müssen.
+
+======================================================================
+2. VERBINDLICHE FACHREGEL
+======================================================================
+
+Normale redaktionelle FDShop-Beschreibungsfelder sind PLAIN TEXT.
+
+Mitarbeiter:
+- schreiben normalen Text
+- verwenden Enter für Zeilenumbrüche/Absätze
+- müssen und sollen KEINE HTML-Tags zur Gestaltung eingeben
+
+FDShop:
+- speichert die normalen Zeilenumbrüche
+- escaped Text bei HTML-Ausgabe sicher
+- stellt gespeicherte Zeilenumbrüche im Frontend sichtbar dar
+
+HTML-Eingabe darf nicht erforderlich sein und darf nicht als Gestaltungsmittel
+interpretiert werden.
+
+Beispiel technische Ausgabe sinngemäß:
+nl2br($this->escape($text))
+
+Die konkrete Umsetzung soll zur vorhandenen Joomla-/FDShop-Struktur passen.
+
+======================================================================
+3. AKTUELL BEREITS FESTGESTELLTE INKONSISTENZ
+======================================================================
+
+Vor Auftragserstellung wurde im aktuellen Code bereits festgestellt:
+
+- Produkt-Kurzbeschreibung auf Produktdetail:
+  escape + nl2br -> bereits korrekt
+
+- Kategoriebeschreibung:
+  escape + nl2br -> bereits korrekt
+
+- Produkt-Langbeschreibung:
+  aktuell HTMLHelper::_('content.prepare', description)
+  -> normale Enter-Umbrüche werden nicht zuverlässig als sichtbare
+     HTML-Zeilenumbrüche dargestellt; eingegebenes HTML kann interpretiert
+     werden
+
+- Produkt-Kurzbeschreibung auf Produktkarten:
+  escaped, aber ohne explizite Umbruchdarstellung
+
+Weitere Felder/Ausgabestellen sind von Codex vollständig zu inventarisieren.
+
+======================================================================
+4. SHOPWEITE INVENTUR
+======================================================================
+
+Bitte gezielt alle redaktionellen Beschreibungs-/Mehrzeilentextfelder und ihre
+tatsächlichen Frontend-Ausgabestellen prüfen, insbesondere:
+
+- Produkt short_description
+- Produkt description
+- Kategorie description
+- Hersteller description
+- Bundle description
+- vergleichbare redaktionelle Mehrzeilentexte, sofern sie im Frontend
+  tatsächlich als Beschreibung ausgegeben werden
+
+Meta-Beschreibungen sind KEINE formatierten Frontend-Beschreibungen und sollen
+nicht künstlich mit <br> versehen werden.
+
+Ebenso keine technischen, Mail-, Dokument-, AGB- oder bewusst anders
+definierten Safe-HTML-Felder pauschal verändern.
+
+Keine blind globale nl2br-Suche/Ersetzung.
+
+======================================================================
+5. ZIEL DER UMSETZUNG
+======================================================================
+
+Für alle normalen redaktionellen Beschreibungsfelder soll gelten:
+
+Backend-Eingabe:
+Zeile 1
+Zeile 2
+
+Frontend:
+Zeile 1
+Zeile 2
+
+ohne manuelle HTML-Tags.
+
+Sicherheitsregel:
+Eingabe wie
+<script>alert(1)</script>
+oder
+<p>Text</p>
+darf in einem als Plain Text definierten Beschreibungsfeld NICHT als
+ausführbares/formatierendes HTML interpretiert werden.
+
+Bestehende sichere Escaping-Regeln erhalten.
+
+======================================================================
+6. DATENBESTAND / KEINE BLINDE MIGRATION
+======================================================================
+
+Aktuell wurden erst vereinzelt manuelle HTML-Tags durch Mitarbeiter
+eingetragen; die Datenpflege wurde gestoppt.
+
+Dieser Auftrag soll primär die Ein-/Ausgaberegel korrigieren.
+
+KEINE pauschale automatische Bereinigung bestehender realer Beschreibungsdaten
+ohne vorherige Analyse.
+
+Falls für bereits vorhandene HTML-Beschreibungen eine Migration/Bereinigung
+notwendig wäre:
+- Umfang feststellen
+- keine destruktive automatische Konvertierung improvisieren
+- STOP bzw. im Abschlussbericht konkrete Empfehlung geben
+
+Keine echten Produkttexte durch Tests verändern.
+
+======================================================================
+7. BACKEND UX
+======================================================================
+
+Bestehende Textareas dürfen beibehalten werden, sofern sie für Plain Text
+geeignet sind.
+
+Wenn Feldfilter aktuell HTML bewusst zulassen, prüfen und für die betroffenen
+Plain-Text-Beschreibungen passend absichern.
+
+Keine WYSIWYG-/HTML-Editor-Pflicht einführen.
+
+Keine große Admin-UX-Umgestaltung.
+
+======================================================================
+8. TESTS – KLEIN UND GEZIELT
+======================================================================
+
+Mindestens automatisiert/real prüfen:
+
+A Produkt-Langbeschreibung
+Eingabe mit mindestens zwei Zeilen -> Frontend zeigt Umbruch.
+
+B Produkt-Kurzbeschreibung
+Detailseite und relevante Produktkarte -> gewünschte Umbrüche konsistent.
+
+C Kategorie
+Mehrzeilige Beschreibung -> sichtbare Umbrüche.
+
+D Hersteller/Bundle
+Nur soweit diese Beschreibungen tatsächlich im Frontend ausgegeben werden;
+vorhandene Ausgabestellen korrekt behandeln.
+
+E Sicherheit
+HTML-/Script-Testtext wird bei Plain-Text-Beschreibungen escaped und nicht
+interpretiert/ausgeführt.
+
+F Regression
+- PHP-Syntax
+- git diff --check
+- kurzer Frontend-/Produkt-/Kategorie-Smoke
+- keine Browser-/PHP-/Joomla-Fehler
+
+KEIN FULL-Testmarathon, solange Änderungen auf Templates/Formfilter/
+unmittelbar notwendige Tests/Dokumentation beschränkt bleiben.
+
+Falls zentrale Model-/Service-/Persistenzlogik unerwartet geändert werden
+müsste: STOP statt Scope ausweiten.
+
+======================================================================
+9. DOKUMENTATION
+======================================================================
+
+Die verbindliche Fachregel dauerhaft in geeigneter FDShop-Projektdokumentation
+festhalten:
+
+„Normale redaktionelle Beschreibungsfelder sind Plain Text. Zeilenumbrüche
+werden als Text gespeichert und bei Frontend-HTML-Ausgabe sicher sichtbar
+gemacht. Mitarbeiter verwenden keine HTML-Tags zur Formatierung.“
+
+Dabei klar abgrenzen:
+- Meta-Felder
+- bewusst definierte Safe-HTML-Felder
+- Mail-/Dokumenttexte
+- technische Inhalte
+
+======================================================================
+10. NICHT TUN
+======================================================================
+
+- keine PayPal-Arbeit
+- keine Schemaänderung, sofern nicht unerwartet zwingend
+- keine Datenbankmigration nur für Darstellung
+- keine pauschale Datenbereinigung
+- kein WYSIWYG-Projekt
+- kein content.prepare für Plain-Text-Felder, wenn dadurch HTML interpretiert
+  wird
+- keine Businesslogikänderung
+- kein main-Merge
+- kein Force Push
+
+======================================================================
+11. ABSCHLUSS
+======================================================================
+
+Nach grünen gezielten Tests:
+- Commit feature
+- Push origin/feature
+- Working Tree sauber
+- Auftrag nach Aufträge/erledigt gemäß Workflow
+
+Abschlussbericht kurz:
+- inventarisierte Felder/Ausgabestellen
+- geänderte Dateien
+- vereinheitlichte Regel
+- Sicherheitsprüfung
+- Umgang mit eventuell vorhandenen HTML-Bestandsdaten
+- Tests
+- Commit-SHA
+- feature=origin/feature
+- Working Tree
+
+Commitmessage sinngemäß:
+Normalize plain text description line breaks
+
+ENDE DES KLEINAUFTRAGS
