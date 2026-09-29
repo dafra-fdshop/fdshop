@@ -1,0 +1,228 @@
+FDShop – PAYPAL HOTFIX FÜR CODEX
+JS SDK V6 – REALER IONOS SANDBOX-FLOW HÄNGT IM PAYPAL-LOADING
+
+Projekt: FDShop
+Branch: feature
+Basis: aktueller feature
+Scope: isolierter PayPal-JS-SDK-v6-Hotfix / Diagnose
+KEIN Payment-Architekturumbau
+
+======================================================================
+1. REALER FEHLERBEFUND AUF IONOS
+======================================================================
+
+Daniel/Caesar testen das installierte Paket real online auf IONOS.
+
+Test:
+- normale PayPal-Sandbox-Zahlungsart
+- Produkt 0,50 EUR
+- gültige Sandbox Merchant Credentials über externen Credential Resolver
+- PayPal Checkout gestartet
+
+Serverseitiger FDShop-Request payment.start ist erfolgreich:
+
+HTTP 200
+success=true
+amount=0.50
+currency=EUR
+gültige interne session_token
+gültige PayPal order_id
+gültiges expires_at
+
+Damit real bestätigt:
+- Credential Resolver
+- PayPal OAuth
+- Checkout-Revalidierung
+- Payment Session
+- temporäre Reservierung
+- PayPal Create Order
+
+funktionieren bis dahin.
+
+Problem:
+Das PayPal-Sandbox-Popup bleibt dauerhaft bei
+„Sie werden zu PayPal weitergeleitet“
+stehen.
+
+Parallel zeigt PayPals eigene Browseroberfläche sinngemäß:
+„Sie sehen das sichere Browserfenster von PayPal nicht? ... Weiter“
+
+PayPal-interne Netzwerkrequests laufen überwiegend mit HTTP 200.
+
+Browserkonsole zeigt wiederholt PayPal-interne Firebase-Warnungen:
+Provided authentication credentials for app [DEFAULT] are invalid...
+Diese Warnung NICHT isoliert als Ursache voraussetzen; sie stammt aus
+PayPals Sandbox-Frontend und muss im Kontext untersucht werden.
+
+Kein Capture wurde ausgelöst.
+
+======================================================================
+2. AKTUELLER FDSHOP-CODE
+======================================================================
+
+cart.js initialisiert derzeit sinngemäß:
+
+window.paypal.createInstance({
+    clientId: config.client_id,
+    components: ['paypal-payments'],
+    pageType: 'checkout'
+})
+
+Danach:
+findEligibleMethods({currencyCode:'EUR'})
+createPayPalOneTimePaymentSession(...)
+session.start({presentationMode:'auto'}, Promise<{orderId}>)
+
+payment.start liefert real erfolgreich die PayPal Order-ID.
+
+======================================================================
+3. WICHTIG: PAYPAL-DOKUMENTATION IST AKTUELL WIDERSPRÜCHLICH
+======================================================================
+
+Nicht blind eine vorgegebene Vermutung implementieren.
+
+Aktuelle offizielle PayPal-v6-Dokumentation vor Änderung selbst prüfen.
+
+Zum Zeitpunkt des Realtests existieren offizielle Seiten, die für normale
+Standard-/One-Time-Checkout-Integrationen clientId als empfohlen darstellen,
+während andere aktuelle v6 Setup-/Upgrade-/End-to-End-Beispiele einen
+serverseitig erzeugten browser-safe clientToken verwenden bzw. createInstance
+mit clientToken zeigen.
+
+Daher verbindlich:
+
+- konkreten Flow "paypal-payments" + createPayPalOneTimePaymentSession +
+  Standard One-Time Payment prüfen
+- aktuelle offizielle PayPal-Dokumentation priorisieren
+- reale Sandbox-Symptome berücksichtigen
+- Ursache nachweisen
+- nicht allein aufgrund des Auftragstextes clientId durch clientToken ersetzen
+
+Wenn PayPals aktuelle verbindliche Doku für genau unseren Flow clientId
+unterstützt und die Ursache woanders liegt, dort korrigieren.
+
+Wenn für unseren realen Flow browser-safe clientToken erforderlich bzw.
+nachweislich die korrekte Lösung ist, diesen sauber serverseitig implementieren.
+
+======================================================================
+4. FALLS CLIENT TOKEN DIE KORREKTE LÖSUNG IST
+======================================================================
+
+Dann:
+
+- Token ausschließlich serverseitig mit Merchant Client-ID/Secret erzeugen
+- offiziellen PayPal-Endpunkt/Parameter gemäß aktueller Doku verwenden
+- Sandbox/Live korrekt trennen
+- kurzlebigen browser-safe Token an Browser liefern
+- Secret/normalen OAuth Access Token niemals an Browser geben
+- CSRF/Session-/Origin-Schutz passend zur bestehenden Architektur
+- Token nicht persistent in DB speichern, sofern nicht erforderlich
+- sinnvolles serverseitiges Caching nur wenn sicher/notwendig
+- Ablaufzeit respektieren
+- keine Tokens loggen
+- createInstance mit dem laut aktueller Doku korrekten Auth-Parameter
+- Fastlane NICHT implementieren
+
+Bestehende serverseitige Create-Order-/Capture-Authentifizierung nicht
+unbegründet verändern.
+
+======================================================================
+5. NICHT ÄNDERN
+======================================================================
+
+Nicht anfassen, außer wenn nachgewiesen zwingend:
+- Payment-Session-Datenmodell
+- Payment Transactions
+- 10-Minuten-Reservierung
+- Expiry/Cleanup
+- Scheduled Task
+- Capture-Fachlogik
+- idempotenter Finalizer
+- Orderfinalisierung
+- Gutschein
+- Lager
+- F3
+- normaler Checkout
+- Webhook-Fachlogik
+- Schema
+
+Kein Refund, Fastlane, Apple Pay, Google Pay, Cards, Vaulting etc.
+
+======================================================================
+6. REALTEST-/TESTANFORDERUNG
+======================================================================
+
+Gezielt testen, KEIN FULL-Testmarathon.
+
+Mindestens:
+- aktuelle PayPal-v6-Dokumentation für konkreten Flow verifizieren
+- bestehender OAuth/Create-Order-Smoke
+- JS-SDK-Initialisierung
+- Eligibility
+- createPayPalOneTimePaymentSession
+- start() mit Promise<{orderId}>
+- Popup-/presentationMode auto
+- Cancel erhält Cart
+- keine doppelte Payment Session / kein Recapture
+- keine Secret-/Token-Leaks
+- PHP/JS Syntax bzw. statische Prüfung
+- git diff --check
+- kurzer relevanter Browser-/Payment-Smoke
+
+WICHTIG:
+Der bisherige automatisierte Test, der lediglich Popup/Mock-Verhalten prüft,
+reicht nicht als Nachweis für den realen PayPal-Sandbox-Buyer-Flow.
+
+Wenn Codex aus seiner Umgebung den echten interaktiven Sandbox-Buyer-Login
+nicht zuverlässig abschließen kann:
+- technische Korrektur soweit möglich testen
+- ausdrücklich als offen melden
+- NICHT behaupten, der reale Popup-Flow sei bestanden
+- Daniel/Caesar führen danach erneut den IONOS-Realtest durch
+
+Keinen echten Capture auslösen, sofern für die Diagnose nicht zwingend und
+nicht ausdrücklich erforderlich. Der erste echte Capture soll weiterhin in
+der manuellen Abnahme erfolgen.
+
+======================================================================
+7. DOKUMENTATION
+======================================================================
+
+paypal-checkout.md nur dann anpassen, wenn sich die verbindliche
+SDK-v6-Authentifizierungsstrategie tatsächlich ändert.
+
+Dabei dokumentieren:
+- verwendete Auth-Methode
+- warum sie für unseren Standard-One-Time-PayPal-Flow gewählt wurde
+- server-/browserseitige Trennung
+- keine Secrets/Tokens in Beispielen
+
+======================================================================
+8. ABSCHLUSS
+======================================================================
+
+Bei nachgewiesener kleiner Korrektur:
+- gezielte Tests
+- Commit feature
+- Push origin/feature
+- kein main-Merge
+- Working Tree sauber
+- Auftrag nach erledigt
+
+Abschlussbericht MUSS enthalten:
+- nachgewiesene Ursache oder belastbarste technische Diagnose
+- welche offizielle PayPal-v6-Variante für unseren konkreten Flow maßgeblich ist
+- geänderte Dateien
+- ob clientId oder clientToken verwendet wird und warum
+- Testumfang
+- was automatisiert bewiesen wurde
+- was Daniel/Caesar real auf IONOS erneut testen müssen
+- Commit-SHA / feature=origin/feature / Working Tree
+
+Falls Ursache nicht belastbar bestimmt werden kann:
+STOP mit Befund statt spekulativem Umbau.
+
+Commitmessage sinngemäß:
+Fix PayPal v6 sandbox browser flow
+
+ENDE DES HOTFIX-AUFTRAGS
