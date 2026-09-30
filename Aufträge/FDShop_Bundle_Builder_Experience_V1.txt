@@ -1,0 +1,194 @@
+FDShop – UX-/DESIGNAUFTRAG
+BUNDLE BUILDER EXPERIENCE V1 – DESKTOP FIRST
+
+Projekt: FDShop | Branch: feature
+Priorität: hoch – Alleinstellungsmerkmal / Kauferlebnis
+Scope: bestehender Frontend-Bundle-Builder
+Schwerpunkt: UX, Optik, Animation, Kaufgefühl
+Bestehende Bundle-Fachlogik bleibt maßgeblich.
+
+1. ZIEL
+Aus dem funktionierenden technischen Builder soll ein moderner Konfigurator werden: „Stell dir dein eigenes Feuerwerk zusammen.“
+Performance bleibt wichtig, aber ein sinnvoll gebündelter Initial-Load von einigen hundert Millisekunden ist akzeptabel, wenn danach alles unmittelbar/flüssig reagiert.
+Client = Erlebnis/Vorschau; Server = Wahrheit für Bestand, Regeln, Rabatt, Preis, Speichern und Warenkorb.
+Keine unnötigen Frameworks.
+
+2. V1 / FREIHEIT
+Bewusst erste Erlebnisversion, danach IONOS-Realtest/V1.1.
+Codex darf Animationsdauern, Spacing, Schatten, Radien, Kartengrößen und subtile Hover/Focus-Zustände sinnvoll feinjustieren. Modern/hochwertig, nicht verspielt.
+
+3. DESKTOP FIRST
+Desktop ist Schwerpunkt. Mobile darf nicht regressieren und muss bedienbar bleiben; kein finales Touch-Drag&Drop-Redesign in V1.
+
+4. MODAL-LAYOUT
+Aktuell wächst das Modal wegen langer Produktlisten über den Viewport.
+Neu:
+OBEN: Titel, Beschreibung, kompakte Regeln, Rabattfortschritt.
+MITTE: links Produktpool ca. 35–40 %, rechts „Mein Bundle“ ca. 60–65 %.
+UNTEN: kompakte/sticky Zusammenfassung + Aktionen.
+Linker Produktpool bekommt EIGENEN vertikalen Scrollbereich. Rechte Arbeitsfläche darf bei Bedarf intern scrollen. Gesamtmodal soll nicht wegen 30 Produkten kilometerlang werden.
+
+5. LOADING
+Beim Öffnen moderner Ladezustand (Loading-Bar/Skeleton o.ä.). Kein künstliches Warten. Bei schnellem Laden unnötiges Flackern vermeiden; bei langsamer Verbindung klar zeigen, dass der Builder vorbereitet wird. Ruhiger Übergang zum Inhalt.
+
+6. REGELN
+Bestehende dynamische Regeln kompakt darstellen, z.B.:
+✓ Mindestens 2 verschiedene Produkte
+✓ Maximal 2 Stück je Produkt
+Keine hartcodierten Beispielwerte.
+
+7. RABATT-FORTSCHRITTSSTRANG
+Bisherige Textzeile durch visuellen Strang ersetzen, dynamisch aus echten Rabattregeln:
+
+DEIN RABATT
+ 3 %          5 %          8 %                    12 %
+  ●────────────●────────────●───────────────────────●
+4 Stk.       6 Stk.       8 Stk.                 12 Stk.
+
+Gefüllter Fortschritt fährt bei jeder Mengenänderung weich vor/zurück.
+Text z.B. „3 % Rabatt aktiv · Noch 1 Artikel bis 5 %“ bzw. vor erster Stufe „Noch 2 Artikel bis 3 %“. Höchste Stufe korrekt behandeln.
+
+8. RABATT-CELEBRATION
+Beim erstmaligen Erreichen einer neuen Stufe in derselben Builder-Sitzung:
+- Linie erreicht Marker
+- Marker pulsiert kurz
+- wenige dezente Sterne/Partikel bewegen sich gezielt zum Marker
+- Badge/Ribbon per Fade/Scale: „5 % RABATT FREIGESCHALTET“
+Danach Ruhe.
+Keine Daueranimation/Casino-Optik. Bereits gefeierte Stufe nicht bei 5→6→5→6 ständig wiederholen; höhere neue Stufe darf erneut gefeiert werden.
+prefers-reduced-motion respektieren.
+
+9. PRODUKTPOOL LINKS
+Keine Suche V1.
+Mengensteuerung links vollständig entfernen.
+Kompakte Karte:
+- Bild
+- Name
+- SKU
+- Preis
+- Verfügbarkeit
+- „+ Hinzufügen“
+- kleines Info-Icon
+Karte gleichzeitig Drag-Quelle. Hinzufügen bleibt vollwertige Alternative.
+Eigener Scrollcontainer.
+
+10. QUICK VIEW
+Info-Icon öffnet kompaktes Overlay ÜBER dem Bundle-Builder, kein Seitenwechsel, Bundle-State bleibt.
+Anzeigen:
+- größeres Bild
+- Name, SKU, Preis
+- Kurzbeschreibung
+- sinnvolle technische Eckdaten (NEM, Schusszahl, Kaliber, Brenndauer etc. soweit vorhanden)
+- Video-Aktion nur wenn Video vorhanden
+- „+ Zum Bundle hinzufügen“
+Bestehende Video-/Media-Logik nutzen, keine neue Modalbibliothek.
+Hinzufügen nutzt dieselbe Add-Aktion; Overlay darf schließen; neue rechte Karte kurz dezent hervorheben.
+Keine N+1-Abfragen; Daten gesammelt/vorhandene Strukturen nutzen.
+
+11. RECHTS – EMPTY STATE
+Statt technischer Meldung:
+„Stell dein Feuerwerk zusammen“
+„Ziehe Produkte aus der Auswahl hierher oder nutze ‚Hinzufügen‘.“
+Während Drag gültige Dropzone sichtbar hervorheben, z.B. „Hier ablegen“.
+
+12. DRAG & DROP
+Desktop: links greifen → rechts ablegen.
+Quelle darf leicht anheben/Schatten/scale; Dropzone reagiert.
+Drop fügt Produkt hinzu; linkes Produkt bleibt im Pool; rechte Karte erscheint mit kurzem Fade/Translate/Snap.
+Drag und Button ändern denselben fachlichen State. Mengen-/Bundle-Regeln beachten. Server bleibt finale Wahrheit.
+
+13. BUNDLE-KARTEN RECHTS
+Keine Textliste „1 × Acryl“.
+Hochkantkarten als responsives Grid; auf typischer Desktopbreite möglichst 4 Karten/Reihe.
+Bewusst kompakt: „großer Einkaufswagen“-Prinzip – 5–6 Produkte sollen die Fläche noch nicht voll wirken lassen.
+Karte zeigt NUR:
+- Bild oben
+- Produktname
+- mit Abstand [-] [Menge] [+]
+- dezente Entfernen-Aktion
+Preis/SKU/Verfügbarkeit nicht rechts duplizieren.
+Ein Produkt = eine Karte auch bei Menge >1.
+
+14. VALIDIERUNG ALS FORTSCHRITT
+Fachregeln unverändert, UX positiver:
+Leer: „Wähle mindestens 2 verschiedene Produkte.“
+Nach erstem: „1 von 2 Produkten gewählt · Noch ein Produkt – dann ist dein Bundle bereit.“
+Erfüllt: „✓ Dein Bundle ist bereit!“
+Weitere echte Regelverletzungen klar anzeigen. Nicht jede noch offene Mindestbedingung als rote Fehlerwand.
+
+15. STICKY SUMMARY
+Aktuellen klobigen Block modern/kompakt:
+2 Produkte · 6 Artikel
+Zwischensumme 95,40 €
+Bundle-Rabatt 5 % -4,77 €
+DEIN BUNDLE-PREIS 90,63 €
+Du sparst 4,77 €
+Alles dynamisch. Bundlepreis wichtigster Wert. Ersparnis erst bei echtem Rabatt.
+
+16. AKTIONSHIERARCHIE
+Nicht drei gleichwertige Riesenbuttons.
+- „Auswahl zurücksetzen“ = kleine zurückhaltende Nebenaktion
+- „Bundle speichern“ = sekundär
+- „In den Warenkorb“ = klar primärer CTA
+Clientseitig nur aktiv, wenn Grundbedingungen erfüllt; Server validiert immer erneut.
+
+17. CLIENT / PERFORMANCE
+Browser darf Vorschau für Mengen, Produktanzahl, Gesamtmenge, Zwischensumme, erwartete Rabattstufe, Bundlepreis, Ersparnis und Fortschritt unmittelbar berechnen, abgeleitet aus gelieferten Regeln.
+Server validiert Save/Cart erneut.
+Keine N+1-Abfragen, keine Anfrage pro Produkt, keine Serverrunde pro Animation. Benötigte Builderdaten bei Bedarf gesammelt laden.
+
+18. ACCESSIBILITY
+Drag nie einzige Bedienung. Tastatur/Focus sauber. Quick View Fokus/ESC passend zur bestehenden Modalarchitektur. reduced-motion beachten.
+
+19. FACHLOGIK SCHÜTZEN
+Nicht regressieren: Bundle-Regeln, Mindestprodukte, Max-Menge, Rabattstufen, Preise, Bestand, Speichern, gespeicherte Bundles, Cart Bundle Items, serverseitige Validierung, IDs/Zuordnungen, Order/Checkout.
+Primär Frontend/UX. Keine unnötige Schema-/Businesslogik-Neuerfindung.
+
+20. GEZIELTE TESTS – KEIN FULL-SHOP-MARATHON
+Nur Bundle-relevante Tests:
+- Öffnen + Loader
+- Empty State
+- Add per Button
+- Drag&Drop
+- Menge +/−/max/remove
+- mehrere Produkte/Grid/Scroll
+- Rabattstrang + mehrere Schwellen + Celebration nur sinnvoll einmal
+- reduced-motion
+- Quick View + Video/no-video + Add
+- Validität/CTA
+- Save
+- Cart: korrekte Items/Mengen/Preis, genau ein Add-Request
+- Reset
+- Mobile Gegenprobe nur auf Regression
+- relevante Bundle-Service-Regressions
+- JS/PHP Syntax, Paketinstallation, kurzer Smoke, Logs, git diff --check
+NICHT Kategorien, Coupons, PayPal, Rechnung, kompletten Admin usw. nur wegen dieses UX-Auftrags erneut durchtesten.
+
+21. DESIGNZIEL
+Modern, hochwertig, ruhig. Keine Joomla-Backend-/Tabellenästhetik, keine riesigen Formularbuttons, kein Casino, keine Daueranimation.
+Klare Hierarchie, Weißraum, kompakte Karten, hochwertige Mikrointeraktionen, sichtbare Reaktion auf Nutzeraktionen, Freude beim Rabatt-Meilenstein. Bestehende Shop-CI berücksichtigen.
+
+22. NICHT TEIL V1
+- finale Mobile-Touch-UX / Touch-Drag&Drop
+- Produktsuche
+- Produktvergleich
+- Empfehlungen/KI
+- Sound
+- 3D
+- schwere Partikelsimulation
+- Cache-System
+- PayPal/Rechnung/UTC
+- allgemeines Shop-Redesign
+
+23. ABSCHLUSS
+Wenn V1 grün:
+- Commit feature
+- Push origin/feature
+- kein main-Merge
+- Working Trees sauber/synchron
+- Auftrag nach erledigt
+Bericht: UX-Struktur, Loader, Drag/Add-State, Quick View, Rabattprogress/Celebration, Summary/CTA, Performance, Accessibility, gezielte Tests, geänderte Dateien, Commit-SHA.
+Wenn bestehende Bundle-Architektur einen größeren fachlichen Umbau verlangt: STOP mit Befund statt unnötig neu bauen.
+
+Commitmessage sinngemäß:
+Redesign bundle builder experience V1
