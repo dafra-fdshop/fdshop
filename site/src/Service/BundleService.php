@@ -155,7 +155,29 @@ final class BundleService implements BundleServiceInterface
     }
 
     private function loadBundle(int $id): object { $q=$this->db->getQuery(true)->select('*')->from($this->db->quoteName('#__fdshop_bundles'))->where('id = '.(int)$id)->where('is_active = 1'); $this->db->setQuery($q); $b=$this->db->loadObject(); if(!$b) throw new \DomainException('Das Bundle ist nicht verfügbar.'); return $b; }
-    private function loadProducts(int $id): array { $price='CASE WHEN p.discount_active=1 AND p.discount_price>0 THEN p.discount_price ELSE p.sale_price END'; $mediaTable=$this->db->quoteName('#__fdshop_media'); $q=$this->db->getQuery(true)->select(['p.id','p.product_name','p.sale_price','p.currency','d.sku','d.stock_quantity','d.reserved_quantity',$price.' AS effective_price','COALESCE(pp.tax_rate,c.general_vat_rate,0) AS tax_rate','COALESCE(m.path_small,m.path_standard,m.path_mobile,\'\') AS image_path'])->from($this->db->quoteName('#__fdshop_bundle_items','bi'))->innerJoin($this->db->quoteName('#__fdshop_products','p').' ON p.id=bi.product_id')->innerJoin($this->db->quoteName('#__fdshop_products_details','d').' ON d.product_id=p.id')->leftJoin($this->db->quoteName('#__fdshop_product_prices','pp').' ON pp.product_id=p.id')->leftJoin($this->db->quoteName('#__fdshop_config','c').' ON c.id=1')->leftJoin($this->db->quoteName('#__fdshop_media','m')." ON m.id=(SELECT m2.id FROM {$mediaTable} m2 WHERE m2.product_id=p.id AND m2.media_type='image' ORDER BY m2.is_primary DESC,m2.ordering ASC,m2.id ASC LIMIT 1)")->where('bi.bundle_id='.(int)$id)->where('p.ribbon_bundle=1')->where('p.is_active=1')->where('p.is_deleted=0')->order('bi.ordering ASC,bi.id ASC'); $this->db->setQuery($q); return (array)$this->db->loadObjectList(); }
+    private function loadProducts(int $id): array
+    {
+        $price = 'CASE WHEN p.discount_active=1 AND p.discount_price>0 THEN p.discount_price ELSE p.sale_price END';
+        $mediaTable = $this->db->quoteName('#__fdshop_media');
+        $query = $this->db->getQuery(true)->select([
+            'p.id', 'p.product_name', 'p.short_description', 'p.sale_price', 'p.currency',
+            'p.nem', 'p.shot_count', 'p.caliber', 'p.burn_time', 'p.rise_height',
+            'd.sku', 'd.stock_quantity', 'd.reserved_quantity', $price . ' AS effective_price',
+            'COALESCE(pp.tax_rate,c.general_vat_rate,0) AS tax_rate',
+            "COALESCE(m.path_small,m.path_standard,m.path_mobile,'') AS image_path",
+            "COALESCE(v.external_url,'') AS video_url",
+        ])->from($this->db->quoteName('#__fdshop_bundle_items', 'bi'))
+            ->innerJoin($this->db->quoteName('#__fdshop_products', 'p') . ' ON p.id=bi.product_id')
+            ->innerJoin($this->db->quoteName('#__fdshop_products_details', 'd') . ' ON d.product_id=p.id')
+            ->leftJoin($this->db->quoteName('#__fdshop_product_prices', 'pp') . ' ON pp.product_id=p.id')
+            ->leftJoin($this->db->quoteName('#__fdshop_config', 'c') . ' ON c.id=1')
+            ->leftJoin($this->db->quoteName('#__fdshop_media', 'm') . " ON m.id=(SELECT m2.id FROM {$mediaTable} m2 WHERE m2.product_id=p.id AND m2.media_type='image' ORDER BY m2.is_primary DESC,m2.ordering ASC,m2.id ASC LIMIT 1)")
+            ->leftJoin($this->db->quoteName('#__fdshop_media', 'v') . " ON v.id=(SELECT v2.id FROM {$mediaTable} v2 WHERE v2.product_id=p.id AND v2.media_type='youtube' ORDER BY v2.ordering ASC,v2.id ASC LIMIT 1)")
+            ->where('bi.bundle_id=' . (int) $id)->where('p.ribbon_bundle=1')->where('p.is_active=1')->where('p.is_deleted=0')
+            ->order('bi.ordering ASC,bi.id ASC');
+        $this->db->setQuery($query);
+        return (array) $this->db->loadObjectList();
+    }
     private function loadRules(int $id): array { $q=$this->db->getQuery(true)->select('*')->from($this->db->quoteName('#__fdshop_bundle_discount_rules'))->where('bundle_id='.(int)$id)->order('min_quantity ASC, ordering ASC'); $this->db->setQuery($q); return (array)$this->db->loadObjectList(); }
     private function loadSelection(string $table,string $column,int $id): array { $q=$this->db->getQuery(true)->select(['product_id','quantity'])->from($this->db->quoteName($table))->where($this->db->quoteName($column).'='.(int)$id)->order('ordering ASC,id ASC'); $this->db->setQuery($q); return array_map(static fn($r)=>['product_id'=>(int)$r->product_id,'quantity'=>(int)$r->quantity],(array)$this->db->loadObjectList()); }
     private function loadSaved(int $userId,int $bundleId): array { $q=$this->db->getQuery(true)->select(['id','saved_name','modified','created'])->from($this->db->quoteName('#__fdshop_saved_bundles'))->where('user_id='.(int)$userId)->where('bundle_id='.(int)$bundleId)->order('modified DESC,created DESC'); $this->db->setQuery($q); return (array)$this->db->loadObjectList(); }
