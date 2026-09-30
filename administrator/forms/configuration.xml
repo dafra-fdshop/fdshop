@@ -101,7 +101,6 @@
                 <option value="1">Ja</option>
                 <option value="0">Nein</option>
             </field>
-            <field name="paypal_reservation_minutes" type="number" label="PayPal-Reservierungsdauer (Minuten)" default="10" min="5" max="30" required="true" />
         </fieldset>
         <fieldset name="documents_email" label="Dokumente &amp; E-Mail">
             <field name="document_company_name" type="text" label="Firmenname" filter="string" />

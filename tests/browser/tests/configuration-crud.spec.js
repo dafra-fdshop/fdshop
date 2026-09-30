@@ -172,6 +172,7 @@ test('payment validation, CRUD, status actions and filters', async ({ page }) =>
   await page.getByRole('link', { name: 'Hinzufügen', exact: true }).click();
   await expect(page).toHaveURL(/view=paymentmethod.*layout=edit/);
   await expect(page.locator('#jform_payment_name')).toBeVisible();
+  await expect(page.getByRole('tab', { name: 'Konfiguration', exact: true })).toHaveCount(0);
   await page.getByRole('button', { name: 'Save & Close' }).click();
   await expect(page.locator('#jform_payment_name')).toHaveJSProperty('validity.valid', false);
 
@@ -228,6 +229,22 @@ test('payment validation, CRUD, status actions and filters', async ({ page }) =>
   await row.getByRole('link', { name: 'Publish Item' }).click();
   await selectPaymentStatus(page, '1');
   await expect(page.locator('#paymentmethodList')).toContainText(paymentName);
+});
+
+test('PayPal provider configuration is isolated and never renders an existing secret', async ({ page }) => {
+  await openConfigurationTab(page, 'Bezahlsystem');
+  await page.getByRole('link', { name: 'E2E PayPal Sandbox', exact: true }).click();
+  await expect(page.locator('#jform_provider')).toHaveValue('paypal');
+  const configuration = page.getByRole('tab', { name: 'Konfiguration', exact: true });
+  await expect(configuration).toHaveCount(1);
+  await configuration.click();
+  await expect(page.locator('[data-paypal-configuration]')).toBeVisible();
+  await expect(page.locator('#jform_sandbox_client_secret')).toHaveValue('');
+  await expect(page.locator('#jform_live_client_secret')).toHaveValue('');
+  await expect(page.locator('#fdshop-paypal-webhook-url')).toHaveValue(/task=payment\.webhook&format=json/);
+  await expect(page.locator('[data-paypal-configuration]')).toContainText('PAYMENT.CAPTURE.COMPLETED');
+  const html = await page.locator('[data-paypal-configuration]').evaluate((node) => node.outerHTML);
+  expect(html).not.toMatch(/FDSHOP_PAYPAL_(?:SANDBOX|LIVE)_CLIENT_SECRET/);
 });
 
 test('existing order status supports edit, apply, save-close and restoration', async ({ page }) => {

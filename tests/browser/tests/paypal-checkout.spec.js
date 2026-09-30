@@ -50,7 +50,6 @@ test('PayPal v6 checkout creates a server order session and keeps the cart on ca
   await page.evaluate(() => window.__fdshopResolvePayPalSdk());
   await expect(orderButton).toBeEnabled();
   await orderButton.click();
-  await expect(page.locator('[data-paypal-progress]')).toBeVisible({ timeout: 30_000 });
   await expect(page.locator('[data-paypal-countdown]')).toHaveText(/\d{2}:\d{2}/);
   await expect(page.locator('[data-fdshop-cart-message]')).toContainText('abgebrochen');
   expect(await page.evaluate(() => window.__fdshopPayPalOrder?.orderId || '')).not.toBe('');

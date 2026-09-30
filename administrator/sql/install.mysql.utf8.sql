@@ -1274,6 +1274,7 @@ CREATE TABLE IF NOT EXISTS `#__fdshop_payment_methods` (
   `payment_description` TEXT NULL,
   `payment_fee` DECIMAL(12,4) NOT NULL DEFAULT 0.0000,
   `paypal_enabled` TINYINT(1) NOT NULL DEFAULT 0,
+  `provider` VARCHAR(32) NOT NULL DEFAULT '',
   `published` TINYINT(1) NOT NULL DEFAULT 1,
   `is_default` TINYINT(1) NOT NULL DEFAULT 0,
   `ordering` INT NOT NULL DEFAULT 0,
@@ -1284,7 +1285,8 @@ CREATE TABLE IF NOT EXISTS `#__fdshop_payment_methods` (
 
   PRIMARY KEY (`id`),
   KEY `idx_fdshop_payment_methods_published` (`published`),
-  KEY `idx_fdshop_payment_methods_ordering` (`ordering`)
+  KEY `idx_fdshop_payment_methods_ordering` (`ordering`),
+  KEY `idx_fdshop_payment_methods_provider` (`provider`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------

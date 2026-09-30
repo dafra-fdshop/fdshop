@@ -29,15 +29,9 @@
                 min="0"
             />
 
-            <field
-                name="paypal_enabled"
-                type="radio"
-                label="PayPal aktiviert"
-                default="0"
-                class="btn-group btn-group-yesno"
-            >
-                <option value="1">Ja</option>
-                <option value="0">Nein</option>
+            <field name="provider" type="list" label="Provider" default="" description="Externe Zahlungsanbieter erhalten eine eigene Konfiguration.">
+                <option value="">Kein externer Provider</option>
+                <option value="paypal">PayPal</option>
             </field>
 
             <field
@@ -50,6 +44,21 @@
                 <option value="1">Ja</option>
                 <option value="0">Nein</option>
             </field>
+        </fieldset>
+        <fieldset name="paypal_configuration" label="Konfiguration">
+            <field name="paypal_configuration_submitted" type="hidden" default="1" />
+            <field name="paypal_mode" type="radio" label="Betriebsmodus" default="sandbox" class="btn-group">
+                <option value="sandbox">Sandbox</option>
+                <option value="live">Live</option>
+            </field>
+            <field name="paypal_live_confirmation" type="checkbox" label="Live-Aktivierung bestätigen" value="1" description="Pflicht bei einem Wechsel auf Live: Ab jetzt werden echte Transaktionen verwendet." />
+            <field name="paypal_reservation_minutes" type="number" label="Reservierungsdauer (Minuten)" default="10" min="5" max="30" />
+            <field name="sandbox_client_id" type="text" label="Sandbox Client-ID" filter="string" />
+            <field name="sandbox_client_secret" type="password" label="Neues Sandbox Client Secret" autocomplete="new-password" filter="raw" />
+            <field name="sandbox_webhook_id" type="text" label="Sandbox Webhook-ID" filter="string" />
+            <field name="live_client_id" type="text" label="Live Client-ID" filter="string" />
+            <field name="live_client_secret" type="password" label="Neues Live Client Secret" autocomplete="new-password" filter="raw" />
+            <field name="live_webhook_id" type="text" label="Live Webhook-ID" filter="string" />
         </fieldset>
     </fields>
 </form>

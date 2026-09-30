@@ -39,6 +39,46 @@ final class CredentialResolver implements CredentialResolverInterface
         return $this->paypal($name) !== '';
     }
 
+    public function paypalSource(string $mode, string $name): string
+    {
+        if (!in_array($mode, ['sandbox', 'live'], true) || !in_array($name, ['client_id', 'client_secret', 'webhook_id'], true)) {
+            return 'none';
+        }
+
+        $environmentName = 'FDSHOP_PAYPAL_' . strtoupper($mode) . '_' . strtoupper($name);
+        if (trim((string) getenv($environmentName)) !== '') {
+            return 'environment';
+        }
+
+        return trim((string) ($this->load()['paypal'][$mode][$name] ?? '')) !== '' ? 'file' : 'none';
+    }
+
+    public function paypalForMode(string $mode, string $name): string
+    {
+        if (!in_array($mode, ['sandbox', 'live'], true) || !in_array($name, ['client_id', 'client_secret', 'webhook_id'], true)) {
+            return '';
+        }
+        $environment = trim((string) getenv('FDSHOP_PAYPAL_' . strtoupper($mode) . '_' . strtoupper($name)));
+        return $environment !== '' ? $environment : trim((string) ($this->load()['paypal'][$mode][$name] ?? ''));
+    }
+
+    public function modeSource(): string
+    {
+        return in_array(strtolower(trim((string) getenv('FDSHOP_PAYPAL_MODE'))), ['sandbox', 'live'], true)
+            ? 'environment'
+            : 'file';
+    }
+
+    public function secretFilePath(): string
+    {
+        return $this->path();
+    }
+
+    public function fileData(): array
+    {
+        return $this->load();
+    }
+
     private function path(): string
     {
         if ($this->secretFile !== null) {

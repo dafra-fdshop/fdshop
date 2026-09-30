@@ -39,13 +39,19 @@ class PaymentmethodTable extends Table
 
         $this->payment_name = trim((string) ($this->payment_name ?? ''));
         $this->payment_description = (string) ($this->payment_description ?? '');
+        $this->provider = strtolower(trim((string) ($this->provider ?? '')));
+
+        if (!in_array($this->provider, ['', 'paypal'], true)) {
+            $this->setError('Unbekannter Zahlungsprovider.');
+            return false;
+        }
 
         if ($this->payment_name === '') {
             $this->setError('payment_name darf nicht leer sein.');
             return false;
         }
 
-        $this->paypal_enabled = (int) $this->paypal_enabled === 1 ? 1 : 0;
+        $this->paypal_enabled = $this->provider === 'paypal' ? 1 : 0;
         $this->published = (int) $this->published === 1 ? 1 : 0;
         $this->is_default = (int) $this->is_default === 1 ? 1 : 0;
 

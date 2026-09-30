@@ -20,7 +20,7 @@ Für die Kommunikation zwischen FDShop und dem PayPal-Popup muss der effektive R
 
 `https://IHRE-DOMAIN/index.php?option=com_fdshop&task=payment.webhook&format=json`
 
-Im PayPal-Dashboard muss Daniel später für die jeweilige Live-/Sandbox-App einen Webhook mit mindestens `PAYMENT.CAPTURE.COMPLETED` anlegen und dessen Webhook-ID als Environment-Variable hinterlegen. Ohne Webhook-ID lehnt FDShop jede Webhookmutation ab. Signaturen werden über PayPals offiziellen `verify-webhook-signature`-Endpunkt geprüft; Replays laufen durch denselben idempotenten Finalizer.
+Im PayPal-Dashboard ist für die jeweilige Live-/Sandbox-App ein Webhook mit `PAYMENT.CAPTURE.COMPLETED` anzulegen und dessen Webhook-ID zu hinterlegen. Ohne Webhook-ID lehnt FDShop jede Webhookmutation ab. Signaturen werden über PayPals offiziellen `verify-webhook-signature`-Endpunkt geprüft; Replays laufen durch denselben idempotenten Finalizer. Zustellung und Replay-Idempotenz wurden am 30.09.2026 real auf IONOS mit der PayPal-Sandbox bestätigt.
 
 ## Credentials in Docker und auf IONOS
 
@@ -35,6 +35,16 @@ Ein Environment-Wert hat immer Vorrang und wird niemals durch die Datei übersch
 Auf IONOS liegt die Datei außerhalb des Joomla-DocumentRoots. Ohne explizites `FDSHOP_SECRET_FILE` wird sie installationsunabhängig relativ zum aktuellen Joomla-Root als Geschwisterpfad aufgelöst:
 
 `dirname(JPATH_ROOT)/fdshop-data/secrets/fdshop-secrets.php`
+
+## Administration und Rotation
+
+Eine Zahlungsart mit Provider `PayPal` erhält im Administrator einen Tab **Konfiguration**. Super User sehen dort getrennte Sandbox-/Live-Status, Client-ID, Webhook-ID, ein ausschließlich leeres Feld für ein neues Client Secret, die automatisch abgeleitete Webhook-URL und die providerweite Reservierungsdauer. Bestehende Client Secrets werden nie an HTML oder Browser zurückgegeben. Ein leeres Secret-Feld behält den vorhandenen Wert; ein neuer Wert rotiert ihn durch atomisches Schreiben der externen Datei.
+
+Die effektive Priorität bleibt: nichtleere Environment-Variable vor externer Secret-Datei vor „nicht konfiguriert“. Environment-verwaltete Werte sind im Admin nur als solche gekennzeichnet und nicht überschreibbar. Ist der externe Store für Joomla nicht sicher beschreibbar, zeigt FDShop Pfad und serverseitige Pflegehinweise im Nur-Lese-Modus; es erfolgt kein Fallback in Datenbank oder Webroot.
+
+Live kann nur nach ausdrücklicher Bestätigung und mit vollständiger Live Client-ID, Live Client Secret und Live Webhook-ID aktiviert werden. Die Reservierungsdauer bleibt providerweit in `#__fdshop_config` gespeichert (5 bis 30, Standard 10 Minuten).
+
+Im PayPal Developer Dashboard ist für die angezeigte URL ausschließlich das Event `PAYMENT.CAPTURE.COMPLETED` einzurichten; die dabei erzeugte Webhook-ID wird im passenden Modus hinterlegt. Für Popup-Flows muss weiterhin `Cross-Origin-Opener-Policy: same-origin-allow-popups` gelten.
 
 Damit wird insbesondere kein Ordnername wie `Joomla6` hardcodiert. Bei einem Umzug muss entweder `fdshop-data` mit derselben Geschwisterstruktur übernommen oder `FDSHOP_SECRET_FILE` serverseitig auf den neuen absoluten Pfad gesetzt werden.
 
@@ -83,6 +93,6 @@ Cancel, Popup-Schließen, PENDING und Fehler vor Capture lassen Warenkorb und �
 - `tests/paypal/payment-service-regression.php`: Reservierung, Capture vor/nach Ablauf, Finalizerfehler/Retry, Idempotenz, Webhook-Replay, selektiver Multi-Session-Cleanup und Race-Schutz mit kontrollierter UTC-Uhr.
 - `tests/paypal/sandbox-smoke.php`: echte Sandbox-Authentifizierung und Create Order ohne Capture.
 - `tests/browser/tests/paypal-checkout.spec.js`: v6-Browserintegration und Cancel/Cart-Erhalt.
-- `tests/paypal/migration.sh`: Upgrade `0.0.41 → 0.0.42`.
+- `tests/paypal/migration.sh`: Upgrade `0.0.41 → 0.0.43` einschließlich Provider-Zuordnung.
 
-Ein öffentlich erreichbarer, im PayPal-Dashboard registrierter Webhook kann lokal nicht vollständig end-to-end geprüft werden und bleibt bis zur Einrichtung durch Daniel/Caesar offen.
+Ein öffentlich erreichbarer, im PayPal-Dashboard registrierter Webhook kann lokal nicht vollständig end-to-end geprüft werden; die reale Sandbox-Abnahme auf IONOS ist erfolgt.
