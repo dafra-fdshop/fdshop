@@ -1,0 +1,554 @@
+FDShop – UX-/DESIGN-FEINSCHLIFF
+BUNDLE BUILDER EXPERIENCE V1.1 – CI, HIERARCHIE & CELEBRATION
+
+Projekt: FDShop
+Branch: feature
+Basis: real erfolgreich getestete Bundle Builder Experience V1
+V1-Commit: bb7a63da7d2a56600f646e01cbe8d30cd2613e7f
+Priorität: UX-/Design-Feinschliff
+Scope: Bundle Builder Frontend
+KEIN fachlicher Neuaufbau der funktionierenden V1.
+
+======================================================================
+1. AUSGANGSLAGE
+======================================================================
+
+Bundle Builder V1 wurde auf IONOS real getestet und ist funktional/UX-seitig
+sehr erfolgreich.
+
+Besonders positiv:
+- Drag & Drop macht Spaß
+- funktioniert überraschend gut auch auf Tablet/Touch, wenn Produkt kurz
+  gehalten wird
+- Produktpool / Arbeitsfläche / 4er-Karten-Grid funktionieren
+- Quick View funktioniert
+- Sticky Summary funktioniert
+- Tool vermittelt bereits deutlich ein Konfigurator-/Kauferlebnis
+
+V1.1 soll NICHT neu designen, sondern:
+- Kopf kompakter machen
+- Look stärker an FDShop-CI annähern
+- Rabattbereich wichtiger machen
+- Belohnungsmomente stärker inszenieren
+- kleine UX-Hierarchien verbessern
+
+Die bestehende V1-Struktur ist das Fundament.
+
+======================================================================
+2. REFERENZ / ZIELBILD
+======================================================================
+
+Daniel hat V1 real benutzt und einen visuellen Änderungsentwurf erstellt.
+
+Zielrichtung:
+- Header deutlich niedriger/kompakter
+- links Bundle-Titel + begrenzte Beschreibung
+- rechts Slogan + Regeln
+- Rabattanzeige aus Header nach unten in Bereich "Mein Bundle"
+- Produkt-/Arbeitsflächenstruktur ansonsten erhalten
+- Sticky Summary erhalten
+
+Nicht versuchen, aus V1.1 ein weiteres Komplettredesign zu machen.
+
+======================================================================
+3. HEADER KOMPAKTER
+======================================================================
+
+Aktueller Header wirkt zu hoch.
+
+Neu:
+
+LINKS:
+- Bundle-Titel weiter nach oben
+- darunter Beschreibung
+- Beschreibung erhält begrenzte sinnvolle Maximalbreite und läuft NICHT über
+  den gesamten Header bis weit nach rechts
+
+RECHTS:
+Slogan prominent:
+"DEIN FEUERWERK. DEINE AUSWAHL."
+
+Darunter kompakt die bestehenden dynamischen Regeln:
+✓ Mindestens X verschiedene Produkte
+✓ Maximal Y Stück je Produkt
+
+Slogan bleibt ausdrücklich erhalten.
+
+Header soll dadurch deutlich niedriger und klarer zweigeteilt wirken.
+
+======================================================================
+4. CI-FARBE
+======================================================================
+
+Für zentrale gelb/orange Akzente verbindlich FDShop-Farbe verwenden:
+
+#e0a721
+
+Mindestens prüfen/anwenden bei:
+- Slogan
+- "+ Hinzufügen"
+- relevanten aktiven Rabattakzenten
+- "DEIN BUNDLE-PREIS"
+- passenden primären CTA-/Akzentzuständen
+
+Nicht alles orange färben.
+Weiße/ruhige moderne V1-Grundoptik erhalten.
+
+Ziel:
+moderner Builder bleibt eigenständig, wirkt aber klarer wie Teil des FDShop.
+
+======================================================================
+5. "MEIN BUNDLE" / DOPPELTEN TEXT ENTFERNEN
+======================================================================
+
+Bereich rechts:
+
+"Mein Bundle" bleibt.
+
+Der aktuell darunter zusätzlich angezeigte Validierungs-/Hinweistext, soweit
+er die Information aus Empty State/Regeln lediglich doppelt, soll im normalen
+Layout entfallen.
+
+Validierungsinformationen nur dort zeigen, wo sie tatsächlich Mehrwert haben.
+
+======================================================================
+6. RABATTBEREICH VERSCHIEBEN / UMBENENNEN
+======================================================================
+
+Rabattfortschritt aus dem oberen Header herausnehmen.
+
+Er wandert in den rechten Arbeitsbereich direkt unter/bei:
+
+"Mein Bundle"
+
+Umbenennen:
+
+"DEIN RABATT"
+-> "MEIN RABATT"
+
+Ziel:
+optische/semantische Verbindung:
+
+MEIN BUNDLE
+MEIN RABATT
+
+Rabattfortschritt bekommt dort mehr Bühne und ist klarer Teil des eigenen
+Bundle-Erlebnisses.
+
+======================================================================
+7. RABATT-TYPOGRAFIE / MOTIVATION
+======================================================================
+
+Prozentwerte der Rabattstufen DEUTLICH größer als in V1.
+
+Mengenwerte darunter weiterhin kleiner/sekundär.
+
+Motivationstext wie:
+
+"Noch kein Rabatt aktiv · Noch 4 Artikel bis 3 %"
+
+bzw.
+
+"3 % Rabatt aktiv · Noch 1 Artikel bis 5 %"
+
+etwas größer und deutlich dunkler/kontrastreicher als V1.
+
+Dieser Text ist Verkaufs-/Motivationsinformation und darf nicht wie eine
+technische Randnotiz wirken.
+
+Alle Werte dynamisch aus echten Regeln.
+
+======================================================================
+8. CELEBRATION – ESKALATION NACH RABATTSTUFE
+======================================================================
+
+V1-Celebration wird differenziert.
+
+Wichtig:
+Je höher die erreichte Rabattstufe, desto stärker die Celebration.
+
+Niedrigste Rabattstufe:
+- Marker/Kreis darf etwas größer pulsieren
+- wenige dezente Sterne/Partikel
+- klarer, aber noch zurückhaltender Effekt
+
+Mittlere Stufe(n):
+- sichtbar mehr Sterne/Partikel
+- etwas größerer Marker/Glow
+- stärkere, aber weiterhin hochwertige Bewegung
+
+Vorletzte/hohe Stufe:
+- nochmals deutlichere Celebration
+
+MAXIMALE Rabattstufe:
+Hier darf bewusst sichtbar gefeiert werden.
+
+Ziel sinngemäß:
+- deutlicher Stern-/Partikelausstoß
+- darf an eine kleine Konfettikanone erinnern
+- Animation klar sichtbar, aber kurz und performant
+- zusätzlich deutliche Meldung:
+
+"GLÜCKWUNSCH!"
+"12 % RABATT FREIGESCHALTET"
+
+Prozentwert natürlich dynamisch.
+
+Feuerwerkshop-Kontext erlaubt hier bewusst etwas mehr Show.
+
+Keine externe schwere Partikelbibliothek nur dafür einführen.
+Mit leichtgewichtiger bestehender/Vanilla/CSS/Web-Animation-Lösung arbeiten.
+
+prefers-reduced-motion weiterhin respektieren.
+
+======================================================================
+9. CELEBRATION NICHT NUR EINMAL PRO SITZUNG
+======================================================================
+
+V1-Regel "jede Rabattstufe nur einmal pro Builder-Sitzung feiern" wird
+VERWORFEN.
+
+Neue verbindliche Regel:
+
+Celebration wird ausgelöst, wenn eine Rabattgrenze VON UNTEN NACH OBEN
+überschritten/erreicht wird.
+
+Beispiel Schwelle bei 6 Artikeln:
+
+5 -> 6:
+Celebration 5 %
+
+6 -> 7:
+keine erneute 5-%-Celebration
+
+7 -> 6:
+keine Celebration
+
+6 -> 5:
+keine Celebration
+
+5 -> 6:
+Celebration 5 % ERNEUT
+
+Grund:
+Der Kunde hat die Rabattstufe nach einer Änderung erneut erreicht und soll
+erneut positives Feedback erhalten.
+
+Nächste höhere Schwelle:
+z.B. 7 -> 8:
+entsprechende stärkere 8-%-Celebration.
+
+Keine Endlosschleife / kein Trigger ohne echten Schwellenübertritt.
+
+======================================================================
+10. CELEBRATION-TEXT LÄNGER SICHTBAR
+======================================================================
+
+V1-Meldung verschwindet real zu schnell.
+
+Ribbon/Badge/Meldung deutlich länger sichtbar lassen, grob ca. 2,5–3 Sekunden
+als Ausgangspunkt.
+
+Codex darf Timing nach UX-Gefühl feinjustieren.
+
+Animation blockiert keine Bedienung.
+
+Maximalstufe/Glückwunsch darf innerhalb vernünftiger Grenzen etwas
+prominenter/länger wirken.
+
+======================================================================
+11. EMPTY STATE TEXT
+======================================================================
+
+Aktuell sinngemäß:
+"Ziehe Produkte aus der Auswahl hierher oder nutze Hinzufügen."
+
+V1.1:
+
+Haupttext:
+"Ziehe Produkte aus der Auswahl hierher."
+
+Den Teil:
+"oder nutze Hinzufügen"
+entfernen.
+
+Der sichtbare Hinzufügen-Button links erklärt sich selbst.
+
+Darunter zusätzlicher Touch-Hinweis, zurückhaltend, sinngemäß:
+
+"(Auf Touch-Geräten das Produkt kurz gedrückt halten.)"
+
+Dieser Hinweis ist gewünscht, weil Drag & Drop im Realtest auf Tablet
+funktioniert, wenn das Produkt kurz gehalten wird, dies aber nicht jedem
+Kunden bekannt ist.
+
+Text darf stilistisch passend formuliert werden, Aussage beibehalten.
+
+======================================================================
+12. "AUSWAHL ZURÜCKSETZEN" NACH UNTEN
+======================================================================
+
+Aktuelle Reset-Aktion oben rechts aus dem Bereich entfernen.
+
+Nach unten in/nahe den unteren Bereich der Bundle-Arbeitsfläche verschieben,
+oberhalb bzw. passend zur Sticky Summary.
+
+Sie ist eine Nebenaktion auf die aktuelle Zusammenstellung und soll nicht
+oben mit "Mein Bundle" konkurrieren.
+
+Wenn Auswahl leer:
+sinnvoll deaktivieren oder ausblenden.
+
+Weiterhin klar erreichbar, aber zurückhaltend.
+
+======================================================================
+13. PRODUKTPOOL – BUTTONABSTAND
+======================================================================
+
+Linke Produktkarten V1 grundsätzlich beibehalten.
+
+Nur kleine Anpassung:
+
+"+ Hinzufügen" etwas weiter nach links bzw. Layout so justieren, dass zwischen
+Hinzufügen-Button und Info-Icon sichtbar mehr Luft entsteht.
+
+Info-Icon bleibt.
+
+Keine sonstige unnötige Vergrößerung der Produktkarten.
+
+======================================================================
+14. "BUNDLE SPEICHERN" SICHTBARER
+======================================================================
+
+V1-Save-Button ist korrekt sekundär, wirkt real aber fast wie disabled.
+
+V1.1:
+weiterhin klar sekundär gegenüber "In den Warenkorb", aber eindeutig als
+verfügbare Aktion erkennbar.
+
+Geeignet z.B.:
+- heller/weißer Hintergrund
+- klarer Rahmen
+- dunklere Schrift
+- sinnvoller Hover/Focus mit CI-Akzent
+
+NICHT so dominant wie primärer Warenkorb-CTA.
+
+Disabled-Zustand muss weiterhin eindeutig disabled aussehen.
+
+======================================================================
+15. ADD-/DROP-FEEDBACK ETWAS STÄRKER
+======================================================================
+
+Animation beim Hinzufügen eines Produktes ist V1 funktional gut, darf aber
+etwas mehr "Customer Catch" bekommen, ohne kitschig zu werden.
+
+Beim erfolgreichen Add/Drop z.B.:
+- Dropzone reagiert
+- neue Karte mit etwas kräftigerem Fade/Scale/Translate/Snap
+- sehr kurzer warmer CI-Glow/Rahmen
+- Summary-Zahlen reagieren weich
+- Rabattlinie fährt gleichzeitig sichtbar weiter
+
+KEINE Sterne/Konfetti bei jedem Produkt.
+Diese besondere Belohnung bleibt Rabatt-Meilensteinen vorbehalten.
+
+Ziel:
+Produkt hinzufügen soll sich befriedigender/"snappier" anfühlen.
+
+======================================================================
+16. RABATT-FORTSCHRITT SYNCHRON
+======================================================================
+
+Bei Add/Drop/Mengenänderung:
+- Karte/State aktualisiert
+- Summary aktualisiert
+- Rabattstrang bewegt sich synchron/verständlich
+
+Bei Überschreiten einer Schwelle:
+Fortschrittsbewegung -> Marker -> Celebration -> Meldung.
+
+Reihenfolge darf Codex für bestes Look&Feel feinjustieren, Ursache/Wirkung
+muss verständlich bleiben.
+
+======================================================================
+17. V1-FUNKTIONEN SCHÜTZEN
+======================================================================
+
+Nicht regressieren:
+
+- Loader
+- eigenes Produktpool-Scrolling
+- feste/viewportgerechte Modalstruktur
+- Drag & Drop Desktop
+- funktionierendes Touch-Drag&Drop soweit V1 bereits vorhanden
+- "+ Hinzufügen"
+- Quick View
+- Quick-View-Video
+- Add aus Quick View
+- Hochkantkarten
+- 4er-Grid
+- Mengensteuerung rechts
+- Entfernen
+- serverseitige Mengenlimits
+- Rabattberechnung
+- Bundlepreis
+- Euro-Ersparnis
+- Save/Load/Delete
+- Warenkorb
+- genau ein Cart-Request
+- Mobile-Fallback
+- Focus/ESC/Focus-Trap
+- reduced-motion
+- keine N+1-Abfragen
+
+Keine fachliche BundleService-Neuerfindung.
+
+======================================================================
+18. TESTUMFANG – GEZIELT V1.1
+======================================================================
+
+KEIN Full-Shop-Testmarathon.
+
+Gezielt prüfen:
+
+A) Header
+- kompakter
+- Slogan rechts
+- Regeln rechts
+- Beschreibung begrenzte Breite
+
+B) CI
+- #e0a721 an vereinbarten Akzenten
+
+C) Rabattposition
+- unter/bei Mein Bundle
+- "Mein Rabatt"
+- größere Prozentwerte
+- Motivationstext lesbar
+
+D) Celebration
+- erste Stufe
+- mittlere Stufe
+- höchste Stufe / Glückwunsch
+- Sichtdauer
+- reduced-motion
+
+E) Wiederholte Schwelle
+- 5 -> 6 = Celebration
+- 6 -> 5 = keine
+- 5 -> 6 = Celebration erneut
+- kein Mehrfachtrigger ohne Schwellenübertritt
+
+F) Add/Drop
+- stärkeres Feedback
+- State korrekt
+- keine Doppeladdition
+
+G) Touch-Hinweis
+- sichtbar/passend
+- Tablet-/Touch-Gegenprobe soweit Testumgebung möglich
+
+H) Reset
+- neue Position
+- leer deaktiviert/ausgeblendet
+- Funktion korrekt
+
+I) Produktpool
+- Button/Info-Abstand
+- Quick View weiterhin grün
+
+J) Save
+- sekundär aber sichtbar
+- disabled/active unterscheidbar
+
+K) Cart
+- korrekte Items/Mengen/Preis
+- genau ein Request
+
+Zusätzlich nur:
+- relevante Bundle-Browser-/Service-Regression
+- JS/PHP Syntax
+- Paketinstallation
+- kurzer Bundle-Smoke
+- Logs
+- git diff --check
+
+Nicht wegen V1.1 erneut:
+Kategorien, Coupons, PayPal, Rechnungen, UTC, kompletten Adminbereich testen.
+
+======================================================================
+19. DESIGNLEITLINIE
+======================================================================
+
+V1 hat bereits gutes modernes Look&Feel.
+
+V1.1 soll:
+- etwas mehr FDShop-CI
+- etwas mehr Belohnung
+- bessere Informationshierarchie
+- kompakteren Kopf
+bringen.
+
+NICHT:
+- alles schwarz/orange machen
+- Oberfläche überladen
+- Daueranimation
+- Casino
+- Framework-Wechsel
+- komplette V1-Struktur verwerfen
+
+Maximale Rabattstufe ist die bewusste Ausnahme:
+Dort darf für einen kurzen Moment deutlich gefeiert werden.
+
+======================================================================
+20. NICHT TEIL
+======================================================================
+
+- allgemeines Bundle-Backend-Redesign
+- neue Rabattfachlogik
+- Produktsuche
+- finales Mobile-Redesign
+- Shop-weite CI-Änderungen
+- Cache-System
+- Rechnung/Bestellbestätigung-Optik
+- PayPal
+- UTC
+- andere Katalogbereiche
+
+======================================================================
+21. ABSCHLUSS
+======================================================================
+
+Wenn V1.1 grün:
+
+- Commit feature
+- Push origin/feature
+- kein main-Merge
+- Working Trees sauber/synchron
+- Auftrag nach Aufträge/erledigt
+
+Den aus V1 übrig gebliebenen temporären Stash
+"codex-sync-bundle-builder-v1"
+prüfen. Wenn weiterhin nachweislich vollständig durch den bereits gepushten
+V1-Commit abgedeckt und keine fremde Arbeit enthalten ist, darf er im Rahmen
+des sauberen Abschlusses entfernt werden. Nicht blind löschen.
+
+Abschlussbericht:
+1. Header-/CI-Anpassungen
+2. Rabattposition/-typografie
+3. Celebration-Eskalation
+4. neue Schwellenübertrittslogik
+5. Add-/Drop-Feedback
+6. Reset/Save-Anpassungen
+7. Accessibility/reduced-motion
+8. gezielte Tests
+9. geänderte Dateien
+10. Commit-SHA
+11. feature = origin/feature
+12. Working Trees / Stash-Status
+
+Commitmessage sinngemäß:
+Polish bundle builder experience V1.1
+
+ENDE DES AUFTRAGS
