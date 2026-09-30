@@ -1,0 +1,151 @@
+FDShop – ABSCHLUSSAUFTRAG: RECHNUNG + RECHNUNGSNUMMER + PAID-MAIL + STORNO V1
+
+Projekt: FDShop | Branch: feature | Priorität: hoch
+Ausgangspunkt: aktueller feature-Stand nach real grüner PayPal-/Webhook-/Admin-Abnahme.
+
+1. ZIEL
+Eine erfolgreich bezahlte/finalisierte Bestellung erhält genau eine belastbare Rechnung samt Rechnungsnummer und Rechnungsmail. Den funktionierenden Payment-, Webhook-, UTC-, Reservierungs-, Finalizer-, Order- und Lagerflow nicht unnötig umbauen.
+
+2. RECHNUNG = BESTELLSNAPSHOT
+Rechnungsdaten niemals aus später veränderten Produktstammdaten rekonstruieren. Preise, Mengen, Rabatte, Gebühren, Versand/Abholung, Adresse und Summen aus dem Order-/Snapshot-Stand verwenden. Bestehende Order-/Document-/Snapshot-Struktur vor Umsetzung analysieren.
+
+3. TRIGGER / IDEMPOTENZ
+Rechnung entsteht beim bestehenden fachlichen Zustand „Zahlung erhalten“ / erfolgreicher bezahlter Finalisierung.
+- eine Order maximal eine originäre Rechnungsnummer
+- Retry, Webhook Replay/Resend, Finalizer-Retry und Parallelverarbeitung erzeugen keine zweite Rechnung/Nummer
+- verschiedene parallele Orders erhalten niemals dieselbe Nummer
+- keine Rechnung bei Abbruch/Fehler/Reservierung/unbezahlter Überweisung
+- nicht PayPal hart in Invoice-Logik einbauen; andere Zahlarten sollen später bei „bezahlt“ denselben Mechanismus nutzen können.
+
+4. RECHNUNGSNUMMER
+Format verbindlich: RE-YYMMNNNN
+Beispiel September 2026: RE-26090245.
+NNNN vierstellig fortlaufend. Vergabe concurrency-/transaktionssicher; KEIN MAX(...)+1-Race.
+Einmal vergebene Nummer niemals neu vergeben.
+Aktuell Testbetrieb: endgültigen Live-Startwert NICHT erfinden. Vor Go-live separater Cutover: alten Shop schließen, letzte echten Orders/Rechnungen migrieren, letzte reale Rechnungsnummer feststellen, Sequenz passend fortsetzen und Testdaten gemäß Cutover-Konzept bereinigen. Dafür jetzt kontrollierbare Initialisierung/Fortsetzung vorsehen.
+
+5. ZEIT
+Rechnungsdatum = erstmalige erfolgreiche Rechnungserzeugung/bezahlte Finalisierung. Technisch UTC persistieren, menschlich Joomla-/Shop-Zeitzone darstellen. Keine lokale Zeit in UTC-Persistenz schreiben.
+
+6. PDF-BASIS
+NICHT neu designen. Bestehende „Bestellbestätigung (Kunde)“ ist technische/optische Vorlage. Übernehmen: Format, Ränder, Schrift, Logo-/Adressblock, Produktgeometrie, Bilder, Footer und Datenaufbereitung soweit passend.
+
+7. VERBINDLICHE DOMPDF-REGEL (bereits real bestätigt)
+- KEIN table-layout: fixed
+- NICHT auf <colgroup> für Spaltenbreiten verlassen
+- Breiten direkt auf echte th/td bzw. deren Klassen
+- bestehende funktionierende Spaltenbreiten nicht unnötig verändern
+- Logo-CSS nicht wegen transparentem Innenabstand kompensieren
+Diese alte FDShop-Lösung ist verbindlich; keine erneute Dompdf-Experimentierphase.
+
+8. PDF-KOPF
+„Bestellbestätigung“ -> „Rechnung“.
+Adress-/Logo-/Unternehmensblock unverändert.
+Links neu: „Rechnung Nr.: RE-YYMMNNNN“
+Rechts: Rechnungsdatum, Bestelldatum, Bestellnummer.
+Abholstation entfällt in diesem Kopfblock.
+
+9. PRODUKTLISTE
+Sortierung/Aufteilung/Spaltenbreiten exakt aus Kunden-Bestellbestätigung:
+Bild | Art.-Nr. | Produkt | Einzelpreis | Menge | Rabatt | Betrag
+Neu unter Einzelpreis, Rabatt und Betrag klein/dunkelgrau: „inkl. MwSt.“
+Tabellenkopf-Farbe: #e0a721.
+Denselben #e0a721-Kopf auch in bestehender Kunden-Bestellbestätigung übernehmen; dort sonst KEINE Layoutänderung.
+
+10. SUMMEN
+Positionen bleiben brutto.
+Rechnungsblock V1 zwingend:
+Gesamtbetrag (Netto): XX,XX €
+zzgl. 19% MwSt.: XX,XX €
+Gesamtbetrag: XX,XX €
+Netto/Steuer mathematisch korrekt aus Order-/Invoice-Snapshot, nicht Stammdaten. Rundung zentral/konsistent; Netto + MwSt. = Brutto. V1 sichtbar 19 %, Architektur aber nicht unnötig so verbetonieren, dass spätere Steuersätze Komplettumbau verlangen.
+
+11. RABATT / FOOTER
+Bestehende bereinigte Rabattdarstellung der Kunden-Bestellbestätigung unverändert übernehmen. Footer ebenfalls vollständig übernehmen, sofern vorhandene Pflicht-/Unternehmensdaten passen.
+
+12. KUNDE + INTERN
+Keine separate interne Rechnung. Kunde und konfigurierte Shop-Mailadresse erhalten dieselbe PDF und dürfen denselben Mailinhalt bekommen.
+Keine automatische Packliste bei PayPal. Packliste wird bei Bedarf separat im Admin erzeugt. Keine neue UX/Option dafür.
+
+13. MAIL
+Aktuelle PHP-/Mailtemplates zuerst analysieren.
+Bei bezahlter Bestellung Begriff „Bestellbestätigung“ -> „Rechnung“, auch im Betreff.
+Bestehenden bereinigten Mailinhalt grundsätzlich übernehmen; nur notwendige Bezüge anpassen. Rechnung-PDF anhängen.
+Kunde + interne Shopadresse.
+Mailversand idempotent: kein Doppelversand durch Browser-Finalizer, Webhook, Resend oder Retry.
+
+14. ORDER DOCUMENTS / HISTORIE
+#__fdshop_order_documents vollständig analysieren und möglichst nutzen.
+Rechnung nachvollziehbar der Order zuordnen; Rechnungsnummer, Erzeugungszeitpunkt, Dokumenttyp/Status/Version gemäß bestehender Architektur persistieren. Kein rein flüchtiges On-the-fly-Dokument, wenn dadurch historischer Belegzustand verloren geht.
+
+15. STORNO BEREITS BEZAHLTER ORDER
+Wenn bezahlt + Rechnung vorhanden und Order später storniert:
+- Rechnung NICHT löschen
+- Rechnungsnummer NICHT entfernen/wiederverwenden
+- Rechnung deutlich STORNIERT
+- PDF bei/hinter Rechnungsnummer sichtbar „STORNIERT“
+- Kunde und interne Shopadresse erhalten stornierte Rechnung
+- Order/History nachvollziehbar
+- tatsächliche PayPal-/Bank-Rückzahlung bleibt manuell; KEINE Refund-API
+Historischen Originalbeleg nicht blind zerstörerisch überschreiben. Bestehende order_documents-Versionierung analysieren; bevorzugt Originalzustand nachvollziehbar halten und stornierte Dokumentversion zusätzlich archivieren.
+
+Storno vor Zahlung/Rechnung:
+keine Rechnungsnummer/Rechnung nur wegen Storno erzeugen.
+
+Nummernfolge Beispiel:
+RE-26090244
+RE-26090245 STORNIERT
+RE-26090246
+245 wird nie wiederverwendet.
+
+16. TESTS – NUMMER/IDEMPOTENZ
+Mindestens:
+- Format RE-YYMMNNNN
+- Folgerechnung Sequenz
+- Monat/Jahr korrekt
+- Retry derselben Order: keine neue Nummer
+- Webhook Replay: keine neue Nummer
+- Parallel gleiche Order: eine Nummer
+- Parallel verschiedene Orders: unterschiedliche Nummern
+- Storno: Nummer bleibt
+- stornierte Nummer nie wiederverwendet
+- unbezahlte/stornierte Order ohne vorherige Rechnung: keine Rechnung
+Concurrency belastbar prüfen.
+
+17. TESTS – PDF
+Titel, Nummer, Rechnungsdatum, Bestelldatum, Bestellnummer, kein Abholstations-Kopf, unveränderter Adress-/Logo-Block, Produktlayout, #e0a721, „inkl. MwSt.“ x3, Netto/19%/Brutto, Rundung, Rabatt, mehrere Produkte, langer Name, Bild, Mehrseitigkeit soweit sinnvoll, Footer, STORNIERT.
+Explizit sicherstellen: kein table-layout:fixed/problematischer colgroup-Rückfall.
+
+18. TESTS – MAIL/STORNO
+- bezahlte Order -> Rechnungsmail Kunde + intern, PDF angehängt
+- Betreff/Inhalt Rechnung statt Bestellbestätigung
+- Retry/Webhook Replay -> keine Doppelmail
+- bezahlte Order stornieren -> stornierte Rechnung an Kunde + intern
+- keine automatische Packliste
+
+19. REGRESSION
+Payment/Capture/Webhook/Replay-Idempotenz, UTC, Order-Finalizer, Lager/Reservierung, bestehende Bestellbestätigung, manuelle Packliste, Paketinstallation, Quick-Smoke, PHP/JS/XML, Logs, git diff --check.
+Kein unnötiger FULL-Testmarathon, außer Scope/Änderungen rechtfertigen ihn.
+
+20. NICHT TEIL
+- automatische Refunds
+- PayPal Admin erneut umbauen
+- Cache-System
+- Bundle-Fehler
+- komponentenweiter UTC->lokale-Darstellungs-Audit (separater Pflichtpunkt)
+- allgemeines Mail-Redesign
+- finale Altshop-Rechnungsnummernmigration/Cutover
+
+21. DOKUMENTATION
+Bestehende passende Projekt-/Order-/Document-Dokumentation aktualisieren: Trigger, Nummernformat/Sequenz, Idempotenz, Snapshot, Storno, Mail, Dompdf-Regel, späterer Cutover. Keine unnötige neue Doku-Datei.
+
+22. STOP-BEDINGUNGEN
+Wenn bestehende order_documents-/Snapshot-Struktur eine rechtssichere/nachvollziehbare Rechnung oder Stornohistorie nicht ohne größere Architekturentscheidung tragen kann: STOP mit Befund statt improvisieren.
+Wenn Rechnungsnummern-Concurrency ohne Schema-/Sequence-Entscheidung nicht belastbar lösbar ist: STOP mit konkreter Empfehlung.
+
+23. ABSCHLUSS
+Wenn grün: Commit feature, Push origin/feature, kein main-Merge, Working Trees sauber/synchron, Auftrag nach erledigt.
+Abschlussbericht: Architektur, Nummernvergabe, Snapshot, PDF, Mail, Stornohistorie, Idempotenz/Concurrency, Tests, geänderte Dateien, Migration/Version, Commit-SHA, feature=origin/feature, Working Trees.
+
+Commitmessage sinngemäß:
+Add idempotent invoice finalization and paid mail
