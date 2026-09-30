@@ -18,6 +18,12 @@ test('bundle experience loads, supports quick view, button/drag selection and di
     const payload = await response.json();
     const result = payload.data || payload;
     result.products.find(product => Number(product.id) === 900100).video_url = 'https://www.youtube.com/watch?v=aqz-KE-bpKQ';
+    result.rules = [
+      { min_quantity: 1, discount_percent: 3 },
+      { min_quantity: 2, discount_percent: 5 },
+      { min_quantity: 3, discount_percent: 8 },
+      { min_quantity: 4, discount_percent: 12 },
+    ];
     await route.fulfill({ response, json: payload });
   });
   await page.goto('/index.php?option=com_fdshop&view=product&id=900100');
@@ -26,8 +32,15 @@ test('bundle experience loads, supports quick view, button/drag selection and di
   await expect(dialog.locator('.fdshop-bundle__loader')).toBeAttached();
   await expect(dialog.getByRole('heading', { name: 'E2E Bundle Aktiv' })).toBeVisible();
   await expect(dialog.getByText('Stell dein Feuerwerk zusammen')).toBeVisible();
+  await expect(dialog.getByText('(Auf Touch-Geräten das Produkt kurz gedrückt halten.)')).toBeVisible();
   await expect(dialog.locator('.fdshop-bundle__pool [data-bundle-quantity]')).toHaveCount(0);
   await expect(dialog.getByText('Maximal 2 Stück je Produkt')).toBeVisible();
+  await expect(dialog.locator('.fdshop-bundle__promise')).toContainText('DEIN FEUERWERK. DEINE AUSWAHL.');
+  await expect(dialog.locator('.fdshop-bundle__promise')).toContainText('Mindestens 2 verschiedene Produkte');
+  await expect(dialog.locator('.fdshop-bundle__eyebrow')).toHaveCSS('color', 'rgb(224, 167, 33)');
+  await expect(dialog.locator('.fdshop-bundle__chosen > .fdshop-bundle__progress')).toHaveCount(1);
+  await expect(dialog.locator('.fdshop-bundle__progress-heading')).toContainText('MEIN RABATT');
+  await expect(dialog.locator('[data-bundle-reset]')).toBeHidden();
 
   const activePoolCard = dialog.locator('[data-bundle-pool-product="900100"]');
   await activePoolCard.getByRole('button', { name: 'Details zu E2E Produkt Aktiv' }).click();
@@ -48,11 +61,12 @@ test('bundle experience loads, supports quick view, button/drag selection and di
   await dialog.locator('[data-bundle-chosen-product="900105"]').getByRole('button', { name: 'Entfernen' }).click();
 
   await activePoolCard.getByRole('button', { name: '+ Hinzufügen' }).click();
+  await expect(activePoolCard.getByRole('button', { name: '+ Hinzufügen' })).toHaveCSS('background-color', 'rgb(224, 167, 33)');
   await expect(dialog.locator('[data-bundle-chosen-product="900100"]')).toBeVisible();
-  await expect(dialog.locator('[data-bundle-message]')).toContainText('Noch ein Produkt');
+  await expect(dialog.locator('[data-bundle-message]')).toBeHidden();
+  await expect(dialog.locator('[data-bundle-reset]')).toBeVisible();
   await dialog.locator('[data-bundle-pool-product="900105"]').dragTo(dialog.locator('[data-bundle-dropzone]'));
   await expect(dialog.locator('.fdshop-bundle__chosen-card')).toHaveCount(2);
-  await expect(dialog.locator('[data-bundle-message]')).toContainText('Bundle ist bereit');
   await expect(dialog.locator('[data-bundle-progress-status]')).toContainText('5 % Rabatt aktiv');
   await expect(dialog.locator('[data-bundle-celebration]')).toContainText('5 % RABATT FREIGESCHALTET');
   await expect(dialog.locator('[data-bundle-subtotal]')).toHaveText('59,98 €');
@@ -64,21 +78,28 @@ test('bundle experience loads, supports quick view, button/drag selection and di
   await discount.getByRole('button', { name: 'Entfernen' }).click();
   await expect(dialog.locator('[data-bundle-celebration]')).toBeHidden();
   await discountPoolCard.getByRole('button', { name: '+ Hinzufügen' }).click();
-  await expect(dialog.locator('[data-bundle-celebration]')).toBeHidden();
+  await expect(dialog.locator('[data-bundle-celebration]')).toContainText('5 % RABATT FREIGESCHALTET');
+  await page.waitForTimeout(2100);
+  await expect(dialog.locator('[data-bundle-celebration]')).toBeVisible();
 
   const first = dialog.locator('[data-bundle-chosen-product="900100"]');
   await first.getByRole('button', { name: /erhöhen/ }).click();
   await expect(first.locator('[data-bundle-quantity]')).toHaveValue('2');
   await expect(first.getByRole('button', { name: /erhöhen/ })).toBeDisabled();
+  await expect(dialog.locator('[data-bundle-progress-status]')).toContainText('8 % Rabatt aktiv');
+  await expect(dialog.locator('[data-bundle-celebration]')).toContainText('8 % RABATT FREIGESCHALTET');
   await dialog.locator('[data-bundle-chosen-product="900105"]').getByRole('button', { name: /erhöhen/ }).click();
-  await expect(dialog.locator('[data-bundle-progress-status]')).toContainText('10 % Rabatt aktiv');
-  await expect(dialog.locator('[data-bundle-celebration]')).toContainText('10 % RABATT FREIGESCHALTET');
+  await expect(dialog.locator('[data-bundle-progress-status]')).toContainText('12 % Rabatt aktiv');
+  await expect(dialog.locator('[data-bundle-celebration]')).toContainText('GLÜCKWUNSCH!');
+  await expect(dialog.locator('[data-bundle-celebration]')).toContainText('12 % RABATT FREIGESCHALTET');
+  await expect(dialog.locator('[data-bundle-celebration-effects].is-maximum i')).toHaveCount(22);
   await dialog.locator('[data-bundle-chosen-product="900105"]').getByRole('button', { name: /reduzieren/ }).click();
   await first.getByRole('button', { name: /reduzieren/ }).click();
   await first.getByRole('button', { name: 'Entfernen' }).click();
   await expect(dialog.locator('[data-bundle-chosen-product="900100"]')).toHaveCount(0);
   await dialog.getByRole('button', { name: 'Auswahl zurücksetzen' }).click();
   await expect(dialog.getByText('Stell dein Feuerwerk zusammen')).toBeVisible();
+  await expect(dialog.locator('[data-bundle-reset]')).toBeHidden();
   await expect(dialog.getByRole('button', { name: 'In den Warenkorb' })).toBeDisabled();
   diagnostics.expectClean();
 });
@@ -128,6 +149,7 @@ test('registered customer can save, load and delete a composition', async ({ pag
   await dialog.locator('[data-bundle-pool-product="900100"] [data-bundle-add]').click();
   await dialog.locator('[data-bundle-pool-product="900105"] [data-bundle-add]').click();
   await expect(dialog.getByRole('button', { name: 'Bundle speichern' })).toBeEnabled();
+  await expect(dialog.getByRole('button', { name: 'Bundle speichern' })).toHaveCSS('background-color', 'rgb(255, 255, 255)');
   page.once('dialog', prompt => prompt.accept('Mein E2E Bundle'));
   await dialog.getByRole('button', { name: 'Bundle speichern' }).click();
   await expect(dialog.locator('[data-bundle-message]')).toContainText('gespeichert');
@@ -149,7 +171,10 @@ test('mobile fallback stays usable and reduced motion suppresses bundle animatio
   await expect(dialog.locator('.fdshop-bundle__workspace')).toBeVisible();
   await dialog.locator('[data-bundle-pool-product="900100"] [data-bundle-add]').click();
   await expect(dialog.locator('[data-bundle-chosen-product="900100"]')).toBeVisible();
+  await dialog.locator('[data-bundle-pool-product="900105"] [data-bundle-add]').click();
+  await expect(dialog.locator('[data-bundle-celebration]')).toBeVisible();
+  await expect(dialog.locator('[data-bundle-celebration-effects]')).toHaveCSS('display', 'none');
   expect(await page.evaluate(() => matchMedia('(prefers-reduced-motion: reduce)').matches)).toBe(true);
-  await expect(dialog.locator('.fdshop-bundle__chosen-card')).toHaveCSS('animation-name', 'none');
+  await expect(dialog.locator('.fdshop-bundle__chosen-card').last()).toHaveCSS('animation-name', 'none');
   diagnostics.expectClean();
 });
