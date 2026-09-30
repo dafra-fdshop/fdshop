@@ -1,0 +1,337 @@
+FDShop – AUFTRAG
+KOMPONENTENWEITER DATUM-/ZEIT-AUDIT UND LOKALE ANZEIGEZEIT V1
+
+Projekt: FDShop
+Branch: feature
+Priorität: hoch – vor produktivem Einsatz
+Scope: sämtliche menschenlesbaren Datums-/Zeitausgaben in FDShop
+Technische UTC-Persistenz: NICHT ändern
+
+======================================================================
+1. REALBEFUND
+======================================================================
+
+Auf der realen IONOS-Testinstallation wurde am 30.09.2026 gegen 07:26 Uhr
+lokaler deutscher Zeit eine Bestellung durchgeführt.
+
+FDShop zeigte in der Administrator-Bestellliste:
+30.09.2026 05:26
+
+Differenz:
+2 Stunden.
+
+Das entspricht am 30.09. Europe/Berlin:
+CEST = UTC+2.
+
+Joomla Globale Konfiguration -> Server -> Zeitzone ist aktuell:
+"Koordinierte Weltzeit (UTC)"
+
+Der technische UTC-Ansatz ist korrekt.
+Falsch/ungeeignet ist die ungefilterte UTC-Darstellung für Menschen im
+Shopbetrieb.
+
+======================================================================
+2. VERBINDLICHES ZEITMODELL
+======================================================================
+
+NICHT an der technischen Zeitarchitektur rütteln.
+
+Verbindlich:
+
+A) Persistenz / Technik
+- technische Zeitpunkte weiterhin UTC
+- Payment-Zeitmodell weiterhin UTC
+- Ablauf-/Expiry-Vergleiche weiterhin UTC
+- keine lokalen Zeiten in DB schreiben
+- keine +1/+2-Stunden-Korrekturen beim Speichern
+
+B) Darstellung für Menschen
+- Datums-/Zeitwerte werden bei Ausgabe in eine definierte Anzeigezeitzone
+  konvertiert
+- für FRANK DANIEL's Pyro Design ist fachlich Europe/Berlin vorgesehen
+- Sommer-/Winterzeit automatisch über echte Zeitzonenregeln
+- KEINE feste Addition von +1/+2 Stunden
+
+Beispiele:
+30.09.2026 05:26 UTC -> 30.09.2026 07:26 Europe/Berlin
+Winterdatum UTC -> CET (+1)
+DST-Wechsel müssen automatisch korrekt sein.
+
+======================================================================
+3. SINGLE SOURCE FÜR ANZEIGEZEITZONE
+======================================================================
+
+Vor Implementierung analysieren:
+
+- Joomla Website-Zeitzone
+- Joomla User-Zeitzone
+- Factory::getDate / Joomla Date
+- bestehende FDShop-Konfiguration
+- aktuelle Formatierungshelfer
+- Administrator-/Frontend-Kontext
+
+Joomla ist auf der IONOS-Testinstallation derzeit global auf UTC gestellt.
+
+Deshalb NICHT blind "Joomla-Zeitzone verwenden" implementieren und damit
+weiter UTC anzeigen.
+
+Ziel:
+Eine klare, dokumentierte Single Source für die FDShop-Anzeigezeitzone.
+
+Bevorzugte Varianten nach Analyse:
+
+1. Wenn Joomla projektkonform auf Europe/Berlin gestellt werden SOLL und
+   dadurch keine unerwünschten Nebenwirkungen entstehen:
+   Joomla Website-Zeitzone als Quelle sauber verwenden und
+   Installations-/Betriebsanforderung dokumentieren.
+
+ODER
+
+2. Falls Joomla aus technischen/betrieblichen Gründen UTC bleiben soll:
+   kleine zentrale FDShop-Anzeigezeitzone vorsehen, standardmäßig
+   Europe/Berlin, statt verstreuter Hardcodierung.
+
+Keine neue Config nur aus Gewohnheit bauen.
+Zuerst Joomla-/Projektarchitektur prüfen und die einfachste saubere Single
+Source wählen.
+
+Wenn diese Entscheidung unerwartet weitreichend ist:
+STOP mit Befund und Empfehlung vor unnötigem Umbau.
+
+======================================================================
+4. KOMPONENTENWEITER AUDIT
+======================================================================
+
+Nicht nur die Orders-Liste flicken.
+
+Alle FDShop-Ausgaben mit Datum/Uhrzeit suchen und klassifizieren.
+
+Mindestens prüfen:
+
+ADMIN:
+- Bestellliste
+- Bestelldetail
+- Bestellhistorie
+- Bestellstatus-Historie
+- Payment Sessions/Transactions, falls sichtbar
+- Order Documents / Rechnung
+- Rechnungsdatum
+- Bestelldatum
+- Stornodatum, falls vorhanden
+- Versand-/Shipment-Daten
+- Gutschein-/Coupon-Verwendung
+- Produkt created/modified/publish_up/publish_down/available_from
+- Kategorien/Hersteller/Bundles soweit Datum sichtbar
+- Benutzer-/Buyer-Group-bezogene Historien
+- Watchlists
+- sonstige Adminlisten/-details
+
+FRONTEND:
+- Bestellbestätigung
+- Rechnung
+- Kunden-/Bestellhistorie, soweit vorhanden
+- Verfügbarkeitsdatum
+- sonstige sichtbare Datums-/Zeitangaben
+
+MAIL/PDF:
+- Bestelldatum
+- Rechnungsdatum
+- Storno-/Statusdaten
+- sonstige menschenlesbare Zeitangaben
+
+Nicht jedes technische UTC-Feld muss zwingend sichtbar gemacht werden.
+Aber jedes bereits sichtbare Feld muss korrekt lokalisiert sein.
+
+======================================================================
+5. ZENTRALE FORMATIERUNG
+======================================================================
+
+Keine verstreuten Lösungen wie:
+date(...)
+strtotime(...)
++ 7200
+new DateTime ohne explizite Zone
+SQL DATE_FORMAT auf UTC-Werte für lokale Anzeige
+
+Bevorzugt:
+eine zentrale Joomla-konforme FDShop-Hilfe / bestehende geeignete
+Abstraktion für:
+
+UTC-DATETIME -> Anzeigezeitzone -> formatiertes Datum/Zeit
+
+Dabei unterscheiden können:
+- nur Datum
+- Datum + Uhrzeit
+- ggf. ISO/maschinenlesbare Ausgabe, die NICHT lokalisiert werden darf
+
+Technische API-/JSON-/Paymentwerte nur dann lokalisieren, wenn sie ausdrücklich
+für Menschen bestimmt sind.
+
+======================================================================
+6. RECHNUNG / NEUER INVOICE-BLOCK
+======================================================================
+
+Aktueller Invoice-Auftrag/Commit 0.0.44 hat Rechnung und Rechnungsdatum
+eingeführt.
+
+Diesen Bereich ausdrücklich mitprüfen.
+
+Rechnungsdatum und Bestelldatum im PDF müssen für Daniel/Kunden die
+menschenlesbare lokale Zeit/Datum korrekt darstellen.
+
+ABER:
+persistierter invoice_created-/created-Zeitpunkt bleibt UTC.
+
+Keine Änderung an:
+- Rechnungsnummernsequenz
+- Invoice-Idempotenz
+- Snapshot
+- Stornoarchivierung
+- Mail-Idempotenz
+
+======================================================================
+7. DST / SOMMER-/WINTERZEIT
+======================================================================
+
+Explizite Regressionen:
+
+A) Sommer:
+2026-09-30 05:26 UTC
+-> Europe/Berlin 07:26
+
+B) Winter:
+geeigneter Januarwert
+-> Europe/Berlin UTC+1
+
+C) Sommer -> Winter:
+beide Seiten der Rückstellung korrekt und eindeutig behandeln
+
+D) Winter -> Sommer:
+beide Seiten des Sprungs korrekt
+
+Keine manuelle Offsetlogik.
+
+======================================================================
+8. DATUM OHNE UHRZEIT
+======================================================================
+
+Aufpassen bei fachlichen reinen Datumswerten.
+
+Ein Wert, der fachlich nur "Datum" bedeutet, darf nicht durch unnötige
+Timezone-Konvertierung auf den Vortag/Folgetag rutschen.
+
+Audit daher unterscheiden:
+- echter Zeitpunkt/Timestamp -> UTC -> lokale Zone
+- reines Kalenderdatum -> keine falsche Zeitpunktkonvertierung
+
+======================================================================
+9. FORMULARE / EINGABE
+======================================================================
+
+Falls Administratoren lokale Datums-/Zeitwerte eingeben (z.B. publish_up,
+publish_down, available_from):
+
+prüfen, ob Eingabe als Anzeigezeitzone interpretiert und anschließend korrekt
+in UTC persistiert wird.
+
+Nicht nur Ausgabe reparieren und dadurch Eingabe/Anzeige asymmetrisch machen.
+
+Bestehendes Joomla-Verhalten nutzen, sofern korrekt.
+
+======================================================================
+10. TESTS
+======================================================================
+
+Mindestens:
+
+- realer Orderlistenfall 05:26 UTC -> 07:26 Europe/Berlin
+- Bestelldetail
+- Order-/Statushistory
+- Rechnung: Bestelldatum/Rechnungsdatum
+- relevante Mail/PDF-Daten
+- Sommer UTC+2
+- Winter UTC+1
+- beide DST-Grenzen
+- reines Datum ohne Verschiebungsfehler
+- Admin-Datumseingabe round-trip soweit vorhanden
+- Payment UTC-/Expiry-Regression vollständig grün
+- Invoice-/Rechnungsnummernregression
+- Webhook-/Retry-Idempotenz
+- Paketinstallation
+- Quick-Smoke
+- PHP/JS/XML Syntax
+- git diff --check
+- Logs
+
+Kein unnötiger FULL-Testmarathon, sofern zentrale Helperänderung nicht
+tatsächlich breite Auswirkungen hat. Bei zentraler Joomla-Date-Integration
+entsprechend sinnvolle Breite wählen.
+
+======================================================================
+11. DOKUMENTATION
+======================================================================
+
+Verbindlich dokumentieren:
+
+- DB/technische Zeit = UTC
+- Anzeigezeit = definierte Single Source
+- Europe/Berlin für aktuellen Shopbetrieb
+- DST automatisch
+- reine Datumswerte vs. Zeitpunkte
+- Admin-Eingaben
+- keine manuellen Offsetkorrekturen
+
+Bestehende Architektur-/Fachregel-/Installationsdokumentation passend
+aktualisieren.
+
+======================================================================
+12. NICHT TEIL
+======================================================================
+
+Nicht bearbeiten:
+- Payment-Fachlogik
+- PayPal Admin
+- Webhooklogik
+- Rechnungsnummernsequenz
+- Invoice-Snapshot/Stornoarchivierung
+- Bundle-Fehler
+- Cache-System
+- allgemeines optisches Redesign
+
+======================================================================
+13. ABSCHLUSS
+======================================================================
+
+Wenn Analyse + Fix grün:
+
+- Commit feature
+- Push origin/feature
+- kein main-Merge
+- Working Trees sauber/synchron
+- Auftrag nach Aufträge/erledigt
+
+Abschlussbericht:
+
+1. gewählte Single Source der Anzeigezeitzone + Begründung
+2. gefundene bisherige Zeit-Ausgabepfade
+3. zentrale Lösung
+4. korrigierte Adminbereiche
+5. korrigierte Frontend/Mail/PDF-Bereiche
+6. Eingabe-/Roundtrip-Verhalten
+7. DST-Nachweise
+8. Bestätigung: technische UTC-Persistenz unverändert
+9. Tests
+10. geänderte Dateien
+11. Commit-SHA
+12. feature = origin/feature
+13. Working Trees sauber
+
+Wenn Joomla-UTC vs. Europe/Berlin eine projektweite Entscheidung außerhalb
+FDShop erzwingt:
+STOP mit Analyse und Empfehlung statt eigenmächtig globale Joomla-Konfiguration
+umzustellen.
+
+Commitmessage sinngemäß:
+Normalize FDShop human-readable timezone display
+
+ENDE DES AUFTRAGS
