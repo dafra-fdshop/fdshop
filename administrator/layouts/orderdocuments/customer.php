@@ -5,6 +5,8 @@ defined('_JEXEC') or die;
 $o = $displayData['order'];
 $c = $displayData['config'];
 $h = $displayData['helper'];
+$invoice = (bool) ($displayData['invoice'] ?? false);
+$cancelled = (bool) ($displayData['cancelled'] ?? false);
 
 $rows = [];
 
@@ -32,7 +34,7 @@ $logo = $h->image((string) ($c->document_company_logo ?? ''));
 <html lang="de">
 <head>
     <meta charset="utf-8">
-    <title>Bestellbestätigung (Kunde)</title>
+    <title><?= $invoice ? 'Rechnung' : 'Bestellbestätigung (Kunde)' ?></title>
 
     <style>
         @page {
@@ -91,6 +93,10 @@ $logo = $h->image((string) ($c->document_company_logo ?? ''));
             line-height: 1.55;
         }
 
+        .invoice-meta { width: 100%; border-collapse: collapse; }
+        .invoice-meta td { width: 50%; padding: 0; vertical-align: top; }
+        .invoice-meta .right { text-align: right; }
+
         .shipment {
             display: table;
             max-width: 92mm;
@@ -127,7 +133,11 @@ $logo = $h->image((string) ($c->document_company_logo ?? ''));
 
         .items th {
             white-space: nowrap;
+            background: #e0a721;
         }
+
+        .tax-note { display: block; margin-top: .6mm; color: #444; font-size: 6.6pt; font-weight: normal; }
+        .cancelled { margin: 3mm 0; color: #b00020; font-size: 18pt; font-weight: bold; }
 
         .items .alt {
             background: #eef2f8;
@@ -239,7 +249,7 @@ $logo = $h->image((string) ($c->document_company_logo ?? ''));
 <table class="header">
     <tr>
         <td>
-            <h1>Bestellbestätigung (Kunde)</h1>
+            <h1><?= $invoice ? 'Rechnung' : 'Bestellbestätigung (Kunde)' ?></h1>
 
             <div class="address">
                 <b>Rechnungsadresse:</b><br>
@@ -283,12 +293,17 @@ $logo = $h->image((string) ($c->document_company_logo ?? ''));
 </table>
 
 <div class="meta">
-    <b>Bestelldatum:</b> <?= $h->date($o->created) ?><br>
-    <b>Bestellnummer:</b> <?= $h->e($o->order_number) ?><br>
-
-    <span class="shipment">
-        Abholstation „<?= $h->e($o->shipment_name) ?>“
-    </span>
+    <?php if ($invoice) : ?>
+        <table class="invoice-meta"><tr>
+            <td><b>Rechnung Nr.:</b> <?= $h->e($o->invoice_number) ?></td>
+            <td class="right"><b>Rechnungsdatum:</b> <?= $h->day($o->invoice_created_at) ?><br><b>Bestelldatum:</b> <?= $h->day($o->created) ?><br><b>Bestellnummer:</b> <?= $h->e($o->order_number) ?></td>
+        </tr></table>
+        <?php if ($cancelled) : ?><div class="cancelled">STORNIERT</div><?php endif; ?>
+    <?php else : ?>
+        <b>Bestelldatum:</b> <?= $h->date($o->created) ?><br>
+        <b>Bestellnummer:</b> <?= $h->e($o->order_number) ?><br>
+        <span class="shipment">Abholstation „<?= $h->e($o->shipment_name) ?>“</span>
+    <?php endif; ?>
 </div>
 
 <table class="items">
@@ -297,10 +312,10 @@ $logo = $h->image((string) ($c->document_company_logo ?? ''));
             <th class="image">Bild</th>
             <th class="sku">Art.-Nr.</th>
             <th class="product">Produkt</th>
-            <th class="price">Einzelpreis</th>
+            <th class="price">Einzelpreis<?= $invoice ? '<span class="tax-note">inkl. MwSt.</span>' : '' ?></th>
             <th class="quantity">Menge</th>
-            <th class="discount">Rabatt</th>
-            <th class="amount">Betrag</th>
+            <th class="discount">Rabatt<?= $invoice ? '<span class="tax-note">inkl. MwSt.</span>' : '' ?></th>
+            <th class="amount">Betrag<?= $invoice ? '<span class="tax-note">inkl. MwSt.</span>' : '' ?></th>
         </tr>
     </thead>
 
@@ -350,6 +365,12 @@ $logo = $h->image((string) ($c->document_company_logo ?? ''));
 </table>
 
 <table class="sums">
+
+    <?php if ($invoice) : ?>
+        <tr><td class="sum-label">Gesamtbetrag (Netto)</td><td class="sum-value"><?= $h->money($displayData['totals']['net'], $o->currency) ?></td></tr>
+        <tr><td class="sum-label">zzgl. <?= $h->qty($displayData['totals']['rate']) ?>% MwSt.</td><td class="sum-value"><?= $h->money($displayData['totals']['tax'], $o->currency) ?></td></tr>
+        <tr class="total"><td class="sum-label">Gesamtbetrag</td><td class="sum-value"><?= $h->money($displayData['totals']['gross'], $o->currency) ?></td></tr>
+    <?php else : ?>
 
     <tr>
         <td class="sum-label">Zwischensumme</td>
@@ -418,9 +439,11 @@ $logo = $h->image((string) ($c->document_company_logo ?? ''));
         </td>
     </tr>
 
+    <?php endif; ?>
+
 </table>
 
-<?php if (preg_match('/überweisung|bank/i', (string) $o->payment_method_name)) : ?>
+<?php if (!$invoice && preg_match('/überweisung|bank/i', (string) $o->payment_method_name)) : ?>
     <p class="payment">
         Bitte überweisen Sie den Gesamtbetrag innerhalb von
         <?= max(1, (int) ($c->document_payment_days ?? 7)) ?> Tagen.

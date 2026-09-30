@@ -93,6 +93,6 @@ Cancel, Popup-Schließen, PENDING und Fehler vor Capture lassen Warenkorb und �
 - `tests/paypal/payment-service-regression.php`: Reservierung, Capture vor/nach Ablauf, Finalizerfehler/Retry, Idempotenz, Webhook-Replay, selektiver Multi-Session-Cleanup und Race-Schutz mit kontrollierter UTC-Uhr.
 - `tests/paypal/sandbox-smoke.php`: echte Sandbox-Authentifizierung und Create Order ohne Capture.
 - `tests/browser/tests/paypal-checkout.spec.js`: v6-Browserintegration und Cancel/Cart-Erhalt.
-- `tests/paypal/migration.sh`: Upgrade `0.0.41 → 0.0.43` einschließlich Provider-Zuordnung.
+- `tests/paypal/migration.sh`: Upgrade `0.0.41 → 0.0.44` einschließlich Provider-Zuordnung.
 
 Ein öffentlich erreichbarer, im PayPal-Dashboard registrierter Webhook kann lokal nicht vollständig end-to-end geprüft werden; die reale Sandbox-Abnahme auf IONOS ist erfolgt.

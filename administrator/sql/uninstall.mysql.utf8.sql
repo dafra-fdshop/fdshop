@@ -22,6 +22,7 @@ DROP TABLE IF EXISTS `#__fdshop_user_email_changes`;
 DROP TABLE IF EXISTS `#__fdshop_user_history`;
 DROP TABLE IF EXISTS `#__fdshop_order_status_history`;
 DROP TABLE IF EXISTS `#__fdshop_order_documents`;
+DROP TABLE IF EXISTS `#__fdshop_invoice_sequences`;
 DROP TABLE IF EXISTS `#__fdshop_order_history`;
 DROP TABLE IF EXISTS `#__fdshop_order_stock_allocations`;
 DROP TABLE IF EXISTS `#__fdshop_order_bundle_items`;

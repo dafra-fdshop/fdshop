@@ -467,6 +467,9 @@ CREATE TABLE IF NOT EXISTS `#__fdshop_orders` (
   `mail_warning` TEXT NULL,
   `confirmation_pdf_path` VARCHAR(255) NULL,
   `confirmation_pdf_sha256` CHAR(64) NULL,
+  `invoice_number` VARCHAR(32) NULL,
+  `invoice_created_at` DATETIME NULL,
+  `invoice_cancelled_at` DATETIME NULL,
   `withdrawal_status` VARCHAR(16) NOT NULL DEFAULT 'none',
   `withdrawal_declared_at` DATETIME NULL,
   `withdrawal_decided_at` DATETIME NULL,
@@ -479,6 +482,7 @@ CREATE TABLE IF NOT EXISTS `#__fdshop_orders` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_fdshop_orders_order_number` (`order_number`),
   UNIQUE KEY `uk_fdshop_orders_submission_id` (`submission_id`),
+  UNIQUE KEY `uk_fdshop_orders_invoice_number` (`invoice_number`),
   KEY `idx_fdshop_orders_user_id` (`user_id`),
   KEY `idx_fdshop_orders_buyer_group_id` (`buyer_group_id`),
   KEY `idx_fdshop_orders_payment_method_id` (`payment_method_id`),
@@ -488,6 +492,14 @@ CREATE TABLE IF NOT EXISTS `#__fdshop_orders` (
   KEY `idx_fdshop_orders_state` (`state`),
   KEY `idx_fdshop_orders_has_bundle` (`has_bundle`),
   KEY `idx_fdshop_orders_created` (`created`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Monthly, transaction-safe invoice counters. The row may be seeded during the live cutover.
+CREATE TABLE IF NOT EXISTS `#__fdshop_invoice_sequences` (
+  `period` CHAR(4) NOT NULL,
+  `last_number` INT UNSIGNED NOT NULL DEFAULT 0,
+  `modified` DATETIME NOT NULL,
+  PRIMARY KEY (`period`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `#__fdshop_user_history` (
@@ -947,6 +959,8 @@ CREATE TABLE IF NOT EXISTS `#__fdshop_order_documents` (
   `order_id` BIGINT UNSIGNED NOT NULL,
   `change_id` BIGINT UNSIGNED NULL,
   `document_type` VARCHAR(32) NOT NULL DEFAULT 'confirmation',
+  `document_status` VARCHAR(16) NOT NULL DEFAULT 'issued',
+  `invoice_number` VARCHAR(32) NULL,
   `version_no` INT UNSIGNED NOT NULL DEFAULT 0,
   `filename` VARCHAR(255) NOT NULL,
   `sha256` CHAR(64) NOT NULL,

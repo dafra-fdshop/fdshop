@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "0.0.43",
+  "schemaVersion": "0.0.44",
   "counts": {
     "manufacturers": 2, "categories": 4, "buyer_groups": 2,
     "products": 10, "products_details": 10, "product_watchlist": 0,
@@ -16,6 +16,7 @@
     "orders": 2, "order_items": 2, "order_bundles": 1,
     "order_bundle_items": 2, "order_history": 2,
     "order_status_history": 2, "order_stock_allocations": 1,
+    "order_documents": 0, "invoice_sequences": 0,
     "order_shipment_requests": 0, "user_email_changes": 0, "user_history": 0,
     "filters": 7, "filter_ranges": 9,
     "filter_category_map": 1, "filter_range_category_map": 2,

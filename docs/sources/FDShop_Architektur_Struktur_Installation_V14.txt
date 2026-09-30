@@ -754,3 +754,10 @@ PRODUKT-META-DATEN V1 (SCHEMA 0.0.35)
 --------------------------------------
 - `#__fdshop_products.meta_product_type` speichert einen optionalen, serverseitig auf feste Keys begrenzten SEO-Produkttyp. Die Vorschlagserzeugung bleibt ein kleines lokales Admin-Asset ohne API und verwendet ausschließlich aktuelle Formularwerte.
 - `meta_keywords` wurde aus Produkt- und Herstellerschema entfernt. VM-/Legacy-Mappings übernehmen weder Keywords noch leiten sie den neuen Produkttyp heuristisch aus Kategorien ab.
+Rechnungen und Rechnungsnummern (Schema 0.0.44)
+------------------------------------------------
+Der fachliche Status mit `create_invoice = 1` finalisiert eine Rechnung aus dem unveränderlichen Bestellsnapshot. `InvoiceService` sperrt zuerst die Bestellung und anschließend den Monatszähler in `#__fdshop_invoice_sequences`; dadurch entsteht genau eine Nummer im Format `RE-YYMMNNNN`, ohne `MAX()+1`. Der Monatszähler ist für den späteren Live-Cutover kontrolliert initialisierbar. Technische Zeitpunkte werden in UTC gespeichert und nur bei der Ausgabe in die Joomla-/Shop-Zeitzone umgerechnet.
+
+`#__fdshop_order_documents` archiviert die originäre Rechnung als Dokumenttyp `invoice`, Status `issued`, Version 0 und SHA-256-Prüfsumme. Eine spätere Stornierung behält Nummer und Originaldatei und ergänzt Version 1 mit Status `cancelled`; eine Stornierung vor Rechnungsstellung erzeugt keinen Beleg. Kunde und konfigurierte Shopadresse erhalten dasselbe Rechnungs-PDF, ohne automatische Packliste. Wiederholungen lesen die bereits archivierte Version und die Mail-Historie verhindert den erneuten Versand.
+
+Das Rechnungs-PDF verwendet exakt die bewährte Kunden-Bestätigungsgeometrie. Für Dompdf bleiben `table-layout: fixed` und `<colgroup>` ausgeschlossen; Breiten liegen direkt auf `th`/`td`. Netto und 19-Prozent-Steuer werden zentral aus dem gespeicherten Bruttogesamtbetrag berechnet, sodass Netto plus Steuer stets dem Brutto entspricht. Vor dem Livebetrieb ist der separate Rechnungsnummern-Cutover anhand der letzten Altshop-Rechnung verpflichtend.

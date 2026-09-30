@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 define('_JEXEC',1);define('JPATH_BASE','/var/www/html');require JPATH_BASE.'/includes/defines.php';require JPATH_BASE.'/includes/framework.php';
-require_once JPATH_ADMINISTRATOR.'/components/com_fdshop/src/Extension/FdshopComponent.php';require_once JPATH_ADMINISTRATOR.'/components/com_fdshop/src/Service/OrderDocumentService.php';require_once JPATH_ADMINISTRATOR.'/components/com_fdshop/src/Service/OrderNotificationService.php';
+require_once JPATH_ADMINISTRATOR.'/components/com_fdshop/src/Extension/FdshopComponent.php';require_once JPATH_ADMINISTRATOR.'/components/com_fdshop/src/Service/OrderDocumentService.php';require_once JPATH_ADMINISTRATOR.'/components/com_fdshop/src/Service/InvoiceService.php';require_once JPATH_ADMINISTRATOR.'/components/com_fdshop/src/Service/OrderNotificationService.php';
 use FDShop\Component\FDShop\Administrator\Service\OrderDocumentService;use FDShop\Component\FDShop\Administrator\Service\OrderNotificationService;use Joomla\CMS\Application\SiteApplication;use Joomla\CMS\Factory;use Joomla\Database\DatabaseInterface;use Joomla\Session\SessionInterface;
 $_SERVER['HTTP_HOST']='localhost';$_SERVER['REQUEST_URI']='/';$_SERVER['SCRIPT_NAME']='/index.php';$container=Factory::getContainer();$container->alias(SessionInterface::class,'session.web.site');$app=$container->get(SiteApplication::class);Factory::$application=$app;$db=$container->get(DatabaseInterface::class);$service=$app->bootComponent('com_fdshop')->getContainer()->get(OrderDocumentService::class);$orderId=(int)($argv[1]??900800);
 $original=$service->customerDocument($orderId,true);$originalHash=hash('sha256',$original['bytes']);

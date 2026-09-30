@@ -68,6 +68,10 @@ try{
  try{$payment->webhook(['x-test-valid'=>'0'],$event);throw new RuntimeException('Invalid webhook signature accepted.');}catch(RuntimeException $e){if($e->getMessage()==='Invalid webhook signature accepted.')throw $e;}
  $payment->webhook(['x-test-valid'=>'1'],$event);$payment->webhook(['x-test-valid'=>'1'],$event);
  $assert((int)$scalar("SELECT COUNT(*) FROM #__fdshop_orders WHERE submission_id='{$submission}' AND order_status='paid'")===1,'Exactly one paid order was not created.');
+ $orderId=(int)$scalar("SELECT id FROM #__fdshop_orders WHERE submission_id='{$submission}'");$invoiceNumber=(string)$scalar("SELECT invoice_number FROM #__fdshop_orders WHERE id={$orderId}");
+ $assert((bool)preg_match('/^RE-\d{8}$/',$invoiceNumber),'Paid finalization did not assign an invoice number.');
+ $assert((int)$scalar("SELECT COUNT(*) FROM #__fdshop_order_documents WHERE order_id={$orderId} AND document_type='invoice' AND version_no=0")===1,'Paid finalization did not archive exactly one invoice.');
+ $assert((int)$scalar("SELECT COUNT(*) FROM #__fdshop_order_history WHERE order_id={$orderId} AND event_type IN ('mail_buyer_invoice_issued','mail_seller_invoice_issued')")===2,'Paid retry/webhook did not send exactly one invoice mail per recipient.');
  $assert((int)$scalar("SELECT COUNT(*) FROM #__fdshop_cart WHERE user_id={$user}")===0,'Cart was not removed after finalization.');
 
  $clock->set('2026-07-15 11:00:00');$session2='paypal-expiry-regression';$submission2='22222222-2222-4222-8222-222222222222';$cart->addItem($user,$session2,900100,1,'piece');$started2=$payment->start($user,$session2,900600,900610,'','',true,$submission2);$clock->set('2026-07-15 11:09:59');$assert($payment->cleanupExpired()===0,'Active reservation was released before expiry.');$clock->set('2026-07-15 11:10:00');$assert($payment->cleanupExpired()===1,'Reservation was not released exactly at expiry.');$assert($payment->cleanupExpired()===0,'Expired reservation was released twice.');$assert((int)$scalar("SELECT COUNT(*) FROM #__fdshop_cart WHERE user_id={$user}")===1,'Expiry removed the cart.');

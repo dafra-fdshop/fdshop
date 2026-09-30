@@ -23,6 +23,7 @@ use FDShop\Component\FDShop\Administrator\Service\OrderService;
 use FDShop\Component\FDShop\Administrator\Service\OrderServiceInterface;
 use FDShop\Component\FDShop\Administrator\Service\OrderNotificationService;
 use FDShop\Component\FDShop\Administrator\Service\OrderDocumentService;
+use FDShop\Component\FDShop\Administrator\Service\InvoiceService;
 use FDShop\Component\FDShop\Administrator\Service\FilterService;
 use FDShop\Component\FDShop\Administrator\Service\FilterServiceInterface;
 use FDShop\Component\FDShop\Administrator\Service\BuyerEligibilityService;
@@ -195,7 +196,8 @@ return new class () implements ServiceProviderInterface {
 		);
 
         $container->set(OrderDocumentService::class, fn (Container $container): OrderDocumentService => new OrderDocumentService($container->get(DatabaseInterface::class)));
-        $container->set(OrderNotificationService::class, fn (Container $container): OrderNotificationService => new OrderNotificationService($container->get(DatabaseInterface::class), $container->get(OrderDocumentService::class)));
+        $container->set(InvoiceService::class, fn (Container $container): InvoiceService => new InvoiceService($container->get(DatabaseInterface::class), $container->get(OrderDocumentService::class)));
+        $container->set(OrderNotificationService::class, fn (Container $container): OrderNotificationService => new OrderNotificationService($container->get(DatabaseInterface::class), $container->get(OrderDocumentService::class), $container->get(InvoiceService::class)));
 
 		$container->set(
 			OrderService::class,
