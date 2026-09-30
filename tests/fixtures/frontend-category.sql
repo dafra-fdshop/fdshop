@@ -124,6 +124,10 @@ SELECT 904000+n,901000+n,900010,1
 FROM (WITH RECURSIVE sequence AS (SELECT 1 n UNION ALL SELECT n+1 FROM sequence WHERE n<49) SELECT n FROM sequence) numbers
 WHERE n<>26;
 
+INSERT INTO `__PREFIX__fdshop_media`
+(`id`,`product_id`,`media_type`,`external_url`,`file_name`,`file_type`,`path_standard`,`path_small`,`path_mobile`,`path_invoice`,`is_primary`,`ordering`,`created`,`created_by`)
+VALUES (900346,901030,'youtube','https://www.youtube.com/embed/M7lc1UVf-VE',NULL,NULL,NULL,NULL,NULL,NULL,0,1,'2026-01-01 00:00:00',0);
+
 DELETE FROM `__PREFIX__menu` WHERE `alias` = 'batterien' AND `link` LIKE 'index.php?option=com_fdshop&view=category%';
 INSERT INTO `__PREFIX__menu`
 (`id`,`menutype`,`title`,`alias`,`note`,`path`,`link`,`type`,`published`,`parent_id`,`level`,`component_id`,`checked_out`,`checked_out_time`,`browserNav`,`access`,`img`,`template_style_id`,`params`,`lft`,`rgt`,`home`,`language`,`client_id`,`publish_up`,`publish_down`)

@@ -528,3 +528,134 @@ test('video iframe is created only by user action and removed on close', async (
   await expect(page.locator('iframe')).toHaveCount(0);
   expect(browserErrors).toEqual([]);
 });
+
+test('video actions survive filtered catalog replacements and catalog state changes', async ({ page, baseURL }) => {
+  const diagnostics = await installDiagnostics(page, baseURL);
+  await page.addInitScript(() => {
+    window.fdshopVideoDialogOpenCount = 0;
+    const showModal = HTMLDialogElement.prototype.showModal;
+    HTMLDialogElement.prototype.showModal = function (...args) {
+      if (this.matches('[data-fdshop-video-dialog]')) window.fdshopVideoDialogOpenCount += 1;
+      return showModal.apply(this, args);
+    };
+  });
+  await page.route('https://www.youtube-nocookie.com/**', route => route.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html><title>Video fixture</title>' }));
+  await page.setViewportSize({ width: 1400, height: 1000 });
+  await openCategory(page);
+
+  const openVideo = async (productId, source) => {
+    const before = await page.evaluate(() => window.fdshopVideoDialogOpenCount);
+    const card = page.locator(`[data-product-id="${productId}"]`);
+    await card.locator('[data-fdshop-video]').click();
+    await expect(page.locator('[data-fdshop-video-dialog]')).toBeVisible();
+    await expect(page.locator('[data-fdshop-video-dialog] iframe')).toHaveAttribute('src', source);
+    expect(await page.evaluate(() => window.fdshopVideoDialogOpenCount)).toBe(before + 1);
+    await page.locator('[data-fdshop-video-close]').click();
+    await expect(page.locator('[data-fdshop-video-dialog] iframe')).toHaveCount(0);
+  };
+
+  await openVideo('900100', 'https://www.youtube-nocookie.com/embed/aqz-KE-bpKQ');
+  let panel = page.locator('[data-fdshop-filter-module] .fdshop-filter');
+  await panel.getByRole('checkbox', { name: /E2E Hersteller Aktiv/ }).check();
+  await expect(page.locator('.fdshop-category')).not.toHaveAttribute('aria-busy', 'true');
+  await openVideo('900100', 'https://www.youtube-nocookie.com/embed/aqz-KE-bpKQ');
+
+  panel = page.locator('[data-fdshop-filter-module] .fdshop-filter');
+  await panel.getByRole('checkbox', { name: '20 bis 40 s' }).check();
+  await expect(page.locator('.fdshop-filter-chip')).toHaveCount(2);
+  await openVideo('900100', 'https://www.youtube-nocookie.com/embed/aqz-KE-bpKQ');
+
+  await page.locator('[data-fdshop-filter-module] [data-fdshop-filter-reset]').click();
+  await expect(page.locator('.fdshop-filter-chip')).toHaveCount(0);
+  await Promise.all([
+    page.waitForNavigation({ waitUntil: 'networkidle' }),
+    page.locator('[data-fdshop-sort]').selectOption('price:asc'),
+  ]);
+  await openVideo('900100', 'https://www.youtube-nocookie.com/embed/aqz-KE-bpKQ');
+  await Promise.all([
+    page.waitForNavigation({ waitUntil: 'networkidle' }),
+    page.locator('[name="limit"]').selectOption('12'),
+  ]);
+  await openVideo('900100', 'https://www.youtube-nocookie.com/embed/aqz-KE-bpKQ');
+
+  await page.goto('/batterien?sort=name&dir=asc&limit=24&limitstart=24');
+  await openVideo('901030', 'https://www.youtube-nocookie.com/embed/M7lc1UVf-VE');
+  await page.goto('/batterien?fd_filter%5Bmanufacturer%5D%5B%5D=900001&sort=name&dir=asc&limit=24&limitstart=24');
+  await expect(page.locator('.fdshop-filter-chip')).toContainText(['E2E Hersteller Aktiv']);
+  await openVideo('901030', 'https://www.youtube-nocookie.com/embed/M7lc1UVf-VE');
+
+  await page.goto('/batterien');
+  panel = page.locator('[data-fdshop-filter-module] .fdshop-filter');
+  for (let update = 0; update < 3; update += 1) {
+    await panel.getByRole('checkbox', { name: '20 bis 40 s' }).check();
+    await expect(page.locator('.fdshop-filter-chip')).toHaveCount(1);
+    await page.locator('[data-fdshop-filter-module] [data-fdshop-filter-reset]').click();
+    await expect(page.locator('.fdshop-filter-chip')).toHaveCount(0);
+    panel = page.locator('[data-fdshop-filter-module] .fdshop-filter');
+  }
+  await page.setViewportSize({ width: 390, height: 900 });
+  await openVideo('900100', 'https://www.youtube-nocookie.com/embed/aqz-KE-bpKQ');
+  await expect(page.locator('[data-product-id="900104"] [data-fdshop-video]')).toHaveCount(0);
+  diagnostics.expectClean();
+});
+
+test('purchase actions survive repeated AJAX card replacements without duplicate handlers', async ({ page, baseURL }) => {
+  const diagnostics = await installDiagnostics(page, baseURL);
+  let addRequests = 0;
+  await page.route(/index\.php\?option=com_fdshop&format=json&task=cart\.add/, async route => {
+    addRequests += 1;
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ success: true, data: { purchase: {
+        adjusted: false,
+        message: 'Testprodukt wurde hinzugefügt.',
+        productName: 'E2E Produkt Aktiv',
+        effectiveQuantity: 1,
+        unitPrice: '19,99 EUR',
+        lineAmount: '19,99 EUR',
+        cartUrl: '/warenkorb',
+      } } }),
+    });
+  });
+  await page.setViewportSize({ width: 1400, height: 1000 });
+  await openCategory(page);
+
+  const purchase = async () => {
+    const action = page.locator('[data-product-id="900100"] [data-fdshop-purchase]');
+    await action.hover();
+    await expect(action).toHaveClass(/is-open/);
+    const previous = addRequests;
+    await action.locator('[data-purchase-submit]').click();
+    await expect(page.locator('[data-purchase-modal]')).toBeVisible();
+    expect(addRequests).toBe(previous + 1);
+    await page.locator('[data-purchase-close]').first().click();
+  };
+
+  await purchase();
+  let panel = page.locator('[data-fdshop-filter-module] .fdshop-filter');
+  await panel.getByRole('checkbox', { name: '20 bis 40 s' }).check();
+  await expect(page.locator('.fdshop-card')).toHaveCount(1);
+  await purchase();
+
+  for (let update = 0; update < 3; update += 1) {
+    await page.locator('[data-fdshop-filter-module] [data-fdshop-filter-reset]').click();
+    await expect(page.locator('.fdshop-filter-chip')).toHaveCount(0);
+    panel = page.locator('[data-fdshop-filter-module] .fdshop-filter');
+    await panel.getByRole('checkbox', { name: '20 bis 40 s' }).check();
+    await expect(page.locator('.fdshop-card')).toHaveCount(1);
+  }
+  await purchase();
+  expect(addRequests).toBe(3);
+
+  await page.locator('[data-fdshop-filter-module] [data-fdshop-filter-reset]').click();
+  await expect(page.locator('.fdshop-filter-chip')).toHaveCount(0);
+  panel = page.locator('[data-fdshop-filter-module] .fdshop-filter');
+  await panel.getByRole('checkbox', { name: /Nicht auf Lager/ }).check();
+  const watchButton = page.locator('[data-product-id="900106"] [data-watch-open]');
+  await expect(watchButton).toBeVisible();
+  await watchButton.click();
+  await expect(page.locator('[data-watch-dialog]')).toBeVisible();
+  await page.locator('[data-watch-close]').first().click();
+  diagnostics.expectClean();
+});

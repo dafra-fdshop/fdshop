@@ -81,8 +81,10 @@
         var dialog = category ? category.querySelector('[data-fdshop-video-dialog]') : null;
         var content = category ? category.querySelector('[data-fdshop-video-content]') : null;
         var title = category ? category.querySelector('[data-fdshop-video-title]') : null;
-        if (dialog && content && title) category.querySelectorAll('[data-fdshop-video]').forEach(function (button) {
-            button.addEventListener('click', function () {
+        if (category && dialog && content && title) {
+            category.addEventListener('click', function (event) {
+                var button = event.target.closest('[data-fdshop-video]');
+                if (!button || !category.contains(button)) return;
                 var frame = document.createElement('iframe');
                 frame.src = button.dataset.fdshopVideo;
                 frame.title = 'Produktvideo: ' + (button.dataset.productName || 'FDShop-Produkt');
@@ -93,7 +95,7 @@
                 title.textContent = button.dataset.productName || 'Produktvideo';
                 dialog.showModal();
             });
-        });
+        }
         if (dialog && content) {
             var closeButton = category.querySelector('[data-fdshop-video-close]');
             if (closeButton) closeButton.addEventListener('click', function () { dialog.close(); });

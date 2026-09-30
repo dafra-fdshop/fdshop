@@ -1,14 +1,16 @@
 (() => {
   'use strict';
 
-  const actions = document.querySelectorAll('[data-fdshop-purchase]');
   const modal = document.querySelector('[data-purchase-modal]');
-  const f3Modal = document.querySelector('[data-f3-info-modal]');
-  document.querySelectorAll('[data-f3-info-open]').forEach(button => button.addEventListener('click', () => f3Modal?.showModal()));
-  f3Modal?.querySelectorAll('[data-f3-info-close]').forEach(button => button.addEventListener('click', () => f3Modal.close()));
-  const watchModal = document.querySelector('[data-watch-dialog]');
+  document.addEventListener('click', event => {
+    if (event.target.closest('[data-f3-info-open]')) document.querySelector('[data-f3-info-modal]')?.showModal();
+    if (event.target.closest('[data-f3-info-close]')) event.target.closest('[data-f3-info-modal]')?.close();
+  });
   let watchProductId = 0;
-  document.querySelectorAll('[data-watch-open]').forEach(button => button.addEventListener('click', () => {
+  document.addEventListener('click', event => {
+    const button = event.target.closest('[data-watch-open]');
+    if (!button) return;
+    const watchModal = document.querySelector('[data-watch-dialog]');
     if (!watchModal) return;
     watchProductId = Number(button.dataset.watchProductId || 0);
     const product = watchModal.querySelector('[data-watch-product]');
@@ -16,10 +18,15 @@
     const message = watchModal.querySelector('[data-watch-message]');
     if (message) message.textContent = '';
     watchModal.showModal();
-  }));
-  watchModal?.querySelectorAll('[data-watch-close]').forEach(button => button.addEventListener('click', () => watchModal.close()));
-  watchModal?.querySelector('[data-watch-activate]')?.addEventListener('click', async event => {
-    const button = event.currentTarget;
+  });
+  document.addEventListener('click', event => {
+    if (event.target.closest('[data-watch-close]')) event.target.closest('[data-watch-dialog]')?.close();
+  });
+  document.addEventListener('click', async event => {
+    const button = event.target.closest('[data-watch-activate]');
+    if (!button) return;
+    const watchModal = button.closest('[data-watch-dialog]');
+    if (!watchModal) return;
     const tokenInput = watchModal.querySelector('[data-watch-token] input');
     const message = watchModal.querySelector('[data-watch-message]');
     if (!tokenInput || !watchProductId) return;
@@ -33,14 +40,15 @@
     } catch (reason) { message.textContent = reason.message || 'Die Benachrichtigung konnte nicht aktiviert werden.'; }
     finally { button.disabled = false; }
   });
-  const questionDialog = document.querySelector('[data-product-question-dialog]');
-  document.querySelectorAll('[data-product-question-open]').forEach(button => button.addEventListener('click', () => questionDialog?.showModal()));
-  questionDialog?.querySelectorAll('[data-product-question-close]').forEach(button => button.addEventListener('click', () => questionDialog.close()));
+  document.addEventListener('click', event => {
+    if (event.target.closest('[data-product-question-open]')) document.querySelector('[data-product-question-dialog]')?.showModal();
+    if (event.target.closest('[data-product-question-close]')) event.target.closest('[data-product-question-dialog]')?.close();
+  });
   const token = document.querySelector('[data-purchase-token] input');
   const touchCapable = navigator.maxTouchPoints > 0;
   let returnFocus = null;
 
-  if (!actions.length || !token) return;
+  if (!token) return;
 
   const formatQuantity = value => Number(value).toLocaleString('de-DE', { maximumFractionDigits: 3 });
   const closeModal = () => {
@@ -67,52 +75,58 @@
     modal.querySelector('[data-purchase-close]').focus();
   };
 
-  actions.forEach(action => {
-    const button = action.querySelector('[data-purchase-submit]');
-    const quantity = action.querySelector('[data-purchase-quantity]');
-    const error = action.querySelector('[data-purchase-error]');
+  if (!touchCapable) {
+    document.addEventListener('mouseover', event => {
+      const action = event.target.closest('[data-fdshop-purchase]');
+      if (action && !action.contains(event.relatedTarget)) action.classList.add('is-open');
+    });
+    document.addEventListener('mouseout', event => {
+      const commerce = event.target.closest('.fdshop-card__commerce');
+      if (!commerce || commerce.contains(event.relatedTarget)) return;
+      const action = commerce.querySelector('[data-fdshop-purchase]');
+      if (action && !action.contains(document.activeElement)) action.classList.remove('is-open');
+    });
+  }
 
-    if (!touchCapable) {
-      action.addEventListener('mouseenter', () => action.classList.add('is-open'));
-      action.closest('.fdshop-card__commerce')?.addEventListener('mouseleave', () => {
-        if (!action.contains(document.activeElement)) action.classList.remove('is-open');
-      });
+  document.addEventListener('click', async event => {
+    const button = event.target.closest('[data-purchase-submit]');
+    if (!button) return;
+    const action = button.closest('[data-fdshop-purchase]');
+    const quantity = action?.querySelector('[data-purchase-quantity]');
+    const error = action?.querySelector('[data-purchase-error]');
+    if (!action || !quantity || !error) return;
+    if (touchCapable && !action.classList.contains('is-open')) {
+      event.preventDefault();
+      action.classList.add('is-open');
+      quantity.focus();
+      return;
     }
 
-    button.addEventListener('click', async event => {
-      if (touchCapable && !action.classList.contains('is-open')) {
-        event.preventDefault();
-        action.classList.add('is-open');
-        quantity.focus();
-        return;
-      }
+    error.hidden = true;
+    error.textContent = '';
+    button.disabled = true;
+    quantity.disabled = true;
+    const body = new FormData();
+    body.append(token.name, '1');
+    body.append('product_id', action.dataset.purchaseProductId);
+    body.append('quantity', quantity.value);
+    body.append('unit_variant', action.dataset.unitVariant || 'piece');
 
-      error.hidden = true;
-      error.textContent = '';
-      button.disabled = true;
-      quantity.disabled = true;
-      const body = new FormData();
-      body.append(token.name, '1');
-      body.append('product_id', action.dataset.purchaseProductId);
-      body.append('quantity', quantity.value);
-      body.append('unit_variant', action.dataset.unitVariant || 'piece');
-
-      try {
-        const response = await fetch('index.php?option=com_fdshop&format=json&task=cart.add', {
-          method: 'POST', body, headers: { 'X-Requested-With': 'XMLHttpRequest' }
-        });
-        const payload = await response.json();
-        if (!response.ok || payload.success === false || !payload.data?.purchase) {
-          throw new Error(payload.message || 'Das Produkt konnte nicht hinzugefügt werden.');
-        }
-        showResult(payload.data.purchase, button);
-      } catch (reason) {
-        error.textContent = reason.message || 'Das Produkt konnte nicht hinzugefügt werden.';
-        error.hidden = false;
-      } finally {
-        button.disabled = false;
-        quantity.disabled = false;
+    try {
+      const response = await fetch('index.php?option=com_fdshop&format=json&task=cart.add', {
+        method: 'POST', body, headers: { 'X-Requested-With': 'XMLHttpRequest' }
+      });
+      const payload = await response.json();
+      if (!response.ok || payload.success === false || !payload.data?.purchase) {
+        throw new Error(payload.message || 'Das Produkt konnte nicht hinzugefügt werden.');
       }
-    });
+      showResult(payload.data.purchase, button);
+    } catch (reason) {
+      error.textContent = reason.message || 'Das Produkt konnte nicht hinzugefügt werden.';
+      error.hidden = false;
+    } finally {
+      button.disabled = false;
+      quantity.disabled = false;
+    }
   });
 })();
