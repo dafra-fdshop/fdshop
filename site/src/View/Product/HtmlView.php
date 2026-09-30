@@ -13,6 +13,7 @@ use FDShop\Component\FDShop\Site\Helper\RouteHelper;
 use FDShop\Component\FDShop\Site\Helper\PurchaseHelper;
 use FDShop\Component\FDShop\Site\Helper\ProductVisualHelper;
 use FDShop\Component\FDShop\Site\Helper\ProductStructuredDataHelper;
+use FDShop\Component\FDShop\Administrator\Helper\DisplayDateHelper;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Form\Form;
 use Joomla\CMS\MVC\View\HtmlView as BaseHtmlView;
@@ -63,7 +64,7 @@ final class HtmlView extends BaseHtmlView
         if ((int) $item->physically_in_stock === 1) {
             $item->physical_stock_text = 'Im Lager';
         } elseif (!empty($item->available_from)) {
-            $item->physical_stock_text = 'Verfügbar ab ' . Factory::getDate((string) $item->available_from)->format('d.m.Y', true);
+            $item->physical_stock_text = 'Verfügbar ab ' . DisplayDateHelper::instantDate((string) $item->available_from);
         }
 
         $document = Factory::getApplication()->getDocument();

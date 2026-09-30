@@ -38,6 +38,8 @@
                 <option value="1">Ja</option>
             </field>
 
+            <field name="display_timezone" type="timezone" label="FDShop-Anzeigezeitzone" description="Zeitzone für alle menschenlesbaren FDShop-Zeitpunkte. Technische Speicherung und Berechnung bleiben UTC." default="Europe/Berlin" filter="string" required="true" />
+
             <field
                 name="image_size_default"
                 type="number"

@@ -4,6 +4,7 @@ defined('_JEXEC') or die;
 use Joomla\CMS\Factory;
 use Joomla\CMS\HTML\HTMLHelper;
 use Joomla\CMS\Router\Route;
+use FDShop\Component\FDShop\Administrator\Helper\DisplayDateHelper;
 
 $a       = $this->account;
 $user    = $a['user'];
@@ -12,7 +13,7 @@ $config  = $a['config'];
 $section = $this->section;
 $base    = 'index.php?option=com_fdshop&view=account';
 $money   = static fn($value, $currency = 'EUR') => number_format((float) $value, 2, ',', '.') . ' ' . htmlspecialchars((string) $currency, ENT_QUOTES, 'UTF-8');
-$date    = static fn($value) => $value ? HTMLHelper::_('date', $value, 'd.m.Y H:i') : '–';
+$date    = static fn($value) => $value ? DisplayDateHelper::dateTime((string) $value) : '–';
 $status  = static fn($value) => match ((string) $value) {
     'declared' => 'Eingegangen', 'accepted' => 'Akzeptiert', 'rejected' => 'Abgelehnt', default => 'Nicht erklärt',
 };

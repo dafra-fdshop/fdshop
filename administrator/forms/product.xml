@@ -177,7 +177,7 @@
                 type="calendar"
                 label="Verfügbar ab"
                 format="%Y-%m-%d %H:%M:%S"
-                filter="user_utc"
+                filter="raw"
 				description="Ab wann vorraussichtlich im Lager"
             />
 
@@ -236,7 +236,7 @@
                 type="calendar"
                 label="Veröffentlichen ab"
                 format="%Y-%m-%d %H:%M:%S"
-                filter="user_utc"
+                filter="raw"
             />
 
             <field
@@ -244,7 +244,7 @@
                 type="calendar"
                 label="Veröffentlichen bis"
                 format="%Y-%m-%d %H:%M:%S"
-                filter="user_utc"
+                filter="raw"
             />
         </fieldset>
 

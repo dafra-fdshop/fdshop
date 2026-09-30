@@ -6,6 +6,11 @@
 
 defined('_JEXEC') or die;
 
+// Shared display-time formatting is used by both administrator and site code.
+// Load it with the component provider so CLI workers and regular dispatchers
+// have the same central implementation available.
+require_once __DIR__ . '/../src/Helper/DisplayDateHelper.php';
+
 use FDShop\Component\FDShop\Administrator\Extension\FdshopComponent;
 use FDShop\Component\FDShop\Administrator\Service\CategoryService;
 use FDShop\Component\FDShop\Administrator\Service\CategoryServiceInterface;

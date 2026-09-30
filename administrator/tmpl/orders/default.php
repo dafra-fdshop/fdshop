@@ -9,6 +9,7 @@ defined('_JEXEC') or die;
 use Joomla\CMS\HTML\HTMLHelper;
 use Joomla\CMS\Layout\LayoutHelper;
 use Joomla\CMS\Router\Route;
+use FDShop\Component\FDShop\Administrator\Helper\DisplayDateHelper;
 
 HTMLHelper::_('bootstrap.tooltip');
 
@@ -155,7 +156,7 @@ $statusOptions = $this->statusOptions ?? [];
 								</span>
 							</td>
 
-							<td><strong><?php echo !empty($item->created) ? HTMLHelper::_('date', $item->created, 'Y-m-d H:i') : ''; ?></strong><br><span class="small text-muted"><?php echo !empty($item->modified) ? HTMLHelper::_('date', $item->modified, 'Y-m-d H:i') : '–'; ?></span></td>
+						<td><strong><?php echo !empty($item->created) ? DisplayDateHelper::dateTime($item->created, 'd.m.Y H:i') : ''; ?></strong><br><span class="small text-muted"><?php echo !empty($item->modified) ? DisplayDateHelper::dateTime($item->modified, 'd.m.Y H:i') : '–'; ?></span></td>
 
 							<td><?php $withdrawalLabels=['none'=>'–','declared'=>'Widerruf erklärt','accepted'=>'Akzeptiert','rejected'=>'Abgelehnt'];$withdrawal=(string)($item->withdrawal_status??'none'); ?><span class="badge <?php echo $withdrawal==='declared'?'bg-warning text-dark':($withdrawal==='accepted'?'bg-success':($withdrawal==='rejected'?'bg-danger':'bg-secondary')); ?>"><?php echo $withdrawalLabels[$withdrawal]??$this->escape($withdrawal); ?></span></td>
 

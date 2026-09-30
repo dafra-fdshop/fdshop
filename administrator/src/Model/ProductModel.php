@@ -13,6 +13,7 @@ use Joomla\CMS\Form\Form;
 use Joomla\CMS\MVC\Model\AdminModel;
 use FDShop\Component\FDShop\Administrator\Service\ProductServiceInterface;
 use FDShop\Component\FDShop\Administrator\Service\WatchlistServiceInterface;
+use FDShop\Component\FDShop\Administrator\Helper\DisplayDateHelper;
 
 class ProductModel extends AdminModel
 {
@@ -70,12 +71,19 @@ class ProductModel extends AdminModel
             $loadedItem->primary_category_id = (int) $loadedItem->category_ids[0];
         }
 
+        foreach (['available_from', 'publish_up', 'publish_down'] as $field) {
+            $loadedItem->$field = DisplayDateHelper::toDisplayInput($loadedItem->$field ?? null);
+        }
+
         return $loadedItem;
     }
 
     public function save($data): bool
     {
         try {
+            foreach (['available_from', 'publish_up', 'publish_down'] as $field) {
+                $data[$field] = DisplayDateHelper::fromDisplayInput($data[$field] ?? null);
+            }
             $submitted = Factory::getApplication()->getInput()->post->get('jform', [], 'array');
             $data['filter_option_ids'] = $this->normalizeIds($submitted['filter_option_ids'] ?? []);
             $categoryIds = $this->normalizeIds($data['category_ids'] ?? []);

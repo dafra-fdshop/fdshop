@@ -12,6 +12,7 @@ use FDShop\Component\FDShop\Administrator\Service\CouponServiceInterface;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Form\Form;
 use Joomla\CMS\MVC\Model\AdminModel;
+use FDShop\Component\FDShop\Administrator\Helper\DisplayDateHelper;
 
 class CouponModel extends AdminModel
 {
@@ -62,7 +63,9 @@ class CouponModel extends AdminModel
 
         $item = $this->getCouponService()->getCouponById($couponId);
 
-        return $item ?: parent::getItem($pk);
+        $item = $item ?: parent::getItem($pk);
+        if ($item) foreach (['valid_from', 'valid_to'] as $field) $item->$field = DisplayDateHelper::toDisplayInput($item->$field ?? null);
+        return $item;
     }
 
     public function getCouponMappings($pk = null): array
@@ -84,6 +87,7 @@ class CouponModel extends AdminModel
     public function save($data): bool
     {
         try {
+            foreach (['valid_from', 'valid_to'] as $field) $data[$field] = DisplayDateHelper::fromDisplayInput($data[$field] ?? null);
             $couponId = $this->getCouponService()->saveCoupon((array) $data);
 
             $this->setState($this->getName() . '.id', $couponId);

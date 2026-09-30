@@ -8,6 +8,7 @@ use Joomla\CMS\Factory;
 use Joomla\CMS\HTML\HTMLHelper;
 use Joomla\CMS\Layout\FileLayout;
 use Joomla\Database\DatabaseInterface;
+use FDShop\Component\FDShop\Administrator\Helper\DisplayDateHelper;
 
 final class OrderDocumentService
 {
@@ -59,8 +60,8 @@ final class OrderDocumentService
     public function e(mixed $v):string{return htmlspecialchars((string)$v,ENT_QUOTES|ENT_SUBSTITUTE,'UTF-8');}
     public function money(mixed $v,string $c):string{return number_format((float)$v,2,',','.').' '.$this->e($c?:'EUR');}
     public function qty(mixed $v):string{$n=(float)$v;return abs($n-round($n))<.0001?(string)(int)round($n):number_format($n,3,',','.');}
-    public function date(string $v):string{return Factory::getDate($v)->format('d.m.Y H:i',true);}
-    public function day(string $v):string{return Factory::getDate($v,'UTC')->format('d.m.Y',true);}
+    public function date(string $v):string{return DisplayDateHelper::dateTime($v);}
+    public function day(string $v):string{return DisplayDateHelper::instantDate($v);}
     public function invoiceTotals(float $gross,float $rate=19.0):array{$gross=round($gross,2);$net=round($gross/(1+$rate/100),2);return ['net'=>$net,'tax'=>round($gross-$net,2),'gross'=>$gross,'rate'=>$rate];}
     public function addressLine(string $postal,string $city):string{$postal=trim($postal);$city=trim($city);return $postal!==''&&preg_match('/^'.preg_quote($postal,'/').'(?:\s|$)/u',$city)?$city:trim($postal.' '.$city);}
     public function safeColor(string $c):string{return preg_match('/^#[0-9a-f]{6}$/i',$c)?$c:'#d9dde2';}

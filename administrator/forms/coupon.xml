@@ -135,7 +135,7 @@
                 type="calendar"
                 label="Gültig ab"
                 format="%Y-%m-%d %H:%M:%S"
-                filter="user_utc"
+                filter="raw"
                 showtime="true"
             />
 
@@ -144,7 +144,7 @@
                 type="calendar"
                 label="Gültig bis"
                 format="%Y-%m-%d %H:%M:%S"
-                filter="user_utc"
+                filter="raw"
                 showtime="true"
             />
         </fieldset>

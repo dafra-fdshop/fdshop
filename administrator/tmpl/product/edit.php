@@ -5,6 +5,7 @@
  */
 
 defined('_JEXEC') or die;
+use FDShop\Component\FDShop\Administrator\Helper\DisplayDateHelper;
 
 use Joomla\CMS\HTML\HTMLHelper;
 use Joomla\CMS\Language\Text;
@@ -96,7 +97,7 @@ $this->getDocument()->getWebAssetManager()->useScript('com_fdshop.admin-product'
                 <div class="card mb-3">
                     <div class="card-header">Verfügbarkeits-Watchlist</div>
                     <div class="card-body">
-                        <?php if (empty($this->watchlist)) : ?><p class="mb-0 text-muted">Keine aktiven Vormerkungen.</p><?php else : ?><ul><?php foreach ($this->watchlist as $watch) : ?><li><?php echo htmlspecialchars((string)$watch->name,ENT_QUOTES,'UTF-8'); ?> &lt;<?php echo htmlspecialchars((string)$watch->email,ENT_QUOTES,'UTF-8'); ?>&gt; · <?php echo htmlspecialchars((string)$watch->created,ENT_QUOTES,'UTF-8'); ?></li><?php endforeach; ?></ul><p><?php echo count($this->watchlist); ?> Kunde(n) warten auf Verfügbarkeit.</p><button class="btn btn-primary" type="button" data-fdshop-watchlist-notify data-confirm-message="<?php echo (int) count($this->watchlist); ?> Kunden jetzt benachrichtigen?"<?php echo (string)($this->item->in_stock ?? '') === 'Ausverkauft' ? ' disabled' : ''; ?>>Kunden jetzt benachrichtigen</button><?php endif; ?>
+						<?php if (empty($this->watchlist)) : ?><p class="mb-0 text-muted">Keine aktiven Vormerkungen.</p><?php else : ?><ul><?php foreach ($this->watchlist as $watch) : ?><li><?php echo htmlspecialchars((string)$watch->name,ENT_QUOTES,'UTF-8'); ?> &lt;<?php echo htmlspecialchars((string)$watch->email,ENT_QUOTES,'UTF-8'); ?>&gt; · <?php echo DisplayDateHelper::dateTime((string)$watch->created); ?></li><?php endforeach; ?></ul><p><?php echo count($this->watchlist); ?> Kunde(n) warten auf Verfügbarkeit.</p><button class="btn btn-primary" type="button" data-fdshop-watchlist-notify data-confirm-message="<?php echo (int) count($this->watchlist); ?> Kunden jetzt benachrichtigen?"<?php echo (string)($this->item->in_stock ?? '') === 'Ausverkauft' ? ' disabled' : ''; ?>>Kunden jetzt benachrichtigen</button><?php endif; ?>
                     </div>
                 </div>
             </div>

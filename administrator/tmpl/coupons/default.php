@@ -10,6 +10,7 @@ use Joomla\CMS\HTML\HTMLHelper;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\Layout\LayoutHelper;
 use Joomla\CMS\Router\Route;
+use FDShop\Component\FDShop\Administrator\Helper\DisplayDateHelper;
 
 HTMLHelper::_('bootstrap.tooltip');
 
@@ -113,11 +114,11 @@ $listDirn  = $this->state->get('list.direction');
                             </td>
 
                             <td>
-                                <?php echo $this->escape((string) ($item->valid_from ?? '')); ?>
+                                <?php echo !empty($item->valid_from) ? DisplayDateHelper::dateTime((string)$item->valid_from) : ''; ?>
                             </td>
 
                             <td>
-                                <?php echo $this->escape((string) ($item->valid_to ?? '')); ?>
+                                <?php echo !empty($item->valid_to) ? DisplayDateHelper::dateTime((string)$item->valid_to) : ''; ?>
                             </td>
 
                             <td class="text-center">

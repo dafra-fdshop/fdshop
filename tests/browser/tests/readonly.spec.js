@@ -164,7 +164,7 @@ test('Coupons: implemented values and restrictions are readable', async ({ page 
   await page.getByRole('tab', { name: 'Einschränkungen' }).click();
   await expect(page.locator('#jform_product_ids option:checked')).toContainText('E2E Produkt Aktiv');
   await page.getByRole('tab', { name: 'Gültigkeit' }).click();
-  await expect(page.locator('#jform_valid_to')).toHaveValue(/2035-12-31/);
+  await expect(page.locator('#jform_valid_to')).toHaveValue('2036-01-01 00:59:59');
 });
 
 test('Orders: snapshots and histories are readable', async ({ page }) => {

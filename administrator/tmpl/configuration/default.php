@@ -84,6 +84,7 @@ $orderStatusSearchView = (object) [
 						<?php echo $configurationField($this->form->renderField('general_vat_rate')); ?>
 						<?php echo $configurationField($this->form->renderField('general_currency')); ?>
 						<?php echo $configurationField($this->form->renderField('katalog_active')); ?>
+						<?php echo $configurationField($this->form->renderField('display_timezone')); ?>
 						<?php echo $configurationField($this->form->renderField('show_terms_checkbox')); ?>
 						<?php echo $configurationField($this->form->renderField('require_terms_checkbox')); ?>
 					</div>

@@ -1011,6 +1011,7 @@ CREATE TABLE `#__fdshop_config` (
   `show_terms_checkbox` TINYINT(1) NOT NULL DEFAULT 0,
   `require_terms_checkbox` TINYINT(1) NOT NULL DEFAULT 0,
   `paypal_reservation_minutes` INT UNSIGNED NOT NULL DEFAULT 10,
+  `display_timezone` VARCHAR(64) NOT NULL DEFAULT 'Europe/Berlin',
   `katalog_active` TINYINT(1) NOT NULL DEFAULT 0,
   `document_company_name` VARCHAR(255) NOT NULL DEFAULT '',
   `document_company_street` VARCHAR(255) NOT NULL DEFAULT '',
