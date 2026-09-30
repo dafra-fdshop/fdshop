@@ -1,0 +1,290 @@
+FDShop – FIXAUFTRAG
+FRONTEND KATEGORIE: VIDEO-BUTTON NACH FILTERUNG FUNKTIONSLOS
+
+Projekt: FDShop
+Branch: feature
+Priorität: hoch – realer Frontendfehler
+Scope: Kategorieansicht / Produktkarten / Video-Popup / dynamische Filterupdates
+
+======================================================================
+1. AUSGANGSLAGE
+======================================================================
+
+Aktueller Stand:
+- Pagination-State-Fix real grün
+- FDShop Anzeigezeitzone 0.0.45 real grün
+- PayPal/Rechnung nicht Bestandteil dieses Auftrags
+
+Realer Fehler in der Kategorieansicht:
+
+OHNE aktiven Filter:
+- Produktkarte besitzt Video-Button
+- Klick öffnet Video-Popup
+- Video wird korrekt angezeigt/geladen
+
+NACH Anwenden eines Filters:
+- gefilterte Produktkarten werden korrekt angezeigt
+- Video-Button ist weiterhin sichtbar
+- Klick auf Video-Button bewirkt nichts
+- kein Popup
+- kein Video
+- auch mehrfaches Klicken ohne Wirkung
+
+Filterung selbst funktioniert.
+
+======================================================================
+2. ZIEL
+======================================================================
+
+Videofunktion der Produktkarten muss unabhängig davon funktionieren, wie die
+aktuelle Produktliste entstanden ist.
+
+Mindestens:
+
+- initial ungefilterte Kategorie
+- Herstellerfilter
+- technischer Filter
+- mehrere Filter
+- Filter entfernen
+- Pagination
+- Filter + Pagination
+- Sortierung
+- Produkte-pro-Seite
+- Kombination dieser Zustände soweit Produktkarten dynamisch neu gerendert
+  werden
+
+Wenn ein Produkt ein Video besitzt und der Video-Button angezeigt wird, muss
+der Button funktionsfähig sein.
+
+======================================================================
+3. ZUERST URSACHE NACHWEISEN
+======================================================================
+
+Nicht blind Eventhandler nach jedem Filterlauf erneut binden.
+
+Aktuellen feature-Stand analysieren, insbesondere:
+
+- Kategorie-Template
+- Produktkarten-Rendering
+- Filter-JavaScript
+- AJAX-/Fetch-Update der Produktliste
+- Video-Button-Markup / data-Attribute
+- Video-Popup/Modal
+- Video-JavaScript
+- Initialisierung beim DOMContentLoaded
+- Eventhandler
+- dynamisch ersetzte DOM-Container
+- Pagination-/Sortier-/Limit-Updates
+
+Belastbar unterscheiden:
+
+A) Gefilterte Produktkarte enthält weiterhin vollständige korrekte
+   Video-Metadaten, aber Klickhandler ist nach DOM-Replacement verloren.
+
+B) Gefilterte Response/Rendering verliert benötigte Video-Daten.
+
+C) Modal/Popup existiert nach Update nicht mehr bzw. wird falsch referenziert.
+
+D) andere konkrete Ursache.
+
+Erst danach Fix.
+
+======================================================================
+4. BEVORZUGTE ROBUSTE LÖSUNG
+======================================================================
+
+Falls Ursache verlorenes Event-Binding bei dynamisch erzeugten Buttons ist:
+
+Bevorzugt robuste zentrale Event-Delegation an einem stabilen geeigneten
+Container/Dokument statt wiederholtem individuellen Binding jeder Produktkarte,
+sofern dies zur vorhandenen JS-Architektur passt.
+
+Alternativ vorhandene zentrale Reinitialisierungsstrategie sauber verwenden,
+wenn FDShop diese bereits verbindlich nutzt.
+
+Keine mehrfachen Listener nach wiederholtem Filtern.
+Kein Memory-/Handler-Leak.
+Ein Klick -> genau eine Popup-Aktion.
+
+Nicht nur speziellen Herstellerfilter fixen.
+
+======================================================================
+5. VIDEO-DATEN
+======================================================================
+
+Falls Datenproblem:
+
+Sicherstellen, dass dynamisch gerenderte Produktkarten dieselben benötigten
+Videoinformationen erhalten wie initial serverseitig gerenderte Karten.
+
+Keine N+1-Abfrage pro Produkt einführen.
+
+Bestehende Performance-Leitlinie bleibt verbindlich:
+Videodaten gesammelt/performant bereitstellen.
+
+Keine zusätzlichen Requests pro Produkt nur zur Darstellung des Buttons,
+sofern bestehende Architektur dies nicht bereits bewusst vorsieht.
+
+======================================================================
+6. POPUP / SICHERHEIT
+======================================================================
+
+Bestehende Video-Popup-UX beibehalten.
+
+Keine neue Modalbibliothek.
+
+Video-URLs weiterhin nach bestehenden FDShop-Regeln behandeln.
+Keine unsichere HTML-Injection.
+Keine Änderung an Medien-/YouTube-Fachregeln, wenn nicht ursächlich nötig.
+
+Popup schließen / erneut öffnen muss weiterhin funktionieren.
+
+======================================================================
+7. REGRESSIONSTESTS
+======================================================================
+
+Browsertests mindestens:
+
+A) UNGEFILTERT
+- Produkt mit Video
+- Button klicken
+- Popup sichtbar
+- korrektes Video / korrekte Videoquelle
+
+B) HERSTELLERFILTER
+- Filter anwenden
+- gefiltertes Produkt mit Video
+- Button klicken
+- Popup funktioniert
+
+C) TECHNISCHER FILTER
+- Filter anwenden
+- Video funktioniert
+
+D) MEHRERE FILTER
+- kombinierte Filter
+- Video funktioniert
+
+E) FILTER ENTFERNEN
+- Filter setzen
+- entfernen
+- Video funktioniert weiterhin
+
+F) PAGINATION
+- Seite 2
+- Video funktioniert
+
+G) FILTER + PAGINATION
+- Filter bleibt aktiv
+- Seite wechseln
+- Video funktioniert
+- frisch reparierter Pagination-State bleibt korrekt
+
+H) SORTIERUNG / LIMIT
+- Produktliste aktualisieren
+- Video funktioniert danach
+
+I) WIEDERHOLTE UPDATES
+- mehrfach Filter/Sortierung/Pagination wechseln
+- danach ein Klick erzeugt genau ein Popup
+- keine mehrfach gebundenen Handler
+
+J) PRODUKT OHNE VIDEO
+- kein falscher funktionsloser Video-Button erzeugen, entsprechend bestehender
+  Fachregel
+
+======================================================================
+8. BESTEHENDE FRONTEND-FIXES SCHÜTZEN
+======================================================================
+
+Nicht regressieren:
+
+- vollständiger Filter-State
+- Pagination additionalUrlParams
+- limit 24/48 etc.
+- Sortierung
+- SEF-Routing
+- Filterchips
+- Filteroptionen/Counts
+- responsive Produktkarten
+- Purchase Action / Warenkorb
+- Produktbeschreibung/Zeilenumbrüche
+
+Insbesondere Pagination-State-Fix:
+Commit e1c7b5cff0cf0c39e60dfe1d9558358ead2f2ea3
+fachlich erhalten.
+
+======================================================================
+9. PERFORMANCE
+======================================================================
+
+Keine N+1-Queries.
+Keine Video-Abfrage pro Produkt.
+Keine unnötige vollständige Seiteninitialisierung nach jedem Filterupdate.
+
+Fix soll auch bei großen Produktlisten performant bleiben.
+
+======================================================================
+10. TESTUMFANG
+======================================================================
+
+Gezielt:
+
+- relevante Kategorie-/Filter-/Video-Browsertests
+- Pagination-/Filter-State-Regression
+- Desktop
+- Mobile Gegenprobe
+- PHP-/JS-Syntax
+- Paketinstallation
+- Quick-Smoke
+- Logs
+- git diff --check
+
+Kein unnötiger FULL-Shop-Testmarathon, solange Scope eng bleibt.
+
+======================================================================
+11. NICHT TEIL
+======================================================================
+
+Nicht bearbeiten:
+
+- PayPal
+- Rechnung
+- UTC/Anzeigezeitzone
+- Bundle-Funktion
+- Cache-System
+- Adminbereich
+- Medien-Datenmodell, sofern nicht nachweislich Ursache
+
+======================================================================
+12. ABSCHLUSS
+======================================================================
+
+Wenn Ursache nachgewiesen und Fix grün:
+
+- Commit feature
+- Push origin/feature
+- kein main-Merge
+- Working Trees sauber/synchron
+- Auftrag nach Aufträge/erledigt
+
+Abschlussbericht:
+
+1. konkrete Ursache
+2. Fixstrategie
+3. warum dynamische Produktkarten jetzt funktionieren
+4. Schutz vor mehrfachen Eventhandlern
+5. Performance/N+1-Nachweis
+6. Regressionstests
+7. geänderte Dateien
+8. Commit-SHA
+9. feature = origin/feature
+10. Working Trees sauber
+
+Wenn Ursache unerwartet außerhalb Kategorie-/Video-JS liegt:
+STOP mit Befund statt fachfremdem Umbau.
+
+Commitmessage sinngemäß:
+Fix video actions after catalog updates
+
+ENDE DES AUFTRAGS
