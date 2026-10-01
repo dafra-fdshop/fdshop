@@ -1,0 +1,414 @@
+FDShop – MICRO-UX-AUFTRAG
+BUNDLE BUILDER EXPERIENCE V1.3 – MAXIMUM DISCOUNT CELEBRATION BOOST
+
+Projekt: FDShop
+Branch: feature
+Basis: real getestete Bundle Builder V1.2
+V1.2 Commit: 63693c5bedcef69572ab51adc8047f7d199bd9fb
+Scope: ausschließlich maximale Rabatt-Celebration + kleiner Skalenabstand
+KEIN Redesign / KEINE Businesslogikänderung.
+
+======================================================================
+1. REALBEFUND
+======================================================================
+
+V1.2 funktioniert insgesamt gut.
+
+Der reale Screenshot der MAXIMALEN Celebration zeigt jedoch:
+- Glückwunsch-Panel gut
+- Grundidee Hütchen vorhanden
+- Effekt insgesamt deutlich zu klein/schwach
+- zu wenige Partikel
+- kaum räumliche Ausbreitung
+- Luftschlangen fehlen praktisch
+- große "Mein Bundle"-Arbeitsfläche wird kaum genutzt
+
+Der bereitgestellte Screenshot wurde exakt am visuellen HÖHEPUNKT der
+Animation aufgenommen.
+
+Dieser Zustand ist ausdrücklich NICHT stark genug.
+
+Daniel verkauft echte Konfettikanonen und möchte sich für diesen Effekt nicht
+schämen müssen. :)
+
+======================================================================
+2. ZIEL
+======================================================================
+
+Nur die HÖCHSTE Rabattstufe soll für einen kurzen Moment wirklich "PENG!"
+machen.
+
+Keine Änderung an normalen Rabattstufen.
+
+Visuelles Ziel sinngemäß:
+
+       ✦       ╲     ~~~~~       ✦
+  ~~~~~    ✦      ╲         ▪
+         ▪             ~~~~~
+ ✦    ╱      GLÜCKWUNSCH!      ╲    ✦
+    ▪        12 % RABATT          ~~~
+ ~~~~~    ▪                 ✦
+
+Nicht dieses ASCII nachbauen; gemeint ist:
+großflächiger Burst über einen erheblichen Teil der rechten Arbeitsfläche.
+
+======================================================================
+3. HÜTCHEN NEU POSITIONIEREN
+======================================================================
+
+Party-/Konfetti-Hütchen NICHT mehr hinter/zentral am Glückwunsch-Panel.
+
+Neu:
+- Hütchen deutlich weiter unten in der "Mein Bundle"-Arbeitsfläche
+- bevorzugt links unten / unterer linker Bereich
+- ausreichend Abstand zu Rändern/Sticky Summary
+- responsive Positionierung
+
+Das Hütchen ist die sichtbare Quelle der Celebration.
+
+Effektrichtung:
+vom Hütchen überwiegend diagonal nach vorne/oben/rechts in die Arbeitsfläche.
+
+Dadurch entsteht ein echter Ausstoß statt einer kleinen Partikelwolke um die
+Mitte.
+
+======================================================================
+4. HÜTCHEN-EINTRITT
+======================================================================
+
+Hütchen darf selbst dynamisch erscheinen:
+
+- kurzer Scale-/Translate-/leichter Rotate-Effekt
+- z.B. von etwas kleiner/unten in Endposition
+- dann Burst
+
+Keine lange Voranimation.
+
+Gefühl:
+Hütchen kommt -> PENG -> Inhalt schießt heraus.
+
+Codex darf Timing feinjustieren.
+
+======================================================================
+5. DEUTLICH MEHR PARTIKEL
+======================================================================
+
+Aktuelle Partikelmenge deutlich erhöhen.
+
+Zielgröße als Orientierung:
+ca. 50–80 leichte visuelle Elemente insgesamt, sofern performant.
+
+Nicht alle identisch.
+
+Mindestens drei klar erkennbare Typen:
+
+A) KONFETTI
+- kleine Rechtecke/Rauten/Papierstücke
+- unterschiedliche Größen/Rotationen
+
+B) STERNE
+- vorhandene goldene Sternsprache aufgreifen
+- verschiedene Größen
+
+C) LUFTSCHLANGEN
+- ausdrücklich neu/deutlich sichtbar
+- längere geschwungene/spiralförmige Elemente
+- mehrere Stück
+- aus dem Hütchen nach links/oben/rechts bzw. hauptsächlich in die Fläche
+- dürfen sich beim Flug drehen/entrollen bzw. anschließend leicht absinken
+
+Luftschlangen sind ein wichtiger Teil des gewünschten Effekts und dürfen nicht
+wieder nur durch winzige Striche angedeutet werden.
+
+======================================================================
+6. FLUGRADIUS / ARBEITSFLÄCHE NUTZEN
+======================================================================
+
+Partikel nicht nur 50–150 px um das Hütchen verteilen.
+
+Die Celebration darf für ca. 1–2 Sekunden einen großen Teil der gesamten
+"Mein Bundle"-Fläche einnehmen.
+
+Partikel dürfen:
+- bis Richtung Rabattskala fliegen
+- weit nach rechts fliegen
+- über Produktkarten fliegen
+- über/um das Glückwunsch-Panel fliegen
+- teilweise wieder nach unten fallen/faden
+
+Keine deckende Hintergrundebene.
+
+Produkte bleiben sichtbar.
+
+======================================================================
+7. EBENENTIEFE / PANEL
+======================================================================
+
+Glückwunsch-Panel aus V1.2 grundsätzlich beibehalten:
+
+"GLÜCKWUNSCH!"
+"[X] % RABATT FREIGESCHALTET"
+
+Es ist gut und nicht das Problem.
+
+Neu:
+Partikel dürfen ausdrücklich AUCH VOR dem Panel fliegen.
+
+Gewünschte Tiefenwirkung:
+- einige Partikel hinter dem Panel
+- Panel
+- einige Sterne/Konfetti/Luftschlangen vor dem Panel
+
+Dabei Lesbarkeit erhalten:
+Nicht dauerhaft große Elemente direkt über dem gesamten Text parken.
+
+Kurze Überflüge sind ausdrücklich erlaubt.
+
+Saubere z-index-Ebenen definieren.
+
+======================================================================
+8. FARBEN
+======================================================================
+
+Bisherige sehr zurückhaltende Grau/Gold-Idee darf etwas erweitert werden.
+
+Weiterhin FDShop-orientiert, kein Regenbogen-Kindergeburtstag.
+
+Hauptfarben:
+- #e0a721
+- Schwarz/Anthrazit
+- Weiß/Hellgrau
+
+Zusätzlich dürfen wenige warme Orange-/Goldvarianten verwendet werden.
+
+Für etwas mehr Leben dürfen sehr sparsam 1–2 zusätzliche harmonische
+Akzentfarben eingesetzt werden, sofern Gesamtbild hochwertig bleibt.
+
+Nicht alle Partikel grau machen.
+
+Hütchen ebenfalls etwas lebendiger, aber klar FDShop statt bunter Stockgrafik.
+
+======================================================================
+9. GLÜCKWUNSCH-PANEL – KURZER IMPULS
+======================================================================
+
+Panel darf beim Burst einen kurzen hochwertigen Pop bekommen, z.B.:
+
+scale(.88/.92) -> ca. 1.03/1.05 -> 1
+
+Sehr kurz.
+
+"GLÜCKWUNSCH!" darf ggf. minimal zeitversetzt/mit Fade erscheinen.
+
+Keine wackelnde Daueranimation.
+
+======================================================================
+10. ABLAUF
+======================================================================
+
+Sinngemäßer Ablauf:
+
+1. höchste Schwelle wird von unten nach oben erreicht
+2. Rabattfortschritt erreicht Max-Marker
+3. Hütchen erscheint links unten
+4. kräftiger Burst
+5. Konfetti + Sterne + deutlich erkennbare Luftschlangen breiten sich über
+   großen Teil der Arbeitsfläche aus
+6. Glückwunsch-Panel poppt sichtbar
+7. Partikel dürfen vor und hinter Panel fliegen
+8. ca. 1–2 Sekunden sichtbare Celebration
+9. Partikel fallen/faden sauber aus
+10. Overlay vollständig entfernen
+11. dauerhafter Status:
+    "[X] % Rabatt aktiv · Höchste Stufe erreicht"
+
+Timing darf Codex für bestes Look&Feel feinjustieren.
+
+======================================================================
+11. WIEDERHOLUNG MUSS SAUBER BLEIBEN
+======================================================================
+
+Bestehende Regel unverändert:
+
+unter Max-Schwelle -> Max-Schwelle:
+Celebration
+
+wieder darunter:
+keine
+
+erneut Max-Schwelle:
+Celebration erneut
+
+Realtest wird diesen Vorgang mehrfach wiederholen.
+
+Daher nach jedem Lauf:
+- keine übrig gebliebenen Partikel
+- keine Luftschlangen-DOM-Reste
+- kein altes Hütchen
+- kein zweites Panel
+- keine Timerleaks
+- keine Listenerleaks
+- Animation bei jedem erneuten Trigger vollständig
+
+======================================================================
+12. PERFORMANCE
+======================================================================
+
+Mehr Partikel ja, aber leichtgewichtig.
+
+Keine externe Partikel-/Confetti-Library nur dafür hinzufügen.
+
+Bevorzugt vorhandenes Vanilla JS + CSS/Web Animations.
+
+Partikel nach Ende vollständig entfernen.
+
+Keine Layout-Thrashing-Schleifen.
+Transform/opacity bevorzugen.
+
+Animation darf die Bundle-Bedienung nicht dauerhaft blockieren.
+
+======================================================================
+13. REDUCED MOTION
+======================================================================
+
+prefers-reduced-motion weiterhin respektieren.
+
+Dann:
+- keine große Flug-/Burst-Show
+- stattdessen kurze/statische hochwertige Glückwunschdarstellung
+- Maximalrabatt inhaltlich klar
+
+======================================================================
+14. KLEINE ZUSATZKORREKTUR: STATUSABSTAND
+======================================================================
+
+Der dauerhafte Text unter der Rabattskala, z.B.:
+
+"8 % Rabatt aktiv · Noch 1 Artikel bis 12 %"
+
+sitzt im Realtest etwas zu dicht an der Skala.
+
+Etwas mehr vertikalen Abstand zwischen:
+- Skala/Mengenwerten
+- Statuszeile
+
+vorsehen.
+
+Nur kleine Spacing-Korrektur.
+
+Nicht das Rabattlayout erneut umbauen.
+
+======================================================================
+15. NICHT ANFASSEN
+======================================================================
+
+Nicht bearbeiten:
+- Header
+- Produktpool-Struktur
+- Produkttitel-Layout
+- Quick View
+- Drag&Drop-Fachlogik
+- normale Rabattstufen/deren Ribbon-Sequenz
+- Sticky Summary
+- Save
+- Cart
+- BundleService
+- Preis-/Rabattfachlogik
+- Mobile-Redesign
+- andere Shopbereiche
+
+Ribbon-Zielposition der normalen Stufen NICHT wegen kleiner optischer
+Abweichungen erneut perfektionieren.
+
+======================================================================
+16. REFERENZBILD
+======================================================================
+
+Mit Auftrag wird aktueller Real-Screenshot der maximalen Celebration
+bereitgestellt.
+
+Wichtig:
+Dieser Screenshot zeigt den tatsächlichen HÖHEPUNKT der V1.2-Animation.
+
+Bewertung:
+Glückwunsch-Panel brauchbar/gut.
+Celebration drumherum deutlich zu schwach.
+
+Der Screenshot ist IST-Zustand, nicht Zielbild.
+
+======================================================================
+17. GEZIELTE TESTS
+======================================================================
+
+Kein Full-Shop-Test.
+
+Nur:
+
+A) Max-Schwelle erstmalig
+- großer Burst
+- Hütchen links unten
+- Konfetti
+- Sterne
+- Luftschlangen
+- Panel
+- dynamischer Rabattwert
+
+B) Fläche
+- Ausbreitung groß genug
+- Produkte sichtbar
+- keine deckende Hintergrundfläche
+
+C) Ebenen
+- Partikel vor/hinter Panel
+- Text bleibt lesbar
+
+D) Wiederholung
+- mehrfach unter/über Max-Schwelle
+- jedes Mal vollständige Animation
+- sauberer Cleanup
+
+E) reduced-motion
+
+F) kleiner Statusabstand
+
+G) kurze Regression:
+- normale Rabattstufe weiterhin korrekt
+- Add/Remove/Menge weiterhin korrekt
+
+Zusätzlich:
+- JS/CSS-Syntax soweit relevant
+- Bundle-Browsertest gezielt
+- Paketinstallation
+- kurzer Bundle-Smoke
+- Logs
+- git diff --check
+
+NICHT gesamter Shop.
+
+======================================================================
+18. ABSCHLUSS
+======================================================================
+
+Wenn grün:
+- Commit feature
+- Push origin/feature
+- kein main-Merge
+- Working Trees sauber/synchron
+- Auftrag nach erledigt
+
+Abschlussbericht:
+1. Hütchenposition
+2. Partikeltypen/-menge
+3. Luftschlangen
+4. Flugradius
+5. Ebenen/Panel
+6. Farben
+7. Cleanup/Wiederholung
+8. reduced-motion
+9. Tests
+10. Commit-SHA
+
+Commitmessage sinngemäß:
+Boost maximum bundle discount celebration V1.3
+
+ENDE DES AUFTRAGS
