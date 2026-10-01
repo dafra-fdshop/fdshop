@@ -48,9 +48,10 @@ test('bundle experience loads, supports quick view, button/drag selection and di
     const progress = node.querySelector('.fdshop-bundle__progress').getBoundingClientRect();
     const track = node.querySelector('.fdshop-bundle__progress-track').getBoundingClientRect();
     const status = node.querySelector('[data-bundle-progress-status]').getBoundingClientRect();
-    return { sameRow: Math.abs(heading.top - progress.top) < 12, statusBelowScale: status.top > track.bottom };
+    return { sameRow: Math.abs(heading.top - progress.top) < 12, statusGap: status.top - track.bottom };
   });
-  expect(compactHeader).toEqual({ sameRow: true, statusBelowScale: true });
+  expect(compactHeader.sameRow).toBe(true);
+  expect(compactHeader.statusGap).toBeGreaterThan(16);
   await expect(dialog.locator('[data-bundle-progress-status]')).toHaveText('Noch kein Rabatt aktiv · Noch 1 Artikel bis 3 %');
   await expect(dialog.locator('[data-bundle-reset]')).toBeHidden();
 
@@ -123,7 +124,27 @@ test('bundle experience loads, supports quick view, button/drag selection and di
   await expect(maximum).toBeVisible();
   await expect(maximum).toContainText('GLÜCKWUNSCH!');
   await expect(maximum).toContainText('12 % RABATT FREIGESCHALTET');
-  await expect(maximum.locator('[data-bundle-maximum-burst] i')).toHaveCount(34);
+  await expect(maximum.locator('[data-bundle-maximum-burst] i')).toHaveCount(72);
+  await expect(maximum.locator('.is-streamer')).toHaveCount(12);
+  await expect(maximum.locator('.is-star')).toHaveCount(12);
+  await expect(maximum.locator('.is-confetti')).toHaveCount(48);
+  await expect(maximum.locator('[data-bundle-maximum-burst="behind"] i')).toHaveCount(57);
+  await expect(maximum.locator('[data-bundle-maximum-burst="front"] i')).toHaveCount(15);
+  const maximumLayout = await maximum.evaluate(node => {
+    const overlay = node.getBoundingClientRect();
+    const hat = node.querySelector('.fdshop-bundle__party-hat').getBoundingClientRect();
+    const panel = node.querySelector('.fdshop-bundle__maximum-copy').getBoundingClientRect();
+    const behind = Number(getComputedStyle(node.querySelector('.is-behind')).zIndex);
+    const panelLayer = Number(getComputedStyle(node.querySelector('.fdshop-bundle__maximum-copy')).zIndex);
+    const front = Number(getComputedStyle(node.querySelector('.is-front')).zIndex);
+    return {
+      hatLowerLeft: hat.left < overlay.left + overlay.width * .3 && hat.top > overlay.top + overlay.height * .55,
+      transparent: getComputedStyle(node).backgroundColor === 'rgba(0, 0, 0, 0)',
+      layered: behind < panelLayer && panelLayer < front,
+      panelInside: panel.left >= overlay.left && panel.right <= overlay.right,
+    };
+  });
+  expect(maximumLayout).toEqual({ hatLowerLeft: true, transparent: true, layered: true, panelInside: true });
   await expect(dialog.locator('[data-bundle-chosen-product]')).toHaveCount(2);
   await expect(dialog.locator('[data-bundle-celebration]')).toBeHidden();
   const second = dialog.locator('[data-bundle-chosen-product="900105"]');
@@ -131,12 +152,12 @@ test('bundle experience loads, supports quick view, button/drag selection and di
   await expect(maximum).toBeHidden();
   await second.getByRole('button', { name: /erhöhen/ }).click();
   await expect(maximum).toBeVisible();
-  await expect(maximum.locator('[data-bundle-maximum-burst] i')).toHaveCount(34);
+  await expect(maximum.locator('[data-bundle-maximum-burst] i')).toHaveCount(72);
   await expect(dialog.locator('[data-bundle-maximum-celebration]')).toHaveCount(1);
   await second.getByRole('button', { name: /reduzieren/ }).click();
   await second.getByRole('button', { name: /erhöhen/ }).click();
   await expect(maximum).toBeVisible();
-  await expect(maximum.locator('[data-bundle-maximum-burst] i')).toHaveCount(34);
+  await expect(maximum.locator('[data-bundle-maximum-burst] i')).toHaveCount(72);
   await expect(dialog.locator('[data-bundle-progress-status]')).toContainText('12 % Rabatt aktiv', { timeout: 4300 });
   await second.getByRole('button', { name: /reduzieren/ }).click();
   await first.getByRole('button', { name: /reduzieren/ }).click();
