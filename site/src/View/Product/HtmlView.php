@@ -77,7 +77,11 @@ final class HtmlView extends BaseHtmlView
         $document->addCustomTag(
             '<script type="application/ld+json">' . ProductStructuredDataHelper::encode($structuredData) . '</script>'
         );
-        $document->getWebAssetManager()->useStyle('com_fdshop.site')->useScript('com_fdshop.site')->useScript('com_fdshop.purchase')->useScript('com_fdshop.bundle');
+        $assets = $document->getWebAssetManager();
+        $assets->useStyle('com_fdshop.site')->useScript('com_fdshop.site')->useScript('com_fdshop.purchase');
+        if (!empty($item->bundles)) {
+            $assets->useStyle('com_fdshop.bundle')->useScript('com_fdshop.bundle');
+        }
         parent::display($tpl);
     }
 

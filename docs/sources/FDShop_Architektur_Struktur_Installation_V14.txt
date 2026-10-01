@@ -131,6 +131,20 @@ Zentrale Assetdefinition: media/joomla.asset.json
 Bundle-Asset: com_fdshop.admin-bundle URI: com_fdshop/admin-bundle.js
 Aktivierung ausschließlich im Bundle-Editbereich.
 
+Frontend-Bundle-Assets: `com_fdshop.bundle` registriert gemeinsam
+`media/css/bundle.css` und `media/js/bundle.js`. Die Produktansicht aktiviert
+beide Assets nur, wenn das gerenderte Produkt mindestens einen verfügbaren
+Bundle Builder besitzt. `site.css` bleibt die globale Shop-Basis; große,
+funktionsspezifische Oberflächen werden als zusammengehöriges Asset modular
+geladen, ohne unnötige Kleinstdatei-Zersplitterung.
+
+Der Bundle Builder verwendet auf Desktop und Tablet weiterhin die bestätigte
+Zweispalten-/Drag-and-Drop-Oberfläche. Auf Smartphones ist die Produktliste der
+natürliche Scrollbereich: Hinzufügen aktualisiert den gemeinsamen Bundle-State
+sofort und gibt Fly-to-Bundle-Feedback; eine dauerhaft erreichbare Sticky Bar
+öffnet die bestehende Zusammenstellung als Bottom Sheet. Mengen, Save und Cart
+verwenden weiterhin dieselbe Selection- und serverseitige Bundle-Fachlogik.
+
 ===================================================================== 9.
 INSTALLATIONSARCHITEKTUR
 =====================================================================

@@ -9,6 +9,15 @@ async function openBuilder(page) {
   return dialog;
 }
 
+test('bundle assets load only in an actual builder context', async ({ page }) => {
+  await page.goto('/index.php?option=com_fdshop&view=category&id=900200');
+  await expect(page.locator('link[href*="com_fdshop/css/bundle.css"]')).toHaveCount(0);
+  await expect(page.locator('script[src*="com_fdshop/js/bundle.js"]')).toHaveCount(0);
+  await page.goto('/index.php?option=com_fdshop&view=product&id=900100');
+  await expect(page.locator('link[href*="com_fdshop/css/bundle.css"]')).toHaveCount(1);
+  await expect(page.locator('script[src*="com_fdshop/js/bundle.js"]')).toHaveCount(1);
+});
+
 test('bundle experience loads, supports quick view, button/drag selection and discount progress', async ({ page, baseURL }) => {
   const diagnostics = await installDiagnostics(page, baseURL);
   await page.route('https://www.youtube-nocookie.com/**', route => route.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html><title>Bundle video fixture</title>' }));
@@ -41,7 +50,7 @@ test('bundle experience loads, supports quick view, button/drag selection and di
   await expect(dialog.locator('.fdshop-bundle__promise')).toContainText('Mindestens 2 verschiedene Produkte');
   await expect(dialog.locator('.fdshop-bundle__eyebrow')).toHaveCSS('color', 'rgb(224, 167, 33)');
   await expect(dialog.locator('.fdshop-bundle__chosen-top > .fdshop-bundle__progress')).toHaveCount(1);
-  await expect(dialog.locator('.fdshop-bundle__progress-heading')).toContainText('MEIN RABATT');
+  await expect(dialog.locator('[data-bundle-progress-scope="desktop"] .fdshop-bundle__progress-heading')).toContainText('MEIN RABATT');
   await expect(dialog.locator('.fdshop-bundle__promise')).toHaveCSS('border-left-width', '0px');
   const compactHeader = await dialog.locator('.fdshop-bundle__chosen-top').evaluate(node => {
     const heading = node.querySelector('.fdshop-bundle__chosen-heading').getBoundingClientRect();
@@ -52,7 +61,7 @@ test('bundle experience loads, supports quick view, button/drag selection and di
   });
   expect(compactHeader.sameRow).toBe(true);
   expect(compactHeader.statusGap).toBeGreaterThan(16);
-  await expect(dialog.locator('[data-bundle-progress-status]')).toHaveText('Noch kein Rabatt aktiv · Noch 1 Artikel bis 3 %');
+  await expect(dialog.locator('[data-bundle-progress-scope="desktop"] [data-bundle-progress-status]')).toHaveText('Noch kein Rabatt aktiv · Noch 1 Artikel bis 3 %');
   await expect(dialog.locator('[data-bundle-reset]')).toBeHidden();
 
   const activePoolCard = dialog.locator('[data-bundle-pool-product="900100"]');
@@ -83,23 +92,23 @@ test('bundle experience loads, supports quick view, button/drag selection and di
   await activePoolCard.getByRole('button', { name: '+ Hinzufügen' }).click();
   await expect(activePoolCard.getByRole('button', { name: '+ Hinzufügen' })).toHaveCSS('background-color', 'rgb(224, 167, 33)');
   await expect(dialog.locator('[data-bundle-chosen-product="900100"]')).toBeVisible();
-  await expect(dialog.locator('[data-bundle-progress-status]')).toHaveText('Noch kein Rabatt aktiv · Noch 1 Artikel bis 3 %');
+  await expect(dialog.locator('[data-bundle-progress-scope="desktop"] [data-bundle-progress-status]')).toHaveText('Noch kein Rabatt aktiv · Noch 1 Artikel bis 3 %');
   const firstRibbon = dialog.locator('[data-bundle-celebration]');
   await expect(firstRibbon).toContainText('3 % RABATT FREIGESCHALTET');
   await expect(firstRibbon).toHaveAttribute('style', /25%/);
   await expect(dialog.locator('[data-bundle-celebration-effects]')).toHaveAttribute('style', /25%/);
-  const layers = await dialog.locator('.fdshop-bundle__progress-scale').evaluate(node => ({
+  const layers = await dialog.locator('[data-bundle-progress-scope="desktop"] .fdshop-bundle__progress-scale').evaluate(node => ({
     ribbon: Number(getComputedStyle(node.querySelector('[data-bundle-celebration]')).zIndex),
     stars: Number(getComputedStyle(node.querySelector('[data-bundle-celebration-effects]')).zIndex),
   }));
   expect(layers.stars).toBeGreaterThan(layers.ribbon);
   await expect(firstRibbon).toHaveClass(/is-transferring/, { timeout: 3600 });
-  await expect(dialog.locator('[data-bundle-progress-status]')).toContainText('3 % Rabatt aktiv', { timeout: 4500 });
+  await expect(dialog.locator('[data-bundle-progress-scope="desktop"] [data-bundle-progress-status]')).toContainText('3 % Rabatt aktiv', { timeout: 4500 });
   await expect(dialog.locator('[data-bundle-message]')).toBeHidden();
   await expect(dialog.locator('[data-bundle-reset]')).toBeVisible();
   await dialog.locator('[data-bundle-pool-product="900105"]').dragTo(dialog.locator('[data-bundle-dropzone]'));
   await expect(dialog.locator('.fdshop-bundle__chosen-card')).toHaveCount(2);
-  await expect(dialog.locator('[data-bundle-progress-status]')).toContainText('3 % Rabatt aktiv');
+  await expect(dialog.locator('[data-bundle-progress-scope="desktop"] [data-bundle-progress-status]')).toContainText('3 % Rabatt aktiv');
   await expect(dialog.locator('[data-bundle-celebration]')).toContainText('5 % RABATT FREIGESCHALTET');
   await expect(dialog.locator('[data-bundle-celebration]')).toHaveAttribute('style', /50%/);
   await expect(dialog.locator('[data-bundle-subtotal]')).toHaveText('59,98 €');
@@ -158,7 +167,7 @@ test('bundle experience loads, supports quick view, button/drag selection and di
   await second.getByRole('button', { name: /erhöhen/ }).click();
   await expect(maximum).toBeVisible();
   await expect(maximum.locator('[data-bundle-maximum-burst] i')).toHaveCount(100);
-  await expect(dialog.locator('[data-bundle-progress-status]')).toContainText('12 % Rabatt aktiv', { timeout: 4300 });
+  await expect(dialog.locator('[data-bundle-progress-scope="desktop"] [data-bundle-progress-status]')).toContainText('12 % Rabatt aktiv', { timeout: 4300 });
   await second.getByRole('button', { name: /reduzieren/ }).click();
   await first.getByRole('button', { name: /reduzieren/ }).click();
   await first.getByRole('button', { name: 'Entfernen' }).click();
@@ -190,6 +199,21 @@ test('bundle cart request remains single and server snapshot totals stay authori
   await expect(page.locator('[data-cart-subtotal]')).toHaveText('56,98 €');
   await bundle.getByRole('button', { name: 'Bundle entfernen' }).click();
   await expect(page.locator('[data-cart-bundle]')).toHaveCount(0);
+  diagnostics.expectClean();
+});
+
+test('tablet keeps the approved workspace and bundle interactions', async ({ page, baseURL }) => {
+  const diagnostics = await installDiagnostics(page, baseURL);
+  await page.setViewportSize({ width: 820, height: 1000 });
+  const dialog = await openBuilder(page);
+  await expect(dialog.locator('[data-bundle-mobile-bar]')).toBeHidden();
+  await expect(dialog.locator('.fdshop-bundle__pool')).toBeVisible();
+  await expect(dialog.locator('.fdshop-bundle__chosen')).toBeVisible();
+  await dialog.locator('[data-bundle-pool-product="900100"]').dragTo(dialog.locator('[data-bundle-dropzone]'));
+  await expect(dialog.locator('[data-bundle-chosen-product="900100"]')).toBeVisible();
+  await dialog.locator('[data-bundle-pool-product="900105"] [data-bundle-info]').click();
+  await expect(dialog.locator('[data-bundle-quick]')).toBeVisible();
+  await dialog.locator('[data-bundle-quick-close]').click();
   diagnostics.expectClean();
 });
 
@@ -229,19 +253,78 @@ test('registered customer can save, load and delete a composition', async ({ pag
   diagnostics.expectClean();
 });
 
-test('mobile fallback stays usable and reduced motion suppresses bundle animation', async ({ page, baseURL }) => {
+test('mobile builder uses fly feedback, sticky bar and an editable bottom sheet', async ({ page, baseURL }) => {
+  const diagnostics = await installDiagnostics(page, baseURL);
+  await page.setViewportSize({ width: 390, height: 844 });
+  const dialog = await openBuilder(page);
+  await expect(dialog.locator('[data-bundle-progress-scope="mobile"]')).toBeVisible();
+  await expect(dialog.locator('.fdshop-bundle__pool-list')).toHaveCSS('overflow-y', 'visible');
+  const bar = dialog.locator('[data-bundle-mobile-bar]');
+  await expect(bar).toBeVisible();
+  await expect(bar).toContainText('0 Artikel');
+  const addActive = dialog.locator('[data-bundle-pool-product="900100"] [data-bundle-add]');
+  await addActive.click();
+  await expect(page.locator('.fdshop-bundle__fly-clone')).toBeAttached();
+  await expect(dialog.locator('[data-bundle-chosen-product="900100"]')).toBeVisible();
+  await expect(bar).toContainText('1 Artikel');
+  await expect(page.locator('.fdshop-bundle__fly-clone')).toHaveCount(0, { timeout: 1400 });
+  const addDiscount = dialog.locator('[data-bundle-pool-product="900105"] [data-bundle-add]');
+  await dialog.evaluate(root => {
+    root.querySelector('[data-bundle-pool-product="900100"] [data-bundle-add]').click();
+    root.querySelector('[data-bundle-pool-product="900105"] [data-bundle-add]').click();
+  });
+  await expect(dialog.locator('[data-bundle-mobile-toast]')).toBeVisible();
+  await expect(dialog.locator('[data-bundle-mobile-toast]')).toContainText('Rabatt freigeschaltet');
+  await expect(bar).toContainText('3 Artikel');
+  await expect(page.locator('.fdshop-bundle__fly-clone')).toHaveCount(0, { timeout: 1400 });
+
+  const scrollHost = dialog.locator('.fdshop-bundle');
+  await scrollHost.evaluate(node => { node.scrollTop = 160; });
+  const scrollBefore = await scrollHost.evaluate(node => node.scrollTop);
+  await bar.click();
+  await expect(dialog.locator('.fdshop-bundle')).toHaveClass(/is-sheet-open/);
+  await expect(dialog.locator('.fdshop-bundle__chosen')).toBeVisible();
+  await expect(dialog.locator('.fdshop-bundle__summary')).toBeVisible();
+  await expect(dialog.locator('[data-bundle-chosen-product]')).toHaveCount(2);
+  await dialog.locator('[data-bundle-chosen-product="900105"] [data-bundle-increase]').click();
+  await expect(dialog.locator('[data-bundle-chosen-product="900105"] [data-bundle-quantity]')).toHaveValue('2');
+  await dialog.locator('[data-bundle-chosen-product="900100"] [data-bundle-decrease]').click();
+  await dialog.getByRole('button', { name: 'Mein Bundle schließen' }).click();
+  await expect(dialog.locator('.fdshop-bundle')).not.toHaveClass(/is-sheet-open/);
+  expect(await scrollHost.evaluate(node => node.scrollTop)).toBe(scrollBefore);
+
+  await dialog.locator('[data-bundle-pool-product="900100"] [data-bundle-info]').click();
+  await expect(dialog.locator('[data-bundle-quick]')).toBeVisible();
+  expect(await dialog.locator('[data-bundle-quick]').evaluate(node => {
+    const overlay = node.getBoundingClientRect();
+    const card = node.querySelector('.fdshop-bundle__quick-card').getBoundingClientRect();
+    return card.height >= overlay.height * .95;
+  })).toBe(true);
+  await dialog.locator('[data-bundle-quick-add]').click();
+  await expect(dialog.locator('[data-bundle-quick]')).toBeHidden();
+  await expect(bar).toContainText('4 Artikel');
+  await expect(dialog.locator('[data-bundle-mobile-toast]')).toContainText('GLÜCKWUNSCH!');
+  await expect(dialog.locator('[data-bundle-mobile-toast]')).toContainText('10 % RABATT FREIGESCHALTET');
+  diagnostics.expectClean();
+});
+
+test('mobile reduced motion keeps feedback clear without a flying clone', async ({ page, baseURL }) => {
   const diagnostics = await installDiagnostics(page, baseURL);
   await page.setViewportSize({ width: 390, height: 844 });
   await page.emulateMedia({ reducedMotion: 'reduce' });
   const dialog = await openBuilder(page);
-  await expect(dialog.locator('.fdshop-bundle__workspace')).toBeVisible();
   await dialog.locator('[data-bundle-pool-product="900100"] [data-bundle-add]').click();
-  await expect(dialog.locator('[data-bundle-chosen-product="900100"]')).toBeVisible();
+  await expect(page.locator('.fdshop-bundle__fly-clone')).toHaveCount(0);
   await dialog.locator('[data-bundle-pool-product="900105"] [data-bundle-add]').click();
-  await expect(dialog.locator('[data-bundle-celebration]')).toBeVisible();
-  await expect(dialog.locator('[data-bundle-celebration-effects]')).toHaveCSS('display', 'none');
+  const toast = dialog.locator('[data-bundle-mobile-toast]');
+  await expect(toast).toBeVisible();
+  await expect(toast).toContainText('5 % Rabatt freigeschaltet');
   expect(await page.evaluate(() => matchMedia('(prefers-reduced-motion: reduce)').matches)).toBe(true);
   await expect(dialog.locator('.fdshop-bundle__chosen-card').last()).toHaveCSS('animation-name', 'none');
-  await expect(dialog.locator('[data-bundle-progress-status]')).toContainText('5 % Rabatt aktiv', { timeout: 2400 });
+  await expect(dialog.locator('[data-bundle-progress-scope="mobile"] [data-bundle-progress-status]')).toContainText('5 % Rabatt aktiv');
+  await dialog.locator('[data-bundle-pool-product="900100"] [data-bundle-add]').click();
+  await dialog.locator('[data-bundle-pool-product="900105"] [data-bundle-add]').click();
+  await expect(toast).toContainText('GLÜCKWUNSCH!');
+  await expect(toast.locator('i')).toHaveCount(0);
   diagnostics.expectClean();
 });

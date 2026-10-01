@@ -40,6 +40,11 @@
     },
     {
       "name": "com_fdshop.bundle",
+      "type": "style",
+      "uri": "com_fdshop/bundle.css"
+    },
+    {
+      "name": "com_fdshop.bundle",
       "type": "script",
       "uri": "com_fdshop/bundle.js",
       "attributes": { "defer": true }
