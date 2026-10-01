@@ -258,7 +258,7 @@ test('mobile builder uses fly feedback, sticky bar and an editable bottom sheet'
   await page.setViewportSize({ width: 390, height: 560 });
   const dialog = await openBuilder(page);
   await expect(page.locator('body')).toHaveCSS('position', 'fixed');
-  await expect(dialog.locator('[data-bundle-progress-scope="mobile"]')).toBeVisible();
+  await expect(dialog.locator('.fdshop-bundle__header [data-bundle-progress-scope="mobile"]')).toHaveCount(0);
   await expect(dialog.locator('.fdshop-bundle__pool-list')).toHaveCSS('overflow-y', 'visible');
   const scrollHost = dialog.locator('.fdshop-bundle');
   expect(await scrollHost.evaluate(node => node.scrollHeight > node.clientHeight)).toBe(true);
@@ -268,10 +268,18 @@ test('mobile builder uses fly feedback, sticky bar and an editable bottom sheet'
   await expect(lastPoolCard).toBeInViewport();
   const bar = dialog.locator('[data-bundle-mobile-bar]');
   await expect(bar).toBeVisible();
+  await expect(bar.locator('[data-bundle-progress-scope="mobile"]')).toBeVisible();
+  await expect(bar.locator('[data-bundle-progress-status]')).toContainText('Noch');
+  expect(await bar.locator('.fdshop-bundle__mobile-divider').evaluate((line, stickyBar) => line.getBoundingClientRect().width < stickyBar.getBoundingClientRect().width - 30, await bar.elementHandle())).toBe(true);
   await expect(bar).toContainText('0 Artikel');
   const addActive = dialog.locator('[data-bundle-pool-product="900100"] [data-bundle-add]');
   await addActive.click();
   await expect(page.locator('.fdshop-bundle__fly-clone')).toBeAttached();
+  expect(await page.locator('.fdshop-bundle__fly-clone').evaluate(clone => {
+    const animation = clone.getAnimations()[0];
+    const frames = animation.effect.getKeyframes();
+    return animation.effect.getTiming().duration === 1620 && frames.at(-1).transform.includes('scale(0.35)');
+  })).toBe(true);
   expect(await page.locator('.fdshop-bundle__fly-clone').evaluate((clone, stickyBar) => {
     const image = clone.getBoundingClientRect();
     const barBox = stickyBar.getBoundingClientRect();
@@ -279,7 +287,7 @@ test('mobile builder uses fly feedback, sticky bar and an editable bottom sheet'
   }, await bar.elementHandle())).toBe(true);
   await expect(dialog.locator('[data-bundle-chosen-product="900100"]')).toBeVisible();
   await expect(bar).toContainText('1 Artikel');
-  await expect(page.locator('.fdshop-bundle__fly-clone')).toHaveCount(0, { timeout: 1400 });
+  await expect(page.locator('.fdshop-bundle__fly-clone')).toHaveCount(0, { timeout: 2400 });
   await expect(bar).toHaveCSS('animation-name', 'fdshop-bundle-mobile-bar-learn');
   const addDiscount = dialog.locator('[data-bundle-pool-product="900105"] [data-bundle-add]');
   await dialog.evaluate(root => {
@@ -289,7 +297,8 @@ test('mobile builder uses fly feedback, sticky bar and an editable bottom sheet'
   await expect(dialog.locator('[data-bundle-mobile-toast]')).toBeVisible();
   await expect(dialog.locator('[data-bundle-mobile-toast]')).toContainText('Rabatt freigeschaltet');
   await expect(bar).toContainText('3 Artikel');
-  await expect(page.locator('.fdshop-bundle__fly-clone')).toHaveCount(0, { timeout: 1400 });
+  await expect(bar.locator('[data-bundle-progress-status]')).toContainText('Rabatt aktiv');
+  await expect(page.locator('.fdshop-bundle__fly-clone')).toHaveCount(0, { timeout: 2400 });
 
   await scrollHost.evaluate(node => { node.scrollTop = 160; });
   const scrollBefore = await scrollHost.evaluate(node => node.scrollTop);
@@ -331,6 +340,33 @@ test('mobile builder uses fly feedback, sticky bar and an editable bottom sheet'
   await builderClose.click();
   await expect(dialog).toBeHidden();
   await expect(page.locator('body')).not.toHaveCSS('position', 'fixed');
+  diagnostics.expectClean();
+});
+
+test('mobile sticky discount progress stays readable at common phone widths', async ({ page, baseURL }) => {
+  const diagnostics = await installDiagnostics(page, baseURL);
+  for (const width of [320, 375, 430]) {
+    await page.setViewportSize({ width, height: 700 });
+    const dialog = await openBuilder(page);
+    const bar = dialog.locator('[data-bundle-mobile-bar]');
+    const progress = bar.locator('[data-bundle-progress-scope="mobile"]');
+    await expect(progress).toBeVisible();
+    await expect(dialog.locator('.fdshop-bundle__header [data-bundle-progress-scope="mobile"]')).toHaveCount(0);
+    expect(await bar.evaluate(node => {
+      const box = node.getBoundingClientRect();
+      return box.left >= 0 && box.right <= innerWidth && document.documentElement.scrollWidth <= innerWidth;
+    })).toBe(true);
+    const markerLayout = await progress.locator('[data-bundle-rule]').evaluateAll(markers => markers.map(marker => {
+        const box = marker.getBoundingClientRect();
+        return { left: box.left, right: box.right };
+      }));
+    expect(markerLayout.every((box, index) => box.left >= 0 && box.right <= width && (!index || box.left >= markerLayout[index - 1].right))).toBe(true);
+    await bar.focus();
+    await page.keyboard.press('Enter');
+    await expect(dialog.locator('.fdshop-bundle')).toHaveClass(/is-sheet-open/);
+    await dialog.getByRole('button', { name: 'Mein Bundle schließen' }).click();
+    await dialog.getByRole('button', { name: 'Bundle-Konfigurator schließen' }).click();
+  }
   diagnostics.expectClean();
 });
 
