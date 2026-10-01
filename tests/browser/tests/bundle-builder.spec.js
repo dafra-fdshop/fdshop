@@ -124,12 +124,12 @@ test('bundle experience loads, supports quick view, button/drag selection and di
   await expect(maximum).toBeVisible();
   await expect(maximum).toContainText('GLÜCKWUNSCH!');
   await expect(maximum).toContainText('12 % RABATT FREIGESCHALTET');
-  await expect(maximum.locator('[data-bundle-maximum-burst] i')).toHaveCount(72);
-  await expect(maximum.locator('.is-streamer')).toHaveCount(12);
-  await expect(maximum.locator('.is-star')).toHaveCount(12);
-  await expect(maximum.locator('.is-confetti')).toHaveCount(48);
-  await expect(maximum.locator('[data-bundle-maximum-burst="behind"] i')).toHaveCount(57);
-  await expect(maximum.locator('[data-bundle-maximum-burst="front"] i')).toHaveCount(15);
+  await expect(maximum.locator('[data-bundle-maximum-burst] i')).toHaveCount(100);
+  await expect(maximum.locator('.is-streamer')).toHaveCount(20);
+  await expect(maximum.locator('.is-star')).toHaveCount(20);
+  await expect(maximum.locator('.is-confetti')).toHaveCount(60);
+  await expect(maximum.locator('[data-bundle-maximum-burst="behind"] i')).toHaveCount(80);
+  await expect(maximum.locator('[data-bundle-maximum-burst="front"] i')).toHaveCount(20);
   const maximumLayout = await maximum.evaluate(node => {
     const overlay = node.getBoundingClientRect();
     const hat = node.querySelector('.fdshop-bundle__party-hat').getBoundingClientRect();
@@ -152,12 +152,12 @@ test('bundle experience loads, supports quick view, button/drag selection and di
   await expect(maximum).toBeHidden();
   await second.getByRole('button', { name: /erhöhen/ }).click();
   await expect(maximum).toBeVisible();
-  await expect(maximum.locator('[data-bundle-maximum-burst] i')).toHaveCount(72);
+  await expect(maximum.locator('[data-bundle-maximum-burst] i')).toHaveCount(100);
   await expect(dialog.locator('[data-bundle-maximum-celebration]')).toHaveCount(1);
   await second.getByRole('button', { name: /reduzieren/ }).click();
   await second.getByRole('button', { name: /erhöhen/ }).click();
   await expect(maximum).toBeVisible();
-  await expect(maximum.locator('[data-bundle-maximum-burst] i')).toHaveCount(72);
+  await expect(maximum.locator('[data-bundle-maximum-burst] i')).toHaveCount(100);
   await expect(dialog.locator('[data-bundle-progress-status]')).toContainText('12 % Rabatt aktiv', { timeout: 4300 });
   await second.getByRole('button', { name: /reduzieren/ }).click();
   await first.getByRole('button', { name: /reduzieren/ }).click();
