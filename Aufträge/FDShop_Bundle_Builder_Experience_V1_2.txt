@@ -1,0 +1,512 @@
+FDShop – UX-/DESIGN-FEINSCHLIFF
+BUNDLE BUILDER EXPERIENCE V1.2 – LAYOUT & CELEBRATION POLISH
+
+Projekt: FDShop
+Branch: feature
+Basis: real getestete Bundle Builder V1.1
+Scope: ausschließlich gezielte V1.2-Korrekturen am Bundle Builder
+KEIN Neuaufbau der funktionierenden V1/V1.1-Architektur.
+
+======================================================================
+1. REFERENZBILDER / WICHTIGE INTERPRETATION
+======================================================================
+
+Daniel stellt zusammen mit diesem Auftrag vier Screenshots bereit:
+
+1) "Bundle V2 desktop.png"
+   = aktueller real getesteter V1.1-Stand.
+
+2) "Bundle V2 desktop mit Ribbon.png"
+   = aktueller Stand während Rabatt-Celebration; zeigt insbesondere die
+     derzeit falsche feste Ribbonposition ganz rechts.
+
+3) "Bundle V1 änderungen(1).png"
+   = Daniels früheres visuelles Zielbild für Header-/Rabattposition.
+     WICHTIG: Der dort eingezeichnete SCHWARZE VERTIKALE STRICH war NUR eine
+     Hilfslinie, um ungefähr die gewünschte maximale Breite/Umbruchposition
+     der Beschreibung zu zeigen. Er ist KEIN Designelement und muss aus dem
+     realen Builder entfernt werden.
+
+4) "animation höchste rabattstufe.png"
+   = ausschließlich KONZEPTUELLE Referenz für die maximale Celebration:
+     Partyhütchen + Konfetti + Luftschlangen.
+     NICHT Farben, Stil oder exakte Grafik kopieren.
+     FDShop-Version soll deutlich ruhiger/hochwertiger in Grau/Anthrazit mit
+     gezielten #e0a721-Akzenten wirken.
+
+Schriftlicher Auftrag ist verbindlich; Screenshots dienen zur visuellen
+Verdeutlichung.
+
+======================================================================
+2. GRUNDREGEL V1.2
+======================================================================
+
+V1.1 funktioniert und macht im Realtest Spaß.
+
+Nicht anfassen/neu erfinden:
+- Modalgrundarchitektur
+- Produktpool mit eigenem Scroll
+- rechte Arbeitsfläche
+- 4er-Grid
+- Drag&Drop
+- Touch-Drag soweit vorhanden
+- Quick View
+- Sticky Summary
+- Servervalidierung
+- Save/Cart-Fachlogik
+
+V1.2 korrigiert nur:
+1. Header-Hilfslinie
+2. Rabattlayout/-position
+3. Ribbon-Sequenz
+4. Maximalstufen-Celebration
+5. linke Produktkarten-Hierarchie
+
+======================================================================
+3. SCHWARZE HEADER-LINIE ENTFERNEN
+======================================================================
+
+Die schwarze vertikale Linie im aktuellen Header vollständig entfernen.
+
+Sie entstand aus einer Fehlinterpretation von Daniels Mockup.
+
+Ihre einzige ursprüngliche Bedeutung:
+Die Beschreibung links sollte ungefähr dort ihre maximale Breite erreichen
+und umbrechen.
+
+Daher:
+- keine sichtbare Trennlinie
+- Titel links
+- Beschreibung darunter
+- Beschreibung erhält sinnvolle begrenzte Breite / Umbruch
+- Slogan + Regeln rechts wie V1.1 grundsätzlich beibehalten
+
+Header weiterhin kompakt.
+
+======================================================================
+4. RABATT-SKALA WIEDER KOMPAKTER
+======================================================================
+
+Aktuell nimmt "MEIN RABATT" praktisch eine komplette eigene breite Zeile im
+oberen Teil der rechten Arbeitsfläche ein und klebt optisch zu stark an der
+Bereichsoberkante.
+
+Das ist NICHT das gewünschte Ziel.
+
+Ziel gemäß "Bundle V1 änderungen(1).png":
+
+"Mein Bundle" und der Bereich "MEIN RABATT" befinden sich in derselben
+horizontalen Kopfzone / Zeile der rechten Arbeitsfläche.
+
+Sinngemäß:
+
+| Mein Bundle |          MEIN RABATT + Skala                     |
+
+Die Skala darf den größeren rechten Anteil dieser Zeile nutzen.
+
+Damit große Prozentwerte weiterhin gut passen:
+- Kopfzone darf etwas höher werden
+- ausreichendes Padding oben/unten
+- Skala NICHT direkt an oberen Rand kleben
+
+Nicht wieder eine vollständige zusätzliche Rabattzeile über der gesamten
+Arbeitsfläche erzeugen.
+
+======================================================================
+5. RABATT-SKALA TYPOGRAFIE
+======================================================================
+
+Große Prozentwerte aus V1.1 grundsätzlich beibehalten.
+
+Mengenwerte darunter sekundär.
+
+Aktiver Fortschritt/CI-Akzent weiterhin #e0a721.
+
+Skala modern/ruhig, nicht überdominant.
+
+======================================================================
+6. STATUS-/MOTIVATIONSTEXT WIEDER UNTER DIE SKALA
+======================================================================
+
+Text wie:
+
+"Noch kein Rabatt aktiv · Noch 4 Artikel bis 3 %"
+
+"5 % Rabatt aktiv · Noch 2 Artikel bis 8 %"
+
+"10 % Rabatt aktiv · Höchste Stufe erreicht"
+
+soll NICHT oberhalb der Skala stehen.
+
+Er gehört wieder UNTER die Skala, wie in der früheren Version.
+
+V1.1-Verbesserung beibehalten:
+- etwas größer
+- kräftiger/dunkler
+- gut lesbar
+
+Unter diesem Statustext ausreichend Abstand/Padding/Margin zu den
+Bundle-Produktkarten.
+
+Die Produktkarten dürfen optisch nicht direkt an Status/Skala kleben.
+
+======================================================================
+7. RIBBON – POSITION AM ERREICHTEN MARKER
+======================================================================
+
+Aktueller Fehler:
+Das Rabatt-Ribbon erscheint unabhängig von der erreichten Stufe weit rechts.
+
+Neu:
+Ribbon erscheint räumlich an/bei der TATSÄCHLICH erreichten Rabattposition.
+
+Beispiele:
+3 % erreicht -> Ribbon bei 3-%-Marker
+5 % erreicht -> Ribbon bei 5-%-Marker
+8 % erreicht -> Ribbon bei 8-%-Marker
+max. -> passend zur maximalen Stufe bzw. dort greift zusätzlich Punkt 10.
+
+Position responsive begrenzen:
+Ribbon darf nicht aus Modal/Arbeitsbereich herauslaufen.
+Bei Randstufen sinnvoll clampen/transformieren.
+
+======================================================================
+8. RIBBON / STERNE / MARKER – EBENEN
+======================================================================
+
+Ribbon darf die eigentliche Marker-/Sternanimation nicht verdecken.
+
+Visuelle Ebenen so ordnen:
+- Marker/Kreis + Sterne/Partikel laufen sichtbar
+- Ribbon liegt sinnvoll darüber/versetzt, aber verdeckt die Celebration nicht
+
+Falls z-index verwendet:
+bewusst strukturieren.
+
+Kein unkontrolliertes z-index-Wettrüsten.
+
+======================================================================
+9. NORMALE RABATTSTUFEN – ANIMATIONSSEQUENZ
+======================================================================
+
+Für jede NICHT maximale Rabattstufe:
+
+AUSGANG:
+Unter der Skala steht der bisherige Status, z.B.
+"Noch kein Rabatt aktiv · Noch 1 Artikel bis 3 %"
+
+1. Kunde überschreitet Schwelle von unten nach oben.
+2. Fortschrittslinie fährt zum Marker.
+3. Marker/Kreis + stufengerechte Sterne/Partikel starten.
+4. Ribbon erscheint an der erreichten Rabattposition:
+   "3 % RABATT FREIGESCHALTET"
+5. Während Ribbon sichtbar ist, bleibt der ALTE Statustext unter der Skala
+   zunächst unverändert.
+6. Nach der vorgesehenen Ribbon-Anzeigedauer bewegt sich das Ribbon sichtbar
+   von seiner Markerposition in Richtung Statuszeile.
+7. Während dieser Bewegung:
+   - Ribbon darf etwas, aber nicht stark, kleiner werden
+   - Bewegung weich/hochwertig
+8. Beim Eintreffen über/bei der Statuszeile:
+   - Ribbon fadet/verschmilzt weg
+   - ERST JETZT wird der alte Statustext durch den neuen Status ersetzt, z.B.
+     "3 % Rabatt aktiv · Noch 2 Artikel bis 5 %"
+
+Ziel:
+Die Celebration wird visuell in den neuen dauerhaften Zustand überführt.
+
+Nicht:
+Ribbon verschwindet einfach irgendwo.
+
+======================================================================
+10. MAXIMALE RABATTSTUFE – GROSSE CELEBRATION
+======================================================================
+
+Bei Erreichen der HÖCHSTEN Rabattstufe bewusst besondere Inszenierung.
+
+Nicht nur kleine Animation oben an der Skala.
+
+Über der gesamten rechten "Mein Bundle"-Arbeitsfläche erscheint eine
+temporäre Celebration-Ebene.
+
+Inhalt konzeptionell:
+- größeres Party-/Konfetti-Hütchen
+- daraus austretende Luftschlangen
+- Konfetti
+- Sterne/Partikel
+- groß sichtbar:
+  "GLÜCKWUNSCH!"
+  "[X] % RABATT FREIGESCHALTET"
+
+X dynamisch aus tatsächlicher maximaler Rabattstufe.
+
+VISUELL:
+- hochwertige FDShop-Interpretation
+- überwiegend Grau / Anthrazit / Schwarz
+- gezielte #e0a721-Akzente
+- kein bunter Regenbogen-/Kindergeburtstag-Look
+- darf sichtbar und freudig sein
+
+OVERLAY:
+- keine deckende Hintergrundfläche
+- falls technischer Container nötig: Hintergrund transparent
+- bestehende Bundle-Produktkarten darunter sollen weiterhin sichtbar sein
+- Hütchen/Konfetti/Luftschlangen selbst natürlich sichtbar/nicht transparent
+- Overlay blockiert Bedienung möglichst nicht unnötig
+- pointer-events passend setzen
+
+Dauer:
+kurz genug, um nicht zu nerven; lang genug, dass Daniel/Kunde sie wirklich
+wahrnimmt. Codex darf sinnvoll feinjustieren.
+
+Danach sauber auslaufen/faden.
+
+Anschließend dauerhafter Status unter Skala:
+"[X] % Rabatt aktiv · Höchste Stufe erreicht"
+
+Wenn passend, kann auch hier ein Übergang in den Status erfolgen; große
+Flächen-Celebration hat jedoch Priorität gegenüber dem normalen Ribbonflug.
+
+======================================================================
+11. MAXIMALE CELEBRATION WIEDERHOLBAR
+======================================================================
+
+Bestehende V1.1-Regel bleibt:
+
+Celebration bei echtem Schwellenübertritt VON UNTEN NACH OBEN.
+
+Beispiel höchste Schwelle 10 Artikel:
+
+9 -> 10:
+große Maximal-Celebration
+
+10 -> 9:
+keine Celebration
+
+9 -> 10:
+große Maximal-Celebration ERNEUT
+
+Das ist ausdrücklich gewünscht.
+
+Kein "nur einmal pro Sitzung"-State.
+
+Daniel wird diesen Pfad im Realtest garantiert mehrfach hintereinander testen.
+Die Animation muss daher auch nach Wiederholung sauber bleiben:
+- keine hängen gebliebenen DOM-Knoten
+- keine doppelten Timer
+- keine mehrfachen Overlays
+- keine Eventlistener-Leaks
+
+======================================================================
+12. PRODUKTKARTEN LINKS – TITEL MEHR RAUM
+======================================================================
+
+Aktuell konkurriert ein langer Produkttitel horizontal mit:
+"+ Hinzufügen" + Info-Icon.
+
+Dadurch werden lange Namen unnötig früh abgeschnitten.
+
+Neu:
+Produktname erhält eine eigene obere Textzone / eigenen Layoutbereich mit
+deutlich mehr verfügbarer Breite.
+
+Aktionen wandern weiter nach unten.
+
+Ziel sinngemäß:
+
+[ BILD ]  LANGER PRODUKTNAME MIT MEHR BREITE
+          SKU
+          PREIS
+          Verfügbar        [+ Hinzufügen]   [i]
+
+Unterkante von "+ Hinzufügen" und Info-Icon ungefähr auf Höhe der
+Verfügbarkeits-/unteren Metazeile.
+
+Nicht zwingend exakt dieses Markup übernehmen; saubere CSS-Struktur wählen.
+
+Geeignet sind z.B. Grid oder verschachtelte Flex-/Grid-Container.
+
+======================================================================
+13. PRODUKTKARTEN RESPONSIVE ROBUST
+======================================================================
+
+Wichtig wegen Tablet/kleinerer Desktopbreite:
+
+- Produktname darf Kartencontainer nicht sprengen
+- kein Herauslaufen aus Produktkarte
+- sinnvolles Wrapping oder kontrolliertes Ellipsis je nach Platz
+- min-width:0 / overflow-Regeln korrekt bei Flex/Grid
+- Buttons dürfen nicht aus Karte gedrückt werden
+- Bild bleibt sinnvoll proportioniert
+- bei schmalerer Breite darf Layout kompakter werden
+
+Touch-Bedienung/Drag aus V1/V1.1 nicht regressieren.
+
+======================================================================
+14. V1/V1.1 FUNKTIONEN SCHÜTZEN
+======================================================================
+
+Unverändert funktionsfähig:
+
+- Loader
+- Modal/Viewport
+- Produktpool-Scroll
+- Drag&Drop
+- Touch-Drag soweit vorhanden
+- Hinzufügen-Button
+- Quick View
+- Quick-View-Video
+- Add aus Quick View
+- rechte Hochkantkarten
+- 4er-Grid
+- Mengensteuerung
+- Entfernen
+- Reset
+- Save/Load/Delete
+- Sticky Summary
+- Bundlepreis
+- Euro-Ersparnis
+- Cart
+- genau ein Add-to-Cart-Request
+- serverseitige Limits/Validierung
+- reduced-motion
+- Fokus/ESC/Focus-Trap
+- keine N+1-Abfragen
+
+Keine neue Businesslogik.
+
+======================================================================
+15. REDUCED MOTION
+======================================================================
+
+Bei prefers-reduced-motion:
+
+- Zustandswechsel/Rabattinformation weiterhin klar
+- normale Ribbon-Flugbewegung stark reduzieren/ersetzen
+- große Maximal-Celebration deutlich reduzieren oder statisch/kurz darstellen
+- "GLÜCKWUNSCH" und Rabattfreischaltung bleiben inhaltlich sichtbar
+
+Accessibility vor Show.
+
+======================================================================
+16. GEZIELTE TESTS – KEIN FULL-SHOP
+======================================================================
+
+Nur Bundle V1.2 relevant testen.
+
+A) Header
+- schwarze Hilfslinie weg
+- Beschreibung korrekt begrenzt
+- Slogan/Regeln korrekt
+
+B) Rabattlayout
+- Mein Bundle + Mein Rabatt gleiche Kopfzone
+- Skala nicht am oberen Rand
+- Status darunter
+- Abstand zu Produktkarten
+
+C) Ribbonposition
+- erste Stufe
+- mittlere Stufe
+- randnahe Stufe
+- jeweils beim korrekten Marker
+
+D) Ribbonsequenz
+- alter Status bleibt während Celebration
+- Ribbon bewegt sich danach zur Statuszeile
+- neuer Status erst beim Abschluss
+- keine Überdeckung der Markeranimation
+
+E) Maximalstufe
+- große transparente Arbeitsflächen-Celebration
+- Glückwunsch
+- dynamischer Prozentwert
+- Produkte darunter sichtbar
+- danach sauberer finaler Status
+
+F) Wiederholung
+- unter Schwelle fallen
+- erneut überschreiten
+- Animation erneut
+- mehrfach wiederholen
+- keine DOM-/Timer-/Listener-Leaks
+
+G) Produktkarten links
+- langer Titel
+- kurze Titel
+- Button/Info unten
+- Tablet-/schmalere Desktopbreite
+- kein Overflow
+
+H) Drag/Button/QuickView
+- weiterhin korrekt
+
+I) Save/Load/Delete
+- kurze gezielte Regression
+
+J) Cart
+- korrekte Items/Mengen/Preis
+- genau ein Request
+
+Zusätzlich:
+- relevante Bundle-Browsertests
+- JS/PHP Syntax
+- Paketinstallation
+- kurzer Bundle-Smoke
+- Logs
+- git diff --check
+
+NICHT erneut:
+Kategorien, Coupons, PayPal, Rechnungen, UTC, Admin-Gesamtsuite usw.
+
+======================================================================
+17. DESIGNZIEL
+======================================================================
+
+V1.2 soll NICHT mehr Fläche/mehr UI erzeugen.
+
+Im Gegenteil:
+- Header aufräumen
+- Rabatt kompakter integrieren
+- Produktkarten besser strukturieren
+
+Show findet gezielt bei Rabatt-Meilensteinen statt.
+
+Normale Oberfläche:
+ruhig, modern, FDShop.
+
+Maximalrabatt:
+für einen kurzen Moment darf der Feuerwerkshop feiern. :)
+
+======================================================================
+18. ABSCHLUSS
+======================================================================
+
+Wenn grün:
+- Commit feature
+- Push origin/feature
+- kein main-Merge
+- Working Trees sauber/synchron
+- Auftrag nach Aufträge/erledigt
+
+Abschlussbericht:
+1. Headerfix
+2. Rabattlayout
+3. Ribbonposition
+4. Ribbon->Status-Sequenz
+5. Maximal-Celebration
+6. wiederholte Schwellen
+7. Produktkartenlayout/responsive
+8. Accessibility/reduced-motion
+9. Tests
+10. geänderte Dateien
+11. Commit-SHA
+12. feature = origin/feature
+13. Working Trees sauber
+
+Kein unnötiger fachlicher Umbau.
+
+Commitmessage sinngemäß:
+Polish bundle builder layout and celebrations V1.2
+
+ENDE DES AUFTRAGS
