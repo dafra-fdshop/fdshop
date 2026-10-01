@@ -1,0 +1,258 @@
+FDShop – FIX-/POLISH-AUFTRAG
+BUNDLE BUILDER MOBILE EXPERIENCE V1.1
+
+Projekt: FDShop
+Branch: feature
+Basis: Bundle Mobile Experience V1, Commit c1bf427
+Scope: ausschließlich vier reale Mobile-Befunde nach IONOS-Test
+Priorität: hoch – Punkt 1 ist Blocker
+KEIN Redesign, KEINE neue Fachlogik, KEIN Full-Shop-Test.
+
+REFERENZEN
+Mit dem Auftrag werden zwei reale Mobile-Screenshots bereitgestellt:
+1. "Screenshot rückmeldung.png"
+2. "Screenshot info ansicht.png"
+Sie sind IST-Zustand und dienen besonders für Punkt 3 und 4 als visuelle Referenz.
+
+======================================================================
+1. BLOCKER – MOBILE BUILDER MUSS SCROLLEN
+======================================================================
+
+Realbefund:
+Auf Smartphone sind aktuell nur ungefähr die ersten drei Produkte erreichbar.
+Vertikales Wischen innerhalb des geöffneten Bundle Builders scrollt NICHT
+zu weiteren Produkten.
+
+Stattdessen scrollt teilweise die eigentliche Shop-/Produktseite HINTER dem
+geöffneten Bundle-Fenster.
+
+Das ist fachlich/UX-seitig ein Blocker.
+
+Ziel:
+- bei geöffnetem Mobile Bundle Builder bleibt die Hintergrundseite fixiert
+- vertikales Wischen im Builder scrollt den Builder bzw. seinen vorgesehenen
+  natürlichen Mobile-Inhalt
+- alle Produkte sind erreichbar
+- kein verschachtelter kleiner Produkt-Scrollcontainer wie Desktop erzwingen
+- Mobile behält das in V1 beschlossene natürliche vertikale Scrollmodell
+- Sticky Bundle Bar bleibt erreichbar
+- ausreichendes Bottom-Padding, damit letzte Produkte nicht hinter Sticky Bar
+  verschwinden
+- iOS/Android-artiges Touch-Scrolling sauber berücksichtigen
+- Quick View/Bottom Sheet dürfen jeweils ihren vorgesehenen Scroll besitzen
+  und dürfen Scroll nicht an die Hintergrundseite durchreichen
+
+Ursache sauber analysieren: overflow/height/max-height/touch-action,
+Body-/Document-Scroll-Lock, Modal-Container etc.
+Nicht nur per zufälligem z-index/CSS-Hack kaschieren.
+
+Beim Schließen des Builders ursprünglichen Seiten-Scrollzustand sauber
+wiederherstellen.
+
+======================================================================
+2. ADD-FEEDBACK / STICKY BAR DEUTLICH STÄRKER
+======================================================================
+
+Realbefund:
+Die Reaktion der Sticky Bundle Bar beim Hinzufügen ist grundsätzlich gut,
+aber visuell zu brav.
+
+Ziel:
+- bestehende Bewegung/Pop grundsätzlich behalten
+- #e0a721 Glow deutlich größer und sichtbarer
+- Glow darf kurz über die Bar hinausstrahlen
+- kurzer hochwertiger Pop/Impuls
+- beim ersten Produkt gern etwas stärker
+- bei weiteren Adds weiterhin sichtbar, aber nicht nervig
+- keine lange Daueranimation
+- keine Layoutverschiebung
+- prefers-reduced-motion respektieren
+
+Es soll klar wahrnehmbar sein:
+"Hier unten ist gerade etwas in MEIN BUNDLE gegangen."
+
+======================================================================
+3. MOBILE ADD-ANIMATION NEU: PRODUKT VERSCHWINDET IN STICKY BAR
+======================================================================
+
+Die bisherige Fly-to-Bundle-Rückmeldung ist auf dem realen Smartphone zu
+unauffällig.
+
+NICHT das Produkt quer über den gesamten Bildschirm fliegen lassen.
+
+Neue gewünschte Inszenierung entsprechend Referenz
+"Screenshot rückmeldung.png":
+
+Beim Tap auf "+ Hinzufügen":
+
+1. Fachlicher Add-State weiterhin SOFORT; Animation blockiert nichts.
+2. Nahe/oberhalb der Sticky Bundle Bar erscheint deutlich sichtbar ein
+   temporäres Abbild des GERADE hinzugefügten Produktbildes.
+3. Das Bild soll groß genug sein, dass der Nutzer das konkrete Produkt erkennt.
+   Orientierung: etwa wie das im Referenz-Screenshot unten sichtbare
+   Capri-Produktbild.
+4. Start-Opacity sichtbar; während der Bewegung gern zunehmend transparent.
+5. Das Produktbild bewegt sich nur die letzten ca. 60–100 px Richtung
+   Sticky Bundle Bar.
+6. Währenddessen wird es kleiner.
+7. Es verschwindet optisch IN der Sticky Bar.
+8. Gleichzeitig/bei Ankunft: stärkerer Glow/Pop aus Punkt 2.
+9. Temporären Klon danach vollständig aus DOM entfernen.
+
+Metapher:
+"Dieses konkrete Produkt wandert jetzt in Mein Bundle."
+
+Keine zusätzliche Netzwerkabfrage.
+Vorhandenes Produktbild/DOM-Daten nutzen.
+
+Schnelle Mehrfach-Adds:
+- dürfen sich kurz überlappen
+- keine verlorenen Adds
+- keine fachliche Sperre
+- keine Timer-/DOM-Leaks
+- genau ein fachlicher Add pro Nutzeraktion
+
+Quick View Add:
+Bestehendes V1-Verhalten darf bleiben:
+Add sofort -> Quick View schließen -> Sticky Bar deutlich reagieren.
+Kein Zwang, dort denselben Bildflug einzubauen.
+
+Reduced Motion:
+kein Flug; Produkt/Sticky Bar kurz hervorheben.
+
+======================================================================
+4. QUICK VIEW – FALSCHER CLOSE-BUTTON ÜBERLAGERT
+======================================================================
+
+Referenz: "Screenshot info ansicht.png"
+
+Realbefund:
+Im geöffneten Mobile Quick View sind oben rechts zwei Close-Buttons sichtbar.
+Der Close-Button des übergeordneten Bundle Builders liegt über/neben dem
+Quick-View-Close.
+
+Dadurch kann der Nutzer versehentlich den GESAMTEN Bundle Builder schließen
+und verliert den aktuellen Bundle-Kontext.
+
+Ziel / Interaktionsreihenfolge:
+
+Quick View offen:
+- ausschließlich Quick-View-Close als aktive/sichtbare Schließaktion
+- Bundle-Builder-Close liegt logisch/visuell dahinter
+- darf nicht anklickbar sein
+- darf nicht per Tastatur/Fokus erreichbar sein
+- ESC/Back-Verhalten schließt zuerst Quick View, nicht Builder
+
+Quick View geschlossen:
+- Bundle-Close wieder normal sichtbar/aktiv/fokussierbar
+
+Bevorzugt saubere Layer-/State-Lösung.
+Nicht einfach beide X räumlich auseinander schieben.
+
+Prüfen:
+- z-index
+- stacking context
+- aria-hidden/inert/tabindex/focus management soweit zur bestehenden
+  Architektur passend
+- Focus-Rückgabe nach Quick-View-Close
+
+======================================================================
+5. NICHT ANFASSEN
+======================================================================
+
+Nicht redesignen:
+- Desktop Bundle Builder
+- Tablet Experience
+- Desktop-Maximal-Celebration / Daniels finales Hütchen
+- Rabattfachlogik
+- Produktkarten-Design grundsätzlich
+- Sticky-Bar-Inhalte/Informationsarchitektur
+- Bottom-Sheet-Konzept
+- Quick-View-Inhalte
+- Save/Load/Delete
+- Cart-Fachlogik
+- BundleService
+- Asset-Modularisierung bundle.css/bundle.js, außer notwendige Korrekturen
+  für diese vier Mobile-Befunde
+
+Keine Schemaänderung.
+Keine neue Library.
+
+======================================================================
+6. GEZIELTE TESTS
+======================================================================
+
+KEIN Full-Shop-Test.
+
+A) Scroll-Blocker
+- Mobile Builder öffnen
+- lange Produktliste
+- vom ersten bis zum letzten Produkt scrollen
+- Hintergrundseite bewegt sich dabei nicht
+- letzter Inhalt nicht von Sticky Bar verdeckt
+- Builder schließen -> Hintergrundseite wieder normal scrollbar
+- wieder öffnen -> weiterhin korrekt
+
+B) Add Feedback
+- erstes Produkt
+- weiteres Produkt
+- mehrere schnelle Adds
+- sichtbares Produktbild nahe Sticky Bar
+- Bild schrumpft/verschwindet in Bar
+- stärkerer Glow
+- korrekter neuer Artikel-/Preisstate
+- keine Klonreste
+
+C) Quick View
+- öffnen
+- nur richtiger Close bedienbar
+- Bundle-Close nicht klick-/fokussierbar
+- Quick View schließen -> Builder bleibt offen und State erhalten
+- danach Bundle normal schließbar
+- ESC/Fokusreihenfolge prüfen
+
+D) Reduced Motion
+
+E) kurze Regression
+- Mobile Bottom Sheet
+- Mengen +/-
+- Remove
+- Save
+- Add to Cart
+- Desktop/Tablet kurzer Gegencheck, dass nichts verändert wurde
+
+F) Technik
+- relevante Bundle-Browsertests
+- JS/CSS-Syntax soweit vorhanden
+- Paketinstallation
+- Bundle-Smoke
+- Logs
+- git diff --check
+
+======================================================================
+7. ABSCHLUSS
+======================================================================
+
+Wenn grün:
+- Commit feature
+- Push origin/feature
+- kein main-Merge
+- Working Trees sauber/synchron
+- Auftrag nach Aufträge/erledigt
+
+Abschlussbericht:
+1. Ursache Mobile-Scroll
+2. Scroll-Lösung/Background-Lock
+3. neues Add-Feedback
+4. Sticky-Bar-Glow
+5. Quick-View-Layer/Close-Verhalten
+6. Reduced Motion
+7. Tests
+8. geänderte Dateien
+9. Commit-SHA
+10. feature = origin/feature
+
+Commitmessage sinngemäß:
+Polish mobile bundle interaction V1.1
+
+ENDE DES AUFTRAGS
