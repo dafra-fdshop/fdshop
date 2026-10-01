@@ -279,9 +279,21 @@
 .fdshop-bundle__maximum.is-visible .fdshop-bundle__maximum-copy { animation: fdshop-bundle-panel-pop .62s cubic-bezier(.16,.78,.25,1) .12s both; }
 .fdshop-bundle__maximum-copy strong { color: #e0a721; font-size: clamp(1.5rem, 3vw, 2.6rem); letter-spacing: .06em; }
 .fdshop-bundle__maximum-copy span { font-size: clamp(.9rem, 1.45vw, 1.25rem); font-weight: 800; }
-.fdshop-bundle__party-hat { position: absolute; z-index: 5; bottom: 8%; left: 8%; width: clamp(5.5rem, 9vw, 8rem); height: clamp(6rem, 10vw, 9rem); clip-path: polygon(50% 0, 100% 88%, 76% 100%, 24% 100%, 0 88%); background: repeating-linear-gradient(115deg, #222 0 1.05rem, #e0a721 1.05rem 1.7rem, #d37719 1.7rem 2.2rem, #666 2.2rem 3rem); filter: drop-shadow(0 .55rem .45rem rgb(0 0 0 / 28%)); transform: rotate(-17deg); transform-origin: 50% 100%; }
+.fdshop-bundle__party-hat { 
+	position: absolute; 
+	z-index: 5; 
+	bottom: 23%; 
+	left: 19%; 
+	width: clamp(5.5rem, 9vw, 8rem); 
+	height: clamp(6rem, 10vw, 9rem); 
+	clip-path: polygon(50% 0, 100% 88%, 76% 100%, 24% 100%, 0 88%); 
+	background: repeating-linear-gradient(115deg, #222 0 1.05rem, #e0a721 1.05rem 1.7rem, #d37719 1.7rem 2.2rem, #666 2.2rem 3rem); 
+	filter: drop-shadow(0 .55rem .45rem rgb(0 0 0 / 28%)); 
+	transform: rotate(-90deg); 
+	transform-origin: 50% 100%; 
+}
 .fdshop-bundle__party-hat::before { position: absolute; top: -.3rem; left: 50%; width: 1.25rem; height: 1.25rem; border-radius: 50%; background: #f2bc38; content: ""; translate: -50% 0; }
-.fdshop-bundle__maximum.is-visible .fdshop-bundle__party-hat { animation: fdshop-bundle-hat .52s cubic-bezier(.16,.82,.25,1) both; }
+.fdshop-bundle__maximum.is-visible .fdshop-bundle__party-hat { animation: fdshop-bundle-hat 2.20s cubic-bezier(.16,.82,.25,1) both; }
 .fdshop-bundle__maximum-burst { position: absolute; bottom: 24%; left: 14%; width: 1px; height: 1px; }
 .fdshop-bundle__maximum-burst.is-behind { z-index: 2; }
 .fdshop-bundle__maximum-burst.is-front { z-index: 4; }
@@ -360,9 +372,26 @@
 @keyframes fdshop-bundle-summary { 50% { color: #9b5b00; transform: translateY(-.08rem); } }
 @keyframes fdshop-bundle-pulse { 50% { box-shadow: 0 0 0 .8rem rgb(224 167 33 / 24%); transform: scale(1.4); } }
 @keyframes fdshop-bundle-particle { 0% { opacity: 0; transform: rotate(var(--particle-angle)) translateX(0) scale(.4); } 18% { opacity: 1; } 100% { opacity: 0; transform: rotate(var(--particle-angle)) translateX(var(--particle-distance)) scale(1); } }
-@keyframes fdshop-bundle-hat { from { opacity: 0; transform: translate(-1rem, 1.4rem) rotate(-27deg) scale(.68); } 72% { opacity: 1; transform: translate(.15rem, -.2rem) rotate(-13deg) scale(1.08); } to { opacity: 1; transform: rotate(-17deg) scale(1); } }
+
+@keyframes fdshop-bundle-hat {
+    from {
+        opacity: 0;
+        transform: translate(-1rem, 1.4rem) rotate(-135deg) scale(.68);
+    }
+
+    72% {
+        opacity: 1;
+        transform: translate(.15rem, -.2rem) rotate(-110deg) scale(1.08);
+    }
+
+    to {
+        opacity: 1;
+        transform: rotate(-90deg) scale(1);
+    }
+}
+
 @keyframes fdshop-bundle-panel-pop { 0% { opacity: 0; transform: translate(-50%, -50%) scale(.88); } 65% { opacity: 1; transform: translate(-50%, -50%) scale(1.045); } 100% { opacity: 1; transform: translate(-50%, -50%) scale(1); } }
-@keyframes fdshop-bundle-confetti { 0% { opacity: 0; transform: translate(0, 0) rotate(0) scale(.35); } 10% { opacity: 1; } 72% { opacity: 1; transform: translate(var(--burst-x), var(--burst-y)) rotate(var(--burst-rotate)) scale(1); } 100% { opacity: 0; transform: translate(var(--burst-x), calc(var(--burst-y) + 3rem)) rotate(calc(var(--burst-rotate) + 90deg)) scale(.82); } }
+@keyframes fdshop-bundle-confetti { 0% { opacity: 0; transform: translate(0, 0) rotate(0) scale(.35); } 10% { opacity: 1; } 82% { opacity: 1; transform: translate(var(--burst-x), var(--burst-y)) rotate(var(--burst-rotate)) scale(1); } 100% { opacity: 0; transform: translate(var(--burst-x), calc(var(--burst-y) + 9rem)) rotate(calc(var(--burst-rotate) + 90deg)) scale(.82); } }
 .fdshop-cart__bundle { margin-top: .75rem; padding: .75rem; border: 2px solid #d3a341; background: #fffaf0; }
 .fdshop-cart__bundle header { display: flex; justify-content: space-between; gap: 1rem; }
 .fdshop-cart__bundle ul { margin: .5rem 0; }
