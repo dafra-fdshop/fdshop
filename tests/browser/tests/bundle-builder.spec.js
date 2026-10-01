@@ -255,19 +255,32 @@ test('registered customer can save, load and delete a composition', async ({ pag
 
 test('mobile builder uses fly feedback, sticky bar and an editable bottom sheet', async ({ page, baseURL }) => {
   const diagnostics = await installDiagnostics(page, baseURL);
-  await page.setViewportSize({ width: 390, height: 844 });
+  await page.setViewportSize({ width: 390, height: 560 });
   const dialog = await openBuilder(page);
+  await expect(page.locator('body')).toHaveCSS('position', 'fixed');
   await expect(dialog.locator('[data-bundle-progress-scope="mobile"]')).toBeVisible();
   await expect(dialog.locator('.fdshop-bundle__pool-list')).toHaveCSS('overflow-y', 'visible');
+  const scrollHost = dialog.locator('.fdshop-bundle');
+  expect(await scrollHost.evaluate(node => node.scrollHeight > node.clientHeight)).toBe(true);
+  await scrollHost.evaluate(node => { node.scrollTop = node.scrollHeight; });
+  expect(await scrollHost.evaluate(node => node.scrollTop)).toBeGreaterThan(0);
+  const lastPoolCard = dialog.locator('[data-bundle-pool-product]').last();
+  await expect(lastPoolCard).toBeInViewport();
   const bar = dialog.locator('[data-bundle-mobile-bar]');
   await expect(bar).toBeVisible();
   await expect(bar).toContainText('0 Artikel');
   const addActive = dialog.locator('[data-bundle-pool-product="900100"] [data-bundle-add]');
   await addActive.click();
   await expect(page.locator('.fdshop-bundle__fly-clone')).toBeAttached();
+  expect(await page.locator('.fdshop-bundle__fly-clone').evaluate((clone, stickyBar) => {
+    const image = clone.getBoundingClientRect();
+    const barBox = stickyBar.getBoundingClientRect();
+    return image.width >= 72 && image.bottom <= barBox.top + 4 && barBox.top - image.top <= 110;
+  }, await bar.elementHandle())).toBe(true);
   await expect(dialog.locator('[data-bundle-chosen-product="900100"]')).toBeVisible();
   await expect(bar).toContainText('1 Artikel');
   await expect(page.locator('.fdshop-bundle__fly-clone')).toHaveCount(0, { timeout: 1400 });
+  await expect(bar).toHaveCSS('animation-name', 'fdshop-bundle-mobile-bar-learn');
   const addDiscount = dialog.locator('[data-bundle-pool-product="900105"] [data-bundle-add]');
   await dialog.evaluate(root => {
     root.querySelector('[data-bundle-pool-product="900100"] [data-bundle-add]').click();
@@ -278,7 +291,6 @@ test('mobile builder uses fly feedback, sticky bar and an editable bottom sheet'
   await expect(bar).toContainText('3 Artikel');
   await expect(page.locator('.fdshop-bundle__fly-clone')).toHaveCount(0, { timeout: 1400 });
 
-  const scrollHost = dialog.locator('.fdshop-bundle');
   await scrollHost.evaluate(node => { node.scrollTop = 160; });
   const scrollBefore = await scrollHost.evaluate(node => node.scrollTop);
   await bar.click();
@@ -295,16 +307,30 @@ test('mobile builder uses fly feedback, sticky bar and an editable bottom sheet'
 
   await dialog.locator('[data-bundle-pool-product="900100"] [data-bundle-info]').click();
   await expect(dialog.locator('[data-bundle-quick]')).toBeVisible();
+  const builderClose = dialog.getByRole('button', { name: 'Bundle-Konfigurator schließen', includeHidden: true });
+  await expect(builderClose).toBeHidden();
+  await expect(builderClose).toBeDisabled();
+  await expect(builderClose).toHaveAttribute('tabindex', '-1');
   expect(await dialog.locator('[data-bundle-quick]').evaluate(node => {
     const overlay = node.getBoundingClientRect();
     const card = node.querySelector('.fdshop-bundle__quick-card').getBoundingClientRect();
     return card.height >= overlay.height * .95;
   })).toBe(true);
+  await page.keyboard.press('Escape');
+  await expect(dialog.locator('[data-bundle-quick]')).toBeHidden();
+  await expect(dialog).toBeVisible();
+  await expect(builderClose).toBeVisible();
+  await expect(builderClose).toBeEnabled();
+  await expect(dialog.locator('[data-bundle-pool-product="900100"] [data-bundle-info]')).toBeFocused();
+  await dialog.locator('[data-bundle-pool-product="900100"] [data-bundle-info]').click();
   await dialog.locator('[data-bundle-quick-add]').click();
   await expect(dialog.locator('[data-bundle-quick]')).toBeHidden();
   await expect(bar).toContainText('4 Artikel');
   await expect(dialog.locator('[data-bundle-mobile-toast]')).toContainText('GLÜCKWUNSCH!');
   await expect(dialog.locator('[data-bundle-mobile-toast]')).toContainText('10 % RABATT FREIGESCHALTET');
+  await builderClose.click();
+  await expect(dialog).toBeHidden();
+  await expect(page.locator('body')).not.toHaveCSS('position', 'fixed');
   diagnostics.expectClean();
 });
 
