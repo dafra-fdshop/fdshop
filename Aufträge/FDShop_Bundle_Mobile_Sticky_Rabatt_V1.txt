@@ -1,0 +1,309 @@
+FDShop – FINALER MOBILE-UX-POLISH
+BUNDLE BUILDER: PERMANENTE RABATTSKALA IN STICKY BUNDLE BAR
+
+Projekt: FDShop
+Branch: feature
+Basis: aktueller feature-Stand nach realem IONOS-Gerätetest und manuell abgenommenen Mobile-Fixes
+Scope: ausschließlich Mobile Sticky Bundle Bar / Rabattskala
+KEIN Redesign von Desktop/Tablet, KEINE Fachlogikänderung.
+
+WICHTIGER AKTUELLER REALTEST-STAND
+Daniel und Caesar haben nach Mobile V1.1 zwei Darstellungsfehler direkt auf dem IONOS-Testserver diagnostiziert und final abgestimmt. Diese Änderungen sind bereits im Repo committed und dürfen NICHT zurückgebaut/optimiert werden:
+
+1. Fly-to-Bundle:
+- Ursache: Produktklon wurde außerhalb des nativen modal-dialog Top Layers an document.body angehängt und war deshalb auf realem Gerät unsichtbar.
+- final: dialog.appendChild(clone)
+- real getestete Animationsdauer: 1620 ms
+- finale Zielskalierung: scale(.35)
+- Produktbild ist damit sichtbar und abgenommen.
+
+2. Mobile Maximalrabatt-Celebration:
+- Ursache: viewportweite Celebration war im kleinen transformierten Toast-Kontext praktisch unsichtbar.
+- finaler Celebration-Container wird direkt an dialog angehängt.
+- Mobile Konfetti, Sterne und Luftschlangen sind real sichtbar getestet und abgenommen.
+- Streamer wurden optisch final feinjustiert.
+- temporäre Celebration-Elemente werden sauber entfernt.
+- Desktop-Celebration / Daniels Desktop-Hütchen unverändert.
+
+Bitte diesen aktuellen Repo-Stand als verbindliche Basis behandeln.
+
+======================================================================
+1. ZIEL
+======================================================================
+
+Auf Smartphone verschwindet die bisher oben im Builder platzierte Rabattskala beim Scrollen durch die Produktauswahl aus dem Sichtbereich.
+
+Der Rabattfortschritt ist ein zentraler Kaufanreiz und soll deshalb während der gesamten Produktauswahl permanent sichtbar bleiben.
+
+Lösung:
+Die Mobile Sticky Bundle Bar ("Quicky-Menü") wird moderat höher und erhält im oberen Bereich die vollständige Mobile-Rabattskala inklusive dynamischem Statustext.
+
+Darunter bleibt der bisherige Bundle-/Preisbereich.
+
+Die beiden Bereiche werden durch eine dezente, NICHT randbündige Trennlinie getrennt.
+
+======================================================================
+2. MOBILE RABATTSKALA AUS DEM KOPF ENTFERNEN
+======================================================================
+
+Auf Smartphone soll die bisherige permanente Rabattskala im oberen Builder-/Headerbereich nicht zusätzlich bestehen bleiben.
+
+Keine doppelte permanente Anzeige.
+
+Mobile Kopf danach kompakter:
+- Bundle-Titel
+- Beschreibung / Mehr anzeigen falls nötig
+- "DEIN FEUERWERK. DEINE AUSWAHL."
+- dynamische Regeln
+- danach Produktauswahl
+
+Die Rabattskala lebt auf Mobile künftig permanent in der Sticky Bundle Bar.
+
+Desktop/Tablet bleiben unverändert.
+
+======================================================================
+3. STICKY BUNDLE BAR ERWEITERN
+======================================================================
+
+Bestehende Mobile Sticky Bundle Bar moderat erhöhen.
+
+Neue Struktur sinngemäß:
+
+┌────────────────────────────────────┐
+│ MEIN RABATT                        │
+│                                    │
+│  3 %       5 %       8 %      12 %│
+│──●─────────●─────────●──────────●── │
+│ 4 Stk.     6 Stk.    8 Stk.  12 Stk.
+│                                    │
+│ 3 % Rabatt aktiv · Noch 2 Artikel  │
+│ bis 5 %                            │
+│                                    │
+│      ───────────────────────       │
+│                                    │
+│ Mein Bundle             3 % Rabatt │
+│ 4 Artikel                   61,69 € │
+└────────────────────────────────────┘
+
+Darstellung muss natürlich dynamisch aus den vorhandenen Bundle-Regeln/Stufen entstehen. Keine hart codierten 3/5/8/12-Werte.
+
+Die Skala darf nicht unnötig klein gequetscht werden.
+Prozentwerte und Mengen müssen auf typischen Smartphonebreiten gut lesbar bleiben.
+
+======================================================================
+4. DYNAMISCHER RABATTSTATUSTEXT
+======================================================================
+
+Direkt unter der Skala den bereits vorhandenen fachlichen Rabattstatus anzeigen.
+
+Sinngemäß:
+
+Vor erster Stufe:
+"Noch 1 Artikel bis 3 % Rabatt"
+
+Nach erreichter Stufe:
+"3 % Rabatt aktiv · Noch 2 Artikel bis 5 %"
+
+Maximal:
+"12 % Rabatt aktiv · Höchste Stufe erreicht"
+
+Vorhandene Berechnung / bestehende status()-Logik wiederverwenden.
+Keine zweite Rabattfachlogik bauen.
+
+Text kompakt, aber gut lesbar.
+
+======================================================================
+5. TRENNLINIE
+======================================================================
+
+Zwischen Rabattbereich und bisherigem Bundle-/Preisbereich eine dezente Linie.
+
+WICHTIG:
+- NICHT hart von Rand zu Rand
+- bewusst deutlicher seitlicher Abstand
+- lieber etwas mehr Abstand links/rechts als zu wenig
+- optisch zur vorhandenen Rahmen-/Akzentfarbe der Sticky Bar passend
+- dünn/dezent
+- ausreichend vertikaler Abstand oberhalb und unterhalb
+
+Sinngemäß eher:
+      ───────────────────────
+und NICHT:
+────────────────────────────────────
+
+Keine zweite Box erzeugen. Beide Bereiche bleiben Bestandteil derselben Sticky Bar.
+
+======================================================================
+6. BESTEHENDER UNTERER BEREICH
+======================================================================
+
+Unterhalb der Trennlinie bestehende Informationen erhalten:
+- "Mein Bundle"
+- Artikelanzahl
+- aktueller Rabatt
+- Bundlepreis
+- Öffnen-/Chevron-Hinweis
+
+Bestehendes Tap-Verhalten zum Bottom Sheet erhalten.
+
+Die größere Bar darf nicht zu einer klobigen zweiten UI-Fläche werden.
+Kompakt, hochwertig, klare Hierarchie:
+oben Motivation/Rabatt -> unten Bundle/Preis.
+
+======================================================================
+7. INTERAKTION MIT FLY-TO-BUNDLE
+======================================================================
+
+Der gerade real abgenommene Ablauf soll durch die neue Anordnung sogar gestärkt werden:
+
+Produkt hinzufügen
+-> konkretes Produktbild wandert sichtbar in die Sticky Bundle Bar
+-> kräftiger Glow/Pop
+-> Artikelzahl/Preis aktualisieren
+-> Rabattskala unmittelbar darüber zeigt den neuen Fortschritt
+-> bei Schwellenübertritt bestehender Rabatt-Toast / Maximal-Celebration
+
+Fly-to-Bundle-Werte NICHT verändern:
+- dialog.appendChild(clone)
+- duration 1620 ms
+- scale(.35)
+
+Glow/Pop nur an neue Bar-Geometrie anpassen, falls technisch notwendig; Wirkung nicht abschwächen.
+
+======================================================================
+8. MOBILE CELEBRATION SCHÜTZEN
+======================================================================
+
+Die gerade real abgenommene Mobile-Maximal-Celebration nicht neu gestalten.
+
+Beibehalten:
+- Celebration im dialog Top Layer
+- Konfetti
+- Sterne
+- final feinjustierte Luftschlangen
+- Cleanup
+- Glückwunsch-Toast
+- Wiederholbarkeit
+
+Nur falls die höhere Sticky Bar eine geometrische Kollision erzeugt, minimal positionell korrigieren. Keine kreative Neuinterpretation.
+
+Desktop-Maximal-Celebration inklusive Hütchen: NICHT ANFASSEN.
+
+======================================================================
+9. SCROLL / BOTTOM PADDING
+======================================================================
+
+Da die Sticky Bar höher wird:
+- Mobile Builder bottom-padding entsprechend anpassen
+- letztes Produkt vollständig erreichbar
+- nichts von Sticky Bar verdeckt
+- natürliches Mobile-Scrolling aus V1.1 erhalten
+- Hintergrundseite bleibt bei offenem Builder gesperrt
+- Bottom Sheet / Quick View Scrollverhalten erhalten
+
+Keine Rückkehr zum alten Scroll-Blocker.
+
+======================================================================
+10. BOTTOM SHEET
+======================================================================
+
+Tap auf Sticky Bar muss weiterhin Bottom Sheet öffnen.
+
+Prüfen, dass die größere Bar:
+- keine falschen Click-/Touch-Flächen erzeugt
+- Rabatt-Skala selbst nicht versehentlich Aktionen blockiert
+- Chevron/Bar weiterhin verständlich bedienbar
+- Bottom Sheet unverändert funktioniert
+
+======================================================================
+11. RESPONSIVE
+======================================================================
+
+Diese Änderung ist Smartphone-spezifisch.
+
+Prüfen insbesondere:
+- ca. 320 px Breite
+- ca. 360/375 px
+- ca. 390/430 px
+
+Kein horizontaler Overflow.
+Rabattstufen dürfen sich nicht überlappen.
+Lange dynamische Statuszeilen dürfen sinnvoll umbrechen.
+
+Desktop und Tablet bleiben visuell/funktional wie aktueller Stand.
+
+======================================================================
+12. ACCESSIBILITY / REDUCED MOTION
+======================================================================
+
+Bestehende Semantik/Bedienbarkeit erhalten.
+Rabattfortschritt darf rein visuell sein, Statustext muss Information weiterhin textlich transportieren.
+
+Reduced Motion unverändert respektieren.
+
+======================================================================
+13. TESTS – NUR GEZIELT
+======================================================================
+
+KEIN Full-Shop-Test.
+
+Mobile:
+- Builder öffnen
+- Rabattskala oben nicht doppelt vorhanden
+- Skala in Sticky Bar permanent sichtbar
+- durch lange Produktliste bis unten scrollen
+- letzte Produkte trotz höherer Bar erreichbar
+- Produkt hinzufügen
+- real abgenommene 1620-ms-Fly-Animation weiterhin vorhanden
+- Glow/Pop
+- Rabattfortschritt aktualisiert
+- normale Schwelle + Toast
+- Schwelle unterschreiten/erneut erreichen
+- Maximalstufe + real abgenommene Mobile-Celebration
+- Bottom Sheet öffnen/schließen
+- Mengen ändern / Remove
+- Quick View
+- Add to Cart
+- Reduced Motion
+- 320/375/430 px Gegenprobe
+
+Desktop/Tablet:
+nur kurzer Regression-Smoke, dass keine Änderung eingetreten ist.
+
+Technik:
+- relevante Bundle-Browsertests
+- JS/CSS-Syntax soweit vorhanden
+- Paketbau/Installation
+- Bundle-Smoke
+- Logs
+- git diff --check
+
+======================================================================
+14. ABSCHLUSS
+======================================================================
+
+Wenn grün:
+- Commit feature
+- Push origin/feature
+- kein main-Merge
+- Working Trees sauber/synchron
+- Auftrag nach Aufträge/erledigt
+
+Abschlussbericht:
+1. Sticky-Bar-Struktur
+2. Rabattfortschritt/Status
+3. Trennlinie
+4. Bottom-Padding/Scroll
+5. Fly-to-Bundle-Regressionsschutz
+6. Celebration-Regressionsschutz
+7. Bottom Sheet
+8. Responsive
+9. Tests
+10. geänderte Dateien
+11. Commit-SHA
+12. feature = origin/feature
+
+Commitmessage sinngemäß:
+Keep mobile bundle discount progress visible
+
+ENDE DES AUFTRAGS
