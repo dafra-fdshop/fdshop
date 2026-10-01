@@ -1,0 +1,191 @@
+FDShop – UMSETZUNGSAUFTRAG
+BUNDLE BUILDER MOBILE EXPERIENCE V1 + ASSET-MODULARISIERUNG
+
+Projekt: FDShop
+Branch: feature
+Basis: aktuell abgenommener Bundle-Builder nach V1.3 plus Daniels anschließend manuell realgetestetem Celebration-Finetuning.
+Scope: Mobile UX UND vollständige Modularisierung der Bundle-Frontend-Assets.
+WICHTIG: Desktop-/Tablet-Experience ist real abgenommen und darf bei der Modularisierung nicht gestalterisch verändert werden.
+
+1. ZIEL
+A) Mobile Bundle Experience V1: smartphonegerechtes Kauferlebnis statt Desktop nur schmal zu stapeln.
+B) Bundle Asset Modularization V1: ALLE ausschließlich Bundle-bezogenen Styles aus media/css/site.css nach media/css/bundle.css verschieben und bundle.css auf Desktop, Tablet und Mobile nur im tatsächlichen Bundle-Kontext laden.
+Zusätzlich prüfen/umsetzen, ob media/js/bundle.js ebenfalls nur im Bundle-Kontext geladen werden kann.
+Serverseitige Bundle-Fachlogik bleibt maßgeblich.
+
+2. DESKTOP/TABLET SCHÜTZEN
+Aktuelle Desktop-/Tablet-Version real getestet/abgenommen.
+Beim CSS-Umzug:
+- Styles 1:1 funktional/visuell übernehmen
+- nicht nebenbei refactoren oder "verbessern"
+- insbesondere Daniels final manuell abgestimmte Maximal-Celebration (Partikel, Luftschlangen, Flugbahn, Geschwindigkeit, Hütchenposition, Rotation/Keyframes) unverändert übernehmen
+- Drag&Drop, Quick View, Grid, Rabatt/Ribbon, Summary etc. erhalten.
+Asset-Verschiebung darf keine optische Regression erzeugen.
+
+3. MOBILE-GRUNDMODELL
+Smartphone: Drag&Drop NICHT primäres Bedienkonzept.
+Mobile nutzt:
+- natürlichen vertikalen Scroll
+- Produktliste
+- "+ Hinzufügen" primär
+- permanent erreichbare Sticky Bundle Bar unten
+- Bottom Sheet "Mein Bundle" zum Bearbeiten/Abschluss
+Keinen verschachtelten Produkt-Scrollcontainer auf Mobile erzwingen.
+Desktop-/Tablet-Drag&Drop bleibt.
+Touch-Drag darf technisch bestehen, wird auf Smartphone aber nicht als Hauptinteraktion erklärt.
+
+4. MOBILER KOPF
+Kompakt: Bundle-Titel, Beschreibung, Slogan "DEIN FEUERWERK. DEINE AUSWAHL.", dynamische Regeln, Rabattfortschritt.
+Lange Beschreibung bei Bedarf mit "Mehr anzeigen/Weniger anzeigen"; kurze nicht unnötig einklappen.
+Keine unnötige Höhe vor Produktauswahl.
+
+5. MOBILER RABATTFORTSCHRITT
+Skala smartphonegerecht horizontal, lesbar ohne horizontalen Seitenscroll.
+Bestehende Fachlogik unverändert.
+Erreichte Stufe zusätzlich mobil als Toast kommunizieren, da Skala beim Scrollen außerhalb Viewport sein kann.
+
+6. MOBILE PRODUKTLISTE
+Karten: Bild, gut lesbarer Name, SKU, Preis, Verfügbarkeit, großer Touch-Button "+ Hinzufügen", Info/Quick View.
+Keine Mengensteuerung dort.
+Große Touchziele, kein Overflow langer Namen.
+
+7. FLY-TO-BUNDLE
+Beim Tippen auf "+ Hinzufügen":
+1) fachlicher Add-State SOFORT; Animation blockiert nichts
+2) temporären visuellen Klon von Produktbild/geeignetem Kartenanteil erzeugen
+3) Start an Produktkarte
+4) beim Flug kleiner und ca. 35–45 % transparent
+5) weiche leicht gebogene Bahn zur Sticky Bundle Bar
+6) Klon dort entfernen
+7) Sticky Bar kurzer #e0a721-Impuls/Pop
+8) Artikelzahl/Preis/Rabattstatus neuer State
+Orientierung 450–650 ms, feinjustierbar.
+Echte Produktkarte bleibt stehen.
+Schnelle Mehrfach-Adds dürfen überlappen; keine verlorenen Adds, DOM-/Timerreste.
+Beim ersten Produkt darf Sticky Bar stärker reagieren, damit Nutzer lernt: dort ist mein Bundle.
+Reduced Motion: kein Flug, nur kurzes Highlight.
+
+8. QUICK VIEW MOBILE
+Nahezu fullscreen.
+Bild, Name, Preis/SKU, Beschreibung, technische Daten, Video falls vorhanden, großer "+ Zum Bundle hinzufügen".
+Add aus Quick View: unmittelbarer State, kurzer Erfolg, Quick View schließen, Sticky Bar pulsiert. Kein notwendiger Fly-Klon durch Overlay.
+Accessibility/Fokus sauber.
+
+9. STICKY BUNDLE BAR
+Permanent am unteren Rand des mobilen Builders.
+Mindestens: "Mein Bundle", Artikelanzahl, aktueller Rabatt, Bundlepreis, klarer Öffnen-Hinweis.
+Bei leerem Bundle sinnvoller Zustand.
+Darf Inhalt nicht verdecken: ausreichendes Bottom-Padding.
+CSS safe-area-inset-bottom berücksichtigen.
+
+10. MOBILE BOTTOM SHEET
+Tap auf Sticky Bar öffnet Bottom Sheet INNERHALB des Builders, kein unnötiges weiteres Joomla/Browser-Modal.
+Zeigt:
+- Mein Bundle
+- Produkte mit Bild/Name
+- [-] Menge [+]
+- Entfernen
+- Zwischensumme, Rabatt, Bundlepreis, Euro-Ersparnis
+- Bundle speichern
+- primär IN DEN WARENKORB
+- Auswahl zurücksetzen sekundär
+Von unten einfahren; eigener Scroll bei vielen Produkten; schließbar; danach gleiche Position in Produktliste.
+Touchziele/Fokus sauber. Dieselbe Selection/Serverlogik, keine fachliche Duplikation.
+
+11. MOBILE RABATT-TOAST
+Bei Schwellenübertritt von unten nach oben z.B.:
+"✦ 5 % Rabatt freigeschaltet!"
+"Noch 2 Artikel bis 8 %"
+ca. 2–3 s, nicht blockierend. Bei erneutem echten Schwellenübertritt erneut.
+Desktop-Ribbon nicht verändern.
+
+12. MAXIMALRABATT MOBILE
+Desktop-Maximal-Celebration NICHT auf Smartphone quetschen; Daniels handjustiertes Desktop-Hütchen NICHT verändern.
+Mobile eigene reduzierte, freudige Variante:
+- zentral im sichtbaren Mobilebereich
+- GLÜCKWUNSCH!
+- [X] % RABATT FREIGESCHALTET
+- mobilegerechte Sterne/Konfetti
+- eher vertikal/diagonal
+- keine Abhängigkeit vom Desktop-Hütchen
+- kein deckender Hintergrund
+- performant, wiederholbar
+Reduced Motion ruhig/statisch.
+
+13. BUNDLE.CSS – VOLLSTÄNDIGE CSS-HEIMAT
+Neue Datei media/css/bundle.css.
+Dorthin ALLE ausschließlich Bundle-Builder-bezogenen Styles aus site.css:
+gemeinsame Basis, Modal, Loader, Header, Regeln, Produktpool, Drag&Drop, Quick View, Mein Bundle, Karten/Grid, Mengensteuerung, Rabattfortschritt, Ribbon/Partikel, Desktop-Maximal-Celebration, Daniels finales Hütchen, Sticky Summary, Tablet Media Queries, bestehende Mobile Queries, neue Mobile UX, Fly-to-Bundle, Sticky Bar, Bottom Sheet, Toast/Celebration, reduced-motion.
+site.css behält globale/shopweite Regeln.
+Keine weitere unnötige Kleinstdatei-Zersplitterung.
+
+14. CSS-EXTRAKTION PRÜFEN
+Nicht stumpf nur nach Präfix ausschneiden.
+Prüfen, was exklusiv Bundle bzw. global geteilt ist.
+Keine global benötigten Regeln verschieben; keine Bundle-only-Regeln unnötig in site.css lassen.
+Nach Extraktion gezielt Bundle-Selektoren in site.css prüfen; begründete Ausnahmen dokumentieren.
+Reihenfolge/Spezifität erhalten.
+
+15. BUNDLE.CSS BEDARFSGERECHT LADEN
+bundle.css NICHT global auf jeder FDShop-Seite laden.
+Ohne Bundle Builder: site.css, kein bundle.css.
+Mit Bundle Builder: site.css + bundle.css.
+Gilt Desktop/Tablet/Mobile gleichermaßen; Media Queries in bundle.css entscheiden.
+Joomla WebAssetManager / bestehende Assetarchitektur sauber nutzen.
+Kein FOUC beim Builder-Öffnen.
+
+16. BUNDLE.JS PRÜFEN
+Prüfen, wie bundle.js geladen wird.
+Falls global: auf bedarfsgerechte Einbindung im tatsächlichen Bundle-Kontext umstellen, sofern einfach/robust.
+Bevorzugt: Joomla weiß beim Rendern, dass Bundle verfügbar ist -> bundle.css + bundle.js gezielt aktivieren.
+Keinen komplizierten Custom-Lazyloader bauen.
+Falls sauber nicht sinnvoll möglich: STOP/berichten bzw. begründet unverändert lassen statt fragiler Lösung.
+
+17. PERFORMANCE
+Mobile Animationen transform/opacity bevorzugen; Fly-Klone vollständig entfernen; keine N+1-Requests; keine Anfrage je Animation; keine schweren Animationslibraries.
+Bestehende Daten-/Serverlogik wiederverwenden.
+Ziel Assettrennung: Bundle-Code nicht auf Seiten übertragen/parsen, die ihn nicht benötigen.
+
+18. FACHLOGIK SCHÜTZEN
+Nicht regressieren: Regeln, min. verschiedene Produkte, max. Menge, Rabatt, Preise, Bestand, Save/Load/Delete, Cart Bundle Items, serverseitige Validierung, Order/Checkout, Quick View Daten, Video, genau ein fachlicher Add pro Nutzeraktion.
+Keine Schemaänderung ohne zwingenden Grund.
+
+19. RESPONSIVE BREAKPOINTS
+Bestehende Breakpoints analysieren und sinnvoll weiterverwenden.
+Nicht blind "Mobile = 760px", falls Layoutanforderung anderes verlangt.
+Ziel: Desktop bestehend; Tablet bestehend soweit sinnvoll; Smartphone neue UX.
+Breakpoint anhand realer Layoutanforderung wählen/dokumentieren.
+
+20. GEZIELTE TESTS – KEIN FULL-SHOP
+A Asset Loading: Seite ohne Bundle lädt bundle.css nicht; bundle.js ebenfalls nicht falls umgestellt. Bundle-Kontext Desktop/Tablet/Mobile lädt benötigte Assets.
+B Desktop Regression: visueller Smoke, Drag&Drop, Quick View, Rabatt, Max-Celebration inkl. finalem Hütchen unverändert, Save/Cart.
+C Tablet: Layout/Touch brauchbar, keine Extraktionsregression.
+D Mobile: natürlicher Scroll, Karten, Add, Fly-to-Bundle, schnelle Mehrfach-Adds, Sticky Bar, Bottom Sheet, Mengen/Remove, Save, Cart, Reset, Quick View/Video/Add, langer Name, viele gewählte Produkte, Safe Area.
+E Rabatt Mobile: Toast, Wiederholung, Maximalstufe, Reduced Motion.
+F relevante Bundle Browser-/Service-Tests, Syntax, Paketinstallation, Bundle-Smoke, Logs, git diff --check.
+NICHT PayPal, Rechnung, Coupons, Kategorien, Admin-Gesamtsuite.
+
+21. DOKUMENTATION
+Kurz dokumentieren:
+- bundle.css als funktionsspezifisches Asset
+- wann bundle.css/bundle.js geladen werden
+- Mobile-Interaktionsmodell
+- Desktop/Tablet unverändert
+- Frontend-Leitlinie: große funktionsspezifische Bereiche modular laden; keine unnötige Kleinstdatei-Zersplitterung.
+
+22. ABSCHLUSS
+Wenn grün:
+- Commit feature
+- Push origin/feature
+- kein main-Merge
+- Working Trees sauber/synchron
+- Auftrag nach Aufträge/erledigt
+
+Abschlussbericht: Mobile UX, Fly-to-Bundle, Sticky Bar, Bottom Sheet, Mobile Rabatt/Max-Celebration, Quick View Mobile, CSS-Extraktion, bedarfsgerechtes CSS/JS Loading, Desktop/Tablet-Regressionsschutz, Performance/Accessibility, Tests, Dateien, Commit-SHA, feature=origin/feature.
+
+Wenn Assetarchitektur unerwartet großen/fragilen Umbau verlangt: STOP mit Befund statt Scope ausweiten.
+
+Commitmessage sinngemäß:
+Add mobile bundle experience and modular assets
+
+ENDE DES AUFTRAGS
