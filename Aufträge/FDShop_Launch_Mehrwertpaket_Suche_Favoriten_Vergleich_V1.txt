@@ -1,0 +1,331 @@
+# FDShop – Launch-Mehrwertpaket V1
+
+## Produktsuche → Favoriten → Produktvergleich
+
+Projekt: FDShop
+Branch: feature
+Arbeitsmodus: sequenziell, drei eigenständig abschließbare Teilpakete
+Priorität: Launch-V1
+
+WICHTIG:
+- Kein Merge nach main.
+- Kein Full-Shop-Testmarathon.
+- Keine selbst erfundene vierte Aufgabe.
+- Aktueller Code und verbindliche Projektdokumentation sind maßgeblich.
+- Codex darf innerhalb der Fachziele sinnvolle technische Detailentscheidungen selbst treffen, wenn sie Joomla-6-konform, server-side-first, performant und dokumentiert sind.
+
+======================================================================
+0. VERBINDLICHE ARBEITSWEISE
+======================================================================
+
+Teilpakete strikt nacheinander:
+1. Produktsuche V1
+2. Favoriten V1
+3. Produktvergleich V1
+
+Jedes Teilpaket:
+- analysieren
+- implementieren
+- gezielt testen
+- eigenständig committen und nach origin/feature pushen
+- erst danach nächstes Teilpaket
+
+Wenn ein Teilpaket nicht sauber grün wird: nicht zum nächsten springen. Im Scope korrigieren; falls weiterhin blockiert, STOP mit präzisem Bericht. Bereits abgeschlossene Pakete bleiben bestehen.
+
+Wenn alle drei früher fertig sind: STOP.
+
+Keine unnötigen Libraries oder spekulative Plattformarchitektur.
+
+======================================================================
+1. GEMEINSAME ARCHITEKTUR / PERFORMANCE / SICHERHEIT
+======================================================================
+
+Produktdarstellung:
+Kategorie, Suchergebnisse und Favoriten sollen keine drei unabhängigen Produktkarten erhalten. Bestehende Kategorie-Produktkarte ist Referenz. Falls ein gemeinsames Joomla-Layout sinnvoll ist, darf Codex klein und sicher refaktorieren. Bestehende Video-, Purchase-, Watchlist-/F3- und dynamische Kartenaktionen dürfen nicht regressieren.
+
+Neue Kartenaktionen:
+Favorit und Vergleich auf Produktkarten und sinnvoll auf Produktdetailseite.
+Auf Produktkarte rechts über dem Produktbild:
+- leicht transparent im Ruhezustand
+- Desktop Hover/Fokus: 100 %
+- Touch: von Anfang an ausreichend sichtbar
+- Active-State
+- Tastatur + accessible labels
+Keine rein hoverabhängige Bedienung.
+
+Performance:
+STRIKT KEIN N+1:
+- keine Favoritenabfrage pro Produkt
+- keine Vergleichsabfrage pro Produkt
+- keine Hersteller-/Kategorie-N+1
+- kein AJAX pro Suggestion-Eintrag
+Zustände sichtbarer Produkt-IDs gebündelt laden.
+Nur sinnvolle DB-Indizes anhand echter Query-Pfade ergänzen.
+
+Sichtbarkeit:
+Bestehende FDShop-Regeln für is_active, is_deleted, publish_up/publish_down und relevante Käufergruppen/Katalogregeln wiederverwenden.
+Ausverkauft != unveröffentlicht.
+Ausverkaufte öffentlich sichtbare Produkte dürfen gesucht/favorisiert/verglichen werden.
+Deaktivierte/nicht öffentliche Produkte dürfen nicht geleakt werden.
+
+Konfiguration:
+Neue Feature-Schalter/Limits in bestehende zentrale FDShop-Konfiguration.
+Limits serverseitig erzwingen.
+
+Sicherheit:
+- Joomla User-ID ausschließlich serverseitig aus Auth-Kontext
+- Joomla CSRF bei Mutationen
+- Besitz jeder Liste serverseitig prüfen
+- keine fremden Listen per manipulierter ID
+- Query Builder / sichere Suchparameter
+- keine sensiblen Daten in DOM/JSON
+
+======================================================================
+TEILPAKET 1 – PRODUKTSUCHE V1
+======================================================================
+
+Ziel:
+Schnelle Produktsuche mit Live-Vorschlägen, vollständiger Ergebnisseite, Pagination, bestehenden Produktkarten und Mobile/Desktop.
+
+Suchfelder V1:
+- Produktname
+- SKU
+- Herstellername
+Kategoriebezeichnung darf Codex nach Analyse ergänzen, wenn sauber und sinnvoll.
+Beschreibungen nicht ungeprüft in eine unscharfe Volltextsuche werfen.
+
+Live-Suggestions:
+- ab ca. 3 Zeichen
+- Debounce ca. 250–300 ms
+- veraltete Requests abbrechen/ignorieren
+- ca. 6–8 Vorschläge
+- ein Request pro Suchzustand
+- Bild, Produktname, Hersteller, Preis; SKU wenn sinnvoll
+- Klick/Tap → Detail
+- „Alle Ergebnisse für …“
+- Enter → Ergebnisseite
+- Pfeil hoch/runter, Enter, Escape
+- sinnvolle ARIA Combobox/Listbox-Semantik
+- Klick außerhalb schließt
+- kein kompletter Produktindex im Browser
+
+Suchindex/Cache:
+Daniel wünscht Geschwindigkeit und hat einen Suchindex als Idee genannt.
+Codex soll anhand realer Daten entscheiden:
+- bevorzugt gut indexierte serverseitige DB-Suche, wenn ausreichend schnell
+- eigener Index nur, wenn klar sinnvoll UND Aktualisierung/Invalidierung bei relevanten Änderungen sauber gelöst
+- keine leicht veraltende statische JSON-Datei
+- keine überdimensionierte Suchplattform
+Entscheidung begründen.
+
+Ergebnisseite:
+- Suchbegriff sichtbar
+- Trefferzahl
+- bestehende Produktkarten
+- Pagination, Suchbegriff bleibt erhalten
+- Deep-Link-fähige URL
+- Empty State
+- keine unnötige neue Filterplattform
+- vorhandene Sortier-/Filterarchitektur nur wiederverwenden, wenn sauber und ohne Scope-Aufblähung
+
+Tests:
+Name, Teilbegriff, SKU, Hersteller, Case/Whitespace, keine Treffer, Sichtbarkeitsregeln, ausverkauft sichtbar, Suggestions, schnelle Eingabe ohne stale result, Keyboard, Alle Ergebnisse, Pagination, Mobile, kein N+1, Kartenaktionen, Katalogmodus.
+Danach Paketbau/Installation, Smoke, Logs, diff-check.
+
+Commit:
+Add FDShop product search V1
+
+======================================================================
+TEILPAKET 2 – FAVORITEN V1
+======================================================================
+
+Fachziel:
+Favoriten ausschließlich für registrierte Joomla-Benutzer. Bewusster Registrierungsanreiz.
+Keine Gastfavoriten, kein LocalStorage, kein Gast-Merge.
+Serverseitige Userbindung = geräteübergreifend.
+
+Listen:
+- immer eine „Standardliste“
+- Standardliste nicht löschbar, nicht umbenennbar
+- maximal 3 zusätzliche eigene Listen
+- insgesamt maximal 4
+
+Admin-Konfiguration:
+- Favoriten aktiv, Default aktiv
+- max. zusätzliche Listen, Default 3
+- max. Produkte je Liste, sinnvoller Default z. B. 100
+
+Datenmodell passend zu FDShop-Konvention:
+Liste mit owner user_id, Standardmarker, Name, created/modified soweit sinnvoll.
+Mapping list_id/product_id mit Unique Constraint.
+Keine redundanten Produkt-Snapshots.
+
+Gast klickt Herz:
+Hinweis sinngemäß:
+„Favoriten sind für registrierte Kunden verfügbar. Melde dich an oder erstelle kostenlos ein Kundenkonto, um Produkte dauerhaft in Favoritenlisten zu speichern.“
+Aktionen: Anmelden, Registrieren, Abbrechen.
+Joomla Login/Registrierung verwenden; Return-URL wenn sauber möglich.
+
+Registrierter User:
+Nur Standardliste vorhanden:
+- Herz-Klick direkt Add/Remove
+- kein Popup
+- Feedback + Active-State
+
+Weitere Listen vorhanden:
+Hinzufügen:
+- Dialog mit Checkboxen aller Listen
+- Produkt gleichzeitig in mehreren Listen möglich
+Entfernen:
+- nur eine Liste → direkt
+- mehrere Listen → Dialog „Aus welchen Favoritenlisten entfernen?“
+Limits serverseitig.
+
+„Meine Favoriten“:
+- nur authentifiziert
+- Listen wählen
+- eigene Listen anlegen/umbenennen/löschen
+- Standardliste geschützt
+- Produkt entfernen
+- Zuordnung zu weiteren Listen
+- bestehende Kategorie-Produktkarten wiederverwenden
+- Warenkorb/Purchase direkt
+- Video/Kartenaktionen
+- Empty States
+
+Favoritenstatus:
+sichtbare Produkt-IDs gebündelt laden.
+Active = Produkt liegt in mindestens einer Liste.
+Kein Query pro Karte.
+
+Ausverkauft: sichtbar, wenn öffentlich.
+Deaktiviert/unveröffentlicht: Mapping darf bestehen, aber nicht öffentlich leaken.
+
+Tests:
+Gast-Hinweis, Standardliste, Add/Remove, 3 Zusatzlisten-Limit, Schutz Standardliste, Checkbox-Mehrfachzuordnung, Entfernen, Produktlimit, CSRF, Fremd-ID, Userpersistenz, ausverkauft/deaktiviert, Karten/Warenkorb, Mobile/Desktop, kein N+1.
+Paketbau/Installation, Smoke, Logs, diff-check.
+
+Commit:
+Add FDShop favorites V1
+
+======================================================================
+TEILPAKET 3 – PRODUKTVERGLEICH V1
+======================================================================
+
+Fachziel:
+Produkte derselben Kategorie vergleichen.
+Gäste dürfen vergleichen.
+Aktiver Vergleich bleibt innerhalb Joomla-/Browser-Session über Navigation erhalten.
+Registrierte User können Vergleiche zusätzlich dauerhaft speichern.
+
+Limits Default:
+- max. 4 Produkte im aktiven Vergleich
+- gleiche Vergleichskategorie
+- max. 4 gespeicherte Vergleichslisten pro registriertem User
+
+Admin-Konfiguration:
+- Produktvergleich aktiv
+- max. Vergleichsprodukte, Default 4
+- max. gespeicherte Vergleichslisten, Default 4
+Serverseitig erzwingen.
+
+Kategoriebindung:
+Aktiver Vergleich gehört zu einer Vergleichskategorie.
+Bei Start aus Kategorie ist diese Kontext.
+Bei Detailseite Mehrfachkategorien nicht willkürlich wählen; vorhandenen Routing-/Kategorie-Kontext sinnvoll nutzen.
+
+Kategorienwechsel:
+Wenn aktiver Vergleich Kategorie A enthält und User in Kategorie B vergleicht:
+Dialog:
+„Neuen Vergleich starten? Dein aktueller Vergleich enthält Produkte aus einer anderen Kategorie. Möchtest du ihn leeren und mit diesem Produkt einen neuen Vergleich starten?“
+Aktionen:
+- Aktuellen Vergleich leeren und neuen starten
+- Abbrechen
+Keine stille Löschung.
+
+Feedbackleiste:
+Nach erstem Add unten deutliche, kompakte Leiste:
+„Akira wurde zum Vergleich hinzugefügt.“
+„2 von 4 Produkten ausgewählt“ + Button „Zum Vergleich“
+Responsive, nicht störend, Inhalt nicht verdecken, accessible.
+
+Desktop-Vergleich:
+Matrix mit bis zu konfigurierter Produktanzahl.
+Kopf:
+Bild, Name, Hersteller, Preis, Verfügbarkeit, Favorit, Purchase soweit passend, Entfernen.
+
+Vergleichswerte anhand real vorhandener strukturierter Felder, mindestens prüfen:
+- NEM
+- Schusszahl
+- Kaliber
+- Brenndauer
+- Steighöhe
+- Hersteller
+- Preis
+- Verfügbarkeit
+Codex darf sinnvolle vorhandene V1-Felder ergänzen.
+Fehlend = „–“, nicht fälschlich 0.
+
+Option „Nur Unterschiede anzeigen“:
+Zeilen mit bei allen Produkten identischen normalisierten Werten ausblenden.
+
+Mobile:
+KEINE gequetschte Desktoptabelle.
+Ziel:
+- Attributnamen sinnvoll fixiert
+- ca. zwei Produktspalten gleichzeitig lesbar
+- weitere Produkte horizontal wischbar
+- Produktköpfe nach Möglichkeit sticky
+- Kopf/Daten horizontal synchron
+- kein Seiten-Horizontaloverflow
+- Touch natürlich
+- „Nur Unterschiede“ verfügbar
+Codex darf technisch robustere gleichwertige Darstellung wählen, falls sticky/synchron unnötig fragil wäre.
+
+Gespeicherte Vergleiche:
+Nur registriert.
+- aktuellen Vergleich speichern
+- bis 4 Listen
+- Name durch User
+- öffnen, umbenennen, löschen
+- Produkte entfernen
+- gespeicherten Vergleich wieder aktiv öffnen
+Keine Standard-Vergleichsliste.
+Usergebunden = geräteübergreifend.
+
+Gast will speichern:
+Login-/Registrierungshinweis analog Favoriten.
+Aktive Session-Auswahl durch Hinweis nicht verlieren.
+
+Tests:
+Gastvergleich, Session über Navigation, Limit, gleiche Kategorie, Kategorienwechsel bestätigen/abbrechen, Remove/Leeren, Werte, fehlende Werte, Nur Unterschiede, Mobile, Desktop, gespeicherte Vergleiche CRUD, Limit, Fremd-ID/CSRF, deaktiviert/ausverkauft, Kartenaktionen, kein N+1.
+Paketbau/Installation, Smoke, Logs, diff-check.
+
+Commit:
+Add FDShop product comparison V1
+
+======================================================================
+ABSCHLUSS NACH ALLEN DREI PAKETEN
+======================================================================
+
+Kein Merge nach main.
+feature = origin/feature.
+WSL/Windows Working Trees sauber/synchron.
+Auftrag nach Aufträge/erledigt.
+
+Finalbericht getrennt je Teilpaket:
+- Architekturentscheidung
+- Datenmodell/Migration/Schema-Version
+- UI/UX
+- Performance / Query-Verhalten
+- Security
+- Tests
+- geänderte Dateien
+- jeweilige Commit-SHA
+- offene Punkte bewusst für V1.1/V1.2
+
+WICHTIG:
+V1 soll gut, robust und launchfähig sein, aber nicht jede denkbare Komfortfunktion vorwegnehmen.
+Sinnvolle Verbesserungen dürfen als V1.1/V1.2 notiert werden statt V1 unnötig aufzublähen.
+
+ENDE DES AUFTRAGS
