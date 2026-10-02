@@ -6,6 +6,7 @@ DROP TABLE IF EXISTS `#__fdshop_favorite_lists`;
 DROP TABLE IF EXISTS `#__fdshop_payment_transactions`;
 DROP TABLE IF EXISTS `#__fdshop_payment_reservations`;
 DROP TABLE IF EXISTS `#__fdshop_payment_sessions`;
+DROP TABLE IF EXISTS `#__fdshop_cart_continuations`;
 
 DROP TABLE IF EXISTS `#__fdshop_product_filter_option_map`;
 DROP TABLE IF EXISTS `#__fdshop_filter_option_category_map`;

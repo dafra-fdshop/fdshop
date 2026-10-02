@@ -37,6 +37,8 @@ use FDShop\Component\FDShop\Administrator\Service\WatchlistService;
 use FDShop\Component\FDShop\Administrator\Service\WatchlistServiceInterface;
 use FDShop\Component\FDShop\Site\Service\CartService;
 use FDShop\Component\FDShop\Site\Service\CartServiceInterface;
+use FDShop\Component\FDShop\Site\Service\CartContinuationService;
+use FDShop\Component\FDShop\Site\Service\CartContinuationServiceInterface;
 use FDShop\Component\FDShop\Site\Service\CheckoutService;
 use FDShop\Component\FDShop\Site\Service\CheckoutServiceInterface;
 use FDShop\Component\FDShop\Site\Service\PaymentService;
@@ -249,6 +251,8 @@ return new class () implements ServiceProviderInterface {
         $container->set(PaymentUtcClock::class, fn (Container $container): PaymentUtcClock => $container->get(PaymentClockInterface::class));
         $container->set(PaymentServiceInterface::class, fn (Container $container): PaymentServiceInterface => new PaymentService($container->get(DatabaseInterface::class),$container->get(CartServiceInterface::class),$container->get(CheckoutServiceInterface::class),$container->get(PayPalClientInterface::class),$container->get(BuyerEligibilityServiceInterface::class),$container->get(ProductServiceInterface::class),$container->get(PaymentClockInterface::class)));
         $container->set(PaymentService::class, fn (Container $container): PaymentService => $container->get(PaymentServiceInterface::class));
+        $container->set(CartContinuationServiceInterface::class, fn (Container $container): CartContinuationServiceInterface => new CartContinuationService($container->get(DatabaseInterface::class), $container->get(CartServiceInterface::class), $container->get(PaymentServiceInterface::class)));
+        $container->set(CartContinuationService::class, fn (Container $container): CartContinuationService => $container->get(CartContinuationServiceInterface::class));
         $container->set(AccountServiceInterface::class, fn (Container $container): AccountServiceInterface => new AccountService($container->get(DatabaseInterface::class), $container->get(BuyerEligibilityServiceInterface::class), $container->get(OrderServiceInterface::class), $container->get(WatchlistServiceInterface::class)));
         $container->set(AccountService::class, fn (Container $container): AccountService => $container->get(AccountServiceInterface::class));
 

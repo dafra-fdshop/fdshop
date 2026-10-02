@@ -130,6 +130,9 @@ final class FDShopProfile extends CMSPlugin implements SubscriberInterface
         $data = $event->getUser();
         $userId = ArrayHelper::getValue($data, 'id', 0, 'int');
         if (!$event->getSavingResult() || $userId < 1) return;
+        if ($event->getIsNew() && Factory::getApplication()->isClient('site') && Factory::getApplication()->getSession()->get('com_fdshop.cart_continuation.intent') === 'checkout') {
+            Factory::getApplication()->getSession()->set('com_fdshop.cart_continuation.registered', 1);
+        }
         $submitted = Factory::getApplication()->getInput()->post->get('jform', [], 'array');
         $buyerStatus = self::$pendingBuyerStatuses[$userId]
             ?? (string) ($submitted['fdshop_buyer']['status'] ?? $data['fdshop_buyer']['status'] ?? '');

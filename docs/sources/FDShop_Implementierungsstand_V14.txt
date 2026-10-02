@@ -764,3 +764,29 @@ Der Vergleich ergänzt im Produktkopf den vorhandenen FDShop-Videodialog,
 vereinheitlichte Buttons für gespeicherte Listen und ein reloadfreies Leeren
 direkt aus der Feedbackleiste. Produktbild und Video werden gemeinsam in der
 bereits gebündelten Vergleichsabfrage ermittelt.
+
+Checkout Login / Cart Continuation V1 (Schema 0.0.50)
+-----------------------------------------------------
+
+Gäste dürfen den bestehenden FDShop-Warenkorb vollständig verwenden. Der
+Checkout-Einstieg führt sie über die vorhandene kombinierte Joomla-Login- und
+Registrierungsseite; Authentifizierung, Aktivierung und Profildaten bleiben
+bei Joomla sowie den Plugins `fdshopregistration` und `fdshopprofile`.
+
+`CartContinuationService` hält die browsergebundene Fortsetzung für zwei
+Stunden. Im HttpOnly-/SameSite-Lax-Cookie steht nur ein kryptografisch
+zufälliger, opaker Token; serverseitig wird ausschließlich dessen SHA-256-Hash
+gespeichert. Nach Login werden Gast- und Benutzerwarenkorb zentral geprüft:
+ein einzelner Warenkorb wird automatisch verwendet, zwei gefüllte Warenkörbe
+erfordern eine ausdrückliche, transaktionale Auswahl und werden nie gemischt.
+Normale Positionen, Bundlepositionen und noch gültige Versand-, Zahlungs- und
+Gutscheinmetadaten folgen dem gewählten Warenkorb. Käuferberechtigung und die
+bestehenden Cart-/Checkout-Validierungen bleiben verbindlich.
+
+Checkout-Intent führt nach der Auflösung zurück in den FDShop-Warenkorb zum
+tatsächlichen Bestellabschluss; normaler Kundenlogin führt zu `Mein Konto`.
+Ungültige, abgelaufene, fremd gebundene oder bereits verbrauchte Tokens geben
+keinen fremden Warenkorb frei. Der Auswahl-Endpunkt verlangt Joomla-CSRF und
+prüft Token sowie User-Ownership erneut. Beim bewussten Verwerfen eines
+Benutzerwarenkorbs werden ausschließlich aktive, nicht abgeschlossene
+Payment-Reservierungen über den bestehenden Payment-Service freigegeben.

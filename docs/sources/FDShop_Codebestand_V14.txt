@@ -707,3 +707,17 @@ KÄUFERBERECHTIGUNG / F3 V1
 - Das bestehende User-Plugin erweitert Joomla-Benutzerbearbeitung und
   Registrierung; Product-, Cart-, Bundle-, Checkout- und Order-Services binden
   dieselbe zentrale Fachlogik ein.
+
+CHECKOUT LOGIN / CART CONTINUATION V1
+-------------------------------------
+- `site/src/Service/CartContinuationService.php`: gehashte Zwei-Stunden-
+  Continuations, zentrale Gast→User-Auflösung, transaktionale Konfliktwahl,
+  Metadatenübernahme und einmaliger Verbrauch.
+- `#__fdshop_cart_continuations`: schmale serverseitige Token-/Intent-/
+  Cart-Metadatenablage; der Browser erhält keine User-, Cart- oder Kundendaten.
+- `plugins/system/fdshopregistration`: vorhandene kombinierte Auth-Seite mit
+  Checkout-Kontext, Joomla-Login-Fortsetzung und sicherem FDShop-Ziel.
+- `plugins/user/fdshopprofile`: markiert ausschließlich erfolgreiche
+  Checkout-Registrierungen für den kontextuellen Aktivierungshinweis.
+- `site/src/Controller/CartController.php`, `site/tmpl/cart/default.php` und
+  `media/js/cart.js`: Gast-CTA sowie CSRF-geschützte, responsive Konfliktwahl.

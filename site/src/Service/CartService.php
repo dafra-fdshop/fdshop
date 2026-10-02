@@ -84,6 +84,18 @@ final class CartService implements CartServiceInterface
         ];
     }
 
+    public function assertOwnerEligibleForUser(int $userId, int $ownerUserId, string $ownerSessionId): void
+    {
+        if ($userId < 1) throw new \DomainException('Bitte melden Sie sich an.');
+        $this->assertOwner($ownerUserId, $ownerSessionId);
+        $ids = [];
+        $q = $this->db->getQuery(true)->select('product_id')->from($this->db->quoteName('#__fdshop_cart'))->where($this->ownerWhere($ownerUserId, $ownerSessionId));
+        $this->db->setQuery($q); $ids = array_merge($ids, array_map('intval', (array) $this->db->loadColumn()));
+        $q = $this->db->getQuery(true)->select('i.product_id')->from($this->db->quoteName('#__fdshop_cart_bundle_items', 'i'))->innerJoin($this->db->quoteName('#__fdshop_cart_bundles', 'b') . ' ON b.id=i.cart_bundle_id')->where($this->ownerWhere($ownerUserId, $ownerSessionId, 'b'));
+        $this->db->setQuery($q); $ids = array_merge($ids, array_map('intval', (array) $this->db->loadColumn()));
+        $this->eligibility->assertProductsEligible($userId, $ids, 'checkout');
+    }
+
     public function addItem(int $userId, string $sessionId, int $productId, float $quantity, string $unitVariant = 'piece'): array
     {
         $this->assertOwner($userId, $sessionId);

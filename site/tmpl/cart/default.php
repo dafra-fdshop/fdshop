@@ -9,6 +9,9 @@ $currency = (string) ($cart['currency'] ?? 'EUR');
 ?>
 <main class="fdshop-cart" data-fdshop-cart data-paypal-enabled="<?php echo (int) ($cart['payment']->paypal_enabled ?? 0); ?>">
     <h1>Warenkorb</h1>
+        <?php if ($this->cartConflict) : ?>
+        <div class="fdshop-cart-conflict-pending alert alert-warning" role="status"><span>Vor dem Fortsetzen ist eine Warenkorbauswahl erforderlich.</span> <button type="button" class="btn btn-sm btn-outline-dark" data-cart-conflict-open>Warenkörbe vergleichen</button></div>
+        <?php endif; ?>
         <div class="fdshop-cart__message" data-fdshop-cart-message role="status" aria-live="polite" hidden></div>
         <div class="fdshop-cart__grid">
             <section class="fdshop-cart__products" aria-labelledby="fdshop-cart-products-heading">
@@ -59,12 +62,34 @@ $currency = (string) ($cart['currency'] ?? 'EUR');
                 </dl>
                 <div class="fdshop-cart__remark"><label for="fdshop-cart-remark">Bemerkung zur Bestellung</label><textarea id="fdshop-cart-remark" class="form-control" rows="3" data-cart-remark></textarea></div>
                 <?php if ((int) $this->config->show_terms_checkbox === 1) : ?><div class="form-check fdshop-cart__terms"><input id="fdshop-cart-terms" class="form-check-input" type="checkbox" data-cart-terms data-required="<?php echo (int) $this->config->require_terms_checkbox; ?>"><label class="form-check-label" for="fdshop-cart-terms">Ich bestätige die AGB und die Widerrufsbelehrung.</label></div><?php endif; ?>
-                <button type="button" class="btn btn-primary btn-lg fdshop-cart__order" data-cart-order>Zahlungspflichtig bestellen</button>
+                <button type="button" class="btn btn-primary btn-lg fdshop-cart__order" data-cart-order data-cart-guest="<?php echo $this->guest ? '1' : '0'; ?>"><?php echo $this->guest ? 'Weiter zum Bestellen' : 'Zahlungspflichtig bestellen'; ?></button>
                 <div class="alert alert-info mt-3" data-paypal-progress hidden><strong>Zeit für den Abschluss Ihrer Zahlung: <span data-paypal-countdown>10:00</span></strong><div>Bitte schließen Sie den Bezahlvorgang innerhalb der verfügbaren Zeit ab.</div></div>
             </aside>
         </div>
         <dialog class="fdshop-cart__dialog" data-cart-dialog="shipment"><form method="dialog"><header><h2>Abholstation wählen</h2><button value="cancel" aria-label="Auswahl schließen">×</button></header><?php foreach ($cart['shipments'] as $shipment) : ?><button type="button" class="fdshop-cart__option" data-cart-select-shipment="<?php echo (int) $shipment->id; ?>"><strong><?php echo $this->escape((string) $shipment->name); ?></strong><span><?php echo $this->escape($this->formatPrice((float) $shipment->fee, $currency)); ?></span></button><?php endforeach; ?></form></dialog>
         <dialog class="fdshop-cart__dialog" data-cart-dialog="payment"><form method="dialog"><header><h2>Zahlungsart wählen</h2><button value="cancel" aria-label="Auswahl schließen">×</button></header><?php foreach ($cart['payments'] as $payment) : ?><button type="button" class="fdshop-cart__option" data-cart-select-payment="<?php echo (int) $payment->id; ?>" data-paypal-enabled="<?php echo (int) ($payment->paypal_enabled ?? 0); ?>"><strong><?php echo $this->escape((string) $payment->name); ?></strong><span><?php echo $this->escape($this->formatPrice((float) $payment->fee, $currency)); ?></span></button><?php endforeach; ?></form></dialog>
+        <?php if ($this->cartConflict) : ?>
+        <dialog class="fdshop-cart-conflict" data-cart-conflict aria-labelledby="fdshop-cart-conflict-title" aria-describedby="fdshop-cart-conflict-description">
+            <div class="fdshop-cart-conflict__content">
+                <button type="button" class="fdshop-cart-conflict__close" data-cart-conflict-close aria-label="Warenkorbauswahl schließen">×</button>
+                <h2 id="fdshop-cart-conflict-title">Welchen Warenkorb möchtest du verwenden?</h2>
+                <p id="fdshop-cart-conflict-description">Du hast vor deiner Anmeldung einen neuen Warenkorb zusammengestellt. In deinem Kundenkonto ist bereits ein gespeicherter Warenkorb vorhanden. Bitte wähle aus, mit welchem du fortfahren möchtest.</p>
+                <div class="fdshop-cart-conflict__choices">
+                <?php foreach (['guest' => ['AKTUELLER WARENKORB', 'Gerade zusammengestellt'], 'user' => ['GESPEICHERTER WARENKORB', 'Aus deinem Kundenkonto']] as $key => [$title, $origin]) : $summary = $this->cartConflict[$key]; ?>
+                    <section class="fdshop-cart-conflict__choice" aria-labelledby="fdshop-cart-conflict-<?php echo $key; ?>">
+                        <h3 id="fdshop-cart-conflict-<?php echo $key; ?>"><?php echo $title; ?></h3>
+                        <strong><?php echo (int) $summary['count']; ?> Position<?php echo (int) $summary['count'] === 1 ? '' : 'en'; ?> · <?php echo $this->escape((string) $summary['total']); ?></strong>
+                        <span><?php echo $origin; ?></span>
+                        <?php if ($summary['names']) : ?><ul><?php foreach ($summary['names'] as $name) : ?><li><?php echo $this->escape((string) $name); ?></li><?php endforeach; ?><?php if ($summary['remaining'] > 0) : ?><li>+<?php echo (int) $summary['remaining']; ?> weitere</li><?php endif; ?></ul><?php endif; ?>
+                        <button type="button" class="btn btn-primary" data-cart-conflict-choice="<?php echo $key; ?>">Diesen verwenden</button>
+                    </section>
+                <?php endforeach; ?>
+                </div>
+                <p class="fdshop-cart-conflict__notice">Der nicht ausgewählte Warenkorb wird verworfen. Die beiden Warenkörbe werden nicht zusammengeführt.</p>
+                <div class="alert alert-danger" data-cart-conflict-error role="alert" hidden></div>
+            </div>
+        </dialog>
+        <?php endif; ?>
         <form hidden data-cart-token><?php echo HTMLHelper::_('form.token'); ?></form>
         <input type="hidden" value="<?php echo $this->escape($this->submissionId); ?>" data-cart-submission>
 </main>

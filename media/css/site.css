@@ -132,7 +132,7 @@
 @media (max-width: 800px) { .fdshop-products { grid-template-columns: repeat(2, minmax(0, 14.5rem)); } .fdshop-filter-module { display: none; } .fdshop-filter-open { display: inline-flex; } }
 @media (max-width: 800px) { .fdshop-product__overview { grid-template-columns: 1fr; } }
 @media (max-width: 520px) { .fdshop-products { grid-template-columns: 1fr; } .fdshop-card__media { height: 18rem; padding-inline: 3.6rem; } .fdshop-card__media .fdshop-card__placeholder { width: 42%; height: 42%; } .fdshop-toolbar { align-items: stretch; } .fdshop-toolbar label, .fdshop-toolbar select { width: 100%; } .fdshop-toolbar__results { margin-left: 0; } .fdshop-product__heading { grid-template-columns: 1fr; } .fdshop-product__manufacturer { text-align: left; } .fdshop-product__action-zone { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); } .fdshop-product__action { width: 100%; } .fdshop-product__action-button, .fdshop-product__package-control { width: 100%; } .fdshop-product__action small { max-width: none; } .fdshop-product__commerce { gap: .6rem; } }
-.fdshop-cart { --fdshop-border: var(--border-color, #dfe3e7); max-width: 1440px; margin-inline: auto; }
+.fdshop-cart { --fdshop-border: var(--border-color, #dfe3e7); max-width: 1440px; margin-inline: auto; container-type: inline-size; }
 .fdshop-cart__grid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(19rem, 1fr); gap: 1.5rem; align-items: start; }
 .fdshop-cart__products, .fdshop-cart__checkout { padding: 1rem; border: 1px solid #adb5bd; background: #fff; }
 .fdshop-cart__products h2, .fdshop-cart__checkout h2 { margin-top: 0; }
@@ -199,11 +199,24 @@
 .fdshop-purchase-modal dd { margin: 0; text-align: right; }
 .fdshop-purchase-modal__actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .5rem; margin-top: 1rem; }
 @media (max-width: 1100px) { .fdshop-cart__grid { grid-template-columns: 1fr; } }
+@container (max-width: 1100px) { .fdshop-cart__grid { grid-template-columns: 1fr; } }
 @media (max-width: 800px) { .fdshop-cart__table-head { display: none; } .fdshop-cart__item { grid-template-columns: 1fr 1fr; align-items: start; } .fdshop-cart__product { grid-column: 1 / -1; grid-row: 1; } .fdshop-cart__quantity { grid-column: 1 / -1; } .fdshop-cart__mobile-label { display: block; color: var(--fdshop-muted); font-size: .75rem; font-weight: 600; } .fdshop-cart__line-total { text-align: left; } }
 @media (max-width: 520px) { .fdshop-cart__item { grid-template-columns: 1fr; } .fdshop-cart__product, .fdshop-cart__quantity { grid-column: 1; } .fdshop-cart__quantity-controls { flex-wrap: wrap; } }
 .fdshop-cart__bundle { margin-top: .75rem; padding: .75rem; border: 2px solid #d3a341; background: #fffaf0; }
 .fdshop-cart__bundle header { display: flex; justify-content: space-between; gap: 1rem; }
 .fdshop-cart__bundle ul { margin: .5rem 0; }
+.fdshop-cart-conflict { width: min(60rem, calc(100vw - 2rem)); max-height: calc(100vh - 2rem); padding: 0; border: 0; border-radius: .35rem; }
+.fdshop-cart-conflict::backdrop { background: rgb(0 0 0 / 70%); }
+.fdshop-cart-conflict__content { position: relative; padding: clamp(1rem, 3vw, 2rem); }
+.fdshop-cart-conflict__content > h2 { margin: 0 2rem .5rem 0; }
+.fdshop-cart-conflict__close { position: absolute; top: .5rem; right: .75rem; border: 0; background: transparent; font-size: 2rem; line-height: 1; }
+.fdshop-cart-conflict__choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin-block: 1.25rem; }
+.fdshop-cart-conflict__choice { display: grid; gap: .65rem; align-content: start; padding: 1rem; border: 1px solid #adb5bd; background: #fff; }
+.fdshop-cart-conflict__choice h3 { margin: 0; color: #212529; font-size: 1rem; }
+.fdshop-cart-conflict__choice ul { min-height: 4.5rem; margin: 0; padding-left: 1.25rem; }
+.fdshop-cart-conflict__choice .btn { min-height: 2.75rem; margin-top: auto; }
+.fdshop-cart-conflict__notice { padding: .75rem; background: #fff3cd; font-weight: 600; }
+@media (max-width: 600px) { .fdshop-cart-conflict__choices { grid-template-columns: 1fr; } .fdshop-cart-conflict__choice ul { display: none; } }
 
 .fdshop-registration-note { margin-bottom: 1rem; padding: 1rem; border: 1px solid #dfbd88; border-radius: .25rem; background: #f5e6cf; }
 .fdshop-account-entry { display: grid; grid-template-columns: minmax(15rem, .75fr) minmax(0, 2fr); gap: 1rem; align-items: start; }

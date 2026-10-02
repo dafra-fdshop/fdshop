@@ -5,15 +5,60 @@ namespace FDShop\Component\FDShop\Site\Controller;
 defined('_JEXEC') or die;
 
 use FDShop\Component\FDShop\Site\Service\CartServiceInterface;
+use FDShop\Component\FDShop\Site\Service\CartContinuationServiceInterface;
 use FDShop\Component\FDShop\Site\Service\CheckoutServiceInterface;
 use FDShop\Component\FDShop\Site\Helper\RouteHelper;
 use Joomla\CMS\Factory;
 use Joomla\CMS\MVC\Controller\BaseController;
 use Joomla\CMS\Response\JsonResponse;
 use Joomla\CMS\Session\Session;
+use Joomla\CMS\Router\Route;
+use Joomla\CMS\Uri\Uri;
 
 final class CartController extends BaseController
 {
+    public function continueCheckout(): void
+    {
+        $app = Factory::getApplication();
+        try {
+            if (!Session::checkToken('request')) throw new \RuntimeException('Ungültiger Sicherheitstoken.');
+            if ((int) $app->getIdentity()->id > 0) {
+                echo new JsonResponse(['url' => Route::_('index.php?option=com_fdshop&view=cart', false)]);
+                $app->close();
+            }
+            $session = $app->getSession();
+            $cart = $this->getCartService()->getCart(0, $session->getId(), (int) $session->get($this->sessionKey(0, 'shipment_id'), 0), (int) $session->get($this->sessionKey(0, 'payment_id'), 0), (string) $session->get($this->sessionKey(0, 'coupon_code'), ''));
+            if ($cart['items'] === [] && $cart['bundles'] === []) throw new \DomainException('Ihr Warenkorb ist leer.');
+            $token = $this->getContinuationService()->ensure($session->getId(), 'checkout', $this->cartMetadata(0), $this->continuationToken());
+            $session->set('com_fdshop.cart_continuation.intent', 'checkout');
+            $this->setContinuationCookie($token);
+            echo new JsonResponse(['url' => Route::_('index.php?option=com_users&view=registration&fdshop_checkout=1', false)]);
+        } catch (\Throwable $error) {
+            echo new JsonResponse(null, $error->getMessage(), true);
+        }
+        $app->close();
+    }
+
+    public function chooseCart(): void
+    {
+        $app = Factory::getApplication();
+        try {
+            if (!Session::checkToken('request')) throw new \RuntimeException('Ungültiger Sicherheitstoken.');
+            $userId = (int) $app->getIdentity()->id;
+            if ($userId < 1) throw new \DomainException('Bitte melden Sie sich erneut an.');
+            $token = $this->continuationToken();
+            if ($token === '') throw new \DomainException('Die Warenkorbauswahl ist ungültig oder abgelaufen.');
+            $result = $this->getContinuationService()->choose($token, $userId, $app->getInput()->post->getCmd('choice'), $this->cartMetadata($userId));
+            $this->clearContinuationCookie();
+            $app->getSession()->clear('com_fdshop.cart_continuation.intent');
+            $url = $result['target'] === 'checkout' ? 'index.php?option=com_fdshop&view=cart' : 'index.php?option=com_fdshop&view=account';
+            echo new JsonResponse(['url' => Route::_($url, false)], 'Der Warenkorb wurde übernommen.');
+        } catch (\Throwable $error) {
+            echo new JsonResponse(null, $error->getMessage(), true);
+        }
+        $app->close();
+    }
+
     public function add(): void
     {
         $this->mutate(function (CartServiceInterface $service, int $userId, string $sessionId): array {
@@ -71,7 +116,7 @@ final class CartController extends BaseController
         $app=Factory::getApplication();
         try {
             if(!Session::checkToken('request')) throw new \RuntimeException('Ungültiger Sicherheitstoken.');
-            $userId=(int)$app->getIdentity()->id; $session=$app->getSession(); $input=$app->getInput();
+            $userId=(int)$app->getIdentity()->id; if($userId<1)throw new \DomainException('Bitte melden Sie sich an oder registrieren Sie sich, um Ihre Bestellung fortzusetzen.'); $session=$app->getSession(); $input=$app->getInput();
             $result=$this->getCheckoutService()->createOrder($userId,$session->getId(),(int)$session->get($this->sessionKey($userId,'shipment_id'),0),(int)$session->get($this->sessionKey($userId,'payment_id'),0),(string)$session->get($this->sessionKey($userId,'coupon_code'),''),$input->post->getString('order_note'),$input->post->getInt('terms_accepted')===1,$input->post->getString('submission_id'));
             foreach(['shipment_id','payment_id','coupon_code'] as $field)$session->clear($this->sessionKey($userId,$field));
             echo new JsonResponse($result,$result['already_processed']?'Die Bestellung wurde bereits verarbeitet.':'Vielen Dank. Ihre Bestellung wurde erfolgreich angelegt.');
@@ -131,6 +176,36 @@ final class CartController extends BaseController
     private function getCheckoutService(): CheckoutServiceInterface
     {
         return Factory::getApplication()->bootComponent('com_fdshop')->getContainer()->get(CheckoutServiceInterface::class);
+    }
+
+    private function getContinuationService(): CartContinuationServiceInterface
+    {
+        return Factory::getApplication()->bootComponent('com_fdshop')->getContainer()->get(CartContinuationServiceInterface::class);
+    }
+
+    private function cartMetadata(int $userId): array
+    {
+        $session = Factory::getApplication()->getSession();
+        return [
+            'shipment_id' => (int) $session->get($this->sessionKey($userId, 'shipment_id'), 0),
+            'payment_id' => (int) $session->get($this->sessionKey($userId, 'payment_id'), 0),
+            'coupon_code' => (string) $session->get($this->sessionKey($userId, 'coupon_code'), ''),
+        ];
+    }
+
+    private function continuationToken(): string
+    {
+        return Factory::getApplication()->getInput()->cookie->getString(CartContinuationServiceInterface::COOKIE_NAME, '');
+    }
+
+    private function setContinuationCookie(string $token): void
+    {
+        setcookie(CartContinuationServiceInterface::COOKIE_NAME, $token, ['expires' => time() + 7200, 'path' => '/', 'secure' => Uri::getInstance()->isSsl(), 'httponly' => true, 'samesite' => 'Lax']);
+    }
+
+    private function clearContinuationCookie(): void
+    {
+        setcookie(CartContinuationServiceInterface::COOKIE_NAME, '', ['expires' => 1, 'path' => '/', 'secure' => Uri::getInstance()->isSsl(), 'httponly' => true, 'samesite' => 'Lax']);
     }
 
     private function sessionKey(int $userId, string $field): string

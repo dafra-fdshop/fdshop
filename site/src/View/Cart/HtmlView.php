@@ -15,12 +15,16 @@ final class HtmlView extends BaseHtmlView
     public object $config;
     public string $placeholderImage;
     public string $submissionId;
+    public bool $guest = true;
+    public ?array $cartConflict = null;
 
     public function display($tpl = null): void
     {
         $model = $this->getModel();
         $this->cart = $model->getCartData();
         $this->config = $model->getConfig();
+        $this->guest = (bool) Factory::getApplication()->getIdentity()->guest;
+        $this->cartConflict = $model->getConflict();
         $this->placeholderImage = rtrim(Uri::root(true), '/') . '/media/com_fdshop/images/product-placeholder.svg';
         $this->submissionId = $this->uuid();
 

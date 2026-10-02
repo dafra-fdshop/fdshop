@@ -20,4 +20,6 @@ interface CartServiceInterface
 
     public function validateCoupon(int $userId, string $sessionId, string $couponCode, int $shipmentId = 0, int $paymentId = 0): array;
 
+    public function assertOwnerEligibleForUser(int $userId, int $ownerUserId, string $ownerSessionId): void;
+
 }

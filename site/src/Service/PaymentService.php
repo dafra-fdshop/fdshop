@@ -80,6 +80,13 @@ final class PaymentService implements PaymentServiceInterface
         $now=$this->clock->toSql($this->clock->now());$q=$this->db->getQuery(true)->select('id')->from($this->db->quoteName('#__fdshop_payment_sessions'))->where('expires_at<='.$this->db->quote($now))->where("status IN ('created','reserved','payment_in_progress')");$this->db->setQuery($q);$count=0;foreach($this->db->loadColumn() as $id){if($this->release((int)$id,'expired'))$count++;}return $count;
     }
 
+    public function abandonActiveForUser(int $userId): int
+    {
+        if ($userId < 1) return 0;
+        $q=$this->db->getQuery(true)->select('id')->from($this->db->quoteName('#__fdshop_payment_sessions'))->where('user_id='.(int)$userId)->where("status IN ('created','reserved','payment_in_progress','failed')")->where('reservation_released_at IS NULL');
+        $this->db->setQuery($q);$count=0;foreach((array)$this->db->loadColumn() as $id){if($this->release((int)$id,'cancelled'))$count++;}return $count;
+    }
+
     public function webhook(array $headers,string $body):void
     {
         if(!$this->paypal->verifyWebhook($headers,$body))throw new \RuntimeException('Ungültige PayPal-Webhook-Signatur.',403);

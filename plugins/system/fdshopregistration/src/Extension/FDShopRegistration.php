@@ -4,22 +4,118 @@ namespace FDShop\Plugin\System\FDShopRegistration\Extension;
 defined('_JEXEC') or die;
 
 use Joomla\CMS\Event\Application\AfterDispatchEvent;
+use Joomla\CMS\Event\Application\AfterRouteEvent;
+use Joomla\CMS\Event\User\AfterLoginEvent;
+use FDShop\Component\FDShop\Site\Service\CartContinuationServiceInterface;
+use FDShop\Component\FDShop\Site\Service\CartServiceInterface;
 use Joomla\CMS\Helper\ModuleHelper;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\Plugin\CMSPlugin;
+use Joomla\CMS\Uri\Uri;
 use Joomla\Event\SubscriberInterface;
 
 final class FDShopRegistration extends CMSPlugin implements SubscriberInterface
 {
-    public static function getSubscribedEvents(): array { return ['onAfterDispatch' => 'afterDispatch']; }
+    public static function getSubscribedEvents(): array { return ['onAfterRoute' => 'afterRoute', 'onUserAfterLogin' => 'afterLogin', 'onAfterDispatch' => 'afterDispatch']; }
+
+    public function afterRoute(AfterRouteEvent $event): void
+    {
+        $app = $event->getApplication();
+        if (!$app->isClient('site')) return;
+        $session = $app->getSession();
+        if (!$app->getIdentity()->guest) {
+            if ($app->getInput()->getCmd('task') === 'cart.chooseCart') return;
+            $token = $this->token();
+            if ($token !== '') {
+                try {
+                    $userId = (int) $app->getIdentity()->id;
+                    $result = $this->service()->resolveAfterLogin($token, $userId, ['shipment_id' => (int) $session->get('com_fdshop.cart.' . $userId . '.shipment_id', 0), 'payment_id' => (int) $session->get('com_fdshop.cart.' . $userId . '.payment_id', 0), 'coupon_code' => (string) $session->get('com_fdshop.cart.' . $userId . '.coupon_code', '')]);
+                    if ($result['state'] !== 'conflict') $this->clearCookie();
+                    $target = $result['state'] === 'conflict' || $result['target'] === 'checkout' ? 'index.php?option=com_fdshop&view=cart' : $this->normalLoginTarget();
+                    $alreadyThere = $app->getInput()->getCmd('option') === 'com_fdshop' && $app->getInput()->getCmd('view') === ($result['state'] === 'conflict' || $result['target'] === 'checkout' ? 'cart' : 'account');
+                    if (!$alreadyThere) {
+                        $session->clear('com_fdshop.cart_continuation.intent');
+                        $app->redirect($target);
+                    }
+                } catch (\Throwable $error) {
+                    $app->enqueueMessage('Ihr Warenkorb blieb erhalten, konnte aber noch nicht übernommen werden: ' . $error->getMessage(), 'error');
+                    if (!($app->getInput()->getCmd('option') === 'com_fdshop' && $app->getInput()->getCmd('view') === 'cart')) $app->redirect('index.php?option=com_fdshop&view=cart');
+                }
+                return;
+            }
+            if ($session->get('com_fdshop.login.pending') === 1) {
+                $session->clear('com_fdshop.login.pending');
+                if ($app->getInput()->getCmd('option') === 'com_users' && $app->getInput()->getCmd('view', 'profile') === 'profile') $app->redirect($this->normalLoginTarget());
+            }
+            return;
+        }
+        if ($app->getInput()->getCmd('option') !== 'com_users') return;
+        $session->set('com_fdshop.login.pending', 1);
+        $encodedReturn = $app->getInput()->getString('return', '');
+        $requestedReturn = $encodedReturn !== '' ? base64_decode($encodedReturn, true) : false;
+        if (is_string($requestedReturn) && $requestedReturn !== '' && Uri::isInternal($requestedReturn)
+            && !str_contains($requestedReturn, 'option=com_users&view=profile') && !str_contains($requestedReturn, 'option=com_users&view=login')) {
+            $session->set('com_fdshop.login.safe_return', $requestedReturn);
+        }
+        try {
+            $cart = $app->bootComponent('com_fdshop')->getContainer()->get(CartServiceInterface::class)->getCart(0, $session->getId());
+            if ($cart['items'] === [] && $cart['bundles'] === []) return;
+            $intent = $app->getInput()->getBool('fdshop_checkout') || $session->get('com_fdshop.cart_continuation.intent') === 'checkout' ? 'checkout' : 'account';
+            $metadata = ['shipment_id' => (int) $session->get('com_fdshop.cart.0.shipment_id', 0), 'payment_id' => (int) $session->get('com_fdshop.cart.0.payment_id', 0), 'coupon_code' => (string) $session->get('com_fdshop.cart.0.coupon_code', '')];
+            $token = $this->service()->ensure($session->getId(), $intent, $metadata, $this->token());
+            $session->set('com_fdshop.cart_continuation.intent', $intent);
+            $this->setCookie($token);
+        } catch (\Throwable) {
+            // The login/registration page must remain available if FDShop is temporarily unavailable.
+        }
+    }
+
+    public function afterLogin(AfterLoginEvent $event): void
+    {
+        $app = $this->getApplication();
+        if (!$app->isClient('site')) return;
+        $options = $event->getOptions();
+        $userId = (int) ($options['user']->id ?? 0);
+        if ($userId < 1) return;
+        $session = $app->getSession();
+        $token = $this->token();
+        $result = ['state' => 'none', 'target' => 'account'];
+        try {
+            if ($token !== '') {
+                $result = $this->service()->resolveAfterLogin($token, $userId, ['shipment_id' => (int) $session->get('com_fdshop.cart.' . $userId . '.shipment_id', 0), 'payment_id' => (int) $session->get('com_fdshop.cart.' . $userId . '.payment_id', 0), 'coupon_code' => (string) $session->get('com_fdshop.cart.' . $userId . '.coupon_code', '')]);
+            }
+        } catch (\Throwable $error) {
+            $app->enqueueMessage('Ihr Warenkorb blieb erhalten, konnte aber noch nicht übernommen werden: ' . $error->getMessage(), 'error');
+            $result = ['state' => 'conflict', 'target' => 'cart'];
+        }
+        if ($result['state'] !== 'conflict') $this->clearCookie();
+        $explicit = (string) ($options['return'] ?? '');
+        $defaultReturn = $explicit === '' || str_contains($explicit, 'option=com_users&view=profile') || str_contains($explicit, 'option=com_users&view=login');
+        if ($result['state'] === 'conflict' || $result['target'] === 'checkout') {
+            $target = 'index.php?option=com_fdshop&view=cart';
+        } elseif (!$defaultReturn && Uri::isInternal($explicit)) {
+            $target = $explicit;
+        } else {
+            $target = 'index.php?option=com_fdshop&view=account';
+        }
+        $session->set('users.login.form.return', $target);
+        $session->clear('com_fdshop.login.safe_return');
+        $session->clear('com_fdshop.cart_continuation.intent');
+    }
 
     public function afterDispatch(AfterDispatchEvent $event): void
     {
         $app = $event->getApplication();
-        if (!$app->isClient('site') || $app->getIdentity()->id || $app->getDocument()->getType() !== 'html'
-            || $app->getInput()->getCmd('option') !== 'com_users') return;
+        if (!$app->isClient('site') || $app->getIdentity()->id || $app->getDocument()->getType() !== 'html' || $app->getInput()->getCmd('option') !== 'com_users') return;
         $document = $app->getDocument();
         $registration = $document->getBuffer('component');
+        $checkout = $app->getSession()->get('com_fdshop.cart_continuation.intent') === 'checkout' || $app->getInput()->getBool('fdshop_checkout');
+        if ($app->getSession()->get('com_fdshop.cart_continuation.registered') === 1) {
+            $this->loadLanguage();
+            $document->setBuffer('<div class="fdshop-registration-note fdshop-registration-note--activation" role="status"><h2>' . Text::_('PLG_SYSTEM_FDSHOPREGISTRATION_ACTIVATION_TITLE') . '</h2><p>' . Text::_('PLG_SYSTEM_FDSHOPREGISTRATION_ACTIVATION_TEXT') . '</p></div>' . $registration, 'component');
+            $app->getSession()->clear('com_fdshop.cart_continuation.registered');
+            return;
+        }
         if (!str_contains($registration, 'id="member-registration"') || str_contains($registration, 'fdshop-account-entry')) return;
 
         $this->loadLanguage();
@@ -28,10 +124,38 @@ final class FDShopRegistration extends CMSPlugin implements SubscriberInterface
         $assets->getRegistry()->addRegistryFile('media/com_fdshop/joomla.asset.json');
         $assets->useStyle('com_fdshop.site');
         $document->setBuffer(
-            '<div class="fdshop-registration-note" role="note">' . Text::_('PLG_SYSTEM_FDSHOPREGISTRATION_NOTE') . '</div>'
+            '<div class="fdshop-registration-note" role="note">' . ($checkout ? '<h1>' . Text::_('PLG_SYSTEM_FDSHOPREGISTRATION_CHECKOUT_TITLE') . '</h1><p>' . Text::_('PLG_SYSTEM_FDSHOPREGISTRATION_CHECKOUT_TEXT') . '</p>' : Text::_('PLG_SYSTEM_FDSHOPREGISTRATION_NOTE')) . '</div>'
             . '<div class="fdshop-account-entry">'
             . '<section class="fdshop-account-entry__login" aria-labelledby="fdshop-login-title"><h2 id="fdshop-login-title">' . Text::_('PLG_SYSTEM_FDSHOPREGISTRATION_LOGIN_TITLE') . '</h2>' . $login . '</section>'
             . '<section class="fdshop-account-entry__registration" aria-labelledby="fdshop-registration-title"><h2 id="fdshop-registration-title">' . Text::_('PLG_SYSTEM_FDSHOPREGISTRATION_TITLE') . '</h2>' . $registration . '</section>'
             . '</div>', 'component');
+    }
+
+    private function service(): CartContinuationServiceInterface
+    {
+        return $this->getApplication()->bootComponent('com_fdshop')->getContainer()->get(CartContinuationServiceInterface::class);
+    }
+
+    private function token(): string
+    {
+        return $this->getApplication()->getInput()->cookie->getString(CartContinuationServiceInterface::COOKIE_NAME, '');
+    }
+
+    private function setCookie(string $token): void
+    {
+        setcookie(CartContinuationServiceInterface::COOKIE_NAME, $token, ['expires' => time() + 7200, 'path' => '/', 'secure' => Uri::getInstance()->isSsl(), 'httponly' => true, 'samesite' => 'Lax']);
+    }
+
+    private function clearCookie(): void
+    {
+        setcookie(CartContinuationServiceInterface::COOKIE_NAME, '', ['expires' => 1, 'path' => '/', 'secure' => Uri::getInstance()->isSsl(), 'httponly' => true, 'samesite' => 'Lax']);
+    }
+
+    private function normalLoginTarget(): string
+    {
+        $session = $this->getApplication()->getSession();
+        $target = (string) $session->get('com_fdshop.login.safe_return', '');
+        $session->clear('com_fdshop.login.safe_return');
+        return $target !== '' && Uri::isInternal($target) ? $target : 'index.php?option=com_fdshop&view=account';
     }
 }

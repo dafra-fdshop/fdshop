@@ -30,15 +30,11 @@ test('guest cart is isolated by session and cannot create an order', async ({ pa
   await expect(otherPage.locator('[data-cart-item]')).toHaveCount(0);
   await otherContext.close();
 
-  await cart.getByRole('button', { name: 'Zahlungspflichtig bestellen' }).click();
-  await expect(cart.locator('[data-fdshop-cart-message]')).toContainText('an oder registrieren');
-  await item.getByRole('button', { name: /entfernen/ }).click();
-  await expect(cart.locator('[data-cart-item]')).toHaveCount(0);
-  const replacement = await page.evaluate(async ({ tokenName }) => {
-    const body = new FormData(); body.append(tokenName, '1'); body.append('product_id', '900100'); body.append('quantity', '1');
-    return (await fetch('index.php?option=com_fdshop&format=json&task=cart.add', { method: 'POST', body })).json();
-  }, { tokenName });
-  expect(replacement.success, replacement.message).toBe(true);
+  await expect(cart.getByRole('button', { name: 'Weiter zum Bestellen' })).toBeVisible();
+  await cart.getByRole('button', { name: 'Weiter zum Bestellen' }).click();
+  await expect(page).toHaveURL(/(?:option=com_users|component\/users).*(?:registration|login)/);
+  await page.goto('/warenkorb');
+  await expect(page.locator('[data-cart-item]')).toHaveCount(1);
   diagnostics.expectClean();
 });
 

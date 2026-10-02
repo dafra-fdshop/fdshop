@@ -8,6 +8,7 @@
 
         var message = cart.querySelector('[data-fdshop-cart-message]');
         var endpoint = 'index.php?option=com_fdshop&format=json&task=cart.';
+        var conflict = cart.querySelector('[data-cart-conflict]');
 
         function notify(text, error) {
             message.textContent = text;
@@ -85,6 +86,11 @@
             if (button.matches('[data-cart-select-payment]')) request('selectPayment', { payment_id: button.dataset.cartSelectPayment }).then(function () { cart.dataset.paypalEnabled = button.dataset.paypalEnabled || '0'; setPayPalReady(cart.dataset.paypalEnabled!=='1'||Boolean(paypalSession)); if(cart.dataset.paypalEnabled==='1')loadPayPal().catch(function(error){notify(error.message,true);}); button.closest('dialog').close(); notify('Zahlungsart wurde geändert.', false); }).catch(function (error) { notify(error.message, true); });
             if (button.matches('[data-cart-apply-coupon]')) request('applyCoupon', { coupon_code: cart.querySelector('[data-cart-coupon-code]').value }).catch(function (error) { notify(error.message, true); });
             if (button.matches('[data-cart-order]')) {
+                if (conflict) { conflict.showModal(); return; }
+                if (button.dataset.cartGuest === '1') {
+                    request('continueCheckout', {}).then(function (state) { window.location.assign(state.url); }).catch(function (error) { notify(error.message, true); });
+                    return;
+                }
                 var terms = cart.querySelector('[data-cart-terms]');
                 if (cart.dataset.paypalEnabled === '1') {
                     startPayPal({order_note: cart.querySelector('[data-cart-remark]').value, terms_accepted: terms && terms.checked ? '1' : '0', submission_id: cart.querySelector('[data-cart-submission]').value}).catch(function (error) { notify(error.message, true); });
@@ -147,5 +153,25 @@
             await paypalSession.start({presentationMode:'auto'},createPromise);
         }
         if(cart.dataset.paypalEnabled==='1')loadPayPal().catch(function(error){notify(error.message,true);});
+        if (conflict) {
+            conflict.showModal();
+            cart.addEventListener('click', function (event) {
+                var open = event.target.closest('[data-cart-conflict-open]');
+                if (open) { conflict.showModal(); return; }
+                var close = event.target.closest('[data-cart-conflict-close]');
+                if (close) { conflict.close(); return; }
+                var choice = event.target.closest('[data-cart-conflict-choice]');
+                if (!choice) return;
+                var error = conflict.querySelector('[data-cart-conflict-error]');
+                conflict.querySelectorAll('button').forEach(function (control) { control.disabled = true; });
+                request('chooseCart', {choice: choice.dataset.cartConflictChoice}).then(function (state) {
+                    window.location.assign(state.url);
+                }).catch(function (failure) {
+                    error.textContent = failure.message;
+                    error.hidden = false;
+                    conflict.querySelectorAll('button').forEach(function (control) { control.disabled = false; });
+                });
+            });
+        }
     });
 }());

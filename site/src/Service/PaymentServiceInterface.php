@@ -8,4 +8,5 @@ interface PaymentServiceInterface
     public function cleanupExpired():int;
     public function webhook(array $headers,string $body):void;
     public function publicConfig():array;
+    public function abandonActiveForUser(int $userId): int;
 }
