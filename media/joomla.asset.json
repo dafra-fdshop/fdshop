@@ -1,7 +1,7 @@
 {
   "$schema": "https://developer.joomla.org/schemas/json-schema/web_assets.json",
   "name": "com_fdshop",
-  "version": "0.0.45",
+  "version": "0.0.46",
   "assets": [
     {
       "name": "com_fdshop.site",
@@ -47,6 +47,12 @@
       "name": "com_fdshop.bundle",
       "type": "script",
       "uri": "com_fdshop/bundle.js",
+      "attributes": { "defer": true }
+    },
+    {
+      "name": "com_fdshop.search",
+      "type": "script",
+      "uri": "com_fdshop/search.js",
       "attributes": { "defer": true }
     },
     {

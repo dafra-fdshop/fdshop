@@ -694,3 +694,19 @@ PRODUKT-META-DATEN V1 (0.0.35)
 - Meta-Titel und Meta-Beschreibung bleiben frei editierbar. Vorschläge werden ausschließlich durch den bewussten Adminbutton aus aktuellen Formularwerten erzeugt; normales Speichern verändert sie nicht.
 - Der sprachfähig beschriftete `meta_product_type` ist ein optional persistierter Einzelwert und für den Generator erforderlich. Meta-Keywords wurden aus Produkt, Hersteller und Frontendausgabe entfernt und werden nicht aus VirtueMart migriert.
 - JSON-LD ist ausdrücklich der direkte Folgeauftrag und wurde hier nicht vorweggenommen.
+Produktsuche V1 (Schema 0.0.46)
+--------------------------------
+
+Die öffentliche Produktsuche durchsucht serverseitig Produktname,
+Artikelnummer und Hersteller. Sie verwendet die bestehenden Produkt-,
+Produktdetail- und Herstellertabellen statt eines getrennten, potenziell
+veraltenden Suchindex. Veröffentlichungsstatus und Publikationszeitraum werden
+bereits in der Suchabfrage erzwungen; ausverkaufte, weiterhin öffentliche
+Produkte bleiben auffindbar.
+
+Live-Vorschläge werden ab drei Zeichen mit Debounce, Request-Abbruch und
+ARIA-Combobox/Listbox-Semantik geladen. Produktmedien werden für die sichtbare
+Ergebnismenge gebündelt statt je Karte abgefragt. Die Ergebnisseite ist per
+Query-URL direkt verlinkbar; Suchbegriff und Seitengröße bleiben in der
+Pagination erhalten. `search_active` und `search_suggestion_limit` werden in
+der zentralen FDShop-Konfiguration verwaltet und serverseitig durchgesetzt.

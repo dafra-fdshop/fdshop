@@ -1013,6 +1013,8 @@ CREATE TABLE `#__fdshop_config` (
   `paypal_reservation_minutes` INT UNSIGNED NOT NULL DEFAULT 10,
   `display_timezone` VARCHAR(64) NOT NULL DEFAULT 'Europe/Berlin',
   `katalog_active` TINYINT(1) NOT NULL DEFAULT 0,
+  `search_active` TINYINT(1) NOT NULL DEFAULT 1,
+  `search_suggestion_limit` TINYINT UNSIGNED NOT NULL DEFAULT 8,
   `document_company_name` VARCHAR(255) NOT NULL DEFAULT '',
   `document_company_street` VARCHAR(255) NOT NULL DEFAULT '',
   `document_company_postal_code` VARCHAR(32) NOT NULL DEFAULT '',

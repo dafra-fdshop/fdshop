@@ -39,6 +39,9 @@ final class Router extends RouterView
         $account = new RouterViewConfiguration('account');
         $this->registerView($account);
 
+        $search = new RouterViewConfiguration('search');
+        $this->registerView($search);
+
         parent::__construct($app, $menu);
         $this->attachRule(new MenuRules($this));
         $this->attachRule(new StandardRules($this));

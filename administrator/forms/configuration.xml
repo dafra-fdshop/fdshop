@@ -39,6 +39,8 @@
             </field>
 
             <field name="display_timezone" type="timezone" label="FDShop-Anzeigezeitzone" description="Zeitzone für alle menschenlesbaren FDShop-Zeitpunkte. Technische Speicherung und Berechnung bleiben UTC." default="Europe/Berlin" filter="string" required="true" />
+            <field name="search_active" type="radio" label="Produktsuche aktiv" default="1" class="btn-group btn-group-yesno"><option value="1">Ja</option><option value="0">Nein</option></field>
+            <field name="search_suggestion_limit" type="number" label="Maximale Live-Suchvorschläge" default="8" min="6" max="8" required="true" />
 
             <field
                 name="image_size_default"

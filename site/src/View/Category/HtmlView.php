@@ -73,7 +73,8 @@ final class HtmlView extends BaseHtmlView
         Factory::getApplication()->getDocument()->getWebAssetManager()
             ->useStyle('com_fdshop.site')
             ->useScript('com_fdshop.site')
-            ->useScript('com_fdshop.purchase');
+            ->useScript('com_fdshop.purchase')
+            ->useScript('com_fdshop.search');
 
         parent::display($tpl);
     }

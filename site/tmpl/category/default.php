@@ -22,6 +22,7 @@ $resultsText = sprintf('%d–%d von %d', $first, $last, $total);
 $filterData = ['facets' => $this->filterFacets, 'active' => $this->activeFilters, 'category_id' => (int) $this->category->id, 'sort' => $sort, 'direction' => $direction, 'limit' => $limit];
 ?>
 <main class="fdshop-category" data-fdshop-category="<?php echo (int) $this->category->id; ?>">
+    <?php echo LayoutHelper::render('search.form', ['id' => 'category-' . (int) $this->category->id], JPATH_COMPONENT_SITE . '/layouts'); ?>
     <header class="fdshop-category__header">
         <h1><?php echo $this->escape((string) $this->category->category_name); ?></h1>
         <?php if (trim((string) $this->category->description) !== '') : ?>

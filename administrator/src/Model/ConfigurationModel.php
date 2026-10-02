@@ -68,6 +68,8 @@ class ConfigurationModel extends AdminModel
                 'require_terms_checkbox'  => 0,
                 'paypal_reservation_minutes' => 10,
                 'display_timezone'          => 'Europe/Berlin',
+                'search_active'             => 1,
+                'search_suggestion_limit'   => 8,
                 'document_payment_days' => 7,
                 'document_special_category_id' => 0,
                 'document_collection_one_title' => 'Sammlung: Batterien, Raketen, Single Shots etc.',
