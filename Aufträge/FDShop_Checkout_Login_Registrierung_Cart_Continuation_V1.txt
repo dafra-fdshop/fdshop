@@ -1,0 +1,148 @@
+FDShop – Checkout Login, Registrierung und Cart Continuation V1
+
+Projekt: FDShop
+Branch: feature
+Priorität: Launch
+Kein Merge nach main. Kein Full-Shop-Testmarathon.
+
+ZIEL
+Gast darf shoppen und Warenkorb füllen. Zum Bestellen ist ein registriertes und aktiviertes Joomla-Konto erforderlich. Bestehende Account-, Cart-, Checkout- und Joomla-Integrationen sind verbindliche Grundlage.
+
+VOR UMSETZUNG ANALYSIEREN
+CartController, CartService/Interface, CartModel, Cart-Template, media/js/cart.js; CheckoutService und PayPal-Flow; AccountController/Model/Service/View; plugins/system/fdshopregistration; plugins/user/fdshopprofile; Joomla com_users Login/Registrierung/Aktivierung; Router/Return; Cart-Tabellen; Tests.
+
+Keine zweite Benutzerverwaltung, Registrierung, Authentifizierung oder Kundenoberfläche. Bestehende Architektur erweitern. Codex darf technische Details selbst entscheiden. Behebbare technische/Git/Docker/Test-Probleme sind kein STOP-Grund.
+
+1 BESTEHENDE ARCHITEKTUR
+Joomla bleibt Identity/Auth/Login/Aktivierung.
+plg_user_fdshopprofile bleibt Brücke für FDShop-Kundendaten und Käuferberechtigung.
+plg_system_fdshopregistration bleibt kombinierte Login-/Registrierungsseite.
+com_fdshop „Mein Konto“ bleibt zentrale Kundenoberfläche.
+Bestehendes Cart-/Checkout-/Payment-/PayPal-System bleibt bestehen.
+Joomla-Standard-Profilseite ist nicht normaler Kundenweg.
+
+2 WARENKORB → BESTELLVORGANG
+Gast darf Cart normal füllen/bearbeiten. Bestellen nur angemeldet/aktiviert.
+Button heißt verbindlich: „Weiter zum Bestellen“.
+Angemeldeter User → bestehender Checkout.
+Gast → Checkout-Continuation erzeugen → vorhandene kombinierte Login-/Registrierungsseite.
+„Zahlungspflichtig bestellen“ bleibt am tatsächlichen Checkout-Ende.
+
+3 LOGIN / REGISTRIERUNG
+Kein neues Formular.
+Checkout-Kontext auf vorhandener Seite:
+„Fast geschafft!“
+„Melde dich an, wenn du bereits ein Kundenkonto hast, oder registriere dich, um deine Bestellung fortzusetzen. Dein Warenkorb bleibt erhalten.“
+Normale Registrierung bleibt allgemein.
+
+4 E-MAIL-AKTIVIERUNG
+Joomla-Aktivierung beibehalten.
+Flow: Cart → Weiter zum Bestellen → Registrierung → Aktivierungsmail → Aktivierungslink → Konto aktiv → Joomla Login → FDShop Cart-Auflösung → Checkout.
+Kein Auto-Login.
+Nach Checkout-Registrierung:
+„Bitte bestätige jetzt deine E-Mail-Adresse.“
+„Wir haben dir einen Aktivierungslink geschickt. Dein Warenkorb bleibt erhalten. Öffne den Link in der E-Mail und melde dich anschließend an, um deine Bestellung fortzusetzen.“
+Nach Login bei Checkout-Intent nicht Joomla-Profil, sondern FDShop-Fortsetzung.
+
+5 CONTINUATION / TOKEN
+Joomla Session für aktuellen Intent plus kryptografisch zufälliger opaker Continuation-Token im Cookie für denselben Browser.
+Cookie enthält keine user_id, Cart-/Kundendaten/Fachinformationen.
+Serverseitig möglichst nur Token-Hash; bestehendes random_bytes + SHA-256 Muster bevorzugen.
+Cookie Secure, HttpOnly, SameSite=Lax, sinnvoll enger Path.
+Zielgültigkeit 2 Stunden; nach Verbrauch invalidieren.
+Keine sensiblen Daten in Return-URLs.
+Vor neuer Tabelle prüfen, ob bestehende Cart-/Session-Struktur reicht; kleine Continuation-Tabelle inklusive Schema-Update erlaubt, wenn sauberer.
+Geräteübergreifende Gast-Cart-Übernahme V1 nicht erforderlich.
+
+6 GAST-CART → USER-CART ZENTRAL
+Aktuell geht Gast-Cart beim Login verloren. Korrigieren, zentral bei Gast→User, nicht nur Checkout.
+1 Gast-Cart vorhanden/User leer → Gast-Cart automatisch übernehmen.
+2 Gast leer/User vorhanden → User-Cart verwenden.
+3 beide leer → normal.
+4 beide mit Inhalt → Auswahldialog, kein Merge.
+Alle Cart-Bestandteile korrekt: normale Items, Bundles/Items, Mengen/Varianten, Coupon soweit fachlich übertragbar, Versand/Abholung, Zahlung, Metadaten.
+Businesslogik Service-Schicht. Danach bestehende Validierungen.
+
+7 KONFLIKTDIALOG
+Nur bei zwei gefüllten Carts.
+Titel: „Welchen Warenkorb möchtest du verwenden?“
+Text: „Du hast vor deiner Anmeldung einen neuen Warenkorb zusammengestellt. In deinem Kundenkonto ist bereits ein gespeicherter Warenkorb vorhanden. Bitte wähle aus, mit welchem du fortfahren möchtest.“
+
+Desktop/Tablet: zwei Karten nebeneinander.
+AKTUELLER WARENKORB: Anzahl, Gesamtwert, „Gerade zusammengestellt“, optional max. erste 3 Produkt-/Bundle-Namen, ggf. +X weitere, Button „Diesen verwenden“.
+GESPEICHERTER WARENKORB: Anzahl, Gesamtwert, „Aus deinem Kundenkonto“, optional max. erste 3 Produkt-/Bundle-Namen, ggf. +X weitere, Button „Diesen verwenden“.
+
+Mobile: Karten untereinander; KEINE Produkt-/Bundle-Namen; nur Typ, Anzahl, Gesamtwert, Herkunft, Button.
+
+Hinweis: „Der nicht ausgewählte Warenkorb wird verworfen. Die beiden Warenkörbe werden nicht zusammengeführt.“
+
+Keine Vorauswahl. Beide Carts bleiben bis bestätigter serverseitiger Wahl erhalten. Abbruch löscht nichts. Erst erfolgreiche Auswahl finalisiert gewählten Cart und verwirft anderen. Atomar/transaktional. Fehler darf nicht beide zerstören. Tastatur/Fokus/Escape/ARIA. Bundle in Vorschau als eine Bundle-Position.
+
+8 AUCH BEI NORMALEM LOGIN
+Cart-Auflösung gilt auch beim normalen Shop-Login.
+Checkout-Login → Cart auflösen → Checkout.
+Normaler Login → Cart auflösen → FDShop „Mein Konto“.
+Gast-Cart nie kommentarlos verlieren.
+
+9 LOGIN-ZIELE
+Normaler FDShop-Kundenlogin ohne spezielles sicheres Return-Ziel → index.php?option=com_fdshop&view=account
+Checkout-Intent → Cart-Auflösung → Checkout.
+Joomla-Profilseite nicht normaler Kundenzielweg.
+Keine Joomla-Core-Dateien ändern. Backend/fremde Login-Kontexte nicht beschädigen. Sichere explizite Returns respektieren. Open Redirect verhindern.
+
+10 CHECKOUT NACH AUFLÖSUNG
+Nach Checkout-Login + Cart-Auflösung bestehenden FDShop-Bestellprozess direkt fortsetzen. Nicht Startseite/Joomla-Profil.
+Checkout/PayPal nicht neu bauen. Final gewählten Cart verwenden. Veraltete Submission-/Payment-/Reservation-Zustände des verworfenen Carts nicht übernehmen.
+
+11 TEXTE
+Vorhandene Plugins kontextabhängig erweitern, nicht duplizieren.
+Normal: bisherige Texte.
+Checkout vor Auth: Fast geschafft + Cart bleibt.
+Checkout nach Registrierung: Bitte E-Mail bestätigen + Fortsetzung.
+Language-Dateien nach Projektstandard.
+
+12 SICHERHEIT
+Passwörter nur Joomla. Keine User-/Cart-/Kundendaten im Cookie. Kryptografische Tokens, Hash serverseitig, Ablauf/Verbrauch, Secure/HttpOnly/SameSite=Lax, CSRF, Ownership, keine IDOR/Open Redirects. Manipulierter Token nie fremder Cart. Auswahl serverseitig validieren. Cart-Übernahme/-Verwerfen transaktional. Keine Secrets. Tokens/Kundendaten nicht unnötig loggen.
+
+13 RESPONSIVE
+Desktop/Tablet/Mobile. Bestehende Auth-Seite erhalten. Konfliktdialog Desktop nebeneinander, Mobile untereinander und ohne Produktnamen. Große Touch-Ziele, Fokus/Screenreader, kein Overflow. Back/Reload/Abbruch robust.
+
+14 NICHT IN DIESEM AUFTRAG
+Keine neue Benutzerverwaltung/Auth/Registrierung. Joomla com_users nicht intern abschaffen. Kein Auto-Login nach Aktivierung. Kein Gast-Checkout. Kein Cart-Merge. Keine geräteübergreifende Gast-Cart-Fortsetzung V1. Kein Account-/Checkout-/Payment-Redesign. Kein Caching-Großprojekt. Kein main-Merge.
+
+15 GEZIELTE TESTS
+Kein Full-Shop-Marathon, aber belastbare Auth+Cart+Checkout Browsertests.
+
+A Gast→Checkout: Cart, Weiter zum Bestellen, bestehende Auth-Seite, Kontexttext, Cart erhalten.
+B User ohne User-Cart: Gast-Cart→Login→automatische Übernahme inkl. Bundles/Mengen; Checkout→Checkout; normal→Mein Konto.
+C User-Cart/Gast leer: User-Cart bleibt, kein Dialog.
+D beide Carts: Dialog; Summaries; Desktop optional 3 Positionen; Mobile keine Namen; beide Auswahlrichtungen; erst nach Bestätigung verwerfen; Abbruch/Fehler sicher; kein Merge.
+E Registrierung aus Checkout: Kontexttexte; fdshopprofile; Aktivierungsmail; Aktivierungslink; danach Login; Login→Fortsetzung; Cart erhalten.
+F normale Registrierung: keine Checkout-Regression.
+G normaler Login: Mein Konto statt Joomla-Profil; Cart-Auflösung.
+H Security: ungültig/abgelaufen/replay/fremder User/CSRF/Return.
+I Checkout: Nicht-PayPal-Bestellung; PayPal kurzer Regressionstest; Käuferberechtigung/Profilvollständigkeit.
+J Responsive: 320/375/430 + Desktop.
+Technik: PHP/JS-Syntax, Paketbau/Installation, Smoke, Logs, git diff --check.
+
+16 DOKUMENTATION / ABSCHLUSS
+Dauerhafte Architektur-/Fachregeln aktualisieren. Paket-/Schemaversion nach Standard; DB-Update nur wenn nötig.
+Logisch sinnvolle Commits. Push origin/feature. Kein main-Merge. Windows/WSL sauber/synchron. Keine Secrets. Auftrag nach Aufträge/erledigt.
+
+Abschlussbericht:
+1 Analyse bestehender Architektur
+2 Checkout-Einstieg
+3 Login/Registrierung/Aktivierung
+4 Continuation
+5 Cart-Auflösung
+6 Konfliktdialog
+7 Login-Ziele
+8 Security
+9 Responsive
+10 Tests
+11 Schema/Paketversion
+12 Dateien
+13 Commit-SHAs
+14 offene V2-Punkte
+
+ENDE
