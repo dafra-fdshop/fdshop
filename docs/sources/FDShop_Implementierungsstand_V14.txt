@@ -725,3 +725,20 @@ Abfrage geladen. Gäste erhalten einen Joomla-Login-/Registrierungshinweis ohne
 LocalStorage. `Meine Favoriten` verwendet die bestehende Produktkarte samt
 Purchase- und Video-Lifecycle; nicht mehr öffentliche Produkte bleiben im
 Mapping erhalten, werden aber nicht im Frontend ausgegeben.
+
+Produktvergleich V1 (Schema 0.0.48)
+-----------------------------------
+
+Der aktive Produktvergleich liegt serverseitig in der Joomla-Session und ist
+damit auch für Gäste über Navigation hinweg verfügbar. Ein Vergleich ist an
+genau eine Kategorie gebunden; ein Kategorienwechsel erfordert eine bewusste
+Bestätigung. Aktivierung, Kategoriebindung und die konfigurierbare Obergrenze
+werden serverseitig validiert.
+
+Registrierte Benutzer können bis zur konfigurierten Grenze benannte Vergleiche
+in den eigenen Listen speichern, öffnen, umbenennen und löschen. Ownership und
+CSRF werden bei jeder Mutation geprüft. Öffentlich sichtbare Produktdaten,
+Medien und Kategoriekontexte werden jeweils gebündelt geladen; Kartenansichten
+erzeugen keine produktweisen Zusatzabfragen. Die responsive Vergleichsmatrix
+zeigt strukturierte FDShop-Felder, kennzeichnet fehlende Werte mit „–“ und kann
+identische Zeilen clientseitig ausblenden.

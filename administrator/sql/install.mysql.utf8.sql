@@ -1018,6 +1018,9 @@ CREATE TABLE `#__fdshop_config` (
   `favorites_active` TINYINT(1) NOT NULL DEFAULT 1,
   `favorites_max_custom_lists` TINYINT UNSIGNED NOT NULL DEFAULT 3,
   `favorites_max_products` SMALLINT UNSIGNED NOT NULL DEFAULT 100,
+  `comparison_active` TINYINT(1) NOT NULL DEFAULT 1,
+  `comparison_max_products` TINYINT UNSIGNED NOT NULL DEFAULT 4,
+  `comparison_max_saved_lists` TINYINT UNSIGNED NOT NULL DEFAULT 4,
   `document_company_name` VARCHAR(255) NOT NULL DEFAULT '',
   `document_company_street` VARCHAR(255) NOT NULL DEFAULT '',
   `document_company_postal_code` VARCHAR(32) NOT NULL DEFAULT '',
@@ -1447,3 +1450,5 @@ CREATE TABLE IF NOT EXISTS `#__fdshop_favorite_items` (
   `list_id` INT UNSIGNED NOT NULL, `product_id` INT UNSIGNED NOT NULL, `created` DATETIME NOT NULL,
   PRIMARY KEY (`list_id`,`product_id`), KEY `idx_fdshop_favorite_product` (`product_id`,`list_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 DEFAULT COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS `#__fdshop_comparison_lists` (`id` INT UNSIGNED NOT NULL AUTO_INCREMENT,`user_id` INT UNSIGNED NOT NULL,`category_id` BIGINT UNSIGNED NOT NULL,`name` VARCHAR(100) NOT NULL,`created` DATETIME NOT NULL,`modified` DATETIME NOT NULL,PRIMARY KEY(`id`),UNIQUE KEY `uq_fdshop_comparison_name` (`user_id`,`name`),KEY `idx_fdshop_comparison_owner` (`user_id`,`modified`)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 DEFAULT COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS `#__fdshop_comparison_items` (`list_id` INT UNSIGNED NOT NULL,`product_id` BIGINT UNSIGNED NOT NULL,`ordering` TINYINT UNSIGNED NOT NULL DEFAULT 0,PRIMARY KEY(`list_id`,`product_id`),KEY `idx_fdshop_comparison_product` (`product_id`,`list_id`)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 DEFAULT COLLATE=utf8mb4_unicode_ci;

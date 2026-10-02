@@ -1,4 +1,6 @@
 SET FOREIGN_KEY_CHECKS = 0;
+DROP TABLE IF EXISTS `#__fdshop_comparison_items`;
+DROP TABLE IF EXISTS `#__fdshop_comparison_lists`;
 DROP TABLE IF EXISTS `#__fdshop_favorite_items`;
 DROP TABLE IF EXISTS `#__fdshop_favorite_lists`;
 DROP TABLE IF EXISTS `#__fdshop_payment_transactions`;

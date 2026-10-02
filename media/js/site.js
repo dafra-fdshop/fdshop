@@ -34,6 +34,7 @@
                     if (pushHistory) window.history.pushState({}, '', url.toString());
                     bindFilters();
                     bindCategoryControls();
+                    document.dispatchEvent(new CustomEvent('fdshop:product-cards-updated'));
                 })
                 .catch(function (error) { category.removeAttribute('aria-busy'); if (error.name !== 'AbortError') category.dispatchEvent(new CustomEvent('fdshop:filter-error')); });
         };

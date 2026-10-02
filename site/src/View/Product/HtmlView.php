@@ -27,6 +27,7 @@ final class HtmlView extends BaseHtmlView
     public string $placeholderImage;
     public bool $purchaseEnabled = false;
     public Form $questionForm;
+    public int $categoryId = 0;
 
     public function display($tpl = null): void
     {
@@ -43,6 +44,7 @@ final class HtmlView extends BaseHtmlView
         $identity = Factory::getApplication()->getIdentity();
         if (!$identity->guest) $this->questionForm->bind(['name' => $identity->name, 'email' => $identity->email]);
         $categoryId = max(0, Factory::getApplication()->getInput()->getInt('catid'));
+        $this->categoryId = $categoryId;
         $this->categoryUrl = $categoryId > 0 ? RouteHelper::getCategoryRoute($categoryId) : '';
         $root = rtrim(Uri::root(true), '/');
         $this->placeholderImage = ProductVisualHelper::placeholderImage();
@@ -78,7 +80,7 @@ final class HtmlView extends BaseHtmlView
             '<script type="application/ld+json">' . ProductStructuredDataHelper::encode($structuredData) . '</script>'
         );
         $assets = $document->getWebAssetManager();
-        $assets->useStyle('com_fdshop.site')->useScript('com_fdshop.site')->useScript('com_fdshop.purchase')->useScript('com_fdshop.search')->useScript('com_fdshop.favorites');
+        $assets->useStyle('com_fdshop.site')->useScript('com_fdshop.site')->useScript('com_fdshop.purchase')->useScript('com_fdshop.search')->useScript('com_fdshop.favorites')->useScript('com_fdshop.comparison');
         if (!empty($item->bundles)) {
             $assets->useStyle('com_fdshop.bundle')->useScript('com_fdshop.bundle');
         }

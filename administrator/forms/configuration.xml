@@ -44,6 +44,9 @@
             <field name="favorites_active" type="radio" label="Favoriten aktiv" default="1" class="btn-group btn-group-yesno"><option value="1">Ja</option><option value="0">Nein</option></field>
             <field name="favorites_max_custom_lists" type="number" label="Maximale zusätzliche Favoritenlisten" default="3" min="0" max="10" required="true" />
             <field name="favorites_max_products" type="number" label="Maximale Produkte je Favoritenliste" default="100" min="1" max="500" required="true" />
+            <field name="comparison_active" type="radio" label="Produktvergleich aktiv" default="1" class="btn-group btn-group-yesno"><option value="1">Ja</option><option value="0">Nein</option></field>
+            <field name="comparison_max_products" type="number" label="Maximale Produkte im Vergleich" default="4" min="2" max="8" required="true" />
+            <field name="comparison_max_saved_lists" type="number" label="Maximale gespeicherte Vergleiche" default="4" min="0" max="20" required="true" />
 
             <field
                 name="image_size_default"

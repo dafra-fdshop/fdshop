@@ -45,6 +45,9 @@ class ConfigurationTable extends Table
         $this->favorites_active = (int) ($this->favorites_active ?? 1) === 1 ? 1 : 0;
         $this->favorites_max_custom_lists = max(0, min(10, (int) ($this->favorites_max_custom_lists ?? 3)));
         $this->favorites_max_products = max(1, min(500, (int) ($this->favorites_max_products ?? 100)));
+        $this->comparison_active = (int) ($this->comparison_active ?? 1) === 1 ? 1 : 0;
+        $this->comparison_max_products = max(2, min(8, (int) ($this->comparison_max_products ?? 4)));
+        $this->comparison_max_saved_lists = max(0, min(20, (int) ($this->comparison_max_saved_lists ?? 4)));
         $this->display_timezone = trim((string) ($this->display_timezone ?? 'Europe/Berlin'));
         if (!in_array($this->display_timezone, DateTimeZone::listIdentifiers(), true)) throw new RuntimeException('Bitte wählen Sie eine gültige FDShop-Anzeigezeitzone.');
 

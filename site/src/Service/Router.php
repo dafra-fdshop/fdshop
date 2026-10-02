@@ -45,6 +45,9 @@ final class Router extends RouterView
         $favorites = new RouterViewConfiguration('favorites');
         $this->registerView($favorites);
 
+        $comparison = new RouterViewConfiguration('comparison');
+        $this->registerView($comparison);
+
         parent::__construct($app, $menu);
         $this->attachRule(new MenuRules($this));
         $this->attachRule(new StandardRules($this));
