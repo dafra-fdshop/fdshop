@@ -37,6 +37,7 @@ $nav = [
             <?php foreach ($nav as $key => [$icon, $label]) : ?>
                 <a class="<?php echo $section === $key ? 'is-active' : ''; ?>" href="<?php echo Route::_($base . '&section=' . $key); ?>"<?php echo $section === $key ? ' aria-current="page"' : ''; ?>><span class="<?php echo $icon; ?>" aria-hidden="true"></span><?php echo $label; ?></a>
             <?php endforeach; ?>
+            <a href="<?php echo Route::_('index.php?option=com_fdshop&view=favorites'); ?>"><span class="icon-heart" aria-hidden="true"></span>Meine Favoriten</a>
         </nav>
 
         <main class="fdshop-account__main">
@@ -48,6 +49,7 @@ $nav = [
                 <a class="fdshop-account__quick" href="<?php echo Route::_($base . '&section=security'); ?>"><span class="icon-lock" aria-hidden="true"></span><strong>Konto & Sicherheit</strong><span>E-Mail und Zugangsdaten</span></a>
                 <a class="fdshop-account__quick" href="<?php echo Route::_($base . '&section=f3'); ?>"><span class="icon-shield" aria-hidden="true"></span><strong>F3-Berechtigung</strong><span><?php echo $a['buyer_status'] === 'permit_holder' ? 'Aktiv' : 'Nicht aktiv'; ?></span></a>
                 <a class="fdshop-account__quick" href="<?php echo Route::_($base . '&section=watchlist'); ?>"><span class="icon-bell" aria-hidden="true"></span><strong>Watchlist</strong><span><?php echo count($a['watchlist']); ?> aktive Vormerkung<?php echo count($a['watchlist']) === 1 ? '' : 'en'; ?></span></a>
+                <a class="fdshop-account__quick" href="<?php echo Route::_('index.php?option=com_fdshop&view=favorites'); ?>"><span class="icon-heart" aria-hidden="true"></span><strong>Meine Favoriten</strong><span>Produktlisten verwalten</span></a>
             </div>
             <?php if (!empty($a['orders'])) : $last = $a['orders'][0]; ?>
             <section class="fdshop-account__panel"><div class="fdshop-account__panelhead"><h2>Letzte Bestellung</h2><a href="<?php echo Route::_($base . '&section=orders'); ?>">Alle anzeigen</a></div>

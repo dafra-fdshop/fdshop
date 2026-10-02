@@ -42,6 +42,9 @@ class ConfigurationTable extends Table
         $this->paypal_reservation_minutes = max(5, min(30, (int) ($this->paypal_reservation_minutes ?? 10)));
         $this->search_active = (int) ($this->search_active ?? 1) === 1 ? 1 : 0;
         $this->search_suggestion_limit = max(6, min(8, (int) ($this->search_suggestion_limit ?? 8)));
+        $this->favorites_active = (int) ($this->favorites_active ?? 1) === 1 ? 1 : 0;
+        $this->favorites_max_custom_lists = max(0, min(10, (int) ($this->favorites_max_custom_lists ?? 3)));
+        $this->favorites_max_products = max(1, min(500, (int) ($this->favorites_max_products ?? 100)));
         $this->display_timezone = trim((string) ($this->display_timezone ?? 'Europe/Berlin'));
         if (!in_array($this->display_timezone, DateTimeZone::listIdentifiers(), true)) throw new RuntimeException('Bitte wählen Sie eine gültige FDShop-Anzeigezeitzone.');
 

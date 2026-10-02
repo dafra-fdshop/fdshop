@@ -710,3 +710,18 @@ Ergebnismenge gebündelt statt je Karte abgefragt. Die Ergebnisseite ist per
 Query-URL direkt verlinkbar; Suchbegriff und Seitengröße bleiben in der
 Pagination erhalten. `search_active` und `search_suggestion_limit` werden in
 der zentralen FDShop-Konfiguration verwaltet und serverseitig durchgesetzt.
+Favoriten V1 (Schema 0.0.47)
+--------------------------------
+
+Favoriten sind serverseitig an den authentifizierten Joomla-Benutzer gebunden.
+Jeder Benutzer erhält bei der ersten Nutzung eine geschützte Standardliste
+und kann bis zur zentral konfigurierten Grenze eigene Listen pflegen. Das
+Mapping speichert ausschließlich Listen- und Produkt-IDs; Produktdaten werden
+nicht redundant snapshotartig abgelegt. Besitz, CSRF, Produkt-Sichtbarkeit,
+Listenanzahl und Produktlimit werden serverseitig geprüft.
+
+Der Kartenstatus wird für alle sichtbaren Produkt-IDs in einer gebündelten
+Abfrage geladen. Gäste erhalten einen Joomla-Login-/Registrierungshinweis ohne
+LocalStorage. `Meine Favoriten` verwendet die bestehende Produktkarte samt
+Purchase- und Video-Lifecycle; nicht mehr öffentliche Produkte bleiben im
+Mapping erhalten, werden aber nicht im Frontend ausgegeben.

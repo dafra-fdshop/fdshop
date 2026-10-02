@@ -74,7 +74,8 @@ final class HtmlView extends BaseHtmlView
             ->useStyle('com_fdshop.site')
             ->useScript('com_fdshop.site')
             ->useScript('com_fdshop.purchase')
-            ->useScript('com_fdshop.search');
+            ->useScript('com_fdshop.search')
+            ->useScript('com_fdshop.favorites');
 
         parent::display($tpl);
     }

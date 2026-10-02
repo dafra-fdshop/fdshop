@@ -1015,6 +1015,9 @@ CREATE TABLE `#__fdshop_config` (
   `katalog_active` TINYINT(1) NOT NULL DEFAULT 0,
   `search_active` TINYINT(1) NOT NULL DEFAULT 1,
   `search_suggestion_limit` TINYINT UNSIGNED NOT NULL DEFAULT 8,
+  `favorites_active` TINYINT(1) NOT NULL DEFAULT 1,
+  `favorites_max_custom_lists` TINYINT UNSIGNED NOT NULL DEFAULT 3,
+  `favorites_max_products` SMALLINT UNSIGNED NOT NULL DEFAULT 100,
   `document_company_name` VARCHAR(255) NOT NULL DEFAULT '',
   `document_company_street` VARCHAR(255) NOT NULL DEFAULT '',
   `document_company_postal_code` VARCHAR(32) NOT NULL DEFAULT '',
@@ -1435,3 +1438,12 @@ CREATE TABLE IF NOT EXISTS `#__fdshop_payment_transactions` (
   KEY `idx_fdshop_payment_transaction_session` (`payment_session_id`),
   CONSTRAINT `fk_fdshop_payment_transaction_session` FOREIGN KEY (`payment_session_id`) REFERENCES `#__fdshop_payment_sessions` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS `#__fdshop_favorite_lists` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT, `user_id` INT UNSIGNED NOT NULL, `name` VARCHAR(100) NOT NULL,
+  `is_default` TINYINT(1) NOT NULL DEFAULT 0, `created` DATETIME NOT NULL, `modified` DATETIME NOT NULL,
+  PRIMARY KEY (`id`), UNIQUE KEY `uq_fdshop_favorite_list_name` (`user_id`,`name`), KEY `idx_fdshop_favorite_list_owner` (`user_id`,`is_default`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 DEFAULT COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE IF NOT EXISTS `#__fdshop_favorite_items` (
+  `list_id` INT UNSIGNED NOT NULL, `product_id` INT UNSIGNED NOT NULL, `created` DATETIME NOT NULL,
+  PRIMARY KEY (`list_id`,`product_id`), KEY `idx_fdshop_favorite_product` (`product_id`,`list_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 DEFAULT COLLATE=utf8mb4_unicode_ci;

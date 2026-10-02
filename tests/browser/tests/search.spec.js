@@ -50,9 +50,9 @@ test('search covers name sku manufacturer visibility sold-out and empty state', 
     await expect(page.locator('.fdshop-card', { hasText: product }).first()).toBeVisible();
   }
   await page.goto('/index.php?option=com_fdshop&view=search&q=E2E');
-  await expect(page.locator('[data-product-id="900106"]')).toContainText('Ausverkauft');
-  await expect(page.locator('[data-product-id="900101"]')).toHaveCount(0);
-  await expect(page.locator('[data-product-id="900102"]')).toHaveCount(0);
+  await expect(page.locator('.fdshop-card[data-product-id="900106"]')).toContainText('Ausverkauft');
+  await expect(page.locator('.fdshop-card[data-product-id="900101"]')).toHaveCount(0);
+  await expect(page.locator('.fdshop-card[data-product-id="900102"]')).toHaveCount(0);
   await expect(page.locator('.fdshop-card')).toHaveCount(8);
   await expect(page.locator('[data-product-id="900100"] [data-fdshop-purchase]')).toBeVisible();
 
