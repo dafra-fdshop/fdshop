@@ -1,0 +1,272 @@
+# FDShop Launch-Mehrwertpaket V1.1 Korrekturrunde
+
+Projekt: FDShop
+Branch: feature
+Basis: aktueller Stand nach Suche/Favoriten/Vergleich V1, Schema 0.0.48
+Priorität: Launch-V1.1
+Kein Merge nach main. Kein Full-Shop-Testmarathon.
+
+Codex darf innerhalb der Fachziele sinnvolle technische Detailentscheidungen selbst treffen. Behebbare technische Probleme sind kein STOP-Grund. STOP nur bei echtem Datenverlust-Risiko, nicht zuordenbarer fremder Arbeit, Secret-Gefährdung oder nicht verantwortbar selbst entscheidbarer fachlicher Blockade.
+
+REFERENZEN
+Daniel hat vier Screenshots:
+- Screenshot neue Favoritenliste.png: aktueller Favoritenstand
+- Screenshot aktuelle kategorie-ansicht.png: gewünschte Referenz für zentrale Produktkarte
+- Screenshot 2026-10-02 122454.png: aktuelle Vergleichsansicht
+- Screenshot auflistung.png: aktuelle Vergleichs-Feedbackleiste
+Wenn Bilder im Repo verfügbar: ansehen. Falls nicht, ist dieser Text ausreichend; nicht deswegen stoppen.
+
+======================================================================
+A. PRODUKTSUCHE ALS JOOMLA-MODUL
+======================================================================
+
+Problem:
+V1-Suche ist technisch gut, aber fest in Ansichten wie Kategorie eingebunden. Daniel benötigt die Suche primär frei positionierbar über Joomla-Modulpositionen.
+
+Ziel:
+Echtes Joomla-Site-Modul, z. B. mod_fdshop_search, als Einstieg in die bestehende com_fdshop-Suche.
+
+Vorgaben:
+- Suchlogik bleibt zentral in com_fdshop.
+- Modul dupliziert nicht SearchModel/SearchController/Fachlogik.
+- bestehende Live-Suggestions, Debounce, Request-Abbruch, Keyboard, ARIA und Ergebnisseite wiederverwenden
+- über Joomla-Modulverwaltung installierbar/aktivierbar und an beliebigen Template-Modulpositionen platzierbar
+- mehrere Modulinstanzen robust; keine kollidierenden globalen IDs
+- Assets bedarfsgerecht
+- Joomla 6 sauber
+- Modul in bestehenden FDShop-Paket-/Installationsweg integrieren, sofern passend
+
+Kategorie:
+Feste Suche administrativ steuerbar.
+
+Config:
+- Suche aktiv
+- Suche in Kategorieansicht anzeigen Ja/Nein
+- Default Kategorieanzeige: NEIN
+- Anzahl Live-Vorschläge konfigurierbar, wenn sauber möglich; Default etwa 8
+
+Wenn Suche deaktiviert: keine irreführend aktive Such-UI.
+
+Suchergebnisseite bleibt bestehen.
+
+======================================================================
+B. ADMIN-KONFIGURATION SICHTBAR MACHEN
+======================================================================
+
+Problem:
+Suche, Favoriten, Vergleich existieren technisch, sind administrativ aber kaum als FDShop-Funktionen erkennbar.
+
+Ziel:
+Im bestehenden FDShop-Konfigurationsbereich klare Sektion/Tab/Fieldset "Frontend-Funktionen" oder gleichwertig.
+
+Keine zweite Admin-Komponente.
+
+Gliederung:
+
+PRODUKTSUCHE
+- Suche aktiv
+- Suche in Kategorieansicht anzeigen
+- Anzahl Live-Vorschläge, wenn sinnvoll
+
+FAVORITEN
+- Favoriten aktiv
+- maximale zusätzliche Favoritenlisten pro Benutzer, Default 3
+- maximale Produkte pro Favoritenliste, bestehenden Default beibehalten
+
+PRODUKTVERGLEICH
+- Produktvergleich aktiv
+- maximale Produkte pro aktivem Vergleich, Default 4
+- maximale gespeicherte Vergleichslisten, Default 4
+
+Bestehende Config-Werte wiederverwenden, keine parallelen Einstellungen.
+Serverseitige Limits beibehalten.
+Verständliche Labels/Hilfetexte.
+Speichern/Laden nach FDShop-Standard.
+Migration nur wenn wirklich neue DB-Felder nötig.
+
+======================================================================
+C. FAVORITEN: ECHTE ZENTRALE PRODUKTKARTE
+======================================================================
+
+BESONDERS WICHTIG.
+
+Problem:
+"Meine Favoriten" weicht im Realtest sichtbar von Kategorieansicht ab.
+
+Daniel will NICHT:
+- Kategoriekarte separat pflegen
+- Favoritenkarte separat pflegen
+- Suchkarte separat pflegen
+- Designänderungen mehrfach nachziehen
+
+Ziel:
+EINE zentrale Produktkarte als Single Source of Truth.
+
+Kategorie, Suchergebnisse und Favoriten müssen dieselbe zentrale Rendering-/Layout-Struktur und bei vergleichbarer Gridbreite dieselben Card-Designregeln verwenden.
+
+Zuerst analysieren:
+- Wird site/layouts/product/card.php bereits überall verwendet?
+- Wenn ja: Warum sieht Favorit trotzdem anders aus? Grid-/Container-/Context-CSS analysieren und Ursache zentral beheben.
+- Wenn nein: auf echte Wiederverwendung umbauen.
+
+Keine optische Kopie in neuer Favoriten-CSS-Struktur.
+Keine duplizierten Card-Templates.
+
+Zieltest:
+Spätere zentrale Änderung an Titel, Fakten, Preis, Aktionen, Ribbon etc. muss automatisch in Kategorie, Suche und Favoriten wirken, soweit fachlich verfügbar.
+
+Favoritenspezifisch darf nur Seiten-/Toolbar-/Listenauswahl anders sein.
+
+Kartenaktionen weiterhin:
+- Favorit
+- Vergleich
+- Video
+- Details
+- Verfügbarkeit
+- Purchase/Warenkorb
+
+Responsive zentral.
+
+======================================================================
+D. PRODUKTVERGLEICH: NUR GEZIELTER V1-POLISH
+======================================================================
+
+Kein großes Redesign der Vergleichsmatrix.
+Aktuelle Ansicht funktioniert fachlich. Großes visuelles Redesign später.
+
+D1 Gespeicherte Vergleiche: Buttons modernisieren
+
+Aktuell wirken Öffnen/Umbenennen/Löschen wie rohe Browserbuttons.
+
+FDShop-/Bootstrap-Buttonsprache:
+- Öffnen: primär, darf FDShop-Gelb
+- Umbenennen: zurückhaltend Outline/Secondary
+- Löschen: destructive, klar aber nicht dominant
+Nicht drei gleich starke gelbe Buttons.
+Responsive/Touch beachten.
+
+D2 Video-Button im Produktkopf
+
+Unter Produktbild auf derselben Zeile:
+- Produktname links
+- rechts vorhandener FDShop-Video-Button, nur wenn Video vorhanden
+
+Bestehende Video-Funktion/Dialoglogik aus Kategorie/Produktdarstellung wiederverwenden oder zentral sauber nutzbar machen.
+Keinen dritten unabhängigen Videoplayer.
+Video verändert Vergleichszustand nicht.
+
+D3 Vergleichs-Feedbackleiste: Leeren
+
+Aktuell sinngemäß:
+Produkte zum Vergleich ausgewählt | 4 von 4 | Zum Vergleich
+
+Zusätzlich Button:
+Leeren
+
+Hierarchie:
+- Zum Vergleich primär
+- Leeren Secondary/Outline
+
+Klick Leeren:
+- aktiven Session-Vergleich serverseitig sauber leeren
+- UI-State/Compare-Active-States aktualisieren
+- Feedbackleiste verschwindet
+- kein Wechsel zur Vergleichsansicht nötig
+- CSRF
+- möglichst kein Reload
+
+======================================================================
+NICHT IN DIESEM AUFTRAG
+======================================================================
+
+- kein großes Vergleichsseiten-Redesign
+- keine neuen Vergleichsfelder nur optisch
+- Favoritenfachlogik nicht neu erfinden
+- Suchalgorithmus nicht komplett neu schreiben
+- kein Caching-Großprojekt
+- kein Login-/Checkout-Workflow
+- keine weiteren Features
+- kein main-Merge
+
+======================================================================
+TESTS GEZIELT
+======================================================================
+
+Kein Full-Shop-Test.
+
+Suche/Modul:
+- Modul installierbar
+- Modulposition
+- Live-Suggestions
+- Enter/Alle Ergebnisse
+- Keyboard/ARIA
+- mehrere Modulinstanzen soweit unterstützt
+- Kategorie-Suche Default aus
+- Admin-Schalter Ja/Nein
+- Suche aktiv/inaktiv
+- Ergebnisseite unverändert
+
+Admin:
+- Werte sichtbar
+- speichern/laden
+- Limits weiterhin serverseitig
+- Defaults
+
+Zentrale Produktkarte:
+- Kategorie
+- Suche
+- Favoriten
+- strukturelle/visuelle Gleichheit bei vergleichbarer Breite
+- zentrale Card-Regel greift überall
+- Kartenaktionen
+- AJAX-Filter keine doppelten Listener/N+1
+- Desktop/Tablet/Mobile
+
+Vergleich:
+- gespeicherte Vergleichsbuttons
+- Video mit/ohne Video
+- Video öffnen/schließen
+- Leeren aus Feedbackleiste
+- Active-State danach
+- Bar verschwindet
+- Add/Remove/Kategorienwechsel
+- gespeicherte Vergleiche
+- Mobile Smoke
+
+Technik:
+- PHP/JS-Syntax
+- Paketbau/Installation
+- Modul-Installationsprüfung
+- gezielte Browsertests
+- Smoke
+- Logs
+- git diff --check
+
+======================================================================
+ABSCHLUSS
+======================================================================
+
+Sinnvoller Korrekturcommit; bei größerem Modul-/Card-Refactor logisch getrennte Commits erlaubt.
+
+Commit sinngemäß:
+Polish search favorites and comparison V1
+
+Push origin/feature.
+Kein main-Merge.
+Working Trees sauber/synchron.
+Auftrag nach Aufträge/erledigt.
+
+Abschlussbericht:
+1. Suchmodul
+2. Kategorie-Suchkonfiguration
+3. Frontend-Funktionskonfiguration
+4. zentrale Produktkarte und Ursache der Abweichung
+5. Vergleichsbuttons
+6. Video im Vergleich
+7. Leeren in Feedbackleiste
+8. Tests
+9. geänderte Dateien
+10. Commit-SHAs
+11. offene V1.1/V1.2-Punkte
+
+ENDE
