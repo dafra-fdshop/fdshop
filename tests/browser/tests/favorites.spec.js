@@ -81,7 +81,7 @@ test('authenticated favorites support default toggle, list CRUD, multi-list sele
   await page.goto('/index.php?option=com_fdshop&view=favorites');
   await page.getByRole('link', { name: /Silvester/ }).click();
   await expect(page.locator('[data-favorite-rename]')).toBeVisible();
-  page.once('dialog', async dialog => dialog.accept('Feuerwerk')); 
+  page.once('dialog', async dialog => dialog.accept('Feuerwerk'));
   await page.locator('[data-favorite-rename]').click();
   await expect(page.getByRole('link', { name: /Feuerwerk/ })).toBeVisible();
   await cleanUserFavorites(page);
