@@ -1,0 +1,234 @@
+# FDShop – Produktdetail Final Polish V1
+
+Projekt: FDShop
+Branch: feature
+Basis: aktueller Stand nach Suche/Favoriten/Vergleich V1.1, Paket/Schema 0.0.49
+Priorität: Launch
+Kein Merge nach main. Kein Full-Shop-Testmarathon.
+
+ZIEL
+Produktdetailansicht für den Launch finalisieren. Bestehende Fachlogik wiederverwenden, nicht unnötig neu bauen. Codex darf sinnvolle technische Detailentscheidungen selbst treffen. Behebbare technische Probleme sind kein STOP-Grund.
+
+REFERENZEN
+Daniel hat vier Bilder:
+- Screenshot Produkt detail verpackungseinheit.png – aktueller Stand Verpackungseinheit
+- Screenshot Produkt detail bundle.png – aktueller Stand Bundle
+- Vorlage Produkt detail Verpackungseinheit btn.png – gewünschtes neues Layout
+- Vorlage Produkt detail Bundle btn.png – gewünschtes neues Layout
+
+Falls Bilder im Repo verfügbar: ansehen. Falls nicht, reicht diese Spezifikation; nicht stoppen.
+
+Korrekturen zur Photoshop-Vorlage:
+- kleines Info-Icon unter Verpackungs-/Bundle-Aktion SCHWARZ, nicht blau
+- Bundle-Icon im gelben Button WEISS
+
+======================================================================
+A. FESTE SUCHE AUS PRODUKTDETAIL ENTFERNEN
+======================================================================
+
+Die zuvor direkt in Produktdetail integrierte Suchmaske vollständig entfernen.
+
+FDShop besitzt inzwischen mod_fdshop_search. Bei Bedarf kann Suche über Joomla-Modulpositionen platziert werden. Keine neue Admin-Option für Suche auf Detailseite einführen.
+
+Suchergebnisse, Suchmodul und konfigurierbare Kategorie-Suche unverändert lassen.
+
+======================================================================
+B. NEUER AKTIONSBEREICH UNTER LAGERBESTAND
+======================================================================
+
+Bisherigen Bereich aufräumen. Aktionen kompakt zwischen Lagerbestand und Preis. Danach dezente Trennlinie; Preis/Warenkorb darunter grundsätzlich unverändert.
+
+B1 FRAGE STELLEN
+Bisherigen langen Textlink "Stellen Sie eine Frage zu diesem Produkt" entfernen.
+Stattdessen moderner gelber FDShop-Button mit Sprechblasen-Icon und Text "Frage stellen".
+Bestehende Frage-Funktion wiederverwenden; keine neue Kontaktlogik.
+Responsive/touchfreundlich.
+
+B2 VERPACKUNGSEINHEIT: DISPLAY / SCHINKEN
+Wenn alternative Verpackungseinheit vorhanden:
+
+Gelber Button mit semantischem Verpackungs-/Boxen-Icon (mehrere Kartons/Paketbox).
+
+Display:
+[ Verpackungs-Icon  Display auswählen  ▼ ]
+
+Schinken:
+[ Verpackungs-Icon  Schinken auswählen  ▼ ]
+
+Gleiches Icon für Display und Schinken; Buttontext unterscheidet Art.
+
+Bestehende Auswahl-/Verpackungslogik weiterverwenden.
+
+Darunter kleiner Hilfetext mit SCHWARZEM Info-Icon:
+
+Display:
+"Hier auswählen, wenn ihr ein Display wollt."
+
+Schinken:
+"Hier auswählen, wenn ihr einen Schinken wollt."
+
+B3 BUNDLE
+Wenn bundlefähig:
+
+Gelber FDShop-Button:
+[ weißes Bundle-Icon  Bundle erstellen ]
+
+Bestehende Bundle-Builder-Fachlogik verwenden.
+
+Darunter mit SCHWARZEM Info-Icon:
+"Hier auswählen, wenn ihr ein Bundle wollt."
+
+B4 VERPACKUNG + BUNDLE GLEICHZEITIG
+Aktuell fachlich nicht erwartet (keine Rabatt-auf-Rabatt-Konstellation), aber robust unterstützen:
+- beide Aktionen anzeigen
+- nebeneinander soweit Platz
+- responsive umbrechen
+- Frage stellen sinnvoll daneben/nächste Zeile
+- nichts verstecken
+Keine neue Rabattkombinationslogik.
+
+======================================================================
+C. MEHRERE VERFÜGBARE BUNDLES
+======================================================================
+
+Bisheriges Bundle-Dropdown auf Produktdetail entfernen.
+
+Genau ein verfügbares Bundle:
+Klick "Bundle erstellen" → bestehenden Bundle Builder direkt öffnen.
+
+Mehrere verfügbare Bundles:
+Klick "Bundle erstellen" → kleiner responsiver Dialog/Popup.
+
+Text sinngemäß:
+"Bundle auswählen"
+"Dieses Produkt ist für mehrere Bundles verfügbar. Bitte wählt aus, welches Bundle ihr zusammenstellen möchtet."
+
+Jedes verfügbare Bundle als klarer Button mit kundenseitigem Bundle-Namen.
+Klick → Dialog schließen → bestehenden Bundle Builder mit exakt diesem Bundle öffnen.
+
+Vorgaben:
+- keine interne ID/Nummer als primäre Kundenbezeichnung
+- Tastatur, Escape, Schließen, Fokusmanagement
+- Mobile sauber
+- bestehende Bundle-Sichtbarkeitsregeln
+- keine N+1
+- Fachlogik nicht duplizieren
+
+======================================================================
+D. PRODUKTBILD IM DETAIL-HERO NACH UNTEN
+======================================================================
+
+Problem: freigestelltes Produkt wirkt im linken großen Detailbild zu weit oben/schwebend.
+
+Ziel: wie Kategorie-Karte optisch auf unterem Bereich/Horizont des vorhandenen Hintergrundmotivs stehen.
+
+Vorgaben:
+- Produkt-Layer nach unten
+- kleiner bewusster Abstand zum unteren Rand
+- Hintergrund unverändert
+- Master-/Produktbilddateien unverändert
+- keine neue Bilddatei
+- Produktgröße grundsätzlich beibehalten
+- unterschiedliche Produktproportionen berücksichtigen
+- responsive robust
+- keine fragile fixe Top-Position nur für Acryl
+- möglichst über geeignete zentrale Darstellungsregel
+- Ribbons/Badges nicht regressieren
+
+======================================================================
+E. LAYOUT-HIERARCHIE
+======================================================================
+
+Rechts:
+1. Produktname / Hersteller
+2. Kurzbeschreibung
+3. technische Fakten
+4. Video
+5. Lagerbestand / Verfügbarkeit
+6. neuer Aktionsbereich: Verpackung und/oder Bundle + Frage stellen + Hilfetexte
+7. dezente Trennlinie
+8. Preis + Warenkorb
+
+Katalogmodus-/Kauf-/Verfügbarkeitslogik nicht verändern.
+
+======================================================================
+NICHT IN DIESEM AUFTRAG
+======================================================================
+
+Kein Produktdetail-Komplettredesign.
+Keine neue Rabattlogik.
+Keine neue Bundle-Fachlogik.
+Keine neue Fragefunktion.
+Keine Suche neu bauen.
+Kein Checkout/Login.
+Keine Produktkartenarchitektur ändern.
+Kein Caching-Großprojekt.
+Kein main-Merge.
+
+======================================================================
+TESTS GEZIELT
+======================================================================
+
+Produktdetail:
+- feste Suche weg
+- Suchmodul/Suchergebnisse/Kategoriesuche nicht regressiert
+- Desktop/Tablet/Mobile
+
+Verpackung:
+- ohne Verpackung
+- Display
+- Schinken
+- fachliche Auswahl
+- korrekter Text/Icon
+- schwarzes Info-Icon
+
+Bundle:
+- nicht bundlefähig
+- genau ein Bundle → direkt
+- mehrere Bundles → Popup
+- richtiger Bundle-Name/Bundle
+- Tastatur/Escape/Fokus/Mobile
+- weißes Bundle-Icon
+
+Kombinationsfall:
+- Verpackung + Bundle ohne Layoutbruch
+
+Frage:
+- neuer Button
+- bestehende Funktion unverändert
+
+Hero:
+- verschiedene Produktproportionen
+- tiefer positioniert
+- kein Clipping
+- Badges/Ribbons
+- Mobile
+
+Technik:
+PHP/JS-Syntax, gezielte Browsertests, Paketbau/Installation, Smoke, Logs, git diff --check.
+
+======================================================================
+ABSCHLUSS
+======================================================================
+
+Commit sinngemäß:
+Finalize product detail actions and layout
+
+Push origin/feature.
+Kein main-Merge.
+Windows/WSL sauber/synchron.
+Auftrag nach Aufträge/erledigt.
+
+Bericht kurz:
+1 Suche entfernt
+2 Aktionsbereich
+3 Verpackung
+4 Bundle-Auswahldialog
+5 Frage-Button
+6 Hero-Position
+7 Responsive
+8 Tests
+9 Dateien
+10 Commit-SHA
+
+ENDE
