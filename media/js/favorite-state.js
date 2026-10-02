@@ -1,6 +1,6 @@
 (function () {
     'use strict';
-    document.addEventListener('DOMContentLoaded', function () {
+    function load() {
         var roots = Array.from(document.querySelectorAll('.fdshop-card[data-product-id],.fdshop-product[data-product-id],.fdshop-comparison-product[data-product-id]'));
         if (!roots.length) return;
         var params = new URLSearchParams({ option: 'com_fdshop', task: 'favorite.states', format: 'json' });
@@ -34,5 +34,7 @@
                     host.append(button);
                 });
             });
-    });
+    }
+    document.addEventListener('DOMContentLoaded', load);
+    document.addEventListener('fdshop:product-cards-updated', load);
 }());

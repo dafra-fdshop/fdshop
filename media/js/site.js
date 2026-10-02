@@ -79,13 +79,14 @@
         bindCategoryControls();
         window.addEventListener('popstate', function () { window.location.reload(); });
 
-        var dialog = category ? category.querySelector('[data-fdshop-video-dialog]') : null;
-        var content = category ? category.querySelector('[data-fdshop-video-content]') : null;
-        var title = category ? category.querySelector('[data-fdshop-video-title]') : null;
-        if (category && dialog && content && title) {
-            category.addEventListener('click', function (event) {
+        var videoRoot = category || document.querySelector('[data-comparison-page]');
+        var dialog = videoRoot ? videoRoot.querySelector('[data-fdshop-video-dialog]') : null;
+        var content = videoRoot ? videoRoot.querySelector('[data-fdshop-video-content]') : null;
+        var title = videoRoot ? videoRoot.querySelector('[data-fdshop-video-title]') : null;
+        if (videoRoot && dialog && content && title) {
+            videoRoot.addEventListener('click', function (event) {
                 var button = event.target.closest('[data-fdshop-video]');
-                if (!button || !category.contains(button)) return;
+                if (!button || !videoRoot.contains(button)) return;
                 var frame = document.createElement('iframe');
                 frame.src = button.dataset.fdshopVideo;
                 frame.title = 'Produktvideo: ' + (button.dataset.productName || 'FDShop-Produkt');
@@ -98,7 +99,7 @@
             });
         }
         if (dialog && content) {
-            var closeButton = category.querySelector('[data-fdshop-video-close]');
+            var closeButton = videoRoot.querySelector('[data-fdshop-video-close]');
             if (closeButton) closeButton.addEventListener('click', function () { dialog.close(); });
             dialog.addEventListener('close', function () { content.replaceChildren(); });
             dialog.addEventListener('click', function (event) { if (event.target === dialog) dialog.close(); });

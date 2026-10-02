@@ -11,6 +11,7 @@ defined('_JEXEC') or die;
 
 use FDShop\Component\FDShop\Site\Helper\PurchaseHelper;
 use FDShop\Component\FDShop\Site\Helper\ProductCardHelper;
+use FDShop\Component\FDShop\Site\Helper\SearchHelper;
 use Joomla\CMS\Factory;
 use Joomla\CMS\MVC\View\HtmlView as BaseHtmlView;
 
@@ -27,6 +28,7 @@ final class HtmlView extends BaseHtmlView
     public array $activeFilters = [];
     public array $filterChips = [];
     public bool $filterUiEnabled = false;
+    public bool $showSearch = false;
 
     public function display($tpl = null): void
     {
@@ -59,6 +61,8 @@ final class HtmlView extends BaseHtmlView
         $this->activeFilters = (array) $this->state->get('filter.fdshop', []);
         $this->filterChips = $model->getFilterChips();
         $this->filterUiEnabled = $model->hasAssignedFilterModule();
+        $searchConfig = SearchHelper::config();
+        $this->showSearch = (int) $searchConfig->search_active === 1 && (int) $searchConfig->search_category_active === 1;
         $this->sortOptions = [
             'name:asc'   => 'Name aufsteigend',
             'name:desc'  => 'Name absteigend',
@@ -70,13 +74,16 @@ final class HtmlView extends BaseHtmlView
             ProductCardHelper::prepare($item, (int) $category->id);
         }
 
-        Factory::getApplication()->getDocument()->getWebAssetManager()
+        $assets = Factory::getApplication()->getDocument()->getWebAssetManager()
             ->useStyle('com_fdshop.site')
             ->useScript('com_fdshop.site')
             ->useScript('com_fdshop.purchase')
-            ->useScript('com_fdshop.search')
             ->useScript('com_fdshop.favorites')
             ->useScript('com_fdshop.comparison');
+
+        if ($this->showSearch) {
+            $assets->useScript('com_fdshop.search');
+        }
 
         parent::display($tpl);
     }

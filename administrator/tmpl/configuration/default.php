@@ -93,6 +93,31 @@ $orderStatusSearchView = (object) [
 		</div>
 	<?php echo HTMLHelper::_('uitab.endTab'); ?>
 
+	<?php echo HTMLHelper::_('uitab.addTab', 'fdshopConfigurationTabs', 'frontend-features', 'Frontend-Funktionen'); ?>
+		<div class="row">
+			<div class="col-12 col-xl-8">
+				<div class="card mb-3">
+					<div class="card-header">Produktsuche</div>
+					<div class="card-body">
+						<?php foreach (['search_active', 'search_category_active', 'search_suggestion_limit'] as $field) echo $configurationField($this->form->renderField($field)); ?>
+					</div>
+				</div>
+				<div class="card mb-3">
+					<div class="card-header">Favoriten</div>
+					<div class="card-body">
+						<?php foreach (['favorites_active', 'favorites_max_custom_lists', 'favorites_max_products'] as $field) echo $configurationField($this->form->renderField($field)); ?>
+					</div>
+				</div>
+				<div class="card mb-3">
+					<div class="card-header">Produktvergleich</div>
+					<div class="card-body">
+						<?php foreach (['comparison_active', 'comparison_max_products', 'comparison_max_saved_lists'] as $field) echo $configurationField($this->form->renderField($field)); ?>
+					</div>
+				</div>
+			</div>
+		</div>
+	<?php echo HTMLHelper::_('uitab.endTab'); ?>
+
 	<?php echo HTMLHelper::_('uitab.addTab', 'fdshopConfigurationTabs', 'customer-account', 'User-Bereich'); ?>
 		<div class="row"><div class="col-12 col-xl-8"><div class="card mb-3">
 			<div class="card-header">Mein Konto</div><div class="card-body">

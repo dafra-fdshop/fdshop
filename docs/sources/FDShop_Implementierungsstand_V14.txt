@@ -742,3 +742,25 @@ Medien und Kategoriekontexte werden jeweils gebündelt geladen; Kartenansichten
 erzeugen keine produktweisen Zusatzabfragen. Die responsive Vergleichsmatrix
 zeigt strukturierte FDShop-Felder, kennzeichnet fehlende Werte mit „–“ und kann
 identische Zeilen clientseitig ausblenden.
+
+Launch-Mehrwertpaket V1.1 (Schema 0.0.49)
+-----------------------------------------
+
+Die zentrale Produktsuche ist zusätzlich als echtes Joomla-Site-Modul
+`mod_fdshop_search` paketiert. Mehrere Instanzen verwenden die vorhandenen
+Komponentenlayouts, Endpunkte und Assets mit instanzspezifischen IDs; die
+Suchfachlogik bleibt ausschließlich in `com_fdshop`. Die fest in der
+Kategorieansicht angezeigte Suche ist separat konfigurierbar und standardmäßig
+deaktiviert. Suche, Favoriten und Vergleich besitzen im bestehenden
+Konfigurationsbereich einen sichtbaren Tab `Frontend-Funktionen`.
+
+Kategorie, Suche und Favoriten rendern dieselbe zentrale Produktkarte aus
+`site/layouts/product/card.php`. Das gemeinsame feste Kartenraster verhindert,
+dass Karten in breiteren Favoriten- oder Suchcontainern abweichend gestreckt
+werden. Dynamisch ersetzte Karten laden Favoriten- und Vergleichszustand über
+den gemeinsamen Karten-Lifecycle nach, ohne produktweise Zusatzabfragen.
+
+Der Vergleich ergänzt im Produktkopf den vorhandenen FDShop-Videodialog,
+vereinheitlichte Buttons für gespeicherte Listen und ein reloadfreies Leeren
+direkt aus der Feedbackleiste. Produktbild und Video werden gemeinsam in der
+bereits gebündelten Vergleichsabfrage ermittelt.

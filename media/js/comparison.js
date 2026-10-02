@@ -32,7 +32,7 @@
         if (!bar) {
             bar = document.createElement('aside');
             bar.className = 'fdshop-comparison-bar';
-            bar.innerHTML = '<span data-compare-message></span><strong data-compare-count></strong><a class="btn btn-primary" href="index.php?option=com_fdshop&view=comparison">Zum Vergleich</a>';
+            bar.innerHTML = '<span data-compare-message></span><strong data-compare-count></strong><div class="fdshop-comparison-bar__actions"><a class="btn btn-primary" href="index.php?option=com_fdshop&view=comparison">Zum Vergleich</a><button class="btn btn-outline-light" type="button" data-comparison-bar-clear>Leeren</button></div>';
             document.body.append(bar);
         }
         bar.hidden = !next.count;
@@ -62,6 +62,13 @@
                 }).then(function (next) {
                     if (next) paint(next, (next.product_name || 'Produkt') + ' wurde zum Vergleich hinzugefügt.');
                 }).catch(function (error) { alert(error.message); });
+            return;
+        }
+        var barClear = event.target.closest('[data-comparison-bar-clear]');
+        if (barClear) {
+            post('clear', {}, (document.querySelector('[data-fdshop-compare]') || {}).dataset?.token)
+                .then(function (next) { paint(next); })
+                .catch(function (error) { alert(error.message); });
             return;
         }
         var page = document.querySelector('[data-comparison-page]');

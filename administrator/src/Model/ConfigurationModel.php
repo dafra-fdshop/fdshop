@@ -69,6 +69,7 @@ class ConfigurationModel extends AdminModel
                 'paypal_reservation_minutes' => 10,
                 'display_timezone'          => 'Europe/Berlin',
                 'search_active'             => 1,
+                'search_category_active'    => 0,
                 'search_suggestion_limit'   => 8,
                 'favorites_active'          => 1,
                 'favorites_max_custom_lists'=> 3,

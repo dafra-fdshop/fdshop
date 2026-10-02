@@ -39,15 +39,6 @@
             </field>
 
             <field name="display_timezone" type="timezone" label="FDShop-Anzeigezeitzone" description="Zeitzone für alle menschenlesbaren FDShop-Zeitpunkte. Technische Speicherung und Berechnung bleiben UTC." default="Europe/Berlin" filter="string" required="true" />
-            <field name="search_active" type="radio" label="Produktsuche aktiv" default="1" class="btn-group btn-group-yesno"><option value="1">Ja</option><option value="0">Nein</option></field>
-            <field name="search_suggestion_limit" type="number" label="Maximale Live-Suchvorschläge" default="8" min="6" max="8" required="true" />
-            <field name="favorites_active" type="radio" label="Favoriten aktiv" default="1" class="btn-group btn-group-yesno"><option value="1">Ja</option><option value="0">Nein</option></field>
-            <field name="favorites_max_custom_lists" type="number" label="Maximale zusätzliche Favoritenlisten" default="3" min="0" max="10" required="true" />
-            <field name="favorites_max_products" type="number" label="Maximale Produkte je Favoritenliste" default="100" min="1" max="500" required="true" />
-            <field name="comparison_active" type="radio" label="Produktvergleich aktiv" default="1" class="btn-group btn-group-yesno"><option value="1">Ja</option><option value="0">Nein</option></field>
-            <field name="comparison_max_products" type="number" label="Maximale Produkte im Vergleich" default="4" min="2" max="8" required="true" />
-            <field name="comparison_max_saved_lists" type="number" label="Maximale gespeicherte Vergleiche" default="4" min="0" max="20" required="true" />
-
             <field
                 name="image_size_default"
                 type="number"
@@ -111,6 +102,20 @@
                 <option value="1">Ja</option>
                 <option value="0">Nein</option>
             </field>
+        </fieldset>
+        <fieldset name="frontend_features" label="Frontend-Funktionen">
+            <field type="spacer" label="PRODUKTSUCHE" description="Zentrale Produktsuche und Live-Vorschläge. Das Suchmodul kann unabhängig an Joomla-Modulpositionen veröffentlicht werden." class="text-uppercase fw-bold" />
+            <field name="search_active" type="radio" label="Suche aktiv" description="Aktiviert Suchmodul, Live-Vorschläge und Ergebnisseite." default="1" class="btn-group btn-group-yesno"><option value="1">Ja</option><option value="0">Nein</option></field>
+            <field name="search_category_active" type="radio" label="Suche in Kategorieansicht anzeigen" description="Zeigt das Suchfeld zusätzlich fest oberhalb der Kategorieansicht. Standardmäßig bleibt es zugunsten frei platzierbarer Suchmodule deaktiviert." default="0" class="btn-group btn-group-yesno"><option value="1">Ja</option><option value="0">Nein</option></field>
+            <field name="search_suggestion_limit" type="number" label="Anzahl Live-Vorschläge" description="Maximale Anzahl der gebündelt geladenen Vorschläge pro Suchfeld." default="8" min="6" max="8" required="true" />
+            <field type="spacer" label="FAVORITEN" description="Benutzergebundene Favoriten und zusätzliche Favoritenlisten." class="text-uppercase fw-bold" />
+            <field name="favorites_active" type="radio" label="Favoriten aktiv" default="1" class="btn-group btn-group-yesno"><option value="1">Ja</option><option value="0">Nein</option></field>
+            <field name="favorites_max_custom_lists" type="number" label="Maximale zusätzliche Favoritenlisten pro Benutzer" default="3" min="0" max="10" required="true" />
+            <field name="favorites_max_products" type="number" label="Maximale Produkte pro Favoritenliste" default="100" min="1" max="500" required="true" />
+            <field type="spacer" label="PRODUKTVERGLEICH" description="Sessionbasierter Produktvergleich und gespeicherte Vergleiche für registrierte Benutzer." class="text-uppercase fw-bold" />
+            <field name="comparison_active" type="radio" label="Produktvergleich aktiv" default="1" class="btn-group btn-group-yesno"><option value="1">Ja</option><option value="0">Nein</option></field>
+            <field name="comparison_max_products" type="number" label="Maximale Produkte pro aktivem Vergleich" default="4" min="2" max="8" required="true" />
+            <field name="comparison_max_saved_lists" type="number" label="Maximale gespeicherte Vergleichslisten" default="4" min="0" max="20" required="true" />
         </fieldset>
         <fieldset name="documents_email" label="Dokumente &amp; E-Mail">
             <field name="document_company_name" type="text" label="Firmenname" filter="string" />

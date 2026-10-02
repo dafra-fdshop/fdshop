@@ -22,7 +22,7 @@ $resultsText = sprintf('%d–%d von %d', $first, $last, $total);
 $filterData = ['facets' => $this->filterFacets, 'active' => $this->activeFilters, 'category_id' => (int) $this->category->id, 'sort' => $sort, 'direction' => $direction, 'limit' => $limit];
 ?>
 <main class="fdshop-category" data-fdshop-category="<?php echo (int) $this->category->id; ?>">
-    <?php echo LayoutHelper::render('search.form', ['id' => 'category-' . (int) $this->category->id], JPATH_COMPONENT_SITE . '/layouts'); ?>
+    <?php if ($this->showSearch) : ?><?php echo LayoutHelper::render('search.form', ['id' => 'category-' . (int) $this->category->id], JPATH_COMPONENT_SITE . '/layouts'); ?><?php endif; ?>
     <header class="fdshop-category__header">
         <h1><?php echo $this->escape((string) $this->category->category_name); ?></h1>
         <?php if (trim((string) $this->category->description) !== '') : ?>
@@ -73,60 +73,7 @@ $filterData = ['facets' => $this->filterFacets, 'active' => $this->activeFilters
         <p class="fdshop-category__empty">In dieser Kategorie sind aktuell keine Produkte verfügbar.</p>
     <?php else : ?>
         <div class="fdshop-products">
-            <?php foreach ($this->items as $item) : ?>
-                <article class="fdshop-card" data-product-id="<?php echo (int) $item->id; ?>" data-price="<?php echo $this->escape((string) $item->current_price); ?>" data-visual-state="<?php echo $this->escape($item->visual_state); ?>">
-                    <div class="fdshop-card__visual fdshop-product-visual--<?php echo $this->escape($item->visual_state); ?>">
-                    <div class="fdshop-card__media">
-                        <a class="fdshop-card__image-link" href="<?php echo $this->escape($item->detail_url); ?>" aria-label="Details zu <?php echo $this->escape((string) $item->product_name); ?>">
-                            <?php if ($item->image_is_placeholder) : ?>
-                                <img class="fdshop-card__placeholder" src="<?php echo $this->escape($item->image_url); ?>" alt="<?php echo $this->escape((string) $item->product_name); ?>" loading="lazy" width="400" height="400">
-                            <?php else : ?>
-                                <picture>
-                                    <source media="(max-width: 520px)" srcset="<?php echo $this->escape((string) $item->image_mobile_url); ?>">
-                                    <source media="(min-width: 521px)" srcset="<?php echo $this->escape((string) $item->image_small_url); ?>">
-                                    <img class="fdshop-card__product-image" src="<?php echo $this->escape($item->image_url); ?>" alt="<?php echo $this->escape((string) $item->product_name); ?>" loading="lazy" width="400" height="400">
-                                </picture>
-                            <?php endif; ?>
-                        </a>
-                        <div class="fdshop-card__ribbons" aria-label="Produktkennzeichnungen">
-                            <?php if ($item->visual_state === 'action') : ?><span class="fdshop-ribbon fdshop-ribbon--action">% Angebot</span><?php endif; ?>
-                            <?php if ((int) $item->ribbon_new === 1) : ?><span class="fdshop-ribbon fdshop-ribbon--new">Neu</span><?php endif; ?>
-                            <?php if ((int) $item->ribbon_hot === 1) : ?><span class="fdshop-ribbon fdshop-ribbon--hot">Hot</span><?php endif; ?>
-                            <?php if ((int) $item->ribbon_bundle === 1) : ?><span class="fdshop-ribbon fdshop-ribbon--bundle">Bundle</span><?php endif; ?>
-                            <?php if ((string) ($item->buyer_group_alias ?? '') === 'permit_holder') : ?><span class="fdshop-ribbon fdshop-ribbon--f3">F3</span><?php endif; ?>
-                            <?php if (in_array((string) $item->unit_type, ['Display', 'Schinken', 'VE'], true)) : ?><span class="fdshop-ribbon fdshop-ribbon--package"><?php echo $this->escape(strtoupper((string) $item->unit_type)); ?></span><?php endif; ?>
-                        </div>
-                    </div>
-                    <div class="fdshop-card__body">
-                        <h2 class="fdshop-card__title"><a href="<?php echo $this->escape($item->detail_url); ?>"><?php echo $this->escape((string) $item->product_name); ?></a></h2>
-                        <?php if (trim((string) $item->short_description) !== '') : ?><p class="fdshop-card__description"><?php echo nl2br($this->escape((string) $item->short_description)); ?></p><?php endif; ?>
-                        <div class="fdshop-card__actions">
-                            <a class="btn btn-primary btn-sm" href="<?php echo $this->escape($item->detail_url); ?>">Details</a>
-                            <?php if ($item->media['video'] !== null) : ?><button class="btn btn-dark btn-sm" type="button" data-fdshop-video="<?php echo $this->escape($item->media['video']); ?>" data-product-name="<?php echo $this->escape((string) $item->product_name); ?>" aria-label="Produktvideo zu <?php echo $this->escape((string) $item->product_name); ?> ansehen" title="Produktvideo ansehen"><i class="fa-solid fa-video" aria-hidden="true"></i></button><?php endif; ?>
-                            <p class="fdshop-stock <?php echo $this->escape($item->stock_class); ?>"><strong><?php echo $this->escape((string) $item->in_stock); ?></strong></p>
-                        </div>
-                    </div>
-                    </div>
-                    <div class="fdshop-card__info">
-                            <dl class="fdshop-card__facts" aria-label="Technische Produktdaten">
-                                <?php foreach ($item->card_facts as $fact) : ?>
-                                    <div class="fdshop-card__fact" title="<?php echo $this->escape($fact['label']); ?>">
-                                        <dt class="visually-hidden"><?php echo $this->escape($fact['label']); ?></dt>
-                                        <dd aria-label="<?php echo $this->escape($fact['label'] . ': ' . $fact['value']); ?>">
-                                            <img src="<?php echo $this->escape(\Joomla\CMS\Uri\Uri::root(true) . '/media/com_fdshop/images/product-facts/' . $fact['icon']); ?>" alt="" aria-hidden="true" width="28" height="28" loading="lazy">
-                                            <span><?php echo $this->escape($fact['value']); ?></span>
-                                        </dd>
-                                    </div>
-                                <?php endforeach; ?>
-                            </dl>
-                            <div class="fdshop-card__commerce"><div class="fdshop-card__price" data-effective-price="<?php echo $this->escape((string) $item->current_price); ?>">
-                                <?php if ($item->has_discount) : ?><span class="fdshop-card__regular-price"><?php echo $this->escape($item->regular_price_formatted); ?></span><?php endif; ?>
-                                <strong><?php echo $this->escape($item->price_formatted); ?></strong>
-                                <small>inkl. MwSt.</small>
-                            </div><?php if ($this->purchaseEnabled) : ?><?php echo LayoutHelper::render('purchase.action', PurchaseHelper::data($item, 'piece'), JPATH_COMPONENT_SITE . '/layouts'); ?><?php endif; ?></div>
-                    </div>
-                </article>
-            <?php endforeach; ?>
+            <?php foreach ($this->items as $item) : ?><?php echo LayoutHelper::render('product.card', ['item' => $item, 'purchaseEnabled' => $this->purchaseEnabled], JPATH_COMPONENT_SITE . '/layouts'); ?><?php endforeach; ?>
         </div>
     <?php endif; ?>
 

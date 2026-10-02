@@ -87,7 +87,7 @@ WHERE `id` = 900105;
 INSERT IGNORE INTO `__PREFIX__fdshop_product_category_map` (`id`,`product_id`,`category_id`,`is_primary`) VALUES
 (903100,900103,900010,0),(903101,900104,900010,0),(903102,900105,900010,0),(903103,900106,900010,0),(903104,900107,900010,0);
 
-INSERT INTO `__PREFIX__fdshop_media`
+INSERT IGNORE INTO `__PREFIX__fdshop_media`
 (`id`,`product_id`,`media_type`,`external_url`,`file_name`,`file_type`,`path_standard`,`path_small`,`path_mobile`,`path_invoice`,`is_primary`,`ordering`,`created`,`created_by`)
 VALUES (900341,900100,'youtube','https://www.youtube.com/embed/aqz-KE-bpKQ',NULL,NULL,NULL,NULL,NULL,NULL,0,2,'2026-01-01 00:00:00',0);
 
@@ -147,5 +147,12 @@ WHERE `m`.`client_id` = 0 AND `m`.`module` = 'mod_fdshop_filter';
 INSERT INTO `__PREFIX__modules_menu` (`moduleid`, `menuid`)
 SELECT `id`, 900900 FROM `__PREFIX__modules`
 WHERE `client_id` = 0 AND `module` = 'mod_fdshop_filter';
+
+DELETE `mm` FROM `__PREFIX__modules_menu` AS `mm` INNER JOIN `__PREFIX__modules` AS `m` ON `m`.`id` = `mm`.`moduleid` WHERE `m`.`client_id` = 0 AND `m`.`module` = 'mod_fdshop_search' AND `m`.`title` = 'E2E FDShop Suche';
+DELETE FROM `__PREFIX__modules` WHERE `client_id` = 0 AND `module` = 'mod_fdshop_search' AND `title` = 'E2E FDShop Suche';
+INSERT INTO `__PREFIX__modules` (`asset_id`,`title`,`note`,`content`,`ordering`,`position`,`checked_out`,`checked_out_time`,`publish_up`,`publish_down`,`published`,`module`,`access`,`showtitle`,`params`,`client_id`,`language`)
+VALUES (0,'E2E FDShop Suche','','',1,'sidebar-left',NULL,NULL,NULL,NULL,1,'mod_fdshop_search',1,0,'{"layout":"_:default","moduleclass_sfx":"","cache":"0"}',0,'*');
+SET @fdshop_search_module_id = LAST_INSERT_ID();
+INSERT INTO `__PREFIX__modules_menu` (`moduleid`,`menuid`) VALUES (@fdshop_search_module_id,0);
 
 COMMIT;

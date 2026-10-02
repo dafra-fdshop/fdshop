@@ -72,7 +72,7 @@ test('registered user can save and reopen an owned comparison while mutations re
   await page.locator('[data-product-id="900108"] [data-fdshop-compare]').click();
   await expect(page.locator('.fdshop-comparison-bar')).toContainText('2 von 4');
   await page.goto('/index.php?option=com_fdshop&view=comparison');
-  await page.getByLabel('Name').fill('Mein Testvergleich');
+  await page.locator('[data-comparison-save] input[name="name"]').fill('Mein Testvergleich');
   await page.getByRole('button', { name: 'Aktuellen Vergleich speichern' }).click();
   await expect(page.locator('[data-comparison-list]')).toContainText('Mein Testvergleich');
   const invalid = await page.request.post('/index.php?option=com_fdshop&task=comparison.delete&format=json', { form: { list_id: 999999 } });
@@ -117,5 +117,31 @@ test('comparison action survives the shared dynamic product-card lifecycle', asy
   await expect(action).toBeEnabled();
   await action.click();
   await expect(page.locator('.fdshop-comparison-bar')).toContainText('1 von 4');
+  diagnostics.expectClean();
+});
+
+test('feedback bar clears without reload and comparison video uses the shared dialog', async ({ page, baseURL }) => {
+  const diagnostics = await installDiagnostics(page, baseURL);
+  await page.route('https://www.youtube-nocookie.com/**', route => route.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html><title>Video fixture</title>' }));
+  await openCategory(page, 900010);
+  await clearComparison(page);
+  await page.reload();
+  await page.locator('[data-product-id="900100"] [data-fdshop-compare]').click();
+  const bar = page.locator('.fdshop-comparison-bar');
+  await expect(bar).toBeVisible();
+  await bar.getByRole('button', { name: 'Leeren' }).click();
+  await expect(bar).toBeHidden();
+  await expect(page.locator('[data-product-id="900100"] [data-fdshop-compare]')).toHaveAttribute('aria-pressed', 'false');
+
+  await page.locator('[data-product-id="900100"] [data-fdshop-compare]').click();
+  await bar.getByRole('link', { name: 'Zum Vergleich' }).click();
+  const video = page.locator('.fdshop-comparison-product [data-fdshop-video]');
+  await expect(video).toHaveCount(1);
+  await video.click();
+  const dialog = page.locator('[data-fdshop-video-dialog]');
+  await expect(dialog).toBeVisible();
+  await expect(dialog.locator('iframe')).toHaveCount(1);
+  await dialog.getByRole('button', { name: 'Video schließen' }).click();
+  await expect(dialog).toBeHidden();
   diagnostics.expectClean();
 });

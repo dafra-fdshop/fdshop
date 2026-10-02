@@ -41,6 +41,7 @@ class ConfigurationTable extends Table
         $this->account_f3_max_mb       = max(1, min(25, (int) ($this->account_f3_max_mb ?? 8)));
         $this->paypal_reservation_minutes = max(5, min(30, (int) ($this->paypal_reservation_minutes ?? 10)));
         $this->search_active = (int) ($this->search_active ?? 1) === 1 ? 1 : 0;
+        $this->search_category_active = (int) ($this->search_category_active ?? 0) === 1 ? 1 : 0;
         $this->search_suggestion_limit = max(6, min(8, (int) ($this->search_suggestion_limit ?? 8)));
         $this->favorites_active = (int) ($this->favorites_active ?? 1) === 1 ? 1 : 0;
         $this->favorites_max_custom_lists = max(0, min(10, (int) ($this->favorites_max_custom_lists ?? 3)));
