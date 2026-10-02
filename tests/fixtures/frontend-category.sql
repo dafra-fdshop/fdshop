@@ -43,6 +43,18 @@ UPDATE `__PREFIX__fdshop_bundles`
 SET `description` = CONCAT('Bundlebeschreibung Zeile 1', CHAR(10), 'Bundlebeschreibung Zeile 2 <b>bleibt Text</b>')
 WHERE `id` = 900400;
 
+INSERT INTO `__PREFIX__fdshop_bundles`
+(`id`,`bundle_number`,`bundle_name`,`alias`,`description`,`image_path`,`max_quantity_per_product`,`is_active`,`created`,`created_by`)
+VALUES
+(901400,'E2E-BUNDLE-SECOND','E2E Bundle Zweite Wahl','e2e-bundle-second','Zweites aktives Bundle für die Produktdetail-Auswahl','',2,1,'2026-01-01 00:00:00',0);
+INSERT INTO `__PREFIX__fdshop_bundle_items` (`id`,`bundle_id`,`product_id`,`ordering`,`created`,`created_by`) VALUES
+(901410,901400,900105,1,'2026-01-01 00:00:00',0),(901411,901400,900103,2,'2026-01-01 00:00:00',0);
+INSERT INTO `__PREFIX__fdshop_bundle_discount_rules` (`id`,`bundle_id`,`min_quantity`,`discount_percent`,`ordering`,`created`,`created_by`) VALUES
+(901420,901400,2,3,1,'2026-01-01 00:00:00',0);
+
+UPDATE `__PREFIX__fdshop_products` SET `unit_type`='Schinken' WHERE `id`=900107;
+UPDATE `__PREFIX__fdshop_products_details` SET `unit_quantity`=10 WHERE `product_id`=900107;
+
 UPDATE `__PREFIX__fdshop_products`
 SET `short_description` = '', `description` = ''
 WHERE `id` = 900104;

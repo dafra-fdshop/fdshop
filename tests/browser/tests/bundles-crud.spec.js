@@ -195,7 +195,7 @@ test('bundle invalid save, automatic number, AJAX products, discounts, apply, sa
   await expect(page).toHaveURL(/view=bundles/);
   await page.goto('/index.php?option=com_fdshop&view=product&id=900103');
   await expect(page.locator('.fdshop-ribbon--bundle')).toHaveText('Bundle');
-  await expect(page.getByRole('button', { name: 'Bundle zusammenstellen' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Bundle erstellen' })).toBeVisible();
   await openView(page, 'bundles');
 });
 

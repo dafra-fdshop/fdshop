@@ -19,9 +19,12 @@ $factValues = [
     'Steighöhe' => trim((string) $item->rise_height) !== '' && (float) $item->rise_height !== 0.0 ? (string) $item->rise_height : '-',
 ];
 $factIcons = ['NEM' => 'icon_nem.svg', 'Schusszahl' => 'icon_anzahl.svg', 'Kaliber' => 'icon_durchm.svg', 'Brenndauer' => 'icon_zeit.svg', 'Steighöhe' => 'icon_hoehe.svg'];
+$packageType = ucfirst(trim((string) ($item->package['unit_type'] ?? '')));
+$packageHelper = strtolower($packageType) === 'schinken'
+    ? 'Hier auswählen, wenn ihr einen Schinken wollt.'
+    : 'Hier auswählen, wenn ihr ein Display wollt.';
 ?>
 <main class="fdshop-product" data-product-id="<?php echo (int) $item->id; ?>" data-category-id="<?php echo $this->categoryId; ?>" data-fdshop-package-root data-piece-name="<?php echo $this->escape((string) $item->product_name); ?>" data-piece-price="<?php echo $this->escape((string) $item->current_price); ?>" data-piece-regular-price="<?php echo $this->escape((string) $item->sale_price); ?>" data-piece-nem="<?php echo $this->escape((string) $item->nem); ?>" data-piece-shots="<?php echo $this->escape((string) $item->shot_count); ?>"<?php if ($item->package['valid']) : ?> data-package-name="<?php echo $this->escape((string) $item->product_name . ' ' . $item->package['unit_type']); ?>" data-package-price="<?php echo $this->escape((string) $item->package['price']); ?>" data-package-regular-price="<?php echo $this->escape((string) $item->package['regular_price']); ?>" data-package-quantity="<?php echo (int) $item->package['unit_quantity']; ?>"<?php endif; ?>>
-    <?php echo LayoutHelper::render('search.form', ['id' => 'product-' . (int) $item->id], JPATH_COMPONENT_SITE . '/layouts'); ?>
     <div class="fdshop-product__overview">
         <section class="fdshop-product__gallery" aria-label="Produktbilder">
             <div class="fdshop-product__main-image fdshop-product-visual--<?php echo $this->escape($item->visual_state); ?> is-primary" data-fdshop-main-stage data-visual-state="<?php echo $this->escape($item->visual_state); ?>">
@@ -59,22 +62,25 @@ $factIcons = ['NEM' => 'icon_nem.svg', 'Schusszahl' => 'icon_anzahl.svg', 'Kalib
             <div class="fdshop-product__purchase-zone" aria-label="Preis und Verfügbarkeit">
                 <div class="fdshop-product__stock-copy"><strong>LAGERBESTAND:</strong><span><?php echo $this->escape($item->physical_stock_text); ?></span></div>
                 <p class="fdshop-stock <?php echo $this->escape($item->stock_class); ?>"><strong><?php echo $this->escape((string) $item->in_stock); ?></strong></p>
-                <?php if ($item->package['valid']) : ?><div class="fdshop-product__package"><label for="fdshop-unit-variant"><strong>als <?php echo $this->escape((string) $item->package['unit_type']); ?> bestellen <span title="Eine Verpackung enthält <?php echo (int) $item->package['unit_quantity']; ?> Stück">ⓘ</span></strong></label><select id="fdshop-unit-variant" class="form-select" data-fdshop-package-select><option value="piece"><?php echo $this->escape((string) $item->product_name); ?></option><option value="package"><?php echo $this->escape((string) $item->product_name . ' ' . $item->package['unit_type'] . ($item->package['unit_discount_type'] === 'percent' ? ' (-' . rtrim(rtrim(number_format((float) $item->package['unit_discount_value'], 2, ',', '.'), '0'), ',') . '%)' : '')); ?></option></select><small>Hier auswählen, wenn ihr eine Verpackungseinheit wollt.</small></div><?php endif; ?>
+                <div class="fdshop-product__action-zone">
+                    <?php if ($item->package['valid']) : ?><div class="fdshop-product__action fdshop-product__package"><div class="fdshop-product__package-control"><i class="fa-solid fa-box-open" aria-hidden="true"></i><label class="visually-hidden" for="fdshop-unit-variant"><?php echo $this->escape($packageType); ?> auswählen</label><select id="fdshop-unit-variant" data-fdshop-package-select aria-label="<?php echo $this->escape($packageType); ?> auswählen"><option value="piece"><?php echo $this->escape($packageType); ?> auswählen</option><option value="package"><?php echo $this->escape((string) $item->product_name . ' ' . $packageType . ($item->package['unit_discount_type'] === 'percent' ? ' (-' . rtrim(rtrim(number_format((float) $item->package['unit_discount_value'], 2, ',', '.'), '0'), ',') . '%)' : '')); ?></option></select></div><small><i class="fa-solid fa-circle-info" aria-hidden="true"></i> <?php echo $this->escape($packageHelper); ?></small></div><?php endif; ?>
+                    <?php if (!empty($item->bundles)) : ?>
+                        <div class="fdshop-product__action fdshop-bundle-entry">
+                            <?php if (count($item->bundles) === 1) : ?>
+                                <button type="button" class="btn btn-primary fdshop-product__action-button" data-fdshop-bundle-open="<?php echo (int) $item->bundles[0]->id; ?>"><i class="fa-solid fa-cubes-stacked" aria-hidden="true"></i><span>Bundle erstellen</span></button>
+                            <?php else : ?>
+                                <button type="button" class="btn btn-primary fdshop-product__action-button" data-fdshop-bundle-picker-open><i class="fa-solid fa-cubes-stacked" aria-hidden="true"></i><span>Bundle erstellen</span></button>
+                            <?php endif; ?>
+                            <small><i class="fa-solid fa-circle-info" aria-hidden="true"></i> Hier auswählen, wenn ihr ein Bundle wollt.</small>
+                        </div>
+                    <?php endif; ?>
+                    <div class="fdshop-product__action fdshop-product__question-action"><button type="button" class="btn btn-primary fdshop-product__action-button" data-product-question-open><i class="fa-solid fa-comment-dots" aria-hidden="true"></i><span>Frage stellen</span></button></div>
+                </div>
+                <div class="fdshop-product__commerce">
                 <div class="fdshop-product__price" data-effective-price="<?php echo $this->escape((string) $item->current_price); ?>"><?php if ($item->has_discount || $item->package['valid']) : ?><span class="fdshop-product__regular-price" data-fdshop-package-regular<?php echo $item->has_discount ? '' : ' hidden'; ?>><?php echo $this->escape($item->regular_price_formatted); ?></span><?php endif; ?><strong data-fdshop-package-price><?php echo $this->escape($item->price_formatted); ?></strong><small>inkl. MwSt.</small></div>
                 <?php if ($this->purchaseEnabled) : ?><?php echo LayoutHelper::render('purchase.action', PurchaseHelper::data($item, 'piece'), JPATH_COMPONENT_SITE . '/layouts'); ?><?php endif; ?>
-                <?php if (!empty($item->bundles)) : ?>
-                    <div class="fdshop-bundle-entry">
-                        <?php if (count($item->bundles) === 1) : ?>
-                            <button type="button" class="btn btn-outline-primary" data-fdshop-bundle-open="<?php echo (int) $item->bundles[0]->id; ?>">Bundle zusammenstellen</button>
-                        <?php else : ?>
-                            <label for="fdshop-bundle-choice">Bundle auswählen</label>
-                            <select id="fdshop-bundle-choice" class="form-select" data-fdshop-bundle-choice><option value="">Bitte wählen</option><?php foreach ($item->bundles as $bundle) : ?><option value="<?php echo (int) $bundle->id; ?>"><?php echo $this->escape((string) $bundle->bundle_name); ?></option><?php endforeach; ?></select>
-                            <button type="button" class="btn btn-outline-primary" data-fdshop-bundle-choice-open>Bundle zusammenstellen</button>
-                        <?php endif; ?>
-                    </div>
-                <?php endif; ?>
+                </div>
             </div>
-            <button type="button" class="fdshop-product__question-link" data-product-question-open><i class="fa-solid fa-comment-dots" aria-hidden="true"></i> <?php echo Text::_('COM_FDSHOP_QUESTION_OPEN'); ?></button>
         </section>
     </div>
     <?php if (trim((string) $item->description) !== '') : ?><section class="fdshop-product__description" aria-labelledby="fdshop-product-description-heading"><h2 id="fdshop-product-description-heading">Produktbeschreibung</h2><div><?php echo nl2br($this->escape((string) $item->description)); ?></div></section><?php endif; ?>
@@ -82,6 +88,7 @@ $factIcons = ['NEM' => 'icon_nem.svg', 'Schusszahl' => 'icon_anzahl.svg', 'Kalib
     <dialog class="fdshop-question-dialog" data-product-question-dialog aria-labelledby="fdshop-question-title"><form method="post" action="<?php echo Route::_('index.php?option=com_fdshop&task=interaction.question'); ?>"><button type="button" class="fdshop-question-dialog__close" data-product-question-close aria-label="<?php echo Text::_('COM_FDSHOP_WATCH_CLOSE'); ?>">×</button><h2 id="fdshop-question-title"><?php echo Text::sprintf('COM_FDSHOP_QUESTION_TITLE',$this->escape((string)$item->product_name)); ?></h2><p><?php echo Text::_('COM_FDSHOP_QUESTION_NOTE'); ?></p><?php echo $this->questionForm->renderField('name'); ?><?php echo $this->questionForm->renderField('email'); ?><?php echo $this->questionForm->renderField('question'); ?><div class="fdshop-honeypot" aria-hidden="true"><?php echo $this->questionForm->renderField('website'); ?></div><?php echo $this->questionForm->renderField('captcha'); ?><input type="hidden" name="product_id" value="<?php echo (int)$item->id; ?>"><input type="hidden" name="catid" value="<?php echo (int)Factory::getApplication()->getInput()->getInt('catid'); ?>"><button type="submit" class="btn btn-primary"><?php echo Text::_('COM_FDSHOP_QUESTION_SEND'); ?></button><?php echo HTMLHelper::_('form.token'); ?></form></dialog>
     <?php if ($this->purchaseEnabled && PurchaseHelper::claimModal()) : ?><?php echo LayoutHelper::render('purchase.modal', [], JPATH_COMPONENT_SITE . '/layouts'); ?><?php endif; ?>
     <?php if (!empty($item->bundles)) : ?>
+        <?php if (count($item->bundles) > 1) : ?><dialog class="fdshop-bundle-picker" data-fdshop-bundle-picker aria-labelledby="fdshop-bundle-picker-title"><div class="fdshop-bundle-picker__content"><button type="button" class="fdshop-bundle-picker__close" data-fdshop-bundle-picker-close aria-label="Bundle-Auswahl schließen">×</button><h2 id="fdshop-bundle-picker-title">Bundle auswählen</h2><p>Dieses Produkt ist für mehrere Bundles verfügbar. Bitte wählt aus, welches Bundle ihr zusammenstellen möchtet.</p><div class="fdshop-bundle-picker__options"><?php foreach ($item->bundles as $bundle) : ?><button type="button" class="btn btn-primary" data-fdshop-bundle-picker-choice="<?php echo (int) $bundle->id; ?>"><?php echo $this->escape((string) $bundle->bundle_name); ?></button><?php endforeach; ?></div></div></dialog><?php endif; ?>
         <dialog class="fdshop-bundle-dialog" data-fdshop-bundle-dialog data-builder-url="<?php echo $this->escape(Route::_('index.php?option=com_fdshop&task=bundle.builder&format=json', false)); ?>" data-calculate-url="<?php echo $this->escape(Route::_('index.php?option=com_fdshop&task=bundle.calculate&format=json', false)); ?>" data-save-url="<?php echo $this->escape(Route::_('index.php?option=com_fdshop&task=bundle.save&format=json', false)); ?>" data-delete-url="<?php echo $this->escape(Route::_('index.php?option=com_fdshop&task=bundle.deleteSaved&format=json', false)); ?>" data-cart-url="<?php echo $this->escape(Route::_('index.php?option=com_fdshop&task=bundle.addToCart&format=json', false)); ?>">
             <div class="fdshop-bundle-dialog__content"><button type="button" class="fdshop-bundle-dialog__close" data-fdshop-bundle-close aria-label="Bundle-Konfigurator schließen">×</button><div data-fdshop-bundle-content></div></div>
         </dialog>

@@ -80,7 +80,7 @@ final class HtmlView extends BaseHtmlView
             '<script type="application/ld+json">' . ProductStructuredDataHelper::encode($structuredData) . '</script>'
         );
         $assets = $document->getWebAssetManager();
-        $assets->useStyle('com_fdshop.site')->useScript('com_fdshop.site')->useScript('com_fdshop.purchase')->useScript('com_fdshop.search')->useScript('com_fdshop.favorites')->useScript('com_fdshop.comparison');
+        $assets->useStyle('com_fdshop.site')->useScript('com_fdshop.site')->useScript('com_fdshop.purchase')->useScript('com_fdshop.favorites')->useScript('com_fdshop.comparison');
         if (!empty($item->bundles)) {
             $assets->useStyle('com_fdshop.bundle')->useScript('com_fdshop.bundle');
         }

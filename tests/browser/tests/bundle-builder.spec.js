@@ -1,9 +1,15 @@
 const { test, expect } = require('@playwright/test');
-const { authenticateSiteUser, installDiagnostics } = require('../support/browser');
+const { authenticateSiteUser, installDiagnostics: installBaseDiagnostics } = require('../support/browser');
+
+async function installDiagnostics(page, baseURL) {
+  const diagnostics = await installBaseDiagnostics(page, baseURL);
+  await page.route('https://i.ytimg.com/**', route => route.fulfill({ status: 200, contentType: 'image/svg+xml', body: '<svg xmlns="http://www.w3.org/2000/svg"/>' }));
+  return diagnostics;
+}
 
 async function openBuilder(page) {
   await page.goto('/index.php?option=com_fdshop&view=product&id=900100');
-  await page.getByRole('button', { name: 'Bundle zusammenstellen' }).click();
+  await page.getByRole('button', { name: 'Bundle erstellen' }).click();
   const dialog = page.locator('[data-fdshop-bundle-dialog]');
   await expect(dialog.getByRole('heading', { name: 'E2E Bundle Aktiv' })).toBeVisible();
   return dialog;
@@ -38,7 +44,7 @@ test('bundle experience loads, supports quick view, button/drag selection and di
     await route.fulfill({ response, json: payload });
   });
   await page.goto('/index.php?option=com_fdshop&view=product&id=900100');
-  await page.getByRole('button', { name: 'Bundle zusammenstellen' }).click();
+  await page.getByRole('button', { name: 'Bundle erstellen' }).click();
   const dialog = page.locator('[data-fdshop-bundle-dialog]');
   await expect(dialog.locator('.fdshop-bundle__loader')).toBeAttached();
   await expect(dialog.getByRole('heading', { name: 'E2E Bundle Aktiv' })).toBeVisible();
@@ -244,7 +250,7 @@ test('registered customer can save, load and delete a composition', async ({ pag
   await dialog.getByRole('button', { name: 'Bundle speichern' }).click();
   await expect(dialog.locator('[data-bundle-message]')).toContainText('gespeichert');
   await dialog.getByRole('button', { name: 'Bundle-Konfigurator schließen' }).click();
-  await page.getByRole('button', { name: 'Bundle zusammenstellen' }).click();
+  await page.getByRole('button', { name: 'Bundle erstellen' }).click();
   await expect(dialog.locator('.fdshop-bundle__saved')).toContainText('Mein E2E Bundle');
   await dialog.locator('.fdshop-bundle__saved').getByRole('button', { name: 'Laden' }).click();
   await expect(dialog.locator('[data-bundle-quantity]')).toHaveCount(2);

@@ -248,6 +248,75 @@ test('product detail is reachable and card grid responds with four to one column
   diagnostics.expectClean();
 });
 
+test('product detail polish keeps actions responsive and selects the exact bundle', async ({ page, baseURL }) => {
+  const diagnostics = await installDiagnostics(page, baseURL);
+  await page.route('https://i.ytimg.com/**', route => route.fulfill({ status: 200, contentType: 'image/svg+xml', body: '<svg xmlns="http://www.w3.org/2000/svg"/>' }));
+
+  await page.goto('/index.php?option=com_fdshop&view=product&id=900103&catid=900011');
+  const detail = page.locator('.fdshop-product');
+  await expect(detail.locator(':scope > .fdshop-search')).toHaveCount(0);
+  await expect(detail.locator('[data-fdshop-package-select]')).toHaveValue('piece');
+  await expect(detail.locator('[data-fdshop-package-select]')).toHaveAccessibleName('Display auswählen');
+  await expect(detail.getByText('Hier auswählen, wenn ihr ein Display wollt.')).toBeVisible();
+  await detail.locator('[data-fdshop-package-select]').selectOption('package');
+  await expect(detail.locator('[data-fdshop-package-name]')).toHaveText('E2E Produkt Bild Display');
+
+  const question = detail.getByRole('button', { name: 'Frage stellen' });
+  await question.click();
+  await expect(detail.locator('[data-product-question-dialog]')).toBeVisible();
+  await detail.locator('[data-product-question-close]').click();
+
+  await page.goto('/index.php?option=com_fdshop&view=product&id=900107&catid=900010');
+  await expect(page.locator('[data-fdshop-package-select]')).toHaveAccessibleName('Schinken auswählen');
+  await expect(page.getByText('Hier auswählen, wenn ihr einen Schinken wollt.')).toBeVisible();
+
+  await page.goto('/index.php?option=com_fdshop&view=product&id=900105&catid=900010');
+  await expect(page.locator('[data-fdshop-package-select]')).toBeVisible();
+  const bundleTrigger = page.getByRole('button', { name: 'Bundle erstellen' });
+  await expect(bundleTrigger.locator('.fa-cubes-stacked')).toHaveCSS('color', 'rgb(255, 255, 255)');
+  await expect(page.getByText('Hier auswählen, wenn ihr ein Bundle wollt.')).toBeVisible();
+  await bundleTrigger.click();
+  const picker = page.locator('[data-fdshop-bundle-picker]');
+  await expect(picker.getByRole('heading', { name: 'Bundle auswählen' })).toBeVisible();
+  await expect(picker.getByRole('button', { name: 'E2E Bundle Aktiv' })).toBeVisible();
+  await expect(picker.getByRole('button', { name: 'E2E Bundle Zweite Wahl' })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(bundleTrigger).toBeFocused();
+  await bundleTrigger.click();
+  await picker.getByRole('button', { name: 'E2E Bundle Zweite Wahl' }).click();
+  await expect(page.locator('[data-fdshop-bundle-dialog]').getByRole('heading', { name: 'E2E Bundle Zweite Wahl' })).toBeVisible();
+  await page.locator('[data-fdshop-bundle-close]').click();
+
+  for (const width of [1024, 768, 390]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('/index.php?option=com_fdshop&view=product&id=900105&catid=900010');
+    const layout = await page.locator('.fdshop-product__overview').evaluate(root => {
+      const stage = root.querySelector('.fdshop-product__main-image');
+      const image = root.querySelector('[data-fdshop-main-image]');
+      const actions = root.querySelector('.fdshop-product__action-zone');
+      const stageBox = stage.getBoundingClientRect();
+      const imageBox = image.getBoundingClientRect();
+      return {
+        stageAlignment: getComputedStyle(stage).alignItems,
+        bottomGap: stageBox.bottom - imageBox.bottom,
+        imageInsideStage: imageBox.top >= stageBox.top && imageBox.bottom <= stageBox.bottom,
+        noActionOverflow: actions.scrollWidth <= actions.clientWidth + 1,
+      };
+    });
+    expect(layout.stageAlignment).toBe('flex-end');
+    expect(layout.bottomGap).toBeGreaterThan(0);
+    expect(layout.bottomGap).toBeLessThan(20);
+    expect(layout.imageInsideStage).toBe(true);
+    expect(layout.noActionOverflow).toBe(true);
+  }
+
+  await page.goto('/index.php?option=com_fdshop&view=product&id=900106&catid=900010');
+  await expect(page.locator('[data-fdshop-package-select]')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Bundle erstellen' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Frage stellen' })).toBeVisible();
+  diagnostics.expectClean();
+});
+
 test('product detail renders gallery, video, manufacturer and public product information', async ({ page, baseURL }) => {
   const diagnostics = await installDiagnostics(page, baseURL);
   await page.route('https://i.ytimg.com/**', route => route.fulfill({ status: 200, contentType: 'image/svg+xml', body: '<svg xmlns="http://www.w3.org/2000/svg"/>' }));
