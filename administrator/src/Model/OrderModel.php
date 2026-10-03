@@ -137,6 +137,22 @@ class OrderModel extends BaseDatabaseModel
         return $db->loadObjectList() ?: [];
     }
 
+    public function getOrderBundles($pk = null): array
+    {
+        $orderId = $this->resolveOrderId($pk);
+        if ($orderId <= 0) { return []; }
+        $db=$this->getDatabase();
+        $query=$db->getQuery(true)->select('*')->from($db->quoteName('#__fdshop_order_bundles'))->where('order_id='.(int)$orderId)->order('id ASC');
+        $db->setQuery($query);$bundles=(array)$db->loadObjectList();
+        if($bundles===[]){return [];}
+        $ids=array_map(static fn(object $bundle):int=>(int)$bundle->id,$bundles);
+        $query=$db->getQuery(true)->select('*')->from($db->quoteName('#__fdshop_order_bundle_items'))->whereIn($db->quoteName('order_bundle_id'),$ids)->order('order_bundle_id ASC,id ASC');
+        $db->setQuery($query);$grouped=[];
+        foreach((array)$db->loadObjectList() as $item){$grouped[(int)$item->order_bundle_id][]=$item;}
+        foreach($bundles as $bundle){$bundle->items=$grouped[(int)$bundle->id]??[];}
+        return $bundles;
+    }
+
     public function getStatusHistory($pk = null): array
     {
         $orderId = $this->resolveOrderId($pk);

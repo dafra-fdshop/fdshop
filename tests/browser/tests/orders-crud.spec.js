@@ -59,12 +59,18 @@ test('order list, search, status filters and fixture snapshot details', async ({
   await expect(body).toContainText('E2E Snapshot angelegt'); await expect(body).toContainText('Künstlicher Ausgangsstatus');
   await search(page, 'E2E-ORDER-BUNDLE'); await page.getByRole('link', { name: 'E2E-ORDER-BUNDLE' }).click();
   await expect(page.locator('main')).toContainText('E2E-ORDER-BUNDLE'); await expect(page.locator('main')).toContainText('E2E Produkt Aktionspreis');
+  const bundleBlock = page.locator('[data-order-bundle="900820"]');
+  await expect(bundleBlock).toContainText('E2E Bundle Aktiv'); await expect(bundleBlock).toContainText('E2E-BUNDLE-ACTIVE');
+  await expect(bundleBlock).toContainText('E2E Produkt Aktiv'); await expect(bundleBlock).toContainText('E2E Produkt Aktionspreis');
+  await expect(bundleBlock.locator('input, select, button')).toHaveCount(0);
   await expect(page.locator('main')).toContainText('71,02'); await expect(page.locator('main')).toContainText('E2E Bundle-Snapshot angelegt');
   const getSaveResponse = await page.evaluate(async () => {
     const response = await fetch('/administrator/index.php?option=com_fdshop&task=order.save&id=900801', { credentials: 'same-origin' });
     return response.text();
   });
   expect(getSaveResponse).toContain('ausschließlich per POST zulässig');
+  await search(page, 'E2E-ORDER-PURE-BUNDLE'); await page.getByRole('link', { name: 'E2E-ORDER-PURE-BUNDLE' }).click();
+  await expect(page.locator('[data-order-items] tbody tr')).toHaveCount(0); const pureBundle=page.locator('[data-order-bundle="900821"]'); await expect(pureBundle).toBeVisible(); await expect(pureBundle).toContainText('E2E Reines Bundle'); await expect(pureBundle.locator('tbody tr')).toHaveCount(2); await expect(pureBundle.locator('input, select, button')).toHaveCount(0);
 });
 test('reserved order edits stay draft-only until atomic toolbar save', async ({ page }) => {
   await openNormal(page);

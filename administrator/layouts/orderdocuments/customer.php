@@ -24,7 +24,12 @@ foreach ($displayData['bundles'] as $bundle) {
         'quantity'            => 1,
         'line_total_gross'    => $bundle->total_gross,
         'currency'            => $o->currency,
+        'bundle_header'       => true,
     ];
+    foreach (($bundle->items ?? []) as $bundleItem) {
+        $bundleItem->bundle_child = true;
+        $rows[] = $bundleItem;
+    }
 }
 
 $logo = $h->image((string) ($c->document_company_logo ?? ''));
@@ -336,11 +341,13 @@ $logo = $h->image((string) ($c->document_company_logo ?? ''));
             </td>
 
             <td class="product">
-                <?= $h->e($item->product_name) ?>
+                <?= !empty($item->bundle_child) ? '↳ ' : '' ?><?= $h->e($item->product_name) ?>
             </td>
 
             <td class="price">
-                <?php if ($discount > 0) : ?>
+                <?php if (!empty($item->bundle_child)) : ?>
+                    im Bundle enthalten
+                <?php elseif ($discount > 0) : ?>
                     <s><?= $h->money($regular, $currency) ?></s><br>
                 <?php endif; ?>
 
@@ -353,11 +360,11 @@ $logo = $h->image((string) ($c->document_company_logo ?? ''));
             </td>
 
             <td class="discount">
-                <?= $discount > 0 ? $h->money($discount, $currency) : '-' ?>
+                <?= !empty($item->bundle_child) ? '-' : ($discount > 0 ? $h->money($discount, $currency) : '-') ?>
             </td>
 
             <td class="amount">
-                <?= $h->money($item->line_total_gross, $currency) ?>
+                <?= !empty($item->bundle_child) ? 'enthalten' : $h->money($item->line_total_gross, $currency) ?>
             </td>
         </tr>
     <?php endforeach; ?>

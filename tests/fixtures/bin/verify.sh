@@ -55,7 +55,7 @@ assert_sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_coupon_user_map WHERE
 assert_sql "SELECT GROUP_CONCAT(published ORDER BY ordering SEPARATOR ',') FROM ${JOOMLA_DB_PREFIX}fdshop_shipments;" '1,1,0' 'shipment states/order'
 assert_sql "SELECT GROUP_CONCAT(published ORDER BY ordering SEPARATOR ',') FROM ${JOOMLA_DB_PREFIX}fdshop_payment_methods;" '1,1,0' 'payment states/order'
 assert_sql "SELECT GROUP_CONCAT(is_active ORDER BY ordering SEPARATOR ',') FROM ${JOOMLA_DB_PREFIX}fdshop_order_statuses;" '1,1,1,1,1,0' 'order status states/order'
-assert_sql "SELECT GROUP_CONCAT(CONCAT(order_number,':',has_bundle) ORDER BY id SEPARATOR ',') FROM ${JOOMLA_DB_PREFIX}fdshop_orders;" 'E2E-ORDER-NORMAL:0,E2E-ORDER-BUNDLE:1' 'order snapshots'
+assert_sql "SELECT GROUP_CONCAT(CONCAT(order_number,':',has_bundle) ORDER BY id SEPARATOR ',') FROM ${JOOMLA_DB_PREFIX}fdshop_orders;" 'E2E-ORDER-NORMAL:0,E2E-ORDER-BUNDLE:1,E2E-ORDER-PURE-BUNDLE:1' 'order snapshots'
 assert_sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}fdshop_order_bundle_items WHERE order_bundle_id=900820;" 2 'order bundle snapshots'
 compose exec -T joomla test -f /var/www/html/images/FDShop/products/e2e-fixture-product.svg || fail 'synthetic image missing'
 file_hash="$(compose exec -T joomla sha256sum /var/www/html/images/FDShop/products/e2e-fixture-product.svg | cut -d' ' -f1)"

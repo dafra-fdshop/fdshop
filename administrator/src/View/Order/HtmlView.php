@@ -16,6 +16,7 @@ class HtmlView extends BaseHtmlView
     public $item;
 
     public $orderItems = [];
+    public $orderBundles = [];
 
     public $statusHistory = [];
 
@@ -33,6 +34,7 @@ class HtmlView extends BaseHtmlView
 
         $this->item              = $model->getItem();
         $this->orderItems        = $model->getOrderItems();
+        $this->orderBundles      = $model->getOrderBundles();
         $this->statusHistory     = $model->getStatusHistory();
         $this->orderHistory      = $model->getOrderHistory();
         $this->customerDocuments = $model->getCustomerDocuments();

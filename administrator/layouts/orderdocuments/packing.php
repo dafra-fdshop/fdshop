@@ -354,7 +354,7 @@ $logo = $h->image(
                         </td>
 
                         <td class="product">
-                            <?= $h->e($item->product_name) ?>
+                            <?php if(!empty($item->bundle_name)):?><span style="font-size:6.8pt;color:#555"><?php echo $h->e($item->bundle_name); ?>:</span><br><?php endif;?><?= $h->e($item->product_name) ?>
                         </td>
 
                         <td class="category">
