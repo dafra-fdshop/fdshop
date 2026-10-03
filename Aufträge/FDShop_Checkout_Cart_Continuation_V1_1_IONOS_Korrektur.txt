@@ -1,0 +1,204 @@
+FDShop – Checkout Cart Continuation V1.1 – IONOS Realtest-Korrektur
+
+Projekt: FDShop
+Branch: feature
+Basis: Commit a2d9d717f0bd4c340983144f050d7df00d835347 / Schema 0.0.50
+Priorität: Launch
+Kein Merge nach main.
+
+ZIEL
+Die reale IONOS-Abnahme von Checkout Login / Registrierung / Cart Continuation V1 war fachlich erfolgreich. Es sind ausschließlich vier klar abgegrenzte UX-/Routing-Korrekturen umzusetzen.
+
+WICHTIG – BESTANDSSCHUTZ
+Die IONOS-Realtests bestätigen:
+- Gast-Cart bleibt beim Login erhalten.
+- Gast-Cart wird bei User ohne vorhandenen Cart korrekt übernommen.
+- vorhandener User-Cart + Gast-Cart erzeugt korrekt den Konfliktdialog.
+- beide Carts bleiben bis zur Auswahl erhalten.
+- beide Auswahlrichtungen funktionieren.
+- nach Konfliktauswahl landet der User korrekt im Warenkorb.
+- Registrierung + E-Mail-Aktivierung erhalten den Gast-Cart.
+- nach erstem Login des neu registrierten Users ist der Gast-Cart korrekt dem User zugeordnet.
+- Token-/Continuation-Grundarchitektur funktioniert real.
+
+Diese funktionierenden Bereiche NICHT neu konstruieren.
+CartContinuationService, Ownership-, Transfer-, Konflikt- und Transaktionslogik nur ändern, wenn dies für die unten genannte Return-Kontext-Korrektur zwingend erforderlich ist. Keine neue Architektur.
+
+REFERENZEN AUS REALTEST
+Falls im Auftrag/Repo bereitgestellt, folgende Screenshots als Referenz verwenden:
+1 Screenshot bestellvorgang reg fenster.png
+2 Screenshot nach login reg user ohne gespeicherten Warenkorb.png
+3 Screenshot warenkorb abfrage.png
+4 Screenshot nach registrierung.png
+5 Screenshot anmeldung nach link klick.png
+6 Screenshot erstem login nach registrierung.png
+Falls Bilder nicht lokal verfügbar sind, reicht diese Spezifikation; nicht stoppen.
+
+======================================================================
+1 CHECKOUT-RETURN NACH LOGIN KORRIGIEREN
+======================================================================
+
+Realtest A:
+Bestehender registrierter User ohne gespeicherten User-Cart:
+Gast-Cart → „Weiter zum Bestellen“ → Login → Gast-Cart wird korrekt übernommen.
+FEHLER: anschließend landet User auf Joomla-Standard-Profilseite statt im FDShop-Warenkorb/Bestellprozess.
+
+Soll:
+Wenn Authentifizierung ursprünglich durch „Weiter zum Bestellen“ gestartet wurde, bleibt der Checkout-Intent bis zur finalen Navigation erhalten.
+Nach erfolgreicher Cart-Auflösung:
+→ index.php?option=com_fdshop&view=cart
+→ dort bestehenden Bestellabschluss fortsetzen.
+
+Das gilt auch dann, wenn KEIN Cart-Konflikt besteht.
+
+Realtest C:
+Neuer Gast:
+Gast-Cart → Weiter zum Bestellen → Registrierung → Mailaktivierung → Aktivierungslink → Joomla Login → Gast-Cart wird korrekt übernommen.
+FEHLER: anschließend landet User in FDShop „Mein Konto“.
+
+Soll:
+Auch über Registrierung + Aktivierung hinweg muss ein gültiger Checkout-Intent nach dem abschließenden Login zum Warenkorb/Bestellabschluss führen.
+
+WICHTIG:
+- normalen Login außerhalb Checkout weiterhin zu „Mein Konto“ führen.
+- sichere explizite Return-Ziele weiterhin respektieren.
+- kein Open Redirect.
+- Joomla-Profilseite bleibt technisch bestehen, ist aber kein FDShop-Kundenziel.
+- Ursache gezielt analysieren: vermutlich wird Intent/Target nach erfolgreicher automatischer Cart-Auflösung zu früh konsumiert/gelöscht bzw. steht für die Redirect-Entscheidung nicht mehr zur Verfügung.
+- keine Cart-Transferlogik neu bauen.
+
+======================================================================
+2 DOPPELTES LOGINFORMULAR NACH AKTIVIERUNG ENTFERNEN
+======================================================================
+
+Realtest:
+Nach Klick auf Joomla-Aktivierungslink wird das Konto korrekt aktiviert und Joomla verlangt anschließend Login.
+Auf dieser Seite erscheinen aktuell ZWEI vollständige Loginformulare untereinander.
+
+Soll:
+Genau EIN Loginformular.
+
+Ursache im Zusammenspiel Joomla Aktivierungs-/Loginausgabe und plg_system_fdshopregistration analysieren.
+Das Plugin darf auf der Aktivierungs-Erfolgs-/Loginansicht nicht zusätzlich ein zweites mod_login injizieren.
+
+WICHTIG:
+- nicht per CSS eines der Formulare verstecken.
+- doppeltes Markup gar nicht erzeugen.
+- normale kombinierte Registrierungsseite muss weiterhin Login links + Registrierung rechts anzeigen.
+- Aktivierungsseite darf Joomla-Login sauber verwenden.
+- Passkey/Passwort vergessen/Benutzername vergessen dürfen nicht regressieren.
+
+======================================================================
+3 SPAM-/JUNK-HINWEIS NACH REGISTRIERUNG
+======================================================================
+
+Checkout-spezifischer Aktivierungshinweis funktioniert bereits.
+
+Bestehender Text sinngemäß:
+„Bitte bestätige jetzt deine E-Mail-Adresse.
+Wir haben dir einen Aktivierungslink geschickt. Dein Warenkorb bleibt erhalten. Öffne den Link in der E-Mail und melde dich anschließend an, um deine Bestellung fortzusetzen.“
+
+Ergänzen:
+**„Keine E-Mail erhalten? Bitte prüfe auch deinen Spam- bzw. Junk-Ordner.“**
+
+Gut sichtbar, aber nicht alarmistisch.
+Über Language-Dateien.
+Deutsch und vorhandene englische Übersetzung entsprechend ergänzen.
+
+Der allgemeine Joomla-Systemhinweis darf bestehen bleiben; kein unnötiger Umbau dieses Messagesystems in dieser Runde.
+
+======================================================================
+4 CLOSE-BUTTON CART-KONFLIKTDIALOG POLIEREN
+======================================================================
+
+Der Konfliktdialog selbst ist im Realtest funktional und inhaltlich gut und soll NICHT neu gestaltet werden.
+
+Einzige optische Korrektur:
+Der aktuelle Close-/X-Button wirkt optisch fremd/unsauber.
+
+Soll:
+- schlichter moderner FDShop-Modal-Close
+- rund bzw. sauber proportioniert
+- klares X
+- ausreichende Touch-/Klickfläche
+- Hover/Focus sichtbar
+- keine Layoutverschiebung
+- Mobile sauber
+- bestehende Schließen-/Abbruchlogik unverändert: Schließen darf keinen Cart löschen.
+
+Sonst Dialog unverändert lassen.
+
+======================================================================
+5 VERBINDLICHE REGRESSIONSTESTS
+======================================================================
+
+Die drei real getesteten Kernfälle automatisiert/gezielt schützen:
+
+A Bestehender User OHNE gespeicherten User-Cart
+- Gast-Cart füllen
+- Weiter zum Bestellen
+- Login
+- Gast-Cart übernommen
+- DIREKT FDShop Cart/Bestellabschluss, nicht Joomla-Profil/Account.
+
+B Bestehender User MIT gespeichertem User-Cart
+- Gast-Cart + User-Cart
+- Login
+- Konfliktdialog
+- beide Auswahlrichtungen
+- danach Cart
+- Schließen löscht nichts.
+
+C Neuer User
+- Gast-Cart
+- Checkout-Registrierung
+- checkout-spezifischer Aktivierungshinweis inkl. Spam/Junk
+- Aktivierung
+- genau EIN Loginformular
+- Login
+- Gast-Cart übernommen
+- DIREKT FDShop Cart/Bestellabschluss.
+
+Zusätzlich:
+- normaler Login ohne Checkout → Mein Konto
+- normale Registrierung ohne Checkout nicht regressieren
+- Cookie/Token/Ownership/CSRF bestehende Tests grün
+- Mobile Konfliktdialog weiterhin ohne Produktnamen
+- Nicht-PayPal kurzer Checkout-Smoke
+- PayPal nur gezielte Regression, keine Großbaustelle
+- PHP/JS-Syntax, git diff --check, Paketbau/Installation, Smoke, Logs.
+
+Kein test-full.
+
+======================================================================
+6 ABSCHLUSS
+======================================================================
+
+Version/Schema nur nach Projektstandard erhöhen; kein unnötiges DB-Schema-Update, falls keine DB-Änderung nötig ist.
+Dokumentation nur dort aktualisieren, wo das dauerhafte Verhalten präzisiert werden muss.
+
+Commit sinngemäß:
+Fix checkout continuation redirects and activation UX
+
+Push origin/feature.
+Kein main-Merge.
+Windows/WSL sauber und synchron.
+Keine Secrets.
+Auftrag nach Aufträge/erledigt.
+
+Abschlussbericht kurz:
+1 Ursache Redirect A/C
+2 Korrektur Checkout-Intent
+3 doppeltes Login
+4 Spam-Hinweis
+5 Dialog-Close
+6 Regressionstests
+7 Paket/Version
+8 Dateien
+9 Commit-SHA
+
+Codex hat innerhalb dieses engen Scopes Freiheit für die technisch sauberste Joomla-/FDShop-konforme Lösung. Behebbare technische Probleme sind kein STOP-Grund.
+
+Und für Codex: Die Blockchain funktioniert. Diesmal bitte wirklich nur noch die Straßenschilder zum Warenkorb gerade hängen. 😎🤣
+
+ENDE
