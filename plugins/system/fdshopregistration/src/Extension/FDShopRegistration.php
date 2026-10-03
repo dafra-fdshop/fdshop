@@ -130,10 +130,7 @@ final class FDShopRegistration extends CMSPlugin implements SubscriberInterface
         $registration = $document->getBuffer('component');
         $checkout = $app->getSession()->get('com_fdshop.cart_continuation.intent') === 'checkout' || $app->getInput()->getBool('fdshop_checkout');
         if ($app->getSession()->get('com_fdshop.cart_continuation.registered') === 1) {
-            $this->loadLanguage();
-            $document->setBuffer('<div class="fdshop-registration-note fdshop-registration-note--activation" role="status"><h2>' . Text::_('PLG_SYSTEM_FDSHOPREGISTRATION_ACTIVATION_TITLE') . '</h2><p>' . Text::_('PLG_SYSTEM_FDSHOPREGISTRATION_ACTIVATION_TEXT') . '</p><p><strong>' . Text::_('PLG_SYSTEM_FDSHOPREGISTRATION_ACTIVATION_SPAM') . '</strong></p></div>' . $registration, 'component');
             $app->getSession()->clear('com_fdshop.cart_continuation.registered');
-            return;
         }
         $input = $app->getInput();
         $view = $input->getCmd('view');
@@ -144,7 +141,11 @@ final class FDShopRegistration extends CMSPlugin implements SubscriberInterface
             return;
         }
         if (($view !== 'registration' && $task !== 'registration.register') || $task === 'registration.activate') return;
-        if (!str_contains($registration, 'id="member-registration"') || str_contains($registration, 'fdshop-account-entry')) return;
+        $hasRegistrationForm = str_contains($registration, 'id="member-registration"')
+            && str_contains($registration, 'name="jform[email1]"');
+        $hasJoomlaLogin = str_contains($registration, 'name="username"')
+            && str_contains($registration, 'task=user.login');
+        if (!$hasRegistrationForm || $hasJoomlaLogin || str_contains($registration, 'fdshop-account-entry')) return;
 
         $this->loadLanguage();
         $loginTarget = $checkout ? 'index.php?option=com_fdshop&view=cart' : 'index.php?option=com_fdshop&view=account';
@@ -153,7 +154,7 @@ final class FDShopRegistration extends CMSPlugin implements SubscriberInterface
         $assets->getRegistry()->addRegistryFile('media/com_fdshop/joomla.asset.json');
         $assets->useStyle('com_fdshop.site');
         $document->setBuffer(
-            '<div class="fdshop-registration-note" role="note">' . ($checkout ? '<h1>' . Text::_('PLG_SYSTEM_FDSHOPREGISTRATION_CHECKOUT_TITLE') . '</h1><p>' . Text::_('PLG_SYSTEM_FDSHOPREGISTRATION_CHECKOUT_TEXT') . '</p>' : Text::_('PLG_SYSTEM_FDSHOPREGISTRATION_NOTE')) . '</div>'
+            '<div class="fdshop-registration-note" role="note">' . ($checkout ? '<h1>' . Text::_('PLG_SYSTEM_FDSHOPREGISTRATION_CHECKOUT_TITLE') . '</h1><p>' . Text::_('PLG_SYSTEM_FDSHOPREGISTRATION_CHECKOUT_TEXT') . '</p>' : '<h1>' . Text::_('PLG_SYSTEM_FDSHOPREGISTRATION_NOTE_TITLE') . '</h1><p>' . Text::_('PLG_SYSTEM_FDSHOPREGISTRATION_NOTE') . '</p>') . '</div>'
             . '<div class="fdshop-account-entry">'
             . '<section class="fdshop-account-entry__login" aria-labelledby="fdshop-login-title"><h2 id="fdshop-login-title">' . Text::_('PLG_SYSTEM_FDSHOPREGISTRATION_LOGIN_TITLE') . '</h2>' . $login . '</section>'
             . '<section class="fdshop-account-entry__registration" aria-labelledby="fdshop-registration-title"><h2 id="fdshop-registration-title">' . Text::_('PLG_SYSTEM_FDSHOPREGISTRATION_TITLE') . '</h2>' . $registration . '</section>'

@@ -7,6 +7,8 @@ test('Joomla registration and profile persist FDShop customer data without a thi
   expect(response?.status()).toBe(200);
   const form = page.locator('#member-registration');
   const entry = page.locator('.fdshop-account-entry');
+  await expect(page.getByRole('heading', { name: /Neu bei uns\?|New here\?/i })).toBeVisible();
+  await expect(page.locator('.fdshop-registration-note')).toContainText(/E-Mail.*Bestätigung|email.*confirm/i);
   await expect(entry.getByRole('heading', { name: /already registered|bereits registriert/i })).toBeVisible();
   await expect(entry.getByRole('heading', { name: /registration|registrierung/i })).toBeVisible();
   const desktopBoxes = await entry.locator(':scope > section').evaluateAll(nodes => nodes.map(node => node.getBoundingClientRect()));

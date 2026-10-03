@@ -805,3 +805,20 @@ der tatsächlichen Registrierungsansicht auf. Joomlas Aktivierungs-/Loginansicht
 erhält kein zusätzliches `mod_login`. Der kontextuelle Aktivierungshinweis
 enthält zusätzlich den Spam-/Junk-Hinweis. Am Cart-Continuation-, Ownership-,
 Transfer-, Konflikt- und Transaktionskern wurden keine Änderungen vorgenommen.
+
+Launch Polish Produktdetail und Registrierung V1.1 (Paket 0.0.52, Schema 0.0.50)
+-------------------------------------------------------------------------------
+
+Die Produktdetailansicht fasst Preis und Purchase Action in einer gemeinsamen
+hellgrauen Commerce-Fläche zusammen. Verpackungsauswahlen zeigen ausschließlich
+`Einzelpackung` und den Typ Display/Schinken; nur ein vorhandener prozentualer
+Verpackungsrabatt wird kompakt ergänzt. Preis-, Mengen-, NEM-, Schuss- und
+Warenkorbvarianten verwenden unverändert die bestehende Fachlogik.
+
+Das Registrierungsplugin ergänzt die kombinierte Login-/Registrierungsansicht
+nur bei einem nachgewiesenen Joomla-Registrierungsformular. Ist bereits ein
+Joomla-Login vorhanden, bleibt ausschließlich dieses Original bestehen. Nach
+einer Registrierung gibt FDShop keine zweite Aktivierungsbox mehr aus; die
+Joomla-Systemmeldung bleibt die zentrale, per Sprach-Override pflegbare Quelle.
+Checkout-Intent, Cart Continuation, Ownership, Transfer und Redirect-Ziele sind
+unverändert.

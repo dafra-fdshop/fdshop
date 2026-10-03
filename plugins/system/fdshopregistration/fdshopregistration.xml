@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <extension type="plugin" group="system" method="upgrade">
   <name>plg_system_fdshopregistration</name>
-  <author>FDShop</author><creationDate>2026-10-03</creationDate><version>0.0.51</version>
+  <author>FDShop</author><creationDate>2026-10-03</creationDate><version>0.0.52</version>
   <description>Shopgerechte Darstellung der Joomla-Registrierung.</description>
   <namespace path="src">FDShop\Plugin\System\FDShopRegistration</namespace>
   <scriptfile>script.php</scriptfile>

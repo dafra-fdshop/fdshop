@@ -257,6 +257,7 @@ test('product detail polish keeps actions responsive and selects the exact bundl
   await expect(detail.locator(':scope > .fdshop-search')).toHaveCount(0);
   await expect(detail.locator('[data-fdshop-package-select]')).toHaveValue('piece');
   await expect(detail.locator('[data-fdshop-package-select]')).toHaveAccessibleName('Display auswählen');
+  await expect(detail.locator('[data-fdshop-package-select] option')).toHaveText(['Einzelpackung', 'Display']);
   await expect(detail.getByText('Hier auswählen, wenn ihr ein Display wollt.')).toBeVisible();
   await detail.locator('[data-fdshop-package-select]').selectOption('package');
   await expect(detail.locator('[data-fdshop-package-name]')).toHaveText('E2E Produkt Bild Display');
@@ -268,13 +269,43 @@ test('product detail polish keeps actions responsive and selects the exact bundl
 
   await page.goto('/index.php?option=com_fdshop&view=product&id=900107&catid=900010');
   await expect(page.locator('[data-fdshop-package-select]')).toHaveAccessibleName('Schinken auswählen');
+  await expect(page.locator('[data-fdshop-package-select] option')).toHaveText(['Einzelpackung', 'Schinken']);
   await expect(page.getByText('Hier auswählen, wenn ihr einen Schinken wollt.')).toBeVisible();
+
+  await page.goto('/index.php?option=com_fdshop&view=product&id=900104&catid=900011');
+  await expect(page.locator('[data-fdshop-package-select] option')).toHaveText(['Einzelpackung', 'Display (-5%)']);
+  await page.locator('[data-fdshop-package-select]').selectOption('package');
+  await expect(page.locator('[data-fdshop-package-select]')).toHaveValue('package');
 
   await page.goto('/index.php?option=com_fdshop&view=product&id=900105&catid=900010');
   await expect(page.locator('[data-fdshop-package-select]')).toBeVisible();
   const bundleTrigger = page.getByRole('button', { name: 'Bundle erstellen' });
   await expect(bundleTrigger.locator('.fa-cubes-stacked')).toHaveCSS('color', 'rgb(255, 255, 255)');
-  await expect(page.getByText('Hier auswählen, wenn ihr ein Bundle wollt.')).toBeVisible();
+  const bundleHelp = page.getByText('Hier auswählen, wenn ihr ein Bundle wollt.');
+  await expect(bundleHelp).toBeVisible();
+  const bundleRows = await Promise.all([bundleTrigger.boundingBox(), bundleHelp.boundingBox()]);
+  expect(bundleRows[1].y).toBeGreaterThanOrEqual(bundleRows[0].y + bundleRows[0].height);
+  const productPolish = await page.locator('.fdshop-product').evaluate(root => {
+    const commerce = root.querySelector('.fdshop-product__commerce');
+    const price = root.querySelector('.fdshop-product__price');
+    const cart = commerce.querySelector('.fdshop-purchase__button');
+    const action = root.querySelector('.fdshop-product__action-button');
+    const packageControl = root.querySelector('.fdshop-product__package-control');
+    const commerceBox = commerce.getBoundingClientRect();
+    const cartBox = cart.getBoundingClientRect();
+    return {
+      commerceBackground: getComputedStyle(commerce).backgroundColor,
+      priceBackground: getComputedStyle(price).backgroundColor,
+      cartInsideCommerce: cartBox.left >= commerceBox.left && cartBox.right <= commerceBox.right,
+      actionRadius: parseFloat(getComputedStyle(action).borderTopLeftRadius),
+      packageColumns: getComputedStyle(packageControl).gridTemplateColumns,
+    };
+  });
+  expect(productPolish.commerceBackground).not.toBe('rgba(0, 0, 0, 0)');
+  expect(productPolish.priceBackground).toBe('rgba(0, 0, 0, 0)');
+  expect(productPolish.cartInsideCommerce).toBe(true);
+  expect(productPolish.actionRadius).toBeGreaterThan(0);
+  expect(productPolish.packageColumns.split(' ').length).toBe(2);
   await bundleTrigger.click();
   const picker = page.locator('[data-fdshop-bundle-picker]');
   await expect(picker.getByRole('heading', { name: 'Bundle auswählen' })).toBeVisible();
@@ -373,7 +404,8 @@ test('product detail renders gallery, video, manufacturer and public product inf
   await expect(product.locator('.fdshop-product__stock-copy')).toContainText('Im Lager');
   await expect(product.locator('[data-effective-price] strong')).toHaveText('19,99 EUR');
   await expect(product.locator('[data-effective-price] strong')).toHaveCSS('color', 'rgb(224, 167, 33)');
-  await expect(product.locator('.fdshop-product__price')).toHaveCSS('background-color', 'rgb(240, 244, 251)');
+  await expect(product.locator('.fdshop-product__commerce')).toHaveCSS('background-color', 'rgb(240, 244, 251)');
+  await expect(product.locator('.fdshop-product__price')).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
   await expect(product.locator('.fdshop-product__regular-price')).toHaveCount(0);
   await expect(product.locator('[data-effective-price] small')).toHaveText('inkl. MwSt.');
   const shortDescription = product.locator('.fdshop-product__short-description');

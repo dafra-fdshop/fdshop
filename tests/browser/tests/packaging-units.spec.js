@@ -36,9 +36,11 @@ test('product detail switches server-prepared package data and keeps piece/packa
 test('package pricing supports percent and fixed gross amount while category sends piece explicitly', async ({ page, baseURL }) => {
   const diagnostics = await installDiagnostics(page, baseURL);
   await page.goto('/index.php?option=com_fdshop&view=product&id=900104&catid=900011');
+  await expect(page.locator('[data-fdshop-package-select] option')).toHaveText(['Einzelpackung', 'Display (-5%)']);
   await page.locator('[data-fdshop-package-select]').selectOption('package');
   await expect(page.locator('[data-fdshop-package-price]')).toHaveText('136,80 EUR');
   await page.goto('/index.php?option=com_fdshop&view=product&id=900105&catid=900012');
+  await expect(page.locator('[data-fdshop-package-select] option')).toHaveText(['Einzelpackung', 'Display']);
   await page.locator('[data-fdshop-package-select]').selectOption('package');
   await expect(page.locator('[data-fdshop-package-price]')).toHaveText('199,95 EUR');
   await page.goto('/batterien?limit=48');

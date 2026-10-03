@@ -734,3 +734,15 @@ CHECKOUT LOGIN / CART CONTINUATION V1.1 (PAKET 0.0.51, SCHEMA 0.0.50)
   und übernimmt im Checkout-Kontext das Warenkorbziel.
 - Der Aktivierungshinweis nennt zusätzlich Spam-/Junk-Ordner. Der bestehende
   Konfliktdialog besitzt einen fokussierbaren, touchgerechten FDShop-Closebutton.
+
+LAUNCH POLISH PRODUKTDETAIL / REGISTRIERUNG V1.1 (PAKET 0.0.52, SCHEMA 0.0.50)
+-----------------------------------------------------------------------------
+- `site/tmpl/product/default.php` liefert klare, vom Produktnamen unabhängige
+  Verpackungsoptionen; `media/css/site.css` hält Preis und Purchase Action in
+  einer gemeinsamen Commerce-Fläche und vereinheitlicht Abstände und Rundungen.
+- `plugins/system/fdshopregistration` erkennt die echte Joomla-Registrierungs-
+  form über deren Felder und unterlässt jede zusätzliche Login-Injektion, sobald
+  Joomla bereits sein eigenes Login rendert.
+- Der zusätzliche FDShop-Aktivierungshinweis wurde entfernt. Standardregistrie-
+  rung und Checkout verwenden getrennte, übersetzbare Einführungstexte; die
+  Aktivierungs-Erfolgsmeldung bleibt vollständig bei Joomla.
