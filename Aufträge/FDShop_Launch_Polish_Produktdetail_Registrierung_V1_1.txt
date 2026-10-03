@@ -1,0 +1,64 @@
+FDShop – Launch Polish: Produktdetail V1.1 + Registrierungs-UX
+
+Projekt: FDShop
+Branch: feature
+Basis: aktueller feature-Stand nach erfolgreicher IONOS-Abnahme von Cart Continuation V1.1 / Paket 0.0.51
+Priorität: Launch
+Kein Merge nach main.
+
+ZIEL
+Zwei getrennte kleine Polish-Pakete: A Produktdetail nach Realtest, B Registrierungs-/Aktivierungs-UX.
+
+BESTANDSSCHUTZ
+IONOS bestätigt Gast-Cart-Übernahme, Zwei-Cart-Auswahl in beide Richtungen, Checkout-Login→Cart, Registrierung→echte Mailaktivierung→Login→Cart, normaler Login→Mein Konto und Cart-Erhalt. CartContinuationService, Ownership, Transfer, Token, Checkout-Intent, Redirect- und Transaktionslogik NICHT neu konstruieren. Nur ändern, wenn für B2 zwingend und direkt nachweisbar. Codex darf technische Details innerhalb des Scopes selbst entscheiden; behebbare Probleme sind kein STOP-Grund.
+
+TEIL A – PRODUKTDETAIL V1.1
+Referenzen falls vorhanden: Screenshot mit bundle Funktion.png; Screenshot mit display.png; Screenshot display auswahl geöffnet.png; Screenshot schinken auswahl geöffnet.png. Fehlen sie, nicht stoppen.
+
+A1 PREIS + WARENKORB GEMEINSAM GRAU
+Realtest: Cart-Button wirkt aus hellgrauem Preisfeld herausgerutscht. Voranalyse: kein offensichtlicher unclosed Tag; Preis und Purchase liegen weiterhin in .fdshop-product__commerce, aber nur .fdshop-product__price hat Hintergrund. Preis UND Cart-Button wieder optisch in derselben hellgrauen Commerce-Fläche, Cart rechts wie zuvor. Funktion unverändert, responsive. Keine Markup-Neukonstruktion wenn CSS genügt.
+
+A2 ICON-TEXT-ABSTAND
+Bei allen neuen Produktdetail-Aktionen genügend Abstand zwischen Icon und Text, insbesondere Package-Control mit eigener Grid-Spalte. An FDShop-Buttons angleichen.
+
+A3 BUNDLE-HILFETEXT IMMER UNTER BUTTON
+Bundle-Dialog funktioniert perfekt und bleibt unverändert. Layout immer: Button „Bundle erstellen“, darunter eigene Zeile mit schwarzem Info-Icon und „Hier auswählen, wenn ihr ein Bundle wollt.“ Frage stellen darf daneben stehen. Unabhängig von horizontalem Platz.
+
+A4 RUNDUNGEN
+Package/Action setzt aktuell border-radius:0. Wieder moderne FDShop-Rundung an allen vier Ecken; Focus/Dropdown erhalten.
+
+A5 PACKAGE-AUSWAHL KLAR
+Aktuell ist Stückoption irreführend als „Display/Schinken auswählen“ beschriftet und Package-Option enthält Produktnamen. Neu:
+Display: „Einzelpackung“ und „Display (-XX%)“.
+Schinken: „Einzelpackung“ und „Schinken (-XX%)“.
+Kein Produktname im Select. XX aus bestehendem unit_discount_value, wenn unit_discount_type=percent; sauber ohne unnötige Nachkommastellen. Ohne Prozent-Rabatt nur Display/Schinken, nichts erfinden. Geschlossener Select zeigt aktuell gewählten Wert: initial Einzelpackung, nach Wahl z.B. Display (-20%). Hilfetext bleibt Display/Schinken-spezifisch. Bestehende Preis-/Mengen-/NEM-/Schuss-/Cart-Variant-Logik unverändert.
+
+A6 SCHÜTZEN
+Hero-Produktposition unten ist gut. Bundle-Auswahldialog ist top. Fragefunktion, entfernte Detail-Suche und Fachlogik nicht neu bauen.
+
+TEIL B – REGISTRIERUNGS-/AKTIVIERUNGS-UX
+Referenzen falls vorhanden: Text bei Standart Registreirung.png; nach Standart Registrierung.png; nach klick auf Link.png; nach Registrierung aus dem Warenkorb.png.
+
+B1 FAST GESCHAFFT BEIBEHALTEN
+Checkout-Hinweis vor Login/Registrierung „Fast geschafft!“ funktioniert gut und bleibt.
+
+B2 DOPPELTES LOGIN NACH AKTIVIERUNG
+Nach E-Mail-Aktivierungslink erscheinen sowohl bei normaler als auch Checkout-Registrierung zwei vollständige Loginformulare. Wahrscheinliche Ursache: Joomla rendert auf Aktivierungs-Erfolgsseite bereits eigenes Login und plg_system_fdshopregistration injiziert zusätzlich mod_login/Formular. Ursache verifizieren. Soll exakt EIN Loginformular. Wenn Vermutung stimmt: ORIGINAL JOOMLA-LOGIN BEHALTEN, zusätzliche Plugin-Injektion auf dieser Ansicht unterlassen. Nicht per CSS verstecken und nicht Joomla-Original durch Plugin-Login ersetzen; spätere Template/Joomla-Overrides sollen automatisch greifen. Kombinierte normale Registrierungsseite bleibt Login links + Registrierung rechts. Passkey/Passwort vergessen/Benutzername vergessen schützen. Keine Änderung an Aktivierung, Cart Continuation, Redirect oder Login-Zielen.
+
+B3 ZUSÄTZLICHES FDSHOP-AKTIVIERUNGSFELD ENTFERNEN
+Nach Checkout-Registrierung gibt es Joomla-Systemmeldung plus zusätzliches FDShop-Feld „Bitte bestätige...“. Zweites FDShop-Feld entfernen. Aktivierungshinweis wird künftig zentral über Joomla-Sprach-Override gepflegt und gilt normal wie Checkout. NICHT finalen Text hart in FDShop nachbauen. Daniel setzt Override administrativ. Geplanter Override sinngemäß: „Bitte bestätige jetzt deine E-Mail-Adresse! Wir haben dir einen Aktivierungslink geschickt. Vor der ersten Anmeldung musst du deine E-Mail-Adresse durch Klick auf den Aktivierungslink bestätigen. Ein gegebenenfalls bereits erstellter Warenkorb bleibt erhalten. Keine E-Mail erhalten? Bitte prüfe auch deinen Spam- bzw. Junk-Ordner.“
+
+B4 STANDARD-REGISTRIERUNGSTEXT ENTTECHNISIEREN
+Aktuell „Nach dem Absenden informiert Joomla Sie entsprechend der aktuellen Benutzerkonfiguration ...“ ersetzen durch kundenorientiert, z.B. Überschrift „Neu bei uns?“ und Text „Erstelle hier dein persönliches Kundenkonto. Nach der Registrierung erhältst du eine E-Mail zur Bestätigung deiner E-Mail-Adresse.“ Checkout nutzt weiterhin Fast geschafft. DE/EN Language-Dateien.
+
+TESTS
+A: normales Produkt; Bundleprodukt Hilfetext; 1/mehrere Bundles; Display Einzelpackung↔Display(-%); Schinken; ohne Prozent-Rabatt; Preise/Regular-Price/Package-Preis; richtige unit_variant/Menge; gemeinsame graue Commerce-Fläche; Abstände/Rundungen; Desktop/Tablet/Mobile.
+B: normale Registrierung neuer Standardtext; Checkout Fast geschafft; nach Registrierung nur Joomla-Systemmeldung; Aktivierungslink exakt EIN Joomla-Login; normaler Login→Mein Konto; Checkout-Aktivierung/Login→Cart; Cart erhalten; Passkey/Forgot; gezielte Continuation-Regression ohne Neuimplementierung.
+Technik: PHP/JS-Syntax, relevante Browsertests, git diff --check, Paketbau/Installation, Smoke, Logs. Kein test-full.
+
+ABSCHLUSS
+Version nach Standard; Schema nur bei echter DB-Änderung. Commit sinngemäß „Polish product detail and registration UX“. Push origin/feature, kein main, Windows/WSL sauber, keine Secrets, Auftrag nach erledigt. Bericht getrennt A/B + Tests + Version/Schema + Dateien + SHA.
+
+An Codex: Die Cart-Continuation hat die echte IONOS-Abnahme inklusive Joomla-Mailaktivierung bestanden. Das war richtig stark. Caesar erteilt diesmal Anerkennung ohne „widerwillig“. 😎🥳 Bitte diese funktionierende Technik in Ruhe lassen – wir polieren nur Oberfläche und das doppelte Joomla-Straßenschild. 🤣
+
+ENDE
