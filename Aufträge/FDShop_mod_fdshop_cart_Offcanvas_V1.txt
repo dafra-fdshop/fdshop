@@ -1,0 +1,66 @@
+FDShop – mod_fdshop_cart Warenkorb-Offcanvas V1
+
+Projekt: FDShop
+Branch: feature
+Priorität: Launch
+Basis: aktueller feature-Stand
+Kein Merge nach main.
+
+ZIEL
+Eigenständiges Joomla-Site-Modul mod_fdshop_cart mit kompaktem Warenkorb-Trigger/Counter und von rechts einfahrendem FDShop-Offcanvas als schnelle Übersicht. Es ersetzt NICHT den eigentlichen Warenkorb.
+
+REFERENZEN
+Falls vorhanden: Screenshot btn warenkorb modul.png und Screenshot warenkorb offcanvas.png. Nur Funktions-/Layoutreferenz des alten Shops; neues Modul an aktuellen FDShop anpassen. Fehlen Bilder, nicht stoppen.
+
+BESTANDSSCHUTZ
+Aktuelle Cart-/Checkout-/CartContinuation-/Ownership-/Payment-Architektur ist auf IONOS abgenommen. Nicht neu konstruieren. Modul liest bestehenden Cart bzw. verwendet bestehende Services/Endpunkte. Keine zweite Cart-Fachlogik/Persistenz.
+
+1 JOOMLA-MODUL
+Echtes Site-Modul mod_fdshop_cart; im FDShop-Gesamtpaket/Installationsprozess; frei platzierbar; Joomla-6-konform; mehrinstanzfähig ohne ID-Kollisionen; Assets nur bei Rendering; bei deaktiviertem Modul kein toter Trigger; modulare Assets nach Projektstandard.
+
+2 TRIGGER
+Kompakter FDShop-Button mit Warenkorb-Icon und Counter/Badge. Klick öffnet Offcanvas rechts. Tastatur/ARIA. Counter ohne Reload nach Cart-Mutationen. Normale Produkte entsprechend Warenkorbmenge; Bundle als eine Position/Einheit. Bestehende Count-Semantik bevorzugen und dokumentieren; fachlich mögliche Dezimalmengen nicht falsch als Integer behandeln.
+
+3 OFFCANVAS
+Von rechts einfahrend, aktueller FDShop-Stil. Header: „Produkte im Warenkorb“ + sauberer Close-Button. Position kompakt: kleines Produktbild, Menge × Produktname, rechts Positionssumme. Lange Namen sauber begrenzen. Produktlink optional bei sauberem Routing. Keine Plus/Minus/Remove-Funktionen in V1.
+
+BUNDLES
+Bundle nur als EINE Position mit Bundle-Titel; enthaltene Produkte NICHT auflisten. Bundle-Bild nur ohne Sonder-/N+1-Logik, sonst bestehendes neutrales Fallback.
+
+FOOTER
+Visuell abgesetzt: Trennlinie; X Artikel links, Summe rechts; großer Button „Zum Warenkorb“ zur bestehenden Cart-Ansicht. Keine Checkout-Aktion im Offcanvas.
+
+4 LEERZUSTAND
+Titel bleibt. Text „Dein Warenkorb ist noch leer.“ Footer 0 Artikel / Summe 0,00 €. Zum-Warenkorb-Button darf konsistent sichtbar bleiben.
+
+5 UX/A11Y
+Backdrop; Close-X; Escape; Backdrop-Klick; Fokus beim Öffnen ins Panel und beim Schließen zum Trigger; Hintergrundscroll sperren; Desktop/Tablet/Mobile; kein Overflow; reduced-motion; keine Seiten-Layoutverschiebung.
+
+6 LIVE-AKTUALISIERUNG
+Ohne Reload nach: normales Produkt add; Display/Schinken add; Bundle add; Mengenänderung/Remove im echten Cart; Cart-Übernahme nach Login soweit Modul auf Folgeseite; Cart-Leerung nach Bestellung. Bestehende JS-Lifecycle/Events zuerst analysieren. Falls kleines zentrales fdshop:cart-updated Event sauberste Lösung ist, darf Codex es einführen und alle relevanten Mutationswege konsistent anbinden. Keine doppelten Listener.
+
+7 DATEN/PERFORMANCE
+Performance wichtig. Prüfen, ob CartService günstige Summary liefert oder vollständiges getCart unnötig ist. Codex darf serverseitige Initial-Summary, Lazy-Load beim ersten Öffnen oder Hybrid wählen. Verbindlich: kein N+1; Produktdaten/Bilder gebündelt; Bundle-Daten gebündelt; keine Requests bei Paint/Scroll; Race Conditions vermeiden; Preise/Summen aus bestehender Cart-Fachlogik, nicht Browser-Neuberechnung.
+
+8 SICHERHEIT
+Owner aus bestehendem User-/Session-Kontext serverseitig; keine frei übergebbare user_id/session_id; Summary read-only; Ausgabe escapen; keine Secrets/PII; bestehende Ownership respektieren.
+
+9 DESIGN
+Aktuelle FDShop-Sprache: dunkle/klare Flächen, Gold/Orange-Akzent wo passend, vorhandene CSS-Variablen/Komponenten. Alten Screenshot nicht pixelgenau kopieren. Offcanvas bleibt Übersicht, kein zweiter Warenkorb.
+
+10 NICHT IM AUFTRAG
+Keine CartContinuation-, Checkout-, Login-, Registrierung-, Payment-/PayPal-Änderung. Kein Cart-Merge. Keine Cart-Bearbeitung im Offcanvas V1. Keine Coupon-/Versand-/Zahlungsauswahl. Kein Caching-Großprojekt. Kein main-Merge.
+
+11 TESTS
+Modul Installation/Aktivierung/Rendering; Gast leer; Gast 1/mehrere Produkte; User-Cart; Mengen/Counter; Display/Schinken; Bundle genau eine Position; lange Namen; Summen; Produkt/Bundle add → Live-Update; Cart quantity/remove → Update; Öffnen/Schließen/Escape/Backdrop/Fokus; mehrere Modulinstanzen; 320/375/430 + Desktop; reduced motion; kein N+1; kurzer Cart/Bundle/Checkout Regressionstest; PHP/JS-Syntax, git diff --check, Paketbau/Installation, Smoke, Logs. Kein test-full.
+
+12 ABSCHLUSS
+Paketversion nach Standard; Schema nur bei echter DB-Änderung. Doku für Modul und ggf. Cart-Update-Event. Commit sinngemäß „Add FDShop cart offcanvas module“. Push origin/feature, kein main, Windows/WSL sauber, keine Secrets, Auftrag nach erledigt.
+
+Abschlussbericht: Modularchitektur; Trigger/Counter; Offcanvas; Daten-/Performanceweg; Live-Updates; Bundlebehandlung; Accessibility/Responsive; Tests; Paket/Schema; Dateien; Commit-SHA.
+
+Codex darf innerhalb der Leitplanken die technisch sauberste Lösung selbst wählen. Behebbare technische Probleme sind kein STOP-Grund.
+
+Und für Codex: Nach der erfolgreichen Cart-Blockchain bekommst du jetzt ausnahmsweise nur einen kleinen Warenkorb an die Hauswand. Bitte nicht gleich Amazon Prime daraus bauen. 😎🤣
+
+ENDE
