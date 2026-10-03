@@ -107,49 +107,14 @@
 .fdshop-product__stock-copy { display: flex; flex-direction: column; gap: .15rem; font-size: .85rem; }
 .fdshop-product__stock-copy > strong { font-size: .75rem; }
 .fdshop-product__purchase-zone > .fdshop-stock { justify-self: end; }
-.fdshop-product__action-zone { 
-	display: flex; 
-	grid-column: 1 / -1; 
-	flex-wrap: wrap; 
-	align-items: flex-start; 
-	gap: .75rem; 
-	margin-top: .55rem;
-	padding-top: .85rem;
-    justify-content: space-around;
-    border-top: 1px solid var(--fdshop-border);
-}
-
-/*.fdshop-product__action { display: grid; min-width: 0; gap: .3rem; }*/
-.fdshop-product__action {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    min-width: 0;
-    gap: .3rem;
-}
-
-.fdshop-product__action > small {
-    display: block;
-    grid-column: 1;
-    width: 100%;
-}
-/*.fdshop-bundle-entry { grid-template-columns: minmax(0, 1fr); align-content: start; }
-.fdshop-bundle-entry small { display: block; grid-column: 1; }*/
-.fdshop-product__bundle-action {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: .3rem;
-}
-
-.fdshop-product__bundle-action small {
-    display: block;
-    width: 100%;
-}
-
+.fdshop-product__action-zone { display: flex; grid-column: 1 / -1; flex-wrap: wrap; align-items: flex-start; gap: .75rem; margin-top: .55rem; }
+.fdshop-product__action { display: grid; min-width: 0; gap: .3rem; }
+.fdshop-bundle-entry { grid-template-columns: minmax(0, 1fr); align-content: start; }
+.fdshop-bundle-entry small { display: block; grid-column: 1; }
 .fdshop-product__action small { max-width: 18rem; color: #171717; font-size: .75rem; line-height: 1.25; }
 .fdshop-product__action small .fa-circle-info { color: #171717; }
 .fdshop-product__action-button, .fdshop-product__package-control { min-height: 2.6rem; border: 1px solid #c48d0b; border-radius: .35rem; color: #fff; background: #e0a721; font-weight: 700; }
-.btn.fdshop-product__action-button { display: inline-flex; align-items: center; justify-content: center; gap: .65rem; padding: .5rem .8rem; }
+.fdshop-product__action-button { display: inline-flex; align-items: center; justify-content: center; gap: .65rem; padding: .5rem .8rem; }
 .fdshop-product__action-button:hover, .fdshop-product__action-button:focus-visible { border-color: #9f7000; color: #fff; background: #c9910f; }
 .fdshop-product__action-button .fa-solid { color: #fff; }
 .fdshop-product__package-control { position: relative; display: grid; grid-template-columns: 2rem minmax(0, 1fr); align-items: center; column-gap: .35rem; overflow: hidden; padding-left: .35rem; }

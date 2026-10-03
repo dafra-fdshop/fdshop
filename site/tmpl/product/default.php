@@ -68,7 +68,7 @@ $packageDiscount = ($item->package['unit_discount_type'] ?? '') === 'percent'
                 <div class="fdshop-product__action-zone">
                     <?php if ($item->package['valid']) : ?><div class="fdshop-product__action fdshop-product__package"><div class="fdshop-product__package-control"><i class="fa-solid fa-box-open" aria-hidden="true"></i><label class="visually-hidden" for="fdshop-unit-variant"><?php echo $this->escape($packageType); ?> auswählen</label><select id="fdshop-unit-variant" data-fdshop-package-select aria-label="<?php echo $this->escape($packageType); ?> auswählen"><option value="piece">Einzelpackung</option><option value="package"><?php echo $this->escape($packageType . $packageDiscount); ?></option></select></div><small><i class="fa-solid fa-circle-info" aria-hidden="true"></i> <?php echo $this->escape($packageHelper); ?></small></div><?php endif; ?>
                     <?php if (!empty($item->bundles)) : ?>
-                        <div class="fdshop-product__action fdshop-bundle-entry">
+                        <div class="fdshop-product__action fdshop-product__bundle-action">
                             <?php if (count($item->bundles) === 1) : ?>
                                 <button type="button" class="btn btn-primary fdshop-product__action-button" data-fdshop-bundle-open="<?php echo (int) $item->bundles[0]->id; ?>"><i class="fa-solid fa-cubes-stacked" aria-hidden="true"></i><span>Bundle erstellen</span></button>
                             <?php else : ?>
