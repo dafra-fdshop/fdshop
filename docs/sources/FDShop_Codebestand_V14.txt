@@ -766,3 +766,23 @@ WARENKORB-OFFCANVAS-MODUL V1 (PAKET 0.0.53, SCHEMA 0.0.50)
   `fdshop:cart-updated`; Cart-, Bundle- und Checkout-Fachlogik bleibt führend.
 - `media/css/cart-module.css` enthält ausschließlich Moduldesign, responsive
   Offcanvas-Geometrie, Scrollsperre und Reduced-Motion-Verhalten.
+
+FAVORITEN-COUNTER-MODUL V1 (PAKET 0.0.54, SCHEMA 0.0.50)
+--------------------------------------------------------
+- `modules/mod_fdshop_favorites` rendert einen frei positionierbaren Link zur
+  bestehenden Favoritenansicht und lädt seine kleinen Assets ausschließlich
+  bei einer veröffentlichten Modulinstanz.
+- `FavoriteService::defaultCount()` zählt per gebündelter SQL-Abfrage nur
+  unterschiedliche Produkte der geschützten Standardliste des aktuellen
+  Joomla-Benutzers. `FavoritesCounterHelper` teilt den serverseitigen Wert
+  requestlokal zwischen mehreren Modulinstanzen.
+- `FavoriteController::counter` ist ein read-only Fallback ohne übergebbare
+  User-ID. Toggle und Membership-Speicherung bleiben die führenden Mutationen
+  und liefern zusätzlich ihren autoritativen `default_count`.
+- `media/js/favorites.js` signalisiert erfolgreiche Änderungen über
+  `fdshop:favorites-updated`; `favorites-module.js` aktualisiert alle Instanzen
+  direkt und koordiniert nur bei einem detailfreien Fremdevent genau einen
+  Fallback-Request.
+- `media/css/favorites-module.css` übernimmt ausschließlich die kompakte
+  Trigger-/Badge-Sprache des Warenkorbmoduls. Ein Offcanvas oder eine zweite
+  Favoritenoberfläche ist ausdrücklich nicht vorhanden.

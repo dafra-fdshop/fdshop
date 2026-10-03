@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extension type="module" client="site" method="upgrade">
+  <name>FDShop Favoriten</name>
+  <author>FDShop</author>
+  <creationDate>2026-10-03</creationDate>
+  <version>0.0.54</version>
+  <description>Platziert den FDShop-Favoritenbutton mit dem Zähler der geschützten Standardliste.</description>
+  <files><filename module="mod_fdshop_favorites">mod_fdshop_favorites.php</filename><folder>tmpl</folder></files>
+  <config><fields name="params"><fieldset name="basic"><field name="moduleclass_sfx" type="textarea" label="COM_MODULES_FIELD_MODULECLASS_SFX_LABEL" /></fieldset><fieldset name="advanced"><field name="cache" type="list" label="Caching" default="0"><option value="1">JGLOBAL_USE_GLOBAL</option><option value="0">JGLOBAL_NO_CACHING</option></field><field name="cache_time" type="number" label="Cachezeit" default="300" filter="integer" /><field name="cachemode" type="hidden" default="static" /></fieldset></fields></config>
+</extension>

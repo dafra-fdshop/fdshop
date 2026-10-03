@@ -58,4 +58,9 @@ final class RouteHelper
     {
         return Route::_('index.php?option=com_fdshop&view=cart');
     }
+
+    public static function getFavoritesRoute(): string
+    {
+        return Route::_('index.php?option=com_fdshop&view=favorites');
+    }
 }

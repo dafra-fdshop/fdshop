@@ -1,0 +1,4 @@
+.fdshop-favorites-module { position: relative; display: inline-flex; --fdshop-favorites-accent: #e0a721; }
+.fdshop-favorites-module__trigger { position: relative; display: inline-grid; width: 2.75rem; height: 2.75rem; place-items: center; border: 1px solid #c48d0b; border-radius: .45rem; color: #111; background: var(--fdshop-favorites-accent); font-size: 1.15rem; line-height: 1; text-decoration: none; }
+.fdshop-favorites-module__trigger:hover, .fdshop-favorites-module__trigger:focus-visible { color: #111; background: #f0b724; outline: 2px solid #fff; outline-offset: 2px; }
+.fdshop-favorites-module__badge { position: absolute; right: -.45rem; bottom: -.35rem; display: grid; min-width: 1.35rem; height: 1.35rem; padding: 0 .25rem; place-items: center; border: 2px solid #fff; border-radius: 999px; color: #fff; background: #171717; font-size: .68rem; line-height: 1; }

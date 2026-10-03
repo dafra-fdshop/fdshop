@@ -167,4 +167,13 @@ VALUES (0,'E2E FDShop Suche','','',1,'sidebar-left',NULL,NULL,NULL,NULL,1,'mod_f
 SET @fdshop_search_module_id = LAST_INSERT_ID();
 INSERT INTO `__PREFIX__modules_menu` (`moduleid`,`menuid`) VALUES (@fdshop_search_module_id,0);
 
+DELETE `mm` FROM `__PREFIX__modules_menu` AS `mm` INNER JOIN `__PREFIX__modules` AS `m` ON `m`.`id`=`mm`.`moduleid` WHERE `m`.`client_id`=0 AND `m`.`module`='mod_fdshop_favorites' AND `m`.`title` LIKE 'E2E FDShop Favoriten%';
+DELETE FROM `__PREFIX__modules` WHERE `client_id`=0 AND `module`='mod_fdshop_favorites' AND `title` LIKE 'E2E FDShop Favoriten%';
+INSERT INTO `__PREFIX__modules` (`asset_id`,`title`,`note`,`content`,`ordering`,`position`,`checked_out`,`checked_out_time`,`publish_up`,`publish_down`,`published`,`module`,`access`,`showtitle`,`params`,`client_id`,`language`) VALUES
+(0,'E2E FDShop Favoriten 1','','',2,'top-a',NULL,NULL,NULL,NULL,1,'mod_fdshop_favorites',1,0,'{"layout":"_:default","moduleclass_sfx":"","cache":"0"}',0,'*'),
+(0,'E2E FDShop Favoriten 2','','',3,'top-a',NULL,NULL,NULL,NULL,1,'mod_fdshop_favorites',1,0,'{"layout":"_:default","moduleclass_sfx":"","cache":"0"}',0,'*');
+INSERT INTO `__PREFIX__modules_menu` (`moduleid`,`menuid`)
+SELECT `id`,0 FROM `__PREFIX__modules`
+WHERE `client_id`=0 AND `module`='mod_fdshop_favorites' AND `title` LIKE 'E2E FDShop Favoriten%';
+
 COMMIT;

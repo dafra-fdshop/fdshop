@@ -9,6 +9,7 @@ use Joomla\CMS\Session\Session;
 final class FavoriteController extends BaseController
 {
  public function states():void{$app=Factory::getApplication();try{$service=FavoriteHelper::service();$ids=(array)$this->input->get('product_ids',[],'array');$user=(int)$app->getIdentity()->id;echo new JsonResponse(['enabled'=>$service->enabled(),'guest'=>$user<1,'states'=>$user?$service->states($user,$ids):[]]);}catch(\Throwable$e){echo new JsonResponse(null,$e->getMessage(),true);}$app->close();}
+ public function counter():void{$app=Factory::getApplication();try{$service=FavoriteHelper::service();$user=(int)$app->getIdentity()->id;echo new JsonResponse(['enabled'=>$service->enabled(),'guest'=>$user<1,'count'=>$service->defaultCount($user)]);}catch(\Throwable$e){echo new JsonResponse(null,$e->getMessage(),true);}$app->close();}
  public function toggle():void{$this->json(fn($s,$u)=>$s->toggleDefault($u,$this->input->post->getInt('product_id')));}
  public function lists():void{$this->json(fn($s,$u)=>['lists'=>$s->lists($u,$this->input->getInt('product_id'))],false);}
  public function saveMemberships():void{$this->json(fn($s,$u)=>$s->saveMemberships($u,$this->input->post->getInt('product_id'),(array)$this->input->post->get('list_ids',[],'array')));}

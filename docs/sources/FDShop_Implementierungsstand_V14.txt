@@ -843,3 +843,22 @@ Reduced-Motion sowie mobile Vollbreite. Es bleibt eine reine Übersicht und
 enthält bewusst keine Mengen-, Coupon-, Versand-, Zahlungs- oder
 Checkout-Fachlogik. Cart Continuation, Ownership, Checkout und Payment wurden
 nicht verändert.
+
+Favoriten-Counter-Modul V1 (Paket 0.0.54, Schema 0.0.50)
+--------------------------------------------------------
+
+`mod_fdshop_favorites` ist ein frei platzierbares Joomla-Site-Modul mit einem
+kompakten Herz-Button und dem Produktzähler der geschützten Favoriten-
+Standardliste. Der Link führt für angemeldete Benutzer zur vorhandenen Ansicht
+„Meine Favoriten“; Gäste folgen über dieselbe Ansicht dem etablierten
+Joomla-Loginweg. Es existiert keine Gastpersistenz und keine zweite
+Favoritenverwaltung.
+
+Der initiale Zähler wird serverseitig über die bestehende Favoriten-Fachlogik
+ermittelt. Eine gezielte `COUNT(DISTINCT product_id)`-Abfrage berücksichtigt
+ausschließlich die benutzereigene Liste mit `is_default = 1`; zusätzliche
+Listen und Mehrfachzuordnungen erhöhen den Wert nicht. Erfolgreiche bestehende
+Toggle- und Membership-Aktionen übertragen den autoritativen neuen Zähler im
+zentralen `fdshop:favorites-updated`-Event an alle Modulinstanzen. Ein kleiner
+read-only Fallback-Endpunkt verwendet stets die aktuelle Joomla-Identity und
+wird bei mehreren Instanzen nur einmal abgefragt.
