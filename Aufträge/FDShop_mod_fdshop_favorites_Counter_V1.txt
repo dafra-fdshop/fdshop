@@ -1,0 +1,54 @@
+FDShop – mod_fdshop_favorites Favoriten-Trigger V1
+
+Projekt: FDShop
+Branch: feature
+Priorität: Launch
+Basis: aktueller feature-Stand inklusive bestehender Favoriten-V1 und mod_fdshop_cart
+Kein Merge nach main.
+
+ZIEL
+Ein sehr kleines eigenständiges Joomla-Site-Modul mod_fdshop_favorites erstellen. Es stellt ausschließlich einen frei positionierbaren Favoriten-Button mit Herz-Icon und Live-Counter bereit. Kein Favoriten-Offcanvas und keine zweite Favoritenverwaltung.
+
+BESTANDSSCHUTZ
+Bestehende Favoriten-V1 ist Single Source of Truth: Joomla-usergebundene Favoritenlisten, geschützte Standardliste, zusätzliche Listen, Ownership/Limits und bestehende „Meine Favoriten“-Ansicht bleiben unverändert. Vor Umsetzung aktuelle Favoriten-Services/Modelle/Controller/JS sowie das gerade implementierte mod_fdshop_cart als Modul-/Counter-Muster analysieren und wiederverwenden. Keine parallele Favoritenlogik/Persistenz.
+
+1 MODUL
+Echtes Site-Modul mod_fdshop_favorites; im FDShop-Gesamtpaket/Installationsprozess; frei auf Modulpositionen platzierbar; Joomla-6-konform; mehrinstanzfähig; Assets nur bei Rendering; kein toter Trigger wenn Modul nicht veröffentlicht.
+
+2 BUTTON
+Kompakter Button im Stil des aktuellen FDShop/Header-Buttons bzw. mod_fdshop_cart. Herz-Icon + kleiner Counter/Badge. Klick führt direkt zur bestehenden FDShop-Ansicht „Meine Favoriten“. Kein Popup/Offcanvas in V1. Tastaturbedienbar, ARIA-Label, sichtbarer Focus.
+
+3 COUNTER – NUR STANDARDLISTE
+Verbindlich gezählt werden ausschließlich Produkte in der geschützten Favoriten-Standardliste des aktuell angemeldeten Joomla-Benutzers. Zusätzliche Favoritenlisten zählen NICHT mit. Ein Produkt zählt einmal pro Eintrag der Standardliste. Keine Summe über Listen und keine Dubletten-Aufblähung.
+
+GAST
+Favoriten sind aktuell bewusst registrierten Benutzern vorbehalten. Für Gast soll der Button sinnvoll bestehen können, Counter = 0. Klick soll den bereits etablierten Favoriten-/Loginweg bzw. die vorhandene registrierungsbezogene UX verwenden; keine neue Authentifizierungslogik bauen. Falls die bestehende Favoriten-V1 bereits einen verbindlichen Gast-Zielweg hat, diesen exakt wiederverwenden.
+
+4 LIVE-UPDATE
+Counter soll ohne Reload reagieren, wenn ein angemeldeter User ein Produkt zur Standardliste hinzufügt oder daraus entfernt. Änderungen ausschließlich in anderen Favoritenlisten dürfen den Standardlisten-Counter nicht verändern. Vor neuem Event bestehende Favoriten-JS-Lifecycle/Events analysieren. Falls ein kleines zentrales Event nötig ist, sauber und einmalig integrieren; keine doppelten Listener.
+
+5 PERFORMANCE
+Kein Laden kompletter Favoritenkarten nur für den Counter. Bestehenden Service/Query wiederverwenden oder eine sehr kleine Count-Abfrage/Response ergänzen. Kein N+1. User/Standardliste serverseitig bestimmen. Bei mehreren Modulinstanzen Daten/Requests sinnvoll teilen, nicht pro Instanz unnötig duplizieren.
+
+6 SICHERHEIT
+Keine frei übergebbare user_id. Aktuellen Joomla-User serverseitig verwenden. Ownership respektieren. Count-Endpunkt falls nötig read-only. Ausgabe escapen. Keine PII/Secrets.
+
+7 DESIGN
+Optisch an den neuen Warenkorb-Modul-Trigger und aktuellen FDShop anlehnen, sodass beide Header-Buttons wie aus einem Guss wirken. Herz-Icon klar erkennbar, Badge klein aber lesbar. Desktop/Tablet/Mobile. Kein unnötiges neues Designsystem.
+
+8 NICHT IM AUFTRAG
+Kein Favoriten-Offcanvas; keine neue Favoritenansicht; keine Änderung an maximalen Listen/Limits; keine Gast-Favoriten/LocalStorage; keine Cart-/Checkout-/Continuation-Änderung; keine Produktkarten-Neukonstruktion; kein main-Merge.
+
+9 TESTS
+Modulinstallation/-rendering; Gast; eingeloggter User Standardliste leer; Standardliste mit mehreren Produkten; zusätzliche Listen verändern Counter nicht; Add/Remove Standardliste aktualisiert live; Produkt gleichzeitig in mehreren Listen zählt Standardliste nur einmal; Klickziel „Meine Favoriten“; mehrere Modulinstanzen; 320/375/430 + Desktop; Tastatur/ARIA; kein N+1; bestehende Favoriten-Regression; Paketbau/Installation, PHP/JS-Syntax, git diff --check, Smoke, Logs. Kein test-full.
+
+10 ABSCHLUSS
+Paketversion nach Projektstandard; Schema nur bei echter DB-Änderung. Modul dokumentieren. Commit sinngemäß „Add FDShop favorites counter module“. Push origin/feature; kein main; Windows/WSL sauber; keine Secrets; Auftrag nach erledigt.
+
+Abschlussbericht: Architektur; Standardlisten-Count; Gastverhalten; Live-Update; Performance; Responsive/A11y; Tests; Paket/Schema; Dateien; Commit-SHA.
+
+Codex darf innerhalb dieses kleinen Scopes die technisch sauberste Lösung selbst wählen. Behebbare Probleme sind kein STOP-Grund.
+
+Und für Codex: Offenbar ist dir langweilig, sobald Daniel und Caesar länger als zehn Minuten brauchen. Hier hast du noch ein Herz mit Zähler. Bitte daraus kein Tinder für Feuerwerkskörper bauen. 🤣❤️
+
+ENDE
