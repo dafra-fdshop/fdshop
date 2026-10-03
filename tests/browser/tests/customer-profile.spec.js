@@ -44,6 +44,7 @@ test('Joomla registration and profile persist FDShop customer data without a thi
   await login.locator('input[name="password"]').fill('FDShop-Test-2026!');
   await login.getByRole('button', { name: /Log in|Anmelden/i }).click();
   await expect(login).toHaveCount(0);
+  await expect(page).toHaveURL(/(?:option=com_fdshop.*view=account|component\/fdshop\/account|mein-konto)/);
 
   await page.goto('/index.php?option=com_users&view=profile&layout=edit');
   await expect(page.getByLabel(/First name|Vorname/i)).toHaveValue('Max');

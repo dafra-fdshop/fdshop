@@ -16,6 +16,8 @@ use Joomla\Event\SubscriberInterface;
 
 final class FDShopRegistration extends CMSPlugin implements SubscriberInterface
 {
+    private const SESSION_REDIRECT_TARGET = 'com_fdshop.login.redirect_target';
+
     public static function getSubscribedEvents(): array { return ['onAfterRoute' => 'afterRoute', 'onUserAfterLogin' => 'afterLogin', 'onAfterDispatch' => 'afterDispatch']; }
 
     public function afterRoute(AfterRouteEvent $event): void
@@ -24,6 +26,17 @@ final class FDShopRegistration extends CMSPlugin implements SubscriberInterface
         if (!$app->isClient('site')) return;
         $session = $app->getSession();
         if (!$app->getIdentity()->guest) {
+            $redirectTarget = (string) $session->get(self::SESSION_REDIRECT_TARGET, '');
+            if ($redirectTarget !== '') {
+                $session->clear(self::SESSION_REDIRECT_TARGET);
+                $session->clear('com_fdshop.login.pending');
+                $session->clear('com_fdshop.login.safe_return');
+                $session->clear('com_fdshop.cart_continuation.intent');
+                if (Uri::isInternal($redirectTarget) && !$this->isCurrentFdshopTarget($redirectTarget)) {
+                    $app->redirect($redirectTarget);
+                }
+                return;
+            }
             if ($app->getInput()->getCmd('task') === 'cart.chooseCart') return;
             $token = $this->token();
             if ($token !== '') {
@@ -90,17 +103,23 @@ final class FDShopRegistration extends CMSPlugin implements SubscriberInterface
         }
         if ($result['state'] !== 'conflict') $this->clearCookie();
         $explicit = (string) ($options['return'] ?? '');
+        $safeReturn = (string) $session->get('com_fdshop.login.safe_return', '');
         $defaultReturn = $explicit === '' || str_contains($explicit, 'option=com_users&view=profile') || str_contains($explicit, 'option=com_users&view=login');
         if ($result['state'] === 'conflict' || $result['target'] === 'checkout') {
             $target = 'index.php?option=com_fdshop&view=cart';
+        } elseif ($safeReturn !== '' && Uri::isInternal($safeReturn)) {
+            $target = $safeReturn;
         } elseif (!$defaultReturn && Uri::isInternal($explicit)) {
             $target = $explicit;
         } else {
             $target = 'index.php?option=com_fdshop&view=account';
         }
-        $session->set('users.login.form.return', $target);
-        $session->clear('com_fdshop.login.safe_return');
-        $session->clear('com_fdshop.cart_continuation.intent');
+        // Joomla stores controller user-state values inside its session registry;
+        // writing the same-looking key directly to the session does not modify it.
+        $app->setUserState('users.login.form.return', $target);
+        // Joomla may first route to its profile/login destination after authentication.
+        // Keep the resolved, internal FDShop target until that following request.
+        $session->set(self::SESSION_REDIRECT_TARGET, $target);
     }
 
     public function afterDispatch(AfterDispatchEvent $event): void
@@ -112,14 +131,24 @@ final class FDShopRegistration extends CMSPlugin implements SubscriberInterface
         $checkout = $app->getSession()->get('com_fdshop.cart_continuation.intent') === 'checkout' || $app->getInput()->getBool('fdshop_checkout');
         if ($app->getSession()->get('com_fdshop.cart_continuation.registered') === 1) {
             $this->loadLanguage();
-            $document->setBuffer('<div class="fdshop-registration-note fdshop-registration-note--activation" role="status"><h2>' . Text::_('PLG_SYSTEM_FDSHOPREGISTRATION_ACTIVATION_TITLE') . '</h2><p>' . Text::_('PLG_SYSTEM_FDSHOPREGISTRATION_ACTIVATION_TEXT') . '</p></div>' . $registration, 'component');
+            $document->setBuffer('<div class="fdshop-registration-note fdshop-registration-note--activation" role="status"><h2>' . Text::_('PLG_SYSTEM_FDSHOPREGISTRATION_ACTIVATION_TITLE') . '</h2><p>' . Text::_('PLG_SYSTEM_FDSHOPREGISTRATION_ACTIVATION_TEXT') . '</p><p><strong>' . Text::_('PLG_SYSTEM_FDSHOPREGISTRATION_ACTIVATION_SPAM') . '</strong></p></div>' . $registration, 'component');
             $app->getSession()->clear('com_fdshop.cart_continuation.registered');
             return;
         }
+        $input = $app->getInput();
+        $view = $input->getCmd('view');
+        $task = $input->getCmd('task');
+        if ($checkout && ($view === 'login' || $task === 'registration.activate')) {
+            $login = $this->withLoginReturn($registration, 'index.php?option=com_fdshop&view=cart');
+            if ($login !== $registration) $document->setBuffer($login, 'component');
+            return;
+        }
+        if (($view !== 'registration' && $task !== 'registration.register') || $task === 'registration.activate') return;
         if (!str_contains($registration, 'id="member-registration"') || str_contains($registration, 'fdshop-account-entry')) return;
 
         $this->loadLanguage();
-        $login = ModuleHelper::renderModule(ModuleHelper::getModule('mod_login', 'FDShop registration login'), ['style' => 'none']);
+        $loginTarget = $checkout ? 'index.php?option=com_fdshop&view=cart' : 'index.php?option=com_fdshop&view=account';
+        $login = $this->withLoginReturn(ModuleHelper::renderModule(ModuleHelper::getModule('mod_login', 'FDShop registration login'), ['style' => 'none']), $loginTarget);
         $assets = $document->getWebAssetManager();
         $assets->getRegistry()->addRegistryFile('media/com_fdshop/joomla.asset.json');
         $assets->useStyle('com_fdshop.site');
@@ -157,5 +186,31 @@ final class FDShopRegistration extends CMSPlugin implements SubscriberInterface
         $target = (string) $session->get('com_fdshop.login.safe_return', '');
         $session->clear('com_fdshop.login.safe_return');
         return $target !== '' && Uri::isInternal($target) ? $target : 'index.php?option=com_fdshop&view=account';
+    }
+
+    private function isCurrentFdshopTarget(string $target): bool
+    {
+        $query = [];
+        parse_str((string) parse_url($target, PHP_URL_QUERY), $query);
+        if (($query['option'] ?? '') !== 'com_fdshop') return false;
+        $input = $this->getApplication()->getInput();
+        return $input->getCmd('option') === 'com_fdshop' && $input->getCmd('view') === (string) ($query['view'] ?? '');
+    }
+
+    private function withLoginReturn(string $html, string $target): string
+    {
+        if (!Uri::isInternal($target)) return $html;
+        $encoded = base64_encode($target);
+        $changed = false;
+        $html = (string) preg_replace_callback('/<input\b[^>]*\bname=(["\'])return\1[^>]*>/i', static function (array $match) use ($encoded, &$changed): string {
+            $changed = true;
+            $tag = $match[0];
+            if (preg_match('/\bvalue=(["\'])[^"\']*\1/i', $tag)) {
+                return (string) preg_replace('/\bvalue=(["\'])[^"\']*\1/i', 'value="' . $encoded . '"', $tag, 1);
+            }
+            return substr($tag, 0, -1) . ' value="' . $encoded . '">';
+        }, $html);
+        if ($changed) return $html;
+        return (string) preg_replace('/<\/form>/i', '<input type="hidden" name="return" value="' . $encoded . '"></form>', $html, 1);
     }
 }

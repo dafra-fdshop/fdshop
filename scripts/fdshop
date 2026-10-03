@@ -528,6 +528,25 @@ run_browser_frontend_cart() {
       load_fixtures || true
       return 1
     fi
+    load_fixtures >/dev/null
+    load_frontend_cart_fixtures >/dev/null
+    sql "DELETE i FROM ${JOOMLA_DB_PREFIX}fdshop_cart_bundle_items i INNER JOIN ${JOOMLA_DB_PREFIX}fdshop_cart_bundles b ON b.id=i.cart_bundle_id WHERE b.user_id=${profile_user_id}; DELETE FROM ${JOOMLA_DB_PREFIX}fdshop_cart_bundles WHERE user_id=${profile_user_id}; DELETE FROM ${JOOMLA_DB_PREFIX}fdshop_cart WHERE user_id=${profile_user_id};"
+    if ! compose run --rm --no-deps --env "PLAYWRIGHT_OUTPUT_DIR=$container_output-empty-account" browser npx playwright test tests/cart-continuation-empty-account.spec.js; then
+      sql "UPDATE ${JOOMLA_DB_PREFIX}extensions SET params=JSON_SET(params,'$.allowUserRegistration','${old_registration}') WHERE type='component' AND element='com_users';" || true
+      printf 'Empty-account checkout continuation regression failed.\n' >&2
+      load_fixtures || true
+      return 1
+    fi
+    load_fixtures >/dev/null
+    load_frontend_cart_fixtures >/dev/null
+    sql "UPDATE ${JOOMLA_DB_PREFIX}extensions SET params=JSON_SET(params,'$.allowUserRegistration','1','$.useractivation','1','$.mail_to_admin','0') WHERE type='component' AND element='com_users';"
+    if ! compose run --rm --no-deps --env "PLAYWRIGHT_OUTPUT_DIR=$container_output-activation" browser npx playwright test tests/cart-continuation-activation.spec.js; then
+      sql "UPDATE ${JOOMLA_DB_PREFIX}extensions SET params=JSON_SET(params,'$.allowUserRegistration','${old_registration}','$.useractivation','${old_activation}','$.mail_to_admin','${old_mail_to_admin}') WHERE type='component' AND element='com_users';" || true
+      printf 'Activated-user checkout continuation regression failed.\n' >&2
+      load_fixtures || true
+      return 1
+    fi
+    sql "DELETE FROM ${JOOMLA_DB_PREFIX}user_usergroup_map WHERE user_id IN (SELECT id FROM ${JOOMLA_DB_PREFIX}users WHERE username LIKE 'fdshop_continue_%'); DELETE FROM ${JOOMLA_DB_PREFIX}user_profiles WHERE user_id IN (SELECT id FROM ${JOOMLA_DB_PREFIX}users WHERE username LIKE 'fdshop_continue_%'); DELETE FROM ${JOOMLA_DB_PREFIX}fdshop_user_buyer_group_map WHERE user_id IN (SELECT id FROM ${JOOMLA_DB_PREFIX}users WHERE username LIKE 'fdshop_continue_%'); DELETE FROM ${JOOMLA_DB_PREFIX}users WHERE username LIKE 'fdshop_continue_%'; UPDATE ${JOOMLA_DB_PREFIX}extensions SET params=JSON_SET(params,'$.allowUserRegistration','${old_registration}','$.useractivation','${old_activation}','$.mail_to_admin','${old_mail_to_admin}') WHERE type='component' AND element='com_users';"
     sql "UPDATE ${JOOMLA_DB_PREFIX}extensions SET params=JSON_SET(params,'$.allowUserRegistration','${old_registration}') WHERE type='component' AND element='com_users';"
     load_fixtures >/dev/null
     printf 'Frontend cart artifacts: %s\nFDShop checkout suite: PASS (order, snapshots, reservation, coupon and cleanup verified)\n' "$host_output"
