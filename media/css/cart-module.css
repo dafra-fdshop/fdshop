@@ -1,0 +1,28 @@
+.fdshop-cart-module { position: relative; display: inline-flex; --fdshop-cart-accent: #e0a721; }
+.fdshop-cart-module__trigger { position: relative; display: inline-grid; width: 2.75rem; height: 2.75rem; place-items: center; border: 1px solid #c48d0b; border-radius: .45rem; color: #111; background: var(--fdshop-cart-accent); font-size: 1.15rem; cursor: pointer; }
+.fdshop-cart-module__trigger:hover, .fdshop-cart-module__trigger:focus-visible { background: #f0b724; outline: 2px solid #fff; outline-offset: 2px; }
+.fdshop-cart-module__badge { position: absolute; right: -.45rem; bottom: -.35rem; display: grid; min-width: 1.35rem; height: 1.35rem; padding: 0 .25rem; place-items: center; border: 2px solid #fff; border-radius: 999px; color: #fff; background: #171717; font-size: .68rem; line-height: 1; }
+.fdshop-cart-module__backdrop { position: fixed; z-index: 10040; inset: 0; opacity: 0; background: rgb(0 0 0 / 58%); transition: opacity .2s ease; }
+.fdshop-cart-module__backdrop.is-open { opacity: 1; }
+.fdshop-cart-module__panel { position: fixed; z-index: 10050; top: 0; right: 0; display: grid; width: min(26rem, 100vw); height: 100dvh; grid-template-rows: auto minmax(0, 1fr) auto; overflow: hidden; border: 0; color: #171717; background: #fff; box-shadow: -1rem 0 2.5rem rgb(0 0 0 / 28%); transform: translateX(102%); transition: transform .22s ease; }
+.fdshop-cart-module__panel.is-open { transform: translateX(0); }
+.fdshop-cart-module__panel > header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1rem 1.15rem; color: #fff; background: #1c1c1c; }
+.fdshop-cart-module__panel h2 { margin: 0; color: inherit; font-size: 1.15rem; }
+.fdshop-cart-module__panel header button { display: grid; width: 2.5rem; height: 2.5rem; flex: 0 0 auto; place-items: center; padding: 0; border: 0; border-radius: 50%; color: #fff; background: transparent; font-size: 1.8rem; line-height: 1; cursor: pointer; }
+.fdshop-cart-module__panel header button:hover, .fdshop-cart-module__panel header button:focus-visible { color: #111; background: var(--fdshop-cart-accent); outline: 2px solid #fff; }
+.fdshop-cart-module__body { min-height: 0; padding: .65rem 1.15rem; overflow-y: auto; overscroll-behavior: contain; }
+.fdshop-cart-module__body > p { margin: 1rem 0; color: #555; }
+.fdshop-cart-module__body ul { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
+.fdshop-cart-module__item { display: grid; grid-template-columns: 3.75rem minmax(0, 1fr) auto; align-items: center; gap: .75rem; padding: .85rem 0; border-bottom: 1px solid #e3e3e3; }
+.fdshop-cart-module__item img { width: 3.75rem; height: 3.75rem; border-radius: .3rem; background: #f1f1f1; object-fit: contain; }
+.fdshop-cart-module__item div, .fdshop-cart-module__item strong { min-width: 0; }
+.fdshop-cart-module__item strong { display: block; font-size: .88rem; line-height: 1.3; }
+.fdshop-cart-module__item strong > a, .fdshop-cart-module__item strong > span:last-child { display: -webkit-box; overflow: hidden; color: inherit; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.fdshop-cart-module__item b { white-space: nowrap; color: #b77f00; font-size: .85rem; }
+.fdshop-cart-module__item[data-cart-module-position="bundle"] img { padding: .7rem; }
+.fdshop-cart-module__panel > footer { padding: 1rem 1.15rem max(1rem, env(safe-area-inset-bottom)); border-top: 1px solid #c7c7c7; background: #f2f3f5; }
+.fdshop-cart-module__panel > footer > div { display: flex; justify-content: space-between; gap: 1rem; margin-bottom: .75rem; font-size: .9rem; }
+.fdshop-cart-module__panel > footer .btn { display: flex; width: 100%; min-height: 2.75rem; align-items: center; justify-content: center; border-color: #c48d0b; color: #111; background: var(--fdshop-cart-accent); font-weight: 700; }
+.fdshop-cart-offcanvas-open { overflow: hidden; }
+@media (max-width: 430px) { .fdshop-cart-module__panel { width: 100vw; } .fdshop-cart-module__item { grid-template-columns: 3.25rem minmax(0, 1fr); } .fdshop-cart-module__item img { width: 3.25rem; height: 3.25rem; } .fdshop-cart-module__item > b { grid-column: 2; justify-self: end; } }
+@media (prefers-reduced-motion: reduce) { .fdshop-cart-module__panel, .fdshop-cart-module__backdrop { transition: none; } }

@@ -8,6 +8,7 @@ use FDShop\Component\FDShop\Site\Service\CartServiceInterface;
 use FDShop\Component\FDShop\Site\Service\CartContinuationServiceInterface;
 use FDShop\Component\FDShop\Site\Service\CheckoutServiceInterface;
 use FDShop\Component\FDShop\Site\Helper\RouteHelper;
+use FDShop\Component\FDShop\Site\Helper\CartSummaryHelper;
 use Joomla\CMS\Factory;
 use Joomla\CMS\MVC\Controller\BaseController;
 use Joomla\CMS\Response\JsonResponse;
@@ -17,6 +18,17 @@ use Joomla\CMS\Uri\Uri;
 
 final class CartController extends BaseController
 {
+    public function summary(): void
+    {
+        $app = Factory::getApplication();
+        try {
+            echo new JsonResponse(CartSummaryHelper::get());
+        } catch (\Throwable $error) {
+            echo new JsonResponse(null, $error->getMessage(), true);
+        }
+        $app->close();
+    }
+
     public function continueCheckout(): void
     {
         $app = Factory::getApplication();

@@ -37,7 +37,7 @@ build_package() {
   stage_dir="$(mktemp -d -t fdshop-package.XXXXXXXX)"
   trap '[[ -n "${stage_dir:-}" && "$stage_dir" == /tmp/fdshop-package.* ]] && rm -rf -- "$stage_dir"' RETURN
 
-  mkdir -p "$stage_dir/component" "$stage_dir/filter-module" "$stage_dir/products-module" "$stage_dir/search-module" "$stage_dir/user-plugin" "$stage_dir/system-plugin" "$stage_dir/task-plugin" "$stage_dir/package"
+  mkdir -p "$stage_dir/component" "$stage_dir/filter-module" "$stage_dir/products-module" "$stage_dir/search-module" "$stage_dir/cart-module" "$stage_dir/user-plugin" "$stage_dir/system-plugin" "$stage_dir/task-plugin" "$stage_dir/package"
   cp -a "$REPO_ROOT/administrator" "$stage_dir/component/administrator"
   cp -a "$REPO_ROOT/site" "$stage_dir/component/site"
   cp -a "$REPO_ROOT/media" "$stage_dir/component/media"
@@ -45,6 +45,7 @@ build_package() {
   cp -a "$REPO_ROOT/modules/mod_fdshop_filter/." "$stage_dir/filter-module/"
   cp -a "$REPO_ROOT/modules/mod_fdshop_products/." "$stage_dir/products-module/"
   cp -a "$REPO_ROOT/modules/mod_fdshop_search/." "$stage_dir/search-module/"
+  cp -a "$REPO_ROOT/modules/mod_fdshop_cart/." "$stage_dir/cart-module/"
   cp -a "$REPO_ROOT/plugins/user/fdshopprofile/." "$stage_dir/user-plugin/"
   cp -a "$REPO_ROOT/plugins/system/fdshopregistration/." "$stage_dir/system-plugin/"
   cp -a "$REPO_ROOT/plugins/task/fdshoppaymentcleanup/." "$stage_dir/task-plugin/"
@@ -53,12 +54,13 @@ build_package() {
   ( cd "$stage_dir/filter-module"; find . -type f -print | LC_ALL=C sort | zip -X -q "$stage_dir/package/mod_fdshop_filter.zip" -@ )
   ( cd "$stage_dir/products-module"; find . -type f -print | LC_ALL=C sort | zip -X -q "$stage_dir/package/mod_fdshop_products.zip" -@ )
   ( cd "$stage_dir/search-module"; find . -type f -print | LC_ALL=C sort | zip -X -q "$stage_dir/package/mod_fdshop_search.zip" -@ )
+  ( cd "$stage_dir/cart-module"; find . -type f -print | LC_ALL=C sort | zip -X -q "$stage_dir/package/mod_fdshop_cart.zip" -@ )
   ( cd "$stage_dir/user-plugin"; find . -type f -print | LC_ALL=C sort | zip -X -q "$stage_dir/package/plg_user_fdshopprofile.zip" -@ )
   ( cd "$stage_dir/system-plugin"; find . -type f -print | LC_ALL=C sort | zip -X -q "$stage_dir/package/plg_system_fdshopregistration.zip" -@ )
   ( cd "$stage_dir/task-plugin"; find . -type f -print | LC_ALL=C sort | zip -X -q "$stage_dir/package/plg_task_fdshoppaymentcleanup.zip" -@ )
   cp "$REPO_ROOT/pkg_fdshop.xml" "$stage_dir/package/"
   touch -d '2000-01-01 00:00:00 UTC' "$stage_dir/package/"*
-  ( cd "$stage_dir/package"; zip -X -q "$PACKAGE_PATH" plg_user_fdshopprofile.zip plg_system_fdshopregistration.zip plg_task_fdshoppaymentcleanup.zip com_fdshop_component.zip mod_fdshop_filter.zip mod_fdshop_products.zip mod_fdshop_search.zip pkg_fdshop.xml )
+  ( cd "$stage_dir/package"; zip -X -q "$PACKAGE_PATH" plg_user_fdshopprofile.zip plg_system_fdshopregistration.zip plg_task_fdshoppaymentcleanup.zip com_fdshop_component.zip mod_fdshop_filter.zip mod_fdshop_products.zip mod_fdshop_search.zip mod_fdshop_cart.zip pkg_fdshop.xml )
 
   printf 'Built %s\n' "$PACKAGE_PATH"
   sha256sum "$PACKAGE_PATH"
@@ -140,6 +142,8 @@ verify_installed() {
   [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}extensions WHERE type='module' AND element='mod_fdshop_products' AND client_id=0;")" == "1" ]]
   compose exec -T joomla test -f /var/www/html/modules/mod_fdshop_search/mod_fdshop_search.php
   [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}extensions WHERE type='module' AND element='mod_fdshop_search' AND client_id=0;")" == "1" ]]
+  compose exec -T joomla test -f /var/www/html/modules/mod_fdshop_cart/mod_fdshop_cart.php
+  [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}extensions WHERE type='module' AND element='mod_fdshop_cart' AND client_id=0;")" == "1" ]]
   compose exec -T joomla test -f /var/www/html/plugins/user/fdshopprofile/services/provider.php
   [[ "$(sql "SELECT COUNT(*) FROM ${JOOMLA_DB_PREFIX}extensions WHERE type='plugin' AND folder='user' AND element='fdshopprofile' AND enabled=1;")" == "1" ]]
   compose exec -T joomla test -f /var/www/html/plugins/system/fdshopregistration/services/provider.php
@@ -162,6 +166,7 @@ verify_uninstalled() {
   compose exec -T joomla test ! -e /var/www/html/modules/mod_fdshop_filter
   compose exec -T joomla test ! -e /var/www/html/modules/mod_fdshop_products
   compose exec -T joomla test ! -e /var/www/html/modules/mod_fdshop_search
+  compose exec -T joomla test ! -e /var/www/html/modules/mod_fdshop_cart
   compose exec -T joomla test ! -e /var/www/html/plugins/user/fdshopprofile
   compose exec -T joomla test ! -e /var/www/html/plugins/system/fdshopregistration
   compose exec -T joomla test ! -e /var/www/html/plugins/task/fdshoppaymentcleanup
@@ -212,10 +217,11 @@ sync_source() {
     test ! -d /var/www/html/modules/mod_fdshop_filter || rsync -a --delete /workspace/fdshop/modules/mod_fdshop_filter/ /var/www/html/modules/mod_fdshop_filter/
     test ! -d /var/www/html/modules/mod_fdshop_products || rsync -a --delete /workspace/fdshop/modules/mod_fdshop_products/ /var/www/html/modules/mod_fdshop_products/
     test ! -d /var/www/html/modules/mod_fdshop_search || rsync -a --delete /workspace/fdshop/modules/mod_fdshop_search/ /var/www/html/modules/mod_fdshop_search/
+    test ! -d /var/www/html/modules/mod_fdshop_cart || rsync -a --delete /workspace/fdshop/modules/mod_fdshop_cart/ /var/www/html/modules/mod_fdshop_cart/
     test ! -d /var/www/html/plugins/user/fdshopprofile || rsync -a --delete /workspace/fdshop/plugins/user/fdshopprofile/ /var/www/html/plugins/user/fdshopprofile/
     test ! -d /var/www/html/plugins/system/fdshopregistration || rsync -a --delete /workspace/fdshop/plugins/system/fdshopregistration/ /var/www/html/plugins/system/fdshopregistration/
     test ! -d /var/www/html/plugins/task/fdshoppaymentcleanup || rsync -a --delete /workspace/fdshop/plugins/task/fdshoppaymentcleanup/ /var/www/html/plugins/task/fdshoppaymentcleanup/
-    chown -R www-data:www-data /var/www/html/administrator/components/com_fdshop /var/www/html/components/com_fdshop /var/www/html/media/com_fdshop /var/www/html/modules/mod_fdshop_filter /var/www/html/modules/mod_fdshop_products /var/www/html/modules/mod_fdshop_search /var/www/html/plugins/user/fdshopprofile /var/www/html/plugins/system/fdshopregistration /var/www/html/plugins/task/fdshoppaymentcleanup 2>/dev/null || true
+    chown -R www-data:www-data /var/www/html/administrator/components/com_fdshop /var/www/html/components/com_fdshop /var/www/html/media/com_fdshop /var/www/html/modules/mod_fdshop_filter /var/www/html/modules/mod_fdshop_products /var/www/html/modules/mod_fdshop_search /var/www/html/modules/mod_fdshop_cart /var/www/html/plugins/user/fdshopprofile /var/www/html/plugins/system/fdshopregistration /var/www/html/plugins/task/fdshoppaymentcleanup 2>/dev/null || true
   '
   printf 'FDShop source synchronized. Manifest and installer lifecycle were not bypassed.\n'
 }
@@ -469,7 +475,7 @@ run_browser_frontend_cart() {
 
   if compose run --rm --no-deps \
     --env "PLAYWRIGHT_OUTPUT_DIR=$container_output" \
-    browser npx playwright test tests/cart-continuation.spec.js tests/frontend-cart.spec.js tests/bundle-builder.spec.js; then
+    browser npx playwright test tests/cart-continuation.spec.js tests/frontend-cart.spec.js tests/bundle-builder.spec.js tests/cart-module.spec.js; then
     sql "UPDATE ${JOOMLA_DB_PREFIX}fdshop_config SET show_terms_checkbox=0 WHERE id=1;"
     if ! compose run --rm --no-deps \
       --env "PLAYWRIGHT_OUTPUT_DIR=$container_output" \

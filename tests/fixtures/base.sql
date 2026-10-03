@@ -144,6 +144,9 @@ VALUES (0,'E2E FDShop Suche','','',1,'sidebar-left',NULL,NULL,NULL,NULL,1,'mod_f
 SET @fdshop_search_module_id=LAST_INSERT_ID();
 INSERT INTO `__PREFIX__modules_menu` (`moduleid`,`menuid`) VALUES (@fdshop_search_module_id,0);
 
+DELETE `mm` FROM `__PREFIX__modules_menu` AS `mm` INNER JOIN `__PREFIX__modules` AS `m` ON `m`.`id`=`mm`.`moduleid` WHERE `m`.`client_id`=0 AND `m`.`module`='mod_fdshop_cart' AND `m`.`title` LIKE 'E2E FDShop Warenkorb%';
+DELETE FROM `__PREFIX__modules` WHERE `client_id`=0 AND `module`='mod_fdshop_cart' AND `title` LIKE 'E2E FDShop Warenkorb%';
+
 INSERT INTO `__PREFIX__fdshop_bundles` (id,bundle_number,bundle_name,alias,description,image_path,max_quantity_per_product,is_active,created,created_by) VALUES
 (900400,'E2E-BUNDLE-ACTIVE','E2E Bundle Aktiv','e2e-bundle-active','Künstliches aktives Bundle','images/FDShop/products/e2e-fixture-product.svg',2,1,'2026-01-01 00:00:00',0),(900401,'E2E-BUNDLE-INACTIVE','E2E Bundle Inaktiv','e2e-bundle-inactive','Künstliches inaktives Bundle','',1,0,'2026-01-01 00:00:00',0);
 INSERT INTO `__PREFIX__fdshop_bundle_items` (id,bundle_id,product_id,ordering,created,created_by) VALUES

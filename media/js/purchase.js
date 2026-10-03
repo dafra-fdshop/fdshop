@@ -120,6 +120,7 @@
       if (!response.ok || payload.success === false || !payload.data?.purchase) {
         throw new Error(payload.message || 'Das Produkt konnte nicht hinzugefügt werden.');
       }
+      document.dispatchEvent(new CustomEvent('fdshop:cart-updated'));
       showResult(payload.data.purchase, button);
     } catch (reason) {
       error.textContent = reason.message || 'Das Produkt konnte nicht hinzugefügt werden.';

@@ -143,7 +143,12 @@ final class BundleService implements BundleServiceInterface
     {
         $query = $this->db->getQuery(true)->select('*')->from($this->db->quoteName('#__fdshop_cart_bundles'))->where($this->ownerWhere($userId, $sessionId))->order('created ASC, id ASC');
         $this->db->setQuery($query); $bundles = (array) $this->db->loadObjectList();
-        foreach ($bundles as $bundle) { $q = $this->db->getQuery(true)->select('*')->from($this->db->quoteName('#__fdshop_cart_bundle_items'))->where('cart_bundle_id = ' . (int) $bundle->id)->order('ordering ASC, id ASC'); $this->db->setQuery($q); $bundle->items = (array) $this->db->loadObjectList(); }
+        if ($bundles === []) return [];
+        $ids = array_map(static fn ($bundle): int => (int) $bundle->id, $bundles);
+        $itemsQuery = $this->db->getQuery(true)->select('*')->from($this->db->quoteName('#__fdshop_cart_bundle_items'))->whereIn($this->db->quoteName('cart_bundle_id'), $ids)->order('cart_bundle_id ASC, ordering ASC, id ASC');
+        $this->db->setQuery($itemsQuery); $grouped = [];
+        foreach ((array) $this->db->loadObjectList() as $item) $grouped[(int) $item->cart_bundle_id][] = $item;
+        foreach ($bundles as $bundle) $bundle->items = $grouped[(int) $bundle->id] ?? [];
         return $bundles;
     }
 

@@ -30,4 +30,13 @@ INSERT INTO `__PREFIX__menu`
 VALUES
 (900901,'mainmenu','Warenkorb','warenkorb','','warenkorb','index.php?option=com_fdshop&view=cart','component',1,1,1,__COMPONENT_ID__,0,NULL,0,1,'',0,'{}',__MENU_LFT__,__MENU_RGT__,0,'*',0,NULL,NULL);
 
+DELETE `mm` FROM `__PREFIX__modules_menu` AS `mm` INNER JOIN `__PREFIX__modules` AS `m` ON `m`.`id`=`mm`.`moduleid` WHERE `m`.`client_id`=0 AND `m`.`module`='mod_fdshop_cart' AND `m`.`title` LIKE 'E2E FDShop Warenkorb%';
+DELETE FROM `__PREFIX__modules` WHERE `client_id`=0 AND `module`='mod_fdshop_cart' AND `title` LIKE 'E2E FDShop Warenkorb%';
+INSERT INTO `__PREFIX__modules` (`asset_id`,`title`,`note`,`content`,`ordering`,`position`,`checked_out`,`checked_out_time`,`publish_up`,`publish_down`,`published`,`module`,`access`,`showtitle`,`params`,`client_id`,`language`) VALUES
+(0,'E2E FDShop Warenkorb 1','','',1,'top-a',NULL,NULL,NULL,NULL,1,'mod_fdshop_cart',1,0,'{"layout":"_:default","moduleclass_sfx":"","cache":"0"}',0,'*'),
+(0,'E2E FDShop Warenkorb 2','','',2,'top-a',NULL,NULL,NULL,NULL,1,'mod_fdshop_cart',1,0,'{"layout":"_:default","moduleclass_sfx":"","cache":"0"}',0,'*');
+INSERT INTO `__PREFIX__modules_menu` (`moduleid`,`menuid`)
+SELECT `id`,0 FROM `__PREFIX__modules`
+WHERE `client_id`=0 AND `module`='mod_fdshop_cart' AND `title` LIKE 'E2E FDShop Warenkorb%';
+
 COMMIT;

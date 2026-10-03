@@ -746,3 +746,23 @@ LAUNCH POLISH PRODUKTDETAIL / REGISTRIERUNG V1.1 (PAKET 0.0.52, SCHEMA 0.0.50)
 - Der zusätzliche FDShop-Aktivierungshinweis wurde entfernt. Standardregistrie-
   rung und Checkout verwenden getrennte, übersetzbare Einführungstexte; die
   Aktivierungs-Erfolgsmeldung bleibt vollständig bei Joomla.
+
+WARENKORB-OFFCANVAS-MODUL V1 (PAKET 0.0.53, SCHEMA 0.0.50)
+----------------------------------------------------------
+- `modules/mod_fdshop_cart` rendert initial über `CartSummaryHelper` und lädt
+  seine eigenständigen Assets nur bei einer tatsächlich veröffentlichten
+  Modulinstanz. Instanzbezogene IDs und Joomla-Web-Asset-Deduplizierung sichern
+  die Mehrinstanzfähigkeit.
+- `CartService::getSummary()` ist die gemeinsame schlanke Datenquelle für
+  initiales Rendering und `CartController::summary`. Owner werden ausschließlich
+  aus Joomla-Identity und Session abgeleitet; der Endpunkt akzeptiert keine
+  fremden User- oder Session-IDs.
+- `BundleService::loadCartBundles()` lädt alle Bundlekinder eines Warenkorbs in
+  einer gebündelten Abfrage. Das Offcanvas bildet jedes Bundle trotzdem nur als
+  eine Position mit neutralem Fallbackbild ab.
+- `media/js/cart-module.js` koordiniert einen Race-geschützten Summary-Request
+  für sämtliche Instanzen. Die bestehenden Mutationswege in `purchase.js`,
+  `cart.js` und `bundle.js` signalisieren nach erfolgreicher Änderung zentral
+  `fdshop:cart-updated`; Cart-, Bundle- und Checkout-Fachlogik bleibt führend.
+- `media/css/cart-module.css` enthält ausschließlich Moduldesign, responsive
+  Offcanvas-Geometrie, Scrollsperre und Reduced-Motion-Verhalten.

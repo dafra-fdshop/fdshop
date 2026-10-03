@@ -8,6 +8,8 @@ interface CartServiceInterface
 {
     public function getCart(int $userId, string $sessionId, int $shipmentId = 0, int $paymentId = 0, string $couponCode = ''): array;
 
+    public function getSummary(int $userId, string $sessionId): array;
+
     public function addItem(int $userId, string $sessionId, int $productId, float $quantity, string $unitVariant = 'piece'): array;
 
     public function updateQuantity(int $userId, string $sessionId, int $cartId, float $quantity, int $shipmentId = 0, int $paymentId = 0): array;

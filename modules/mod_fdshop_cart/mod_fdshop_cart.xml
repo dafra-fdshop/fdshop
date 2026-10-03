@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extension type="module" client="site" method="upgrade">
+  <name>FDShop Warenkorb</name>
+  <author>FDShop</author>
+  <creationDate>2026-10-03</creationDate>
+  <version>0.0.53</version>
+  <description>Kompakter FDShop-Warenkorb mit Counter und Offcanvas-Übersicht.</description>
+  <files><filename module="mod_fdshop_cart">mod_fdshop_cart.php</filename><folder>tmpl</folder></files>
+  <config><fields name="params"><fieldset name="basic"><field name="moduleclass_sfx" type="textarea" label="COM_MODULES_FIELD_MODULECLASS_SFX_LABEL" /></fieldset><fieldset name="advanced"><field name="cache" type="hidden" default="0" /></fieldset></fields></config>
+</extension>

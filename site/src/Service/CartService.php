@@ -18,14 +18,50 @@ final class CartService implements CartServiceInterface
 
     public function getCart(int $userId, string $sessionId, int $shipmentId = 0, int $paymentId = 0, string $couponCode = ''): array
     {
-        $this->assertOwner($userId, $sessionId);
-        $items = $this->loadItems($userId, $sessionId);
-        $bundles = $this->bundleService->loadCartBundles($userId, $sessionId);
-        $this->attachImages($items);
+        $contents = $this->getSummary($userId, $sessionId);
+        $items = $contents['items'];
+        $bundles = $contents['bundles'];
         $shipments = $this->loadChoices('shipments');
         $payments = $this->loadChoices('payment_methods');
         [$shipment, $shipmentFallback] = $this->resolveChoice($shipments, $shipmentId, 'Versandart');
         [$payment, $paymentFallback] = $this->resolveChoice($payments, $paymentId, 'Zahlungsart');
+        $shipmentFee = $shipment ? (float) $shipment->fee : 0.0;
+        $paymentFee = $payment ? (float) $payment->fee : 0.0;
+        $subtotal = (float) $contents['subtotal'];
+        $coupon = ['code' => '', 'discount' => 0.0];
+        if ($couponCode !== '') {
+            try {
+                $coupon = $this->couponResult($items, $userId, $couponCode, $subtotal);
+            } catch (\DomainException) {
+                // A coupon that became invalid must never make the cart unusable.
+            }
+        }
+
+        return [
+            'items' => $items,
+            'bundles' => $bundles,
+            'shipments' => $shipments,
+            'payments' => $payments,
+            'shipment' => $shipment,
+            'payment' => $payment,
+            'shipment_fallback' => $shipmentFallback,
+            'payment_fallback' => $paymentFallback,
+            'subtotal' => $subtotal,
+            'shipment_fee' => $shipmentFee,
+            'payment_fee' => $paymentFee,
+            'coupon_code' => $coupon['code'],
+            'coupon_discount' => $coupon['discount'],
+            'total' => $this->money($subtotal - $coupon['discount'] + $shipmentFee + $paymentFee),
+            'currency' => $contents['currency'],
+        ];
+    }
+
+    public function getSummary(int $userId, string $sessionId): array
+    {
+        $this->assertOwner($userId, $sessionId);
+        $items = $this->loadItems($userId, $sessionId);
+        $bundles = $this->bundleService->loadCartBundles($userId, $sessionId);
+        $this->attachImages($items);
         $subtotal = 0.0;
 
         foreach ($items as $item) {
@@ -53,35 +89,7 @@ final class CartService implements CartServiceInterface
             $subtotal += $bundle->total_gross;
         }
 
-        $shipmentFee = $shipment ? (float) $shipment->fee : 0.0;
-        $paymentFee = $payment ? (float) $payment->fee : 0.0;
-        $subtotal = $this->money($subtotal);
-        $coupon = ['code' => '', 'discount' => 0.0];
-        if ($couponCode !== '') {
-            try {
-                $coupon = $this->couponResult($items, $userId, $couponCode, $subtotal);
-            } catch (\DomainException) {
-                // A coupon that became invalid must never make the cart unusable.
-            }
-        }
-
-        return [
-            'items' => $items,
-            'bundles' => $bundles,
-            'shipments' => $shipments,
-            'payments' => $payments,
-            'shipment' => $shipment,
-            'payment' => $payment,
-            'shipment_fallback' => $shipmentFallback,
-            'payment_fallback' => $paymentFallback,
-            'subtotal' => $subtotal,
-            'shipment_fee' => $shipmentFee,
-            'payment_fee' => $paymentFee,
-            'coupon_code' => $coupon['code'],
-            'coupon_discount' => $coupon['discount'],
-            'total' => $this->money($subtotal - $coupon['discount'] + $shipmentFee + $paymentFee),
-            'currency' => $items[0]->currency ?? 'EUR',
-        ];
+        return ['items' => $items, 'bundles' => $bundles, 'subtotal' => $this->money($subtotal), 'currency' => $items[0]->currency ?? ($bundles[0]->currency ?? 'EUR')];
     }
 
     public function assertOwnerEligibleForUser(int $userId, int $ownerUserId, string $ownerSessionId): void

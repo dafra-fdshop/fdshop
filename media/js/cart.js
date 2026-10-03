@@ -61,6 +61,7 @@
             cart.querySelector('[data-cart-shipment-name]').textContent = state.shipmentName;
             cart.querySelector('[data-cart-payment-name]').textContent = state.paymentName;
             cart.dataset.paypalEnabled = String(state.paymentPayPalEnabled || 0);
+            document.dispatchEvent(new CustomEvent('fdshop:cart-updated'));
         }
 
         function quantity(row, delta) {
@@ -79,7 +80,7 @@
             if (button.matches('[data-cart-bundle-remove]')) {
                 var bundle = button.closest('[data-cart-bundle]');
                 var body = new FormData(); body.append(token.name, '1'); body.append('cart_bundle_id', bundle.dataset.cartBundle);
-                fetch('index.php?option=com_fdshop&format=json&task=bundle.removeFromCart', {method: 'POST', body: body, credentials: 'same-origin', headers: {Accept: 'application/json'}}).then(function (response) { return response.json(); }).then(function (payload) { if (payload.success === false) throw new Error(payload.message); window.location.reload(); }).catch(function (error) { notify(error.message, true); });
+                fetch('index.php?option=com_fdshop&format=json&task=bundle.removeFromCart', {method: 'POST', body: body, credentials: 'same-origin', headers: {Accept: 'application/json'}}).then(function (response) { return response.json(); }).then(function (payload) { if (payload.success === false) throw new Error(payload.message); document.dispatchEvent(new CustomEvent('fdshop:cart-updated')); window.location.reload(); }).catch(function (error) { notify(error.message, true); });
             }
             if (button.matches('[data-cart-open]')) cart.querySelector('[data-cart-dialog="' + button.dataset.cartOpen + '"]').showModal();
             if (button.matches('[data-cart-select-shipment]')) request('selectShipment', { shipment_id: button.dataset.cartSelectShipment }).then(function () { button.closest('dialog').close(); notify('Abholstation wurde geändert.', false); }).catch(function (error) { notify(error.message, true); });

@@ -822,3 +822,24 @@ einer Registrierung gibt FDShop keine zweite Aktivierungsbox mehr aus; die
 Joomla-Systemmeldung bleibt die zentrale, per Sprach-Override pflegbare Quelle.
 Checkout-Intent, Cart Continuation, Ownership, Transfer und Redirect-Ziele sind
 unverändert.
+
+Warenkorb-Offcanvas-Modul V1 (Paket 0.0.53, Schema 0.0.50)
+----------------------------------------------------------
+
+`mod_fdshop_cart` ist ein frei platzierbares Joomla-Site-Modul mit
+serverseitig gerendertem Zähler und einem responsiven Warenkorb-Offcanvas. Es
+verwendet ausschließlich den bestehenden Benutzer-/Session-Owner und die
+zentrale Cart-Fachlogik. Normale Positionen zählen ihre fachlich mögliche
+Dezimalmenge; ein Bundle zählt und erscheint als genau eine Position.
+
+Der read-only Summary-Endpunkt liefert Produktbild, Menge, Snapshotname,
+Positionssumme und Warenkorbsumme gebündelt. Mehrere Modulinstanzen teilen bei
+einer Mutation einen zentralen `fdshop:cart-updated`-Refresh; beim ersten Paint
+ist kein zusätzlicher Browserrequest nötig. Produktbilder und Bundlekinder
+werden gebündelt geladen, ohne produkt- oder bundleweise N+1-Abfragen.
+
+Das Offcanvas ergänzt Backdrop, Escape, Fokusführung, Scrollsperre,
+Reduced-Motion sowie mobile Vollbreite. Es bleibt eine reine Übersicht und
+enthält bewusst keine Mengen-, Coupon-, Versand-, Zahlungs- oder
+Checkout-Fachlogik. Cart Continuation, Ownership, Checkout und Payment wurden
+nicht verändert.
